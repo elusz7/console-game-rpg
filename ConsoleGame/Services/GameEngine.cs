@@ -7,23 +7,15 @@ using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Services;
 
-public class GameEngine
+public class GameEngine(GameContext context, MenuManager menuManager, OutputManager outputManager, InventoryManager inventoryManager)
 {
-    private readonly GameContext _context;
-    private readonly MenuManager _menuManager;
-    private readonly OutputManager _outputManager;
-    private readonly InventoryManager _inventoryManager;
+    private readonly GameContext _context = context;
+    private readonly MenuManager _menuManager = menuManager;
+    private readonly OutputManager _outputManager = outputManager;
+    private readonly InventoryManager _inventoryManager = inventoryManager;
 
     private IPlayer? _player;
     private IMonster? _goblin;
-
-    public GameEngine(GameContext context, MenuManager menuManager, OutputManager outputManager, InventoryManager inventoryManager)
-    {
-        _menuManager = menuManager;
-        _outputManager = outputManager;
-        _inventoryManager = inventoryManager;
-        _context = context;
-    }
 
     public void Run()
     {

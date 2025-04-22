@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Characters;
 
 namespace ConsoleGameEntities.Models.Items;
@@ -19,26 +15,25 @@ public class Inventory
     //adding, using, equipping, and removing items 
     public void AddItem(Item item)
     {
-        decimal currentCarryingWeight = 0;
-        foreach (Item i in Items)
-        {
-            currentCarryingWeight += i.Weight;
-        }
+        decimal currentCarryingWeight = Items.Sum(i => i.Weight);
 
         decimal wiggleRoom = Capacity - currentCarryingWeight;
 
         if (Items.Contains(item))
         {
-            Console.Error.WriteLine($"You already have {item.Name} in your inventory.");
+            throw new DuplicateItemException($"You already have {item.Name} in your inventory.");
         }
         else if (item.Weight <= wiggleRoom)
         {
             Items.Add(item);
-            Console.WriteLine($"You have added {item.Name} to your inventory.");
+        }
+        else if (item.Weight > wiggleRoom)
+        {
+            throw new OverweightException($"You cannot add {item.Name} to your inventory. Will exceed carrying capacity.");
         }
         else
         {
-            Console.WriteLine($"You cannot add {item.Name} to your inventory. Exceeds carry weight capacity.");
+            throw new InventoryException($"An error has occured trying to add {item.Name} to your inventory.");
         }
     }
 
@@ -47,11 +42,10 @@ public class Inventory
         if (Items.Contains(item))
         {
             Items.Remove(item);
-            Console.WriteLine($"You have removed {item.Name} from your inventory.");
         }
         else
         {
-            Console.WriteLine($"You do not have {item.Name} in your inventory.");
+            throw new ItemNotFoundException($"You do not have {item.Name} in your inventory.");
         }
     }
 
@@ -61,11 +55,10 @@ public class Inventory
         if (itemToRemove != null)
         {
             Items.Remove(itemToRemove);
-            Console.WriteLine($"You have removed {itemToRemove.Name} from your inventory.");
         }
         else
         {
-            Console.WriteLine($"You do not have {itemName} in your inventory.");
+            throw new ItemNotFoundException($"You do not have {itemName} in your inventory.");
         }
     }
 

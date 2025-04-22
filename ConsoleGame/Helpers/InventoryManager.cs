@@ -1,21 +1,19 @@
 ﻿using ConsoleGameEntities.Data;
+using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Characters;
 using ConsoleGameEntities.Models.Items;
 using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.Helpers;
 
-public class InventoryManager
+public class InventoryManager(GameContext context, OutputManager outputManager)
 {
-    private readonly GameContext _context;
+    private readonly GameContext _context = context;
+    private readonly OutputManager _outputManager = outputManager;
+
     private Player player;
     private static string sortOrder = "asc";
     private List<Item> items;
-
-    public InventoryManager(GameContext context)
-    {
-        _context = context;
-    }
 
     public void InventoryMenu(IPlayer character)
     {
@@ -24,20 +22,21 @@ public class InventoryManager
             .Include(i => i.Inventory)
             .ThenInclude(inv => inv.Player).ToList();
 
-        Console.Clear();
+        _outputManager.Clear();
 
         while (true)
         {
-            Console.WriteLine("Inventory Menu");
-            Console.WriteLine("1. Search for item by name");
-            Console.WriteLine("2. List items by type");
-            Console.WriteLine("3. Sort items");
-            Console.WriteLine("4. List items equippable by player");
-            Console.WriteLine("5. Add item to inventory");
-            Console.WriteLine("6. Remove item from inventory");
-            Console.WriteLine("7. Return to main menu");
+            _outputManager.WriteLine("Inventory Menu");
+            _outputManager.WriteLine("1. Search for item by name");
+            _outputManager.WriteLine("2. List items by type");
+            _outputManager.WriteLine("3. Sort items");
+            _outputManager.WriteLine("4. List items equippable by player");
+            _outputManager.WriteLine("5. Add item to inventory");
+            _outputManager.WriteLine("6. Remove item from inventory");
+            _outputManager.WriteLine("7. Return to main menu");
 
-            Console.Write("Choose an option: ");
+            _outputManager.Write("Choose an option: ");
+            _outputManager.Display();
             var input = Console.ReadLine();
 
             switch (input)
@@ -61,17 +60,17 @@ public class InventoryManager
                     RemoveItemFromInventory();
                     break;
                 case "7":
-                    Console.Clear();
+                    _outputManager.Clear();
                     return;
                 default:
-                    Console.WriteLine("Invalid option. Please try again.");
+                    _outputManager.WriteLine("Invalid option. Please try again.");
                     break;
             }
         }
     }
     public void SearchItemByName()
     {
-        Console.Write("\nEnter item name to search: ");
+        _outputManager.Write("\nEnter item name to search: ");
         string itemName = Console.ReadLine();
 
         var itemsFound = items
@@ -80,18 +79,19 @@ public class InventoryManager
 
         if (!itemsFound.Any())
         {
-            Console.WriteLine("\nNo items found\n");
+            _outputManager.WriteLine("\nNo items found\n");
+            _outputManager.Display();
         }
         else
         {
             ListItems(itemsFound);
         }
     }
-
     public void ListItemsByType()
     {
         string category;
-        Console.Write("\nWeapon or Armor? ");
+        _outputManager.Write("\nWeapon or Armor? ");
+        _outputManager.Display();
         category = Console.ReadLine().ToLower();
 
         if (category == "weapon")
@@ -104,23 +104,25 @@ public class InventoryManager
         }
         else
         {
-            Console.WriteLine("Invalid category.\n");
+            _outputManager.WriteLine("Invalid category.\n");
+            _outputManager.Display();
         }
     }
     public void SortItems()
     {
         while (true)
         {
-            Console.WriteLine("\nSort Options:");
-            Console.WriteLine("1. Sort by Name");
-            Console.WriteLine("2. Sort by Attack Value");
-            Console.WriteLine("3. Sort by Defense Value");
-            Console.WriteLine($"4. Change Sort Order (currently: {sortOrder})");
-            Console.WriteLine("5. Return to Inventory Menu");
+            _outputManager.Write("\nSort Options:"
+                + "\n1. Sort by Name"
+                + "\n2. Sort by Attack Value"
+                + "\n3. Sort by Defense Value"
+                + $"\n4. Change Sort Order (currently: {sortOrder})"
+                + "\n5. Return to Inventory Menu"
+                + "\n\tChoose an option: ");
+            _outputManager.Display();
 
-            Console.Write("Choose an option: ");
             var input = Console.ReadLine();
-            Console.WriteLine();
+            _outputManager.WriteLine();
 
             switch (input)
             {
@@ -139,10 +141,9 @@ public class InventoryManager
                 case "5":
                     return;
                 default:
-                    Console.WriteLine("Invalid option. Try again.\n");
+                    _outputManager.WriteLine("Invalid option. Try again.\n");
                     break;
             }
-
         }
     }
     private void SortByName()
@@ -178,84 +179,113 @@ public class InventoryManager
         decimal currentCarryingWeight = player.Inventory.Items.Sum(i => i.Weight);
         decimal weightAvailable = player.Inventory.Capacity - currentCarryingWeight;
 
-        Console.WriteLine($"\nCapacity: {currentCarryingWeight} / {player.Inventory.Capacity}\n");
+        _outputManager.WriteLine($"\nCapacity: {currentCarryingWeight} / {player.Inventory.Capacity}\n");
         var equippableItems = items
             .Where(i => i.Weight <= weightAvailable)
             .Where(i => i.InventoryId == null)
             .ToList();
 
         if (!equippableItems.Any())
-            Console.WriteLine("No equippable items available.\n");
+            _outputManager.WriteLine("No equippable items available.\n");
+
+        _outputManager.Display();
 
         ListItems(equippableItems);
     }
     public void AddItemToInventory()
     {
-        Console.Write("\nEnter the name of the item to add to your inventory: ");
+        _outputManager.Write("\nEnter the name of the item to add to your inventory: ");
+        _outputManager.Display();
         string itemName = Console.ReadLine();
-        Console.WriteLine();
+        _outputManager.WriteLine();
 
         var itemToAdd = items.FirstOrDefault(i => i.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase));
         if (itemToAdd != null)
         {
-            player.Inventory.AddItem(itemToAdd);
-            _context.UpdateInventory(player.Inventory);
+            try
+            {
+                player.Inventory.AddItem(itemToAdd);
+                _context.UpdateInventory(player.Inventory);
+                _outputManager.WriteLine($"Item {itemToAdd.Name} added to inventory.\n");
+            }
+            catch (Exception ex) when (ex is DuplicateItemException || ex is OverweightException || ex is InventoryException)
+            {
+                _outputManager.WriteLine(ex.Message);
+                _outputManager.WriteLine($"Item {itemToAdd.Name} not added to inventory.\n");
+            }
         }
         else
         {
-            Console.WriteLine($"Item {itemName} not found.\n");
+            _outputManager.WriteLine($"Item {itemName} not found.\n");
         }
+        _outputManager.Display();
     }
     public void RemoveItemFromInventory()
     {
-        Console.WriteLine();
+        _outputManager.WriteLine();
         for (int i = 0; i < player.Inventory.Items.ToList().Count; i++)
         {
-            Console.WriteLine($"{i + 1}. {player.Inventory.Items.ToList()[i].Name}");
+            _outputManager.WriteLine($"{i + 1}. {player.Inventory.Items.ToList()[i].Name}");
         }
-        while (true)
-        {
-            Console.Write("\nEnter the number of the item to remove from your inventory (-1 to quit): ");
-            string input = Console.ReadLine();
+        
+        _outputManager.Write("\nWhich item would you like to remove: ");
+        _outputManager.Display();
+        string input = Console.ReadLine();
 
-            if (int.TryParse(input, out int index) && index > 0 && index <= player.Inventory.Items.Count)
+        bool isNumber = int.TryParse(input, out int index);
+        try
+        {
+            if ((isNumber) && (index > 0 && index <= player.Inventory.Items.Count))
             {
                 var itemToRemove = player.Inventory.Items.ToList()[index - 1];
                 player.Inventory.RemoveItem(itemToRemove);
+                _outputManager.WriteLine($"Item {itemToRemove.Name} removed from inventory.\n");
                 _context.UpdateInventory(player.Inventory);
-                Console.WriteLine();
-                return;
-            }
-            else if (index == -1)
-            {
-                Console.WriteLine("Operation cancelled.");
-                return;
             }
             else
             {
-                Console.WriteLine("Invalid input. Please try again.");
+                player.Inventory.RemoveItem(input);
+                _outputManager.WriteLine($"Item {input} removed from inventory.\n");
+                _context.UpdateInventory(player.Inventory);
             }
         }
+        catch (ItemNotFoundException ex)
+        {
+            _outputManager.WriteLine(ex.Message);
+        }
+        _outputManager.WriteLine();
+        _outputManager.Display();
+        
     }
     private void ListItems<T>(List<T> itemList) where T : Item
     {
         foreach (var item in itemList)
         {
-            Console.Write($"\t{item.Name}");
+            _outputManager.Write($"\t{item.Name}", ConsoleColor.Yellow);
 
             if (item is Weapon weapon)
-                Console.Write($", Attack Power: {weapon.AttackPower}");
+            {
+                _outputManager.Write(", Attack Power: ");
+                _outputManager.Write(weapon.AttackPower.ToString(), ConsoleColor.Red);
+            }
             else if (item is Armor armor)
-                Console.Write($", Defense Power: {armor.DefensePower}");
+            {
+                _outputManager.Write(", Defense Power: ");
+                _outputManager.Write(armor.DefensePower.ToString(), ConsoleColor.Green);
+            }
 
-            Console.Write($", Weight: {item.Weight}");
+            _outputManager.Write(", Weight: ");
+            _outputManager.Write(item.Weight.ToString(), ConsoleColor.Magenta);
 
             if (item.Inventory != null)
-                Console.Write($", Held by: {item.Inventory.Player.Name}");
+            {
+                _outputManager.Write(", Held by: ");
+                _outputManager.Write(item.Inventory.Player.Name, ConsoleColor.Cyan);
+            }
 
-            Console.WriteLine();
+            _outputManager.WriteLine();
         }
 
-        Console.WriteLine();
+        _outputManager.WriteLine();
     }
 }

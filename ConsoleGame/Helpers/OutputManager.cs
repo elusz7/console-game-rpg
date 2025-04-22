@@ -35,6 +35,11 @@ public class OutputManager
         _outputBuffer.Add((message + Environment.NewLine, color));
     }
 
+    public void WriteLine()
+    {
+        _outputBuffer.Add((Environment.NewLine, ConsoleColor.White));
+    }
+
     private static void WriteColorToConsole(string message, ConsoleColor color)
     {
         Console.ForegroundColor = color; // Set the text color

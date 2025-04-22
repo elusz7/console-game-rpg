@@ -48,6 +48,7 @@ public static class Startup
         services.AddTransient<GameEngine>();
         services.AddTransient<MenuManager>();
         services.AddTransient<InventoryManager>();
+        services.AddTransient<CharacterManager>();
         services.AddSingleton<OutputManager>();
     }
 }
