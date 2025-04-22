@@ -7,11 +7,12 @@ using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Services;
 
-public class GameEngine(GameContext context, MenuManager menuManager, OutputManager outputManager, InventoryManager inventoryManager)
+public class GameEngine(GameContext context, MenuManager menuManager, OutputManager outputManager, CharacterManager characterManager, InventoryManager inventoryManager)
 {
     private readonly GameContext _context = context;
     private readonly MenuManager _menuManager = menuManager;
     private readonly OutputManager _outputManager = outputManager;
+    private readonly CharacterManager _characterManager = characterManager;
     private readonly InventoryManager _inventoryManager = inventoryManager;
 
     private IPlayer? _player;
@@ -31,10 +32,11 @@ public class GameEngine(GameContext context, MenuManager menuManager, OutputMana
 
         while (true)
         {
-            _outputManager.WriteLine("Choose an action:", ConsoleColor.Cyan);
+            _outputManager.WriteLine("Main Menu:", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. Attack");
             _outputManager.WriteLine("2. Inventory Management");
-            _outputManager.WriteLine("3. Quit");
+            _outputManager.WriteLine("3. Character Management");
+            _outputManager.WriteLine("4. Quit");
 
             _outputManager.Display();
 
@@ -49,6 +51,9 @@ public class GameEngine(GameContext context, MenuManager menuManager, OutputMana
                     _inventoryManager.InventoryMenu(_player);
                     break;
                 case "3":
+                    _characterManager.CharacterMenu();
+                    break;
+                case "4":
                     _outputManager.WriteLine("Exiting game...", ConsoleColor.Red);
                     _outputManager.Display();
                     Environment.Exit(0);
