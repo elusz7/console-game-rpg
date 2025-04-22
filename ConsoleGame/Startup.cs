@@ -49,6 +49,7 @@ public static class Startup
         services.AddTransient<MenuManager>();
         services.AddTransient<InventoryManager>();
         services.AddTransient<CharacterManager>();
+        services.AddSingleton<InputManager>();
         services.AddSingleton<OutputManager>();
     }
 }

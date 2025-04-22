@@ -6,9 +6,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.Helpers;
 
-public class InventoryManager(GameContext context, OutputManager outputManager)
+public class InventoryManager(GameContext context, InputManager inputManager, OutputManager outputManager)
 {
     private readonly GameContext _context = context;
+    private readonly InputManager _inputManager = inputManager;
     private readonly OutputManager _outputManager = outputManager;
 
     private Player player;
@@ -37,7 +38,7 @@ public class InventoryManager(GameContext context, OutputManager outputManager)
 
             _outputManager.Write("Choose an option: ");
             _outputManager.Display();
-            var input = Console.ReadLine();
+            var input = _inputManager.ReadString();
 
             switch (input)
             {
@@ -71,7 +72,8 @@ public class InventoryManager(GameContext context, OutputManager outputManager)
     public void SearchItemByName()
     {
         _outputManager.Write("\nEnter item name to search: ");
-        string itemName = Console.ReadLine();
+        _outputManager.Display();
+        string itemName = _inputManager.ReadString();
 
         var itemsFound = items
             .Where(i => i.Name.Contains(itemName, StringComparison.OrdinalIgnoreCase))
@@ -92,7 +94,7 @@ public class InventoryManager(GameContext context, OutputManager outputManager)
         string category;
         _outputManager.Write("\nWeapon or Armor? ");
         _outputManager.Display();
-        category = Console.ReadLine().ToLower();
+        category = _inputManager.ReadString().ToLower();
 
         if (category == "weapon")
         {
@@ -121,7 +123,7 @@ public class InventoryManager(GameContext context, OutputManager outputManager)
                 + "\n\tChoose an option: ");
             _outputManager.Display();
 
-            var input = Console.ReadLine();
+            var input = _inputManager.ReadString();
             _outputManager.WriteLine();
 
             switch (input)
@@ -196,7 +198,7 @@ public class InventoryManager(GameContext context, OutputManager outputManager)
     {
         _outputManager.Write("\nEnter the name of the item to add to your inventory: ");
         _outputManager.Display();
-        string itemName = Console.ReadLine();
+        string itemName = _inputManager.ReadString();
         _outputManager.WriteLine();
 
         var itemToAdd = items.FirstOrDefault(i => i.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase));
@@ -230,7 +232,7 @@ public class InventoryManager(GameContext context, OutputManager outputManager)
         
         _outputManager.Write("\nWhich item would you like to remove: ");
         _outputManager.Display();
-        string input = Console.ReadLine();
+        string input = _inputManager.ReadString();
 
         bool isNumber = int.TryParse(input, out int index);
         try
