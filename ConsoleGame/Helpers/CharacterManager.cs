@@ -5,11 +5,12 @@ using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Helpers;
 
-public class CharacterManager(GameContext context, InputManager inputManager, OutputManager outputManager)
+public class CharacterManager(GameContext context, InputManager inputManager, OutputManager outputManager, InventoryManager inventoryManager)
 {
     private readonly GameContext _context = context;
     private readonly InputManager _inputManager = inputManager;
     private readonly OutputManager _outputManager = outputManager;
+    private readonly InventoryManager _inventoryManager = inventoryManager;
 
     private List<Player> characters;
 
@@ -41,7 +42,7 @@ public class CharacterManager(GameContext context, InputManager inputManager, Ou
                     AddCharacter();
                     break;
                 case "6":
-                    _outputManager.Clear();
+                    _outputManager.WriteLine();
                     return;
                 default:
                     _outputManager.Write("Invalid choice. Please try again.");
@@ -116,25 +117,8 @@ public class CharacterManager(GameContext context, InputManager inputManager, Ou
         _outputManager.Display();
         int capacity = _inputManager.ReadInt();
 
-        _outputManager.Write($"\nWould you like to assign {name} some starting abilities? (y/n) ");
-        _outputManager.Display();
-        string assignAbilities = _inputManager.ReadString().ToLower();
-
-        if (assignAbilities == "y")
-            _outputManager.Write("TO BE ADDED LATER");
-        else
-            _outputManager.Write("No abilities assigned. Abilities can be added later through the main menu.");
-
         List<Ability> abilities = new List<Ability>();
-        _outputManager.Write($"\nWould you like to assign {name} some starting items? (y/n) ");
-        _outputManager.Display();
-        string assignItems = _inputManager.ReadString().ToLower();
-
         List<Item> items = new List<Item>();
-        if (assignItems == "y")
-            _outputManager.Write("TO BE ADDED LATER");
-        else
-            _outputManager.Write("No items assigned. Items can be added later through the main menu.\n");
 
         Player newCharacter = new Player
         {
@@ -149,12 +133,29 @@ public class CharacterManager(GameContext context, InputManager inputManager, Ou
             },
             Abilities = abilities
         };
+
         _context.Players.Add(newCharacter);
         _context.SaveChanges();
 
         characters.Add(newCharacter);
 
-        _outputManager.WriteLine();
+        _outputManager.Write($"\nWould you like to assign {name} some starting abilities? (y/n) ");
+        _outputManager.Display();
+        string assignAbilities = _inputManager.ReadString().ToLower();
+        if (assignAbilities == "y")
+            _outputManager.Write("TO BE ADDED LATER");
+        else
+            _outputManager.WriteLine("No abilities assigned. Abilities can be added later through the main menu.");
+        
+        _outputManager.Write($"\nWould you like to assign {name} some starting items? (y/n) ");
+        _outputManager.Display();
+        string assignItems = _inputManager.ReadString().ToLower();
+        if (assignItems == "y")
+            _inventoryManager.InventoryMainMenu("Character Menu", newCharacter);
+        else
+            _outputManager.WriteLine("No items assigned. Items can be added later through the main menu.\n");
+
+        _outputManager.WriteLine($"New Character [{name}] added successfully!\n");
         _outputManager.Display();
     }
 }

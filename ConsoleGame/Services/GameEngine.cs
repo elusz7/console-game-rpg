@@ -7,10 +7,11 @@ using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Services;
 
-public class GameEngine(GameContext context, MenuManager menuManager, OutputManager outputManager, CharacterManager characterManager, InventoryManager inventoryManager)
+public class GameEngine(GameContext context, MenuManager menuManager, InputManager inputManager, OutputManager outputManager, CharacterManager characterManager, InventoryManager inventoryManager)
 {
     private readonly GameContext _context = context;
     private readonly MenuManager _menuManager = menuManager;
+    private readonly InputManager _inputManager = inputManager;
     private readonly OutputManager _outputManager = outputManager;
     private readonly CharacterManager _characterManager = characterManager;
     private readonly InventoryManager _inventoryManager = inventoryManager;
@@ -33,14 +34,14 @@ public class GameEngine(GameContext context, MenuManager menuManager, OutputMana
         while (true)
         {
             _outputManager.WriteLine("Main Menu:", ConsoleColor.Cyan);
-            _outputManager.WriteLine("1. Attack");
-            _outputManager.WriteLine("2. Inventory Management");
-            _outputManager.WriteLine("3. Character Management");
-            _outputManager.WriteLine("4. Quit");
-
+            _outputManager.Write("1. Attack"
+                + "\n2. Inventory Management"
+                + "\n3. Character Management"
+                + "\n4. Quit"
+                + "\n\tSelect an option:");
             _outputManager.Display();
 
-            var input = Console.ReadLine();
+            var input = _inputManager.ReadString();
 
             switch (input)
             {
@@ -48,10 +49,12 @@ public class GameEngine(GameContext context, MenuManager menuManager, OutputMana
                     AttackCharacter();
                     break;
                 case "2":
-                    _inventoryManager.InventoryMenu(_player);
+                    _inventoryManager.InventoryMainMenu("Main Menu");
+                    _outputManager.Clear();
                     break;
                 case "3":
                     _characterManager.CharacterMenu();
+                    _outputManager.Clear();
                     break;
                 case "4":
                     _outputManager.WriteLine("Exiting game...", ConsoleColor.Red);
