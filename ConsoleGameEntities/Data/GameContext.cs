@@ -87,9 +87,6 @@ namespace ConsoleGameEntities.Data
         public void UpdateInventory(Inventory inventory)
         {
             Inventories.Update(inventory);
-            //Player player = Players.Find(inventory.PlayerId);
-            //Players.Update(player);
-            //Items.UpdateRange(inventory.Items);
             SaveChanges();
         }
     }

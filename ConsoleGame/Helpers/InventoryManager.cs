@@ -1,5 +1,4 @@
-﻿using ConsoleGame.Services;
-using ConsoleGameEntities.Data;
+﻿using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Models.Characters;
 using ConsoleGameEntities.Models.Items;
 using Microsoft.EntityFrameworkCore;
@@ -10,18 +9,20 @@ public class InventoryManager
 {
     private readonly GameContext _context;
     private Player player;
-    private List<Item> itemList;
     private static string sortOrder = "asc";
+    private List<Item> items;
 
     public InventoryManager(GameContext context)
     {
         _context = context;
-        itemList = _context.Items.ToList();
     }
 
     public void InventoryMenu(IPlayer character)
     {
         player = (Player)character;
+        items = _context.Items
+            .Include(i => i.Inventory)
+            .ThenInclude(inv => inv.Player).ToList();
 
         Console.Clear();
 
@@ -68,64 +69,42 @@ public class InventoryManager
             }
         }
     }
-
     public void SearchItemByName()
     {
         Console.Write("\nEnter item name to search: ");
         string itemName = Console.ReadLine();
 
-        var itemsFound = itemList
+        var itemsFound = items
             .Where(i => i.Name.Contains(itemName, StringComparison.OrdinalIgnoreCase))
             .ToList();
 
         if (!itemsFound.Any())
-            Console.WriteLine("\nNo items found");
-
-        foreach (var item in itemsFound)
         {
-            Console.WriteLine($"\tItem Name: {item.Name}, Type: {item.ItemType}");
+            Console.WriteLine("\nNo items found\n");
         }
-
-        Console.WriteLine();
+        else
+        {
+            ListItems(itemsFound);
+        }
     }
+
     public void ListItemsByType()
     {
-        string[] validTypes = { "Weapon", "Armor", "weapon", "armor" };
         string category;
-        while (true)
-        {
-            Console.Write("\nWeapon or Armor? ");
-            category = Console.ReadLine();
+        Console.Write("\nWeapon or Armor? ");
+        category = Console.ReadLine().ToLower();
 
-            if (!validTypes.Contains(category))
-            {
-                Console.WriteLine("Invalid category. Please enter 'Weapon' or 'Armor'.");
-                continue;
-            }
-            else
-            {
-                break;
-            }
+        if (category == "weapon")
+        {
+            ListItems(items.OfType<Weapon>().ToList());
         }
-
-        switch (category.ToLower())
+        else if (category == "armor")
         {
-            case "weapon":
-                var weapons = itemList.OfType<Weapon>().ToList();
-                foreach (var weapon in weapons)
-                {
-                    Console.WriteLine($"\tWeapon Name: {weapon.Name}, AttackPower: {weapon.AttackPower}");
-                }
-                Console.WriteLine();
-                break;
-            case "armor":
-                var armors = itemList.OfType<Armor>().ToList();
-                foreach (var armor in armors)
-                {
-                    Console.WriteLine($"\tArmor Name: {armor.Name}, DefensePower: {armor.DefensePower}");
-                }
-                Console.WriteLine();
-                break;
+            ListItems(items.OfType<Armor>().ToList());
+        }
+        else
+        {
+            Console.WriteLine("Invalid category.\n");
         }
     }
     public void SortItems()
@@ -168,51 +147,31 @@ public class InventoryManager
     }
     private void SortByName()
     {
-        List<Item> sorted;
-        if (sortOrder == "asc")
-        {
-            sorted = itemList.OrderBy(i => i.Name).ToList();
-        }
-        else
-        {
-            sorted = itemList.OrderByDescending(i => i.Name).ToList();
-        }
-        foreach (var item in sorted)
-        {
-            Console.WriteLine($"\tItem Name: {item.Name}, Type: {item.ItemType}");
-        }
+        var sortedItems = sortOrder == "asc"
+            ? items.OrderBy(i => i.Name).ToList()
+            : items.OrderByDescending(i => i.Name).ToList();
+
+        ListItems(sortedItems);
     }
     private void SortByAttack()
     {
-        List<Weapon> sorted;
-        if (sortOrder == "asc")
-        {
-            sorted = itemList.OfType<Weapon>().OrderBy(w => w.AttackPower).ToList();
-        }
-        else
-        {
-            sorted = itemList.OfType<Weapon>().OrderByDescending(w => w.AttackPower).ToList();
-        }
-        foreach (var item in sorted)
-        {
-            Console.WriteLine($"\tItem Name: {item.Name}, AttackPower: {item.AttackPower}");
-        }
+        var weapons = items.OfType<Weapon>().ToList();
+        
+        var sortedWeapons = sortOrder == "asc"
+            ? weapons.OrderBy(w => w.AttackPower).ToList()
+            : weapons.OrderByDescending(w => w.AttackPower).ToList();
+
+        ListItems(sortedWeapons);
     }
     private void SortByDefense()
     {
-        List<Armor> sorted;
-        if (sortOrder == "asc")
-        {
-            sorted = itemList.OfType<Armor>().OrderBy(w => w.DefensePower).ToList();
-        }
-        else
-        {
-            sorted = itemList.OfType<Armor>().OrderByDescending(w => w.DefensePower).ToList();
-        }
-        foreach (var item in sorted)
-        {
-            Console.WriteLine($"\tItem Name: {item.Name}, DefensePower: {item.DefensePower}");
-        }
+        var armors = items.OfType<Armor>().ToList();
+
+        var sortedArmors = sortOrder == "asc"
+            ? armors.OrderBy(a => a.DefensePower).ToList()
+            : armors.OrderByDescending(a => a.DefensePower).ToList();
+
+        ListItems(sortedArmors);
     }
     public void ListEquippableItems()
     {
@@ -220,19 +179,15 @@ public class InventoryManager
         decimal weightAvailable = player.Inventory.Capacity - currentCarryingWeight;
 
         Console.WriteLine($"\nCapacity: {currentCarryingWeight} / {player.Inventory.Capacity}\n");
-        var equippableItems = itemList
+        var equippableItems = items
             .Where(i => i.Weight <= weightAvailable)
-            .Where(i => i.InventoryId != player.Inventory.Id)
+            .Where(i => i.InventoryId == null)
             .ToList();
 
         if (!equippableItems.Any())
             Console.WriteLine("No equippable items available.\n");
 
-        foreach (var item in equippableItems)
-        {
-            Console.WriteLine($"\tItem Name: {item.Name}, Type: {item.ItemType}, Weight: {item.Weight}");
-        }
-        Console.WriteLine();
+        ListItems(equippableItems);
     }
     public void AddItemToInventory()
     {
@@ -240,7 +195,7 @@ public class InventoryManager
         string itemName = Console.ReadLine();
         Console.WriteLine();
 
-        var itemToAdd = itemList.FirstOrDefault(i => i.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase));
+        var itemToAdd = items.FirstOrDefault(i => i.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase));
         if (itemToAdd != null)
         {
             player.Inventory.AddItem(itemToAdd);
@@ -248,11 +203,9 @@ public class InventoryManager
         }
         else
         {
-            Console.WriteLine($"Item {itemName} not found.");
+            Console.WriteLine($"Item {itemName} not found.\n");
         }
-        Console.WriteLine();
     }
-
     public void RemoveItemFromInventory()
     {
         Console.WriteLine();
@@ -260,19 +213,49 @@ public class InventoryManager
         {
             Console.WriteLine($"{i + 1}. {player.Inventory.Items.ToList()[i].Name}");
         }
-        Console.Write("\nEnter the number of the item to remove from your inventory: ");
-        string input = Console.ReadLine();
-
-        if (int.TryParse(input, out int index) && index > 0 && index <= player.Inventory.Items.Count)
+        while (true)
         {
-            var itemToRemove = player.Inventory.Items.ToList()[index - 1];
-            player.Inventory.RemoveItem(itemToRemove);
-            _context.UpdateInventory(player.Inventory);
+            Console.Write("\nEnter the number of the item to remove from your inventory (-1 to quit): ");
+            string input = Console.ReadLine();
+
+            if (int.TryParse(input, out int index) && index > 0 && index <= player.Inventory.Items.Count)
+            {
+                var itemToRemove = player.Inventory.Items.ToList()[index - 1];
+                player.Inventory.RemoveItem(itemToRemove);
+                _context.UpdateInventory(player.Inventory);
+                Console.WriteLine();
+                return;
+            }
+            else if (index == -1)
+            {
+                Console.WriteLine("Operation cancelled.");
+                return;
+            }
+            else
+            {
+                Console.WriteLine("Invalid input. Please try again.");
+            }
+        }
+    }
+    private void ListItems<T>(List<T> itemList) where T : Item
+    {
+        foreach (var item in itemList)
+        {
+            Console.Write($"\t{item.Name}");
+
+            if (item is Weapon weapon)
+                Console.Write($", Attack Power: {weapon.AttackPower}");
+            else if (item is Armor armor)
+                Console.Write($", Defense Power: {armor.DefensePower}");
+
+            Console.Write($", Weight: {item.Weight}");
+
+            if (item.Inventory != null)
+                Console.Write($", Held by: {item.Inventory.Player.Name}");
+
             Console.WriteLine();
         }
-        else
-        {
-            Console.WriteLine("Invalid input. Please try again.");
-        }
+
+        Console.WriteLine();
     }
 }
