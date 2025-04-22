@@ -1,4 +1,5 @@
 ﻿using ConsoleGame.Services;
+using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Models.Characters;
 using ConsoleGameEntities.Models.Items;
 using Microsoft.EntityFrameworkCore;
@@ -7,14 +8,20 @@ namespace ConsoleGame.Helpers;
 
 public class InventoryManager
 {
+    private readonly GameContext _context;
     private Player player;
     private List<Item> itemList;
     private static string sortOrder = "asc";
 
-    public void InventoryMenu(IPlayer character, List<Item> items, GameEngine home)
+    public InventoryManager(GameContext context)
+    {
+        _context = context;
+        itemList = _context.Items.ToList();
+    }
+
+    public void InventoryMenu(IPlayer character)
     {
         player = (Player)character;
-        itemList = items;
 
         Console.Clear();
 
@@ -237,6 +244,7 @@ public class InventoryManager
         if (itemToAdd != null)
         {
             player.Inventory.AddItem(itemToAdd);
+            _context.UpdateInventory(player.Inventory);
         }
         else
         {
@@ -259,6 +267,7 @@ public class InventoryManager
         {
             var itemToRemove = player.Inventory.Items.ToList()[index - 1];
             player.Inventory.RemoveItem(itemToRemove);
+            _context.UpdateInventory(player.Inventory);
             Console.WriteLine();
         }
         else

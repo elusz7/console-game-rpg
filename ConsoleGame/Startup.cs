@@ -1,5 +1,4 @@
-﻿using Castle.Core.Configuration;
-using ConsoleGame.Helpers;
+﻿using ConsoleGame.Helpers;
 using ConsoleGame.Services;
 using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Helpers;

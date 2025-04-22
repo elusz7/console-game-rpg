@@ -62,6 +62,36 @@ namespace ConsoleGameEntities.Data
             base.OnModelCreating(modelBuilder);
         }
 
+        public void UpdatePlayer(Player player)
+        {
+            Players.Update(player);
+            SaveChanges();
+        }
+        public void UpdateMonster(Monster monster)
+        {
+            Monsters.Update(monster);
+            SaveChanges();
+        }
+        public void UpdateAbility(Ability ability)
+        {
+            Abilities.Update(ability);
+            List<Player> players = Players.Where(p => p.Abilities.Contains(ability)).ToList();
+            Players.UpdateRange(players);
+            SaveChanges();
+        }
+        public void UpdateItem(Item item)
+        {
+            Items.Update(item);
+            SaveChanges();
+        }
+        public void UpdateInventory(Inventory inventory)
+        {
+            Inventories.Update(inventory);
+            //Player player = Players.Find(inventory.PlayerId);
+            //Players.Update(player);
+            //Items.UpdateRange(inventory.Items);
+            SaveChanges();
+        }
     }
 }
 

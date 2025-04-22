@@ -54,7 +54,7 @@ public class GameEngine
                     AttackCharacter();
                     break;
                 case "2":
-                    _inventoryManager.InventoryMenu(_player, _context.Items.OfType<Item>().ToList(), this);
+                    _inventoryManager.InventoryMenu(_player);
                     break;
                 case "3":
                     _outputManager.WriteLine("Exiting game...", ConsoleColor.Red);

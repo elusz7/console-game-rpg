@@ -14,9 +14,7 @@ public class Inventory
     public int Capacity { get; set; }
     public int PlayerId { get; set; }
     public virtual Player Player { get; set; }
-
     public virtual ICollection<Item> Items { get; set; } = new List<Item>();
-
 
     //adding, using, equipping, and removing items 
     public void AddItem(Item item)
@@ -29,7 +27,11 @@ public class Inventory
 
         decimal wiggleRoom = Capacity - currentCarryingWeight;
 
-        if (item.Weight <= wiggleRoom)
+        if (Items.Contains(item))
+        {
+            Console.Error.WriteLine($"You already have {item.Name} in your inventory.");
+        }
+        else if (item.Weight <= wiggleRoom)
         {
             Items.Add(item);
             Console.WriteLine($"You have added {item.Name} to your inventory.");
