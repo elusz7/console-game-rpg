@@ -30,7 +30,7 @@ namespace ConsoleGameEntities.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Gold = table.Column<int>(type: "int", nullable: false),
-                    Capacity = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Capacity = table.Column<int>(type: "int", nullable: false),
                     PlayerId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -150,6 +150,12 @@ namespace ConsoleGameEntities.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Items");
+
+            migrationBuilder.DropTable(
+                name: "Inventories");
+
             migrationBuilder.DropTable(
                 name: "Monsters");
 

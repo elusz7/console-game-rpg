@@ -7,7 +7,7 @@ SET IDENTITY_INSERT Players OFF;
 SET IDENTITY_INSERT Inventories ON;
 INSERT INTO Inventories (Id, Gold, Capacity, PlayerId)
 VALUES
-    (1, 100, 34.7, 1);
+    (1, 100, 34, 1);
 SET IDENTITY_INSERT Inventories OFF;
 
 SET IDENTITY_INSERT Monsters ON;
