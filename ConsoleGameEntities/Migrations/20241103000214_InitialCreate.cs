@@ -30,7 +30,7 @@ namespace ConsoleGameEntities.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Gold = table.Column<int>(type: "int", nullable: false),
-                    Capacity = table.Column<int>(type: "int", nullable: false),
+                    Capacity = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     PlayerId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>

@@ -7,7 +7,7 @@ public class Inventory
 {
     public int Id { get; set; }
     public int Gold { get; set; }
-    public int Capacity { get; set; }
+    public decimal Capacity { get; set; }
     public int PlayerId { get; set; }
     public virtual Player Player { get; set; }
     public virtual ICollection<Item> Items { get; set; } = new List<Item>();

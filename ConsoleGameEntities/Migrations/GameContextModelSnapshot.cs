@@ -124,8 +124,8 @@ namespace ConsoleGameEntities.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int>("Capacity")
-                        .HasColumnType("int");
+                    b.Property<decimal>("Capacity")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("Gold")
                         .HasColumnType("int");
@@ -168,8 +168,11 @@ namespace ConsoleGameEntities.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double>("Value")
-                        .HasColumnType("float");
+                    b.Property<decimal>("Weight")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Value")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 

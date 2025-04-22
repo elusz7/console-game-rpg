@@ -49,6 +49,10 @@ namespace ConsoleGameEntities.Data
                 .HasForeignKey<Inventory>(i => i.PlayerId);
 
             modelBuilder.Entity<Inventory>()
+                .Property(i => i.Capacity)
+                .HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<Inventory>()
                 .HasMany(i => i.Items)
                 .WithOne(item => item.Inventory)
                 .HasForeignKey(item => item.InventoryId);
