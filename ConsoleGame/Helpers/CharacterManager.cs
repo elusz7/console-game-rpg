@@ -1,5 +1,7 @@
 ﻿using ConsoleGameEntities.Data;
+using ConsoleGameEntities.Models.Abilities;
 using ConsoleGameEntities.Models.Characters;
+using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Helpers;
 
@@ -35,7 +37,9 @@ public class CharacterManager(GameContext context, InputManager inputManager, Ou
                 case "1":
                     ListCharacters(characters);
                     break;
-
+                case "2":
+                    AddCharacter();
+                    break;
                 case "6":
                     _outputManager.Clear();
                     return;
@@ -75,6 +79,80 @@ public class CharacterManager(GameContext context, InputManager inputManager, Ou
 
             _outputManager.WriteLine();
         }
+
+        _outputManager.WriteLine();
+        _outputManager.Display();
+    }
+
+    public void AddCharacter()
+    {
+        _outputManager.Write("\nEnter character name: ");
+        _outputManager.Display();
+        string name = _inputManager.ReadString();
+
+        _outputManager.Write("Enter character's starting health: ");
+        _outputManager.Display();
+        int health = _inputManager.ReadInt();
+
+        while (health < 0)
+        {
+            _outputManager.Write("\tInvalid input. Please enter a positive number: ");
+            _outputManager.Display();
+            health = _inputManager.ReadInt();
+        }
+
+        _outputManager.Write("Enter character's starting gold: ");
+        _outputManager.Display();
+        int gold = _inputManager.ReadInt();
+        
+        while (gold == -1)
+        {
+            _outputManager.Write("\tInvalid input. Please enter a positive number: ");
+            _outputManager.Display();
+            gold = _inputManager.ReadInt();
+        }
+
+        _outputManager.Write("Enter character's weight carrying capacity: ");
+        _outputManager.Display();
+        int capacity = _inputManager.ReadInt();
+
+        _outputManager.Write($"\nWould you like to assign {name} some starting abilities? (y/n) ");
+        _outputManager.Display();
+        string assignAbilities = _inputManager.ReadString().ToLower();
+
+        if (assignAbilities == "y")
+            _outputManager.Write("TO BE ADDED LATER");
+        else
+            _outputManager.Write("No abilities assigned. Abilities can be added later through the main menu.");
+
+        List<Ability> abilities = new List<Ability>();
+        _outputManager.Write($"\nWould you like to assign {name} some starting items? (y/n) ");
+        _outputManager.Display();
+        string assignItems = _inputManager.ReadString().ToLower();
+
+        List<Item> items = new List<Item>();
+        if (assignItems == "y")
+            _outputManager.Write("TO BE ADDED LATER");
+        else
+            _outputManager.Write("No items assigned. Items can be added later through the main menu.\n");
+
+        Player newCharacter = new Player
+        {
+            Name = name,
+            Health = health,
+            Experience = 0,
+            Inventory = new Inventory
+            {
+                Gold = gold,
+                Capacity = capacity,
+                Items = items
+            },
+            Abilities = abilities
+        };
+        _context.Players.Add(newCharacter);
+        _context.SaveChanges();
+
+        characters.Add(newCharacter);
 
         _outputManager.WriteLine();
         _outputManager.Display();

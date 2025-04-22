@@ -1,8 +1,8 @@
-﻿using ConsoleGameEntities.Models.Abilities.PlayerAbilities;
-using ConsoleGameEntities.Models.Characters;
+﻿using ConsoleGameEntities.Models.Characters;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Characters.Monsters;
 using Microsoft.EntityFrameworkCore;
+using ConsoleGameEntities.Models.Abilities;
 
 namespace ConsoleGameEntities.Data
 {

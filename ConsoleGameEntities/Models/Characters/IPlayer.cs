@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using ConsoleGameEntities.Models.Abilities.PlayerAbilities;
+using ConsoleGameEntities.Models.Abilities;
 using ConsoleGameEntities.Models.Attributes;
 using ConsoleGameEntities.Models.Items;
 
