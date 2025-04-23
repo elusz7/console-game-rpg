@@ -38,7 +38,7 @@ public class GameEngine(GameContext context, MenuManager menuManager, InputManag
                 + "\n2. Inventory Management"
                 + "\n3. Character Management"
                 + "\n4. Quit"
-                + "\n\tSelect an option:");
+                + "\n\tSelect an option: ");
             _outputManager.Display();
 
             var input = _inputManager.ReadString();
@@ -53,7 +53,7 @@ public class GameEngine(GameContext context, MenuManager menuManager, InputManag
                     _outputManager.Clear();
                     break;
                 case "3":
-                    _characterManager.CharacterMenu();
+                    _characterManager.CharacterMainMenu();
                     _outputManager.Clear();
                     break;
                 case "4":

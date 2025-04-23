@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using ConsoleGameEntities.Models.Abilities;
+﻿using ConsoleGameEntities.Models.Abilities;
 using ConsoleGameEntities.Models.Attributes;
 using ConsoleGameEntities.Models.Characters.Monsters;
 using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Exceptions;
+using System.Text;
 
 namespace ConsoleGameEntities.Models.Characters
 {
@@ -61,7 +62,7 @@ namespace ConsoleGameEntities.Models.Characters
                 }
                 else
                 {
-                    Console.WriteLine($"{Name} does not have the ability {ability.Name}!");
+                    throw new AbilityNotFoundException($"{Name} does not have the ability [{ability.Name}]!");
                 }
             }
         }
@@ -70,8 +71,7 @@ namespace ConsoleGameEntities.Models.Characters
             if (target is Monster monster)
                 if (monster.Health <= 0)
                 {
-                    Console.WriteLine($"{target.Name} has already been defeated!");
-                    return false;
+                    throw new InvalidAttackTargetException($"Cannot attack {monster.Name}. It is already dead.");
                 }
             return true;
         }
@@ -188,8 +188,34 @@ namespace ConsoleGameEntities.Models.Characters
         }
         public override string ToString()
         {
-            return $"{Name} (Health: {Health}, Experience: {Experience})";
-        }
+            var builder = new StringBuilder();
 
+            builder.Append("Name: ");
+            builder.Append(Name);
+
+            builder.Append(", Health: ");
+            builder.Append(Health);
+
+            builder.Append(", Experience: ");
+            builder.Append(Experience);
+
+            builder.Append(", Capacity: ");
+            builder.Append(Inventory?.Capacity.ToString() ?? "N/A");
+
+            builder.Append(", Gold: ");
+            builder.Append(Inventory?.Gold.ToString() ?? "N/A");
+
+            builder.Append("\n\tAbilities: ");
+            builder.Append(Abilities != null
+                ? string.Join(", ", Abilities.Select(a => a.Name))
+                : "None");
+
+            builder.Append("\n\tInventory: ");
+            builder.Append(Inventory?.Items != null && Inventory.Items.Any()
+                ? string.Join(", ", Inventory.Items.Select(i => i.Name))
+                : "Empty");
+
+            return builder.ToString();
+        }
     }
 }

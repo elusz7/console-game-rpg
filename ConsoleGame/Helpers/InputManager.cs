@@ -3,7 +3,7 @@ public class InputManager
 {
     public int ReadInt()
     {
-        string input = Console.ReadLine();
+        string input = Console.ReadLine().Trim();
         if (int.TryParse(input, out int result))
         {
             return result;
@@ -16,7 +16,7 @@ public class InputManager
 
     public decimal ReadDecimal()
     {
-        string input = Console.ReadLine();
+        string input = Console.ReadLine().Trim();
         if (decimal.TryParse(input, out decimal result))
         {
             return result;
@@ -29,6 +29,6 @@ public class InputManager
     public string ReadString()
     {
         string input = Console.ReadLine();
-        return input;
+        return input.Trim();
     }
 }

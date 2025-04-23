@@ -12,18 +12,18 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
     private readonly InputManager _inputManager = inputManager;
     private readonly OutputManager _outputManager = outputManager;
 
-    private Player player;
+    private Player? player;
     private static string sortOrder = "ASC";
-    private List<Item> items;
+    private List<Item>? items;
     private string returnPoint;
 
-    public void InventoryMainMenu(string origin, Player character = null)
+    public void InventoryMainMenu(string origin, Player? character = null)
     {
         returnPoint = origin;
         player = character;
         items = _context.Items
             .Include(i => i.Inventory)
-            .ThenInclude(inv => inv.Player).ToList();
+            .ThenInclude(static inv => inv.Player).ToList();
 
         _outputManager.Clear();
 
@@ -58,8 +58,7 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
             }
         }
     }
-
-    public void ItemDisplayMenu()
+    private void ItemDisplayMenu()
     {
         while (true)
         {
@@ -92,7 +91,7 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
             }
         }
     }
-    public void CharacterInventoryMenu()
+    private void CharacterInventoryMenu()
     {
         if (player == null)
         {
@@ -132,7 +131,7 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
             }
         }
     }
-    public void SearchItemByName()
+    private void SearchItemByName()
     {
         _outputManager.Write("\nEnter item name to find: ");
         _outputManager.Display();
@@ -152,7 +151,7 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
             ListItems(itemsFound);
         }
     }
-    public void ListItemsByType()
+    private void ListItemsByType()
     {
         string category;
         _outputManager.Write("\nWeapon or Armor? ");
@@ -173,7 +172,7 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
             _outputManager.Display();
         }
     }
-    public void SortItems()
+    private void SortItems()
     {
         while (true)
         {
@@ -243,7 +242,7 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
 
         ListItems(sortedArmors);
     }
-    public void ListEquippableItems()
+    private void ListEquippableItems()
     {
         decimal currentCarryingWeight = player.Inventory.Items.Sum(i => i.Weight);
         decimal weightAvailable = player.Inventory.Capacity - currentCarryingWeight;
@@ -261,7 +260,7 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
 
         ListItems(equippableItems);
     }
-    public void AddItemToInventory()
+    private void AddItemToInventory()
     {
         _outputManager.Write("\nEnter the name of the item to add to your inventory: ");
         _outputManager.Display();
@@ -288,7 +287,7 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
         }
         _outputManager.Display();
     }
-    public void RemoveItemFromInventory()
+    private void RemoveItemFromInventory()
     {
         _outputManager.WriteLine();
         for (int i = 0; i < player.Inventory.Items.ToList().Count; i++)
