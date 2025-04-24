@@ -22,16 +22,12 @@ namespace ConsoleGameEntities.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configure TPH for Character hierarchy
+            //set up monsters
             modelBuilder.Entity<Monster>()
                 .HasDiscriminator<string>(m=> m.MonsterType)
                 .HasValue<Goblin>("Goblin");
 
-            // Configure TPH for Ability hierarchy
-            modelBuilder.Entity<Ability>()
-                .HasDiscriminator<string>(pa=>pa.AbilityType)
-                .HasValue<ShoveAbility>("ShoveAbility");
-
+            //set up inventory      
             modelBuilder.Entity<Item>()
                 .HasDiscriminator<string>(i => i.ItemType)
                 .HasValue<Weapon>("Weapon")
@@ -50,26 +46,32 @@ namespace ConsoleGameEntities.Data
                 .WithOne(i => i.Player)
                 .HasForeignKey<Inventory>(i => i.PlayerId);
 
-            //modelBuilder.Entity<Inventory>()
-            //    .Property(i => i.Capacity)
-            //    .HasColumnType("decimal(18,2)");
-
             modelBuilder.Entity<Inventory>()
                 .HasMany(i => i.Items)
                 .WithOne(item => item.Inventory)
                 .HasForeignKey(item => item.InventoryId);
 
-            // Configure many-to-many relationship
+            // set up abilities
+            modelBuilder.Entity<Ability>()
+                .HasDiscriminator<string>(pa => pa.AbilityType)
+                .HasValue<ShoveAbility>("ShoveAbility");
+
             modelBuilder.Entity<Player>()
                 .HasMany(p => p.Abilities)
                 .WithMany(a => a.Players)
                 .UsingEntity(j => j.ToTable("PlayerAbilities"));
 
             //set up rooms
-            modelBuilder.Entity<Room>()
-                .HasMany(r => r.Monsters)
-                .WithOne(m => m.Room)
-                .HasForeignKey(m => m.RoomId);
+            modelBuilder.Entity<Player>()
+                .HasOne(p => p.Room)
+                .WithOne(r => r.Player)
+                .HasForeignKey<Room>(r => r.PlayerId);
+
+            modelBuilder.Entity<Monster>()
+                .HasOne(m => m.Room)
+                .WithMany(r => r.Monsters)
+                .HasForeignKey(m => m.RoomId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Room>()
                 .HasOne(r => r.North)

@@ -1,4 +1,5 @@
-﻿using ConsoleGameEntities.Models.Characters.Monsters;
+﻿using ConsoleGameEntities.Models.Characters;
+using ConsoleGameEntities.Models.Characters.Monsters;
 
 namespace ConsoleGameEntities.Models.Rooms;
 
@@ -6,9 +7,11 @@ public class Room
 {
     public int Id { get; set; }
     public virtual ICollection<Monster> Monsters { get; set; } = new List<Monster>();
-    public string Name { get; }
-    public string Description { get; }
+    public string Name { get; set; }
+    public string Description { get; set; }
 
+    public int? PlayerId { get; set; }
+    public virtual Player? Player { get; set; }
     public int? NorthId { get; set; }
     public virtual Room? North { get; set; }
     public int? SouthId { get; set; }

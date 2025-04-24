@@ -1,6 +1,7 @@
 ﻿using ConsoleGame.Helpers;
 using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace ConsoleGame.Services;
 

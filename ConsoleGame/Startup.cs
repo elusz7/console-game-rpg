@@ -49,6 +49,8 @@ public static class Startup
         services.AddTransient<StartMenuManager>();
         services.AddTransient<InventoryManager>();
         services.AddTransient<CharacterManager>();
+        services.AddTransient<MapManager>();
+        services.AddTransient<RoomManager>();
         services.AddSingleton<InputManager>();
         services.AddSingleton<OutputManager>();
     }

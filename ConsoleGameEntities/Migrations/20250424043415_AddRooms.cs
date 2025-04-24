@@ -14,12 +14,6 @@ public partial class AddRooms : Migration
             type: "int",
             nullable: true);
 
-        migrationBuilder.AddColumn<int>(
-            name: "RoomId",
-            table: "Players",
-            type: "int",
-            nullable: true);
-
         migrationBuilder.CreateTable(
             name: "Rooms",
             columns: table => new
@@ -28,6 +22,7 @@ public partial class AddRooms : Migration
                     .Annotation("SqlServer:Identity", "1, 1"),
                 Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                PlayerId = table.Column<int>(type: "int", nullable: true),
                 NorthId = table.Column<int>(type: "int", nullable: true),
                 SouthId = table.Column<int>(type: "int", nullable: true),
                 WestId = table.Column<int>(type: "int", nullable: true),
@@ -36,6 +31,12 @@ public partial class AddRooms : Migration
             constraints: table =>
             {
                 table.PrimaryKey("PK_Rooms", x => x.Id);
+                table.ForeignKey(
+                    name: "FK_Rooms_Players_PlayerId",
+                    column: x => x.PlayerId,
+                    principalTable: "Players",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.NoAction);
                 table.ForeignKey(
                     name: "FK_Rooms_Rooms_EastId",
                     column: x => x.EastId,
@@ -68,9 +69,9 @@ public partial class AddRooms : Migration
             column: "RoomId");
 
         migrationBuilder.CreateIndex(
-            name: "IX_Players_RoomId",
-            table: "Players",
-            column: "RoomId");
+            name: "IX_Rooms_PlayerId",
+            table: "Rooms",
+            column: "PlayerId");
 
         migrationBuilder.CreateIndex(
             name: "IX_Rooms_EastId",
@@ -98,21 +99,6 @@ public partial class AddRooms : Migration
             column: "RoomId",
             principalTable: "Rooms",
             principalColumn: "Id");
-
-        migrationBuilder.AddForeignKey(
-            name: "FK_Players_Rooms_RoomId",
-            table: "Players",
-            column: "RoomId",
-            principalTable: "Rooms",
-            principalColumn: "Id");
-
-        //not related to rooms, but i just noticed i didn't have it before
-        migrationBuilder.AddColumn<int>(
-            name: "InventoryId",
-            table: "Players",
-            type: "int",
-            nullable: false,
-            defaultValue: 0);
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)
@@ -139,9 +125,5 @@ public partial class AddRooms : Migration
         migrationBuilder.DropColumn(
             name: "RoomId",
             table: "Monsters");
-
-        migrationBuilder.DropColumn(
-            name: "RoomId",
-            table: "Players");
     }
 }

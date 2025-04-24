@@ -16,9 +16,7 @@ namespace ConsoleGameEntities.Models.Characters
         public string Name { get; set; }
         public int Health { get; set; }
         public virtual ICollection<Ability> Abilities { get; set; } = new List<Ability>();
-        public int InventoryId { get; set; }
         public virtual Inventory Inventory { get; set; } 
-        public int? RoomId { get; set; }
         public virtual Room? Room { get; set; }
         public void Attack(ITargetable target)
         {
