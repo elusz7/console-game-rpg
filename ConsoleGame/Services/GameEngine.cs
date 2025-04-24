@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ConsoleGame.Services;
 
-public class GameEngine(GameContext context, StartMenuManager menuManager, InputManager inputManager, OutputManager outputManager, CharacterManager characterManager, InventoryManager inventoryManager)
+public class GameEngine(GameContext context, StartMenuManager menuManager, InputManager inputManager, OutputManager outputManager, CharacterManager characterManager, InventoryManager inventoryManager, RoomManager roomManager, MonsterManager monsterManager)
 {
     private readonly GameContext _context = context;
     private readonly StartMenuManager _menuManager = menuManager;
@@ -13,6 +13,8 @@ public class GameEngine(GameContext context, StartMenuManager menuManager, Input
     private readonly OutputManager _outputManager = outputManager;
     private readonly CharacterManager _characterManager = characterManager;
     private readonly InventoryManager _inventoryManager = inventoryManager;
+    private readonly RoomManager _roomManager = roomManager;
+    private readonly MonsterManager _monsterManager = monsterManager;
 
     private IPlayer? _player;
     private IMonster? _goblin;
@@ -34,7 +36,8 @@ public class GameEngine(GameContext context, StartMenuManager menuManager, Input
             _outputManager.WriteLine("Main Menu:", ConsoleColor.Cyan);
             string menuPrompt = "1. Character Management"
                 + "\n2. Inventory Management"
-                + "\n3. Quit"
+                + "\n3. Room Management"
+                + "\n4. Quit"
                 + "\n\tSelect an option: ";
 
             var input = _inputManager.ReadString(menuPrompt);
@@ -50,6 +53,10 @@ public class GameEngine(GameContext context, StartMenuManager menuManager, Input
                     _outputManager.Clear();
                     break;
                 case "3":
+                    _roomManager.RoomMainMenu();
+                    _outputManager.Clear();
+                    break;
+                case "4":
                     _outputManager.WriteLine("Exiting game...", ConsoleColor.Red);
                     _outputManager.Display();
                     Environment.Exit(0);

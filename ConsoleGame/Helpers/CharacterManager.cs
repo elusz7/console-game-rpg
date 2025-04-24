@@ -167,7 +167,7 @@ public class CharacterManager(GameContext context, InputManager inputManager, Ou
 
         int gold = _inputManager.ReadInt("Enter character's starting gold: ");
         
-        int capacity = _inputManager.ReadInt("Enter character's weight carrying capacity: ");
+        decimal capacity = _inputManager.ReadDecimal("Enter character's weight carrying capacity: ");
 
         List<Ability> abilities = new List<Ability>();
         List<Item> items = new List<Item>();
@@ -229,9 +229,12 @@ public class CharacterManager(GameContext context, InputManager inputManager, Ou
             {
                 string newName = "";
                 int newValue = -1;
+                decimal newCapacity = -1.0M;
                 
                 if (input == "name")
                     newName = _inputManager.ReadString($"\tEnter new value for {input}: ");
+                else if (input == "capacity")
+                    newCapacity = _inputManager.ReadDecimal($"\tEnter new value for {input}: ");
                 else
                     newValue = _inputManager.ReadInt($"\tEnter new value for {input}: ");
 
@@ -250,7 +253,7 @@ public class CharacterManager(GameContext context, InputManager inputManager, Ou
                         character.Inventory.Gold = newValue;
                         break;
                     case "capacity":
-                        character.Inventory.Capacity = newValue;
+                        character.Inventory.Capacity = newCapacity;
                         break;
                 }
             }

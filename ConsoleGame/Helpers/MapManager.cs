@@ -20,7 +20,7 @@ public class MapManager
 
     public void DisplayMap()
     {
-        _outputManager.WriteLine("Map:");
+        _outputManager.WriteLine("MAP", ConsoleColor.Cyan);
 
         for (var i = 0; i < gridRows; i++)
         {

@@ -51,6 +51,7 @@ public static class Startup
         services.AddTransient<CharacterManager>();
         services.AddTransient<MapManager>();
         services.AddTransient<RoomManager>();
+        services.AddTransient<MonsterManager>();
         services.AddSingleton<InputManager>();
         services.AddSingleton<OutputManager>();
     }
