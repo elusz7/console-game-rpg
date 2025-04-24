@@ -3,6 +3,7 @@ using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Characters.Monsters;
 using Microsoft.EntityFrameworkCore;
 using ConsoleGameEntities.Models.Abilities;
+using ConsoleGameEntities.Models.Rooms;
 
 namespace ConsoleGameEntities.Data
 {
@@ -13,6 +14,7 @@ namespace ConsoleGameEntities.Data
         public DbSet<Ability>? Abilities { get; set; }
         public DbSet<Item>? Items { get; set; }
         public DbSet<Inventory>? Inventories { get; set; }
+        public DbSet<Room>? Rooms { get; set; }
 
         public GameContext(DbContextOptions<GameContext> options) : base(options)
         {
@@ -62,6 +64,36 @@ namespace ConsoleGameEntities.Data
                 .HasMany(p => p.Abilities)
                 .WithMany(a => a.Players)
                 .UsingEntity(j => j.ToTable("PlayerAbilities"));
+
+            //set up rooms
+            modelBuilder.Entity<Room>()
+                .HasMany(r => r.Monsters)
+                .WithOne(m => m.Room)
+                .HasForeignKey(m => m.RoomId);
+
+            modelBuilder.Entity<Room>()
+                .HasOne(r => r.North)
+                .WithMany()
+                .HasForeignKey(r => r.NorthId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Room>()
+                .HasOne(r => r.South)
+                .WithMany()
+                .HasForeignKey(r => r.SouthId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Room>()
+                .HasOne(r => r.East)
+                .WithMany()
+                .HasForeignKey(r => r.EastId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Room>()
+                .HasOne(r => r.West)
+                .WithMany()
+                .HasForeignKey(r => r.WestId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             base.OnModelCreating(modelBuilder);
         }

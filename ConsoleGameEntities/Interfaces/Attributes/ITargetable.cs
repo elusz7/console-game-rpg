@@ -1,4 +1,4 @@
-﻿namespace ConsoleGameEntities.Models.Attributes;
+﻿namespace ConsoleGameEntities.Interfaces.Attributes;
 
 public interface ITargetable
 {

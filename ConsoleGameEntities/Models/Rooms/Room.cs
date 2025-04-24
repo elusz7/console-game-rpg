@@ -1,0 +1,47 @@
+﻿using ConsoleGameEntities.Models.Characters.Monsters;
+
+namespace ConsoleGameEntities.Models.Rooms;
+
+public class Room
+{
+    public int Id { get; set; }
+    public virtual ICollection<Monster> Monsters { get; set; } = new List<Monster>();
+    public string Name { get; }
+    public string Description { get; }
+
+    public int? NorthId { get; set; }
+    public virtual Room? North { get; set; }
+    public int? SouthId { get; set; }
+    public virtual Room? South { get; set; }
+    public int? WestId { get; set; }
+    public virtual Room? West { get; set; }
+    public int? EastId { get; set; }
+    public virtual Room? East { get; set; }
+
+    public Room() { }
+    public Room(string name, string description)
+    {
+        Name = name;
+        Description = description;
+    }
+
+    public void Enter()
+    {
+        /*_outputManager.WriteLine($"You have entered {Name}. {Description}", ConsoleColor.Green);
+        foreach (var character in Characters)
+        {
+            _outputManager.WriteLine($"{character.Name} is here.", ConsoleColor.Red);
+        }*/
+    }
+
+    public void AddMonster(Monster monster)
+    {
+        Monsters.Add(monster);
+    }
+
+    public void RemoveMonster(Monster monster)
+    {
+        Monsters.Remove(monster);
+    }
+
+}

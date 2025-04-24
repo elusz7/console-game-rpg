@@ -1,9 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Abilities;
-using ConsoleGameEntities.Models.Attributes;
 using ConsoleGameEntities.Models.Items;
 
-namespace ConsoleGameEntities.Models.Characters;
+namespace ConsoleGameEntities.Interfaces;
 
 public interface IPlayer
 {

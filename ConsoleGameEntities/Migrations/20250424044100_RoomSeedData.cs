@@ -4,7 +4,7 @@
 
 namespace ConsoleGameEntities.Migrations;
 
-public partial class InitialSeedData : BaseMigration
+public partial class RoomSeedData : BaseMigration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
     {

@@ -9,20 +9,17 @@
   <ItemGroup>
     <Compile Remove="Models\Abilities\MonsterAbilities\**" />
     <Compile Remove="Models\Characters\Npcs\**" />
-    <Compile Remove="Models\Rooms\**" />
     <EmbeddedResource Remove="Models\Abilities\MonsterAbilities\**" />
     <EmbeddedResource Remove="Models\Characters\Npcs\**" />
-    <EmbeddedResource Remove="Models\Rooms\**" />
     <None Remove="Models\Abilities\MonsterAbilities\**" />
     <None Remove="Models\Characters\Npcs\**" />
-    <None Remove="Models\Rooms\**" />
   </ItemGroup>
 
   <ItemGroup>
     <None Remove="Migrations\Scripts\InitialSeedData.rollback.sql" />
     <None Remove="Migrations\Scripts\InitialSeedData.sql" />
     <None Remove="Models\Abilities\Ability.cs~RF7a28a58b.TMP" />
-    <None Remove="Models\Attributes\ITargetable.cs~RF7fb34c69.TMP" />
+    <None Remove="Interfaces\Attributes\ITargetable.cs~RF7fb34c69.TMP" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleGameEntities.Models.Characters;
+﻿using System.Text;
 
 namespace ConsoleGameEntities.Models.Items;
 
@@ -27,9 +22,9 @@ public abstract class Item
     {
         var sb = new StringBuilder();
 
-        sb.Append($"Name: {Name}, ");
-        sb.Append($"Description: {Description}, ");
-        sb.Append($"Value: {Value}, ");
+        sb.Append($"{Name}: ");
+        sb.Append($"{Description}");
+        sb.Append($"\n\tValue: {Value}, ");
         sb.Append($"Weight: {Weight} , ");
         sb.Append($"Durability: {Durability}");
         

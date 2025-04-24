@@ -1,4 +1,5 @@
-﻿using ConsoleGameEntities.Models.Attributes;
+﻿using ConsoleGameEntities.Interfaces;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Characters;
 
 namespace ConsoleGameEntities.Models.Abilities

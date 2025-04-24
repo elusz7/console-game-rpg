@@ -4,7 +4,7 @@
 
 namespace ConsoleGameEntities.Migrations
 {
-    public partial class AlterInventoryCapacityType : Migration
+    public partial class AlterInventoryCapacityType : BaseMigration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

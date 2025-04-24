@@ -4,6 +4,7 @@ using ConsoleGameEntities.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleGameEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    partial class GameContextModelSnapshot : ModelSnapshot
+    [Migration("20250424043415_AddRooms")]
+    partial class AddRooms
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -112,19 +114,11 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("Health")
                         .HasColumnType("int");
 
-                    b.Property<int>("InventoryId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("RoomId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("RoomId");
 
                     b.ToTable("Players");
                 });
@@ -290,15 +284,6 @@ namespace ConsoleGameEntities.Migrations
                 {
                     b.HasOne("ConsoleGameEntities.Models.Rooms.Room", "Room")
                         .WithMany("Monsters")
-                        .HasForeignKey("RoomId");
-
-                    b.Navigation("Room");
-                });
-
-            modelBuilder.Entity("ConsoleGameEntities.Models.Characters.Player", b =>
-                {
-                    b.HasOne("ConsoleGameEntities.Models.Rooms.Room", "Room")
-                        .WithMany()
                         .HasForeignKey("RoomId");
 
                     b.Navigation("Room");

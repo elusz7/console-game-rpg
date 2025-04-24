@@ -1,6 +1,6 @@
-﻿using ConsoleGameEntities.Models.Attributes;
+﻿using ConsoleGameEntities.Interfaces.Attributes;
 
-namespace ConsoleGameEntities.Models.Characters.Monsters;
+namespace ConsoleGameEntities.Interfaces;
 
 public interface IMonster
 {

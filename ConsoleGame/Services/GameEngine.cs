@@ -1,9 +1,6 @@
 ﻿using ConsoleGame.Helpers;
 using ConsoleGameEntities.Data;
-using ConsoleGameEntities.Models.Attributes;
-using ConsoleGameEntities.Models.Characters;
-using ConsoleGameEntities.Models.Characters.Monsters;
-using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Interfaces;
 
 namespace ConsoleGame.Services;
 

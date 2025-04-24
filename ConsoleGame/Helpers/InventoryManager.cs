@@ -316,7 +316,7 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
             _outputManager.WriteLine($"{i + 1}. {player.Inventory.Items.ToList()[i].Name}");
         }
         
-        int index = _inputManager.ReadInt("\nEnter Item Number To Remove (-1 to : ", player.Inventory.Items.ToList().Count, true);
+        int index = _inputManager.ReadInt("\nEnter Item Number To Remove (-1 to cancel): ", player.Inventory.Items.ToList().Count, true);
 
         if (index == -1)
         {
@@ -330,6 +330,7 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
             player.Inventory.RemoveItem(itemToRemove);
             _outputManager.WriteLine($"Item {itemToRemove.Name} removed from inventory.");
             _context.UpdateInventory(player.Inventory);
+            _context.SaveChanges();
         }
         catch (ItemNotFoundException ex)
         {
@@ -340,10 +341,7 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
     {
         foreach (var item in itemList)
         {
-            if (item is Weapon weapon)
-                _outputManager.WriteLine(weapon.ToString());
-            if (item is Armor armor)
-                _outputManager.WriteLine(armor.ToString());
+            DisplayItemDetails(item);
         }
     }
     private Item SelectItem(string purpose) 
@@ -414,76 +412,69 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
         _outputManager.WriteLine();
         Item item = SelectItem("EditItem");
 
-        while (true) { 
+        while (true)
+        {
             _outputManager.WriteLine($"\nEditing item {item.Name}.", ConsoleColor.Cyan);
+            DisplayItemDetails(item);
 
-            if (item is Weapon w)
-                _outputManager.WriteLine(w.ToString(), ConsoleColor.Magenta);
-            else if (item is Armor a)
-                _outputManager.WriteLine(a.ToString(), ConsoleColor.DarkYellow);
+            string response = _inputManager.ReadString("\nWhat property would you like to edit? (exit to leave): ",
+                new[] { "name", "description", "value", "durability", "weight", "attack power", "defense power", "exit" }).ToLower();
 
-            string[] validResponses = { "name", "description", "value", "durability", "weight", "attack power", "defense power", "exit"};
-
-            string response = _inputManager.ReadString("\nWhat property would you like to edit? (exit to leave) ", validResponses).ToLower();
-
-            if (response.Equals("exit"))
+            if (response == "exit")
             {
                 _context.UpdateItem(item);
+                _context.SaveChanges();
                 _outputManager.WriteLine($"\nItem {item.Name} successfully updated.", ConsoleColor.Green);
                 return;
             }
-            else
-            {
-                string newString = "";
-                int newInt = -1;
-                decimal newDecimal = -1M;
 
-                if (response == "name" || response == "description" || response == "weight")
-                {
-                    newString = _inputManager.ReadString($"\nEnter new {response}: ");
-                }
-                else if (response == "durability" || response == "attack power" || response == "defense power")
-                {
-                    newInt = _inputManager.ReadInt($"\nEnter new {response}: ");
-                }
-                else if (response == "weight" || response == "value")
-                {
-                    newDecimal = _inputManager.ReadDecimal($"\nEnter new {response}: ");
-                }
-
-                switch (response)
-                {
-                    case "name":
-                        item.Name = newString;
-                        break;
-                    case "description":
-                        item.Description = newString;
-                        break;
-                    case "value":
-                        item.Value = newDecimal;
-                        break;
-                    case "durability":
-                        item.Durability = newInt;
-                        break;
-                    case "weight":
-                        item.Weight = newDecimal;
-                        break;
-                    case "attack power":
-                        if (item is Weapon weapon)
-                            weapon.AttackPower = newInt;
-                        else
-                            _outputManager.WriteLine("Item is not a weapon.");
-                        break;
-                    case "defense power":
-                        if (item is Armor armor)
-                            armor.DefensePower = newInt;
-                        else
-                            _outputManager.WriteLine("Item is not an armor.");
-                        break;
-                }
-            }
+            UpdateItemProperty(item, response);
         }
     }
+
+    private void DisplayItemDetails(Item item)
+    {
+        if (item is Weapon weapon)
+            _outputManager.WriteLine(weapon.ToString(), ConsoleColor.Magenta);
+        else if (item is Armor armor)
+            _outputManager.WriteLine(armor.ToString(), ConsoleColor.DarkYellow);
+    }
+
+    private void UpdateItemProperty(Item item, string property)
+    {
+        switch (property)
+        {
+            case "name":
+                item.Name = _inputManager.ReadString("\nEnter new name: ");
+                break;
+            case "description":
+                item.Description = _inputManager.ReadString("\nEnter new description: ");
+                break;
+            case "value":
+                item.Value = _inputManager.ReadDecimal("\nEnter new value: ");
+                break;
+            case "durability":
+                item.Durability = _inputManager.ReadInt("\nEnter new durability: ");
+                break;
+            case "weight":
+                item.Weight = _inputManager.ReadDecimal("\nEnter new weight: ");
+                break;
+            case "attack power":
+                if (item is Weapon weapon)
+                    weapon.AttackPower = _inputManager.ReadInt("\nEnter new attack power: ");
+                else
+                    _outputManager.WriteLine("Item is not a weapon.");
+                break;
+            case "defense power":
+                if (item is Armor armor)
+                    armor.DefensePower = _inputManager.ReadInt("\nEnter new defense power: ");
+                else
+                    _outputManager.WriteLine("Item is not an armor.");
+                break;
+        }
+    }
+
+
     private void RemoveItem()
     {
         _outputManager.WriteLine();
