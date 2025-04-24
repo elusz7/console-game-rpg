@@ -29,14 +29,14 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
 
         while (true)
         {
-            _outputManager.Write("Inventory Main Menu", ConsoleColor.Cyan);
-            _outputManager.Write("\n1. View Items"
+            _outputManager.WriteLine("Inventory Main Menu", ConsoleColor.Cyan);
+            string menuPrompt = "1. View Items"
                 + "\n2. Manage Items"
                 + "\n3. Manage Character's Inventory"
                 + $"\n4. Return to {origin}"
-                + "\n\tChoose an option: ");
-            _outputManager.Display();
-            var input = _inputManager.ReadString();
+                + "\n\tChoose an option: ";
+
+            var input = _inputManager.ReadString(menuPrompt);
 
             switch (input)
             {
@@ -44,7 +44,7 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
                     ItemDisplayMenu();
                     break;
                 case "2":
-                    _outputManager.WriteLine("Item Management Menu not implemented yet.\n");
+                    ItemManagementMenu();
                     break;
                 case "3":
                     CharacterInventoryMenu();
@@ -53,7 +53,7 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
                     _outputManager.WriteLine();
                     return;
                 default:
-                    _outputManager.WriteLine("Invalid option. Please try again.");
+                    _outputManager.WriteLine("Invalid option. Please try again.\n");
                     break;
             }
         }
@@ -63,13 +63,12 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
         while (true)
         {
             _outputManager.WriteLine("\nItem Display Menu", ConsoleColor.Cyan);
-            _outputManager.Write("1. Search For Item(s) By Name"
+            string menuPrompt = "1. Search For Item(s) By Name"
                 + "\n2. List Items By Type"
                 + "\n3. Sort & List Items"
                 + "\n4. Return To Inventory Main Menu"
-                    + "\n\tChoose an option: ");
-            _outputManager.Display();
-            var input = _inputManager.ReadString();
+                    + "\n\tChoose an option: ";
+            var input = _inputManager.ReadString(menuPrompt);
 
             switch (input)
             {
@@ -91,6 +90,38 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
             }
         }
     }
+    private void ItemManagementMenu()
+    {
+        while (true)
+        {
+            _outputManager.WriteLine("\nItem Management Menu", ConsoleColor.Cyan);
+            string menuPrompt = "1. Add Item"
+                + "\n2. Edit Item"
+                + "\n3. Remove Item"
+                + "\n4. Return to Inventory Main Menu"
+                + "\n\tChoose an option: ";
+            string input = _inputManager.ReadString(menuPrompt);
+
+            switch (input)
+            {
+                case "1":
+                    AddItem();
+                    break;
+                case "2":
+                    EditItem();
+                    break;
+                case "3":
+                    RemoveItem();
+                    break;
+                case "4":
+                    _outputManager.WriteLine();
+                    return;
+                default:
+                    _outputManager.WriteLine("Invalid option. Please try again.");
+                    break;
+            }
+        }
+    }
     private void CharacterInventoryMenu()
     {
         if (player == null)
@@ -101,13 +132,12 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
         while (true)
         {
             _outputManager.WriteLine($"\n{player.Name}'s Inventory Management", ConsoleColor.Cyan);
-            _outputManager.Write("1. List Items Equippable"
+            string menuPrompt = "1. List Items Equippable"
                 + "\n2. Add Item to Inventory"
                 + "\n3. Remove Item from Inventory"
                 + "\n4. Return to Inventory Main Menu"
-                + "\n\tChoose an option: ");
-            _outputManager.Display();
-            var input = _inputManager.ReadString();
+                + "\n\tChoose an option: ";
+            var input = _inputManager.ReadString(menuPrompt);
 
             switch (input)
             {
@@ -133,9 +163,7 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
     }
     private void SearchItemByName()
     {
-        _outputManager.Write("\nEnter item name to find: ");
-        _outputManager.Display();
-        string itemName = _inputManager.ReadString();
+        string itemName = _inputManager.ReadString("\nEnter item name to find: ");
 
         var itemsFound = items
             .Where(i => i.Name.Contains(itemName, StringComparison.OrdinalIgnoreCase))
@@ -143,28 +171,25 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
 
         if (!itemsFound.Any())
         {
-            _outputManager.WriteLine("\nNo items found\n");
-            _outputManager.Display();
+            _outputManager.WriteLine($"\n\tNo items found matching [{itemName}]");
         }
         else
         {
-            ListItems(itemsFound);
+            _outputManager.WriteLine($"\n\t{itemsFound.Count} items found matching [{itemName}]\n");
+            ListItemsFullDetails(itemsFound);
         }
     }
     private void ListItemsByType()
     {
-        string category;
-        _outputManager.Write("\nWeapon or Armor? ");
-        _outputManager.Display();
-        category = _inputManager.ReadString().ToLower();
+        string category = _inputManager.ReadString("\nWeapon or Armor? ").ToLower();
 
         if (category == "weapon")
         {
-            ListItems(items.OfType<Weapon>().ToList());
+            ListItemsFullDetails(items.OfType<Weapon>().ToList());
         }
         else if (category == "armor")
         {
-            ListItems(items.OfType<Armor>().ToList());
+            ListItemsFullDetails(items.OfType<Armor>().ToList());
         }
         else
         {
@@ -177,15 +202,13 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
         while (true)
         {
             _outputManager.WriteLine("\nItem Sorted List Options:", ConsoleColor.Cyan);
-            _outputManager.Write("1. Sort by Name"
+            string menuPrompt = "1. Sort by Name"
                 + "\n2. Sort by Attack Value"
                 + "\n3. Sort by Defense Value"
                 + $"\n4. Change Sort Order (currently: {sortOrder})"
                 + "\n5. Return to Inventory Menu"
-                + "\n\tChoose an option: ");
-            _outputManager.Display();
-
-            var input = _inputManager.ReadString();
+                + "\n\tChoose an option: ";
+            var input = _inputManager.ReadString(menuPrompt);
 
             switch (input)
             {
@@ -220,7 +243,7 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
             ? items.OrderBy(i => i.Name).ToList()
             : items.OrderByDescending(i => i.Name).ToList();
 
-        ListItems(sortedItems);
+        ListItemsFullDetails(sortedItems);
     }
     private void SortByAttack()
     {
@@ -230,7 +253,7 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
             ? weapons.OrderBy(w => w.AttackPower).ToList()
             : weapons.OrderByDescending(w => w.AttackPower).ToList();
 
-        ListItems(sortedWeapons);
+        ListItemsFullDetails(sortedWeapons);
     }
     private void SortByDefense()
     {
@@ -240,7 +263,7 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
             ? armors.OrderBy(a => a.DefensePower).ToList()
             : armors.OrderByDescending(a => a.DefensePower).ToList();
 
-        ListItems(sortedArmors);
+        ListItemsFullDetails(sortedArmors);
     }
     private void ListEquippableItems()
     {
@@ -258,13 +281,11 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
 
         _outputManager.Display();
 
-        ListItems(equippableItems);
+        ListItemsFullDetails(equippableItems);
     }
     private void AddItemToInventory()
     {
-        _outputManager.Write("\nEnter the name of the item to add to your inventory: ");
-        _outputManager.Display();
-        string itemName = _inputManager.ReadString();
+        string itemName = _inputManager.ReadString("\nEnter the name of the item to add to your inventory: ");
 
         var itemToAdd = items.FirstOrDefault(i => i.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase));
         if (itemToAdd != null)
@@ -295,62 +316,50 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
             _outputManager.WriteLine($"{i + 1}. {player.Inventory.Items.ToList()[i].Name}");
         }
         
-        _outputManager.Write("\nWhich item would you like to remove: ");
-        _outputManager.Display();
-        string input = _inputManager.ReadString();
+        int index = _inputManager.ReadInt("\nEnter Item Number To Remove (-1 to : ", player.Inventory.Items.ToList().Count, true);
 
-        bool isNumber = int.TryParse(input, out int index);
+        if (index == -1)
+        {
+            _outputManager.WriteLine("Item Removal Cancelled.");
+            return;
+        }
+
         try
         {
-            if ((isNumber) && (index > 0 && index <= player.Inventory.Items.Count))
-            {
-                var itemToRemove = player.Inventory.Items.ToList()[index - 1];
-                player.Inventory.RemoveItem(itemToRemove);
-                _outputManager.WriteLine($"Item {itemToRemove.Name} removed from inventory.");
-                _context.UpdateInventory(player.Inventory);
-            }
-            else
-            {
-                player.Inventory.RemoveItem(input);
-                _outputManager.WriteLine($"Item {input} removed from inventory.");
-                _context.UpdateInventory(player.Inventory);
-            }
+            var itemToRemove = player.Inventory.Items.ToList()[index - 1];
+            player.Inventory.RemoveItem(itemToRemove);
+            _outputManager.WriteLine($"Item {itemToRemove.Name} removed from inventory.");
+            _context.UpdateInventory(player.Inventory);
         }
         catch (ItemNotFoundException ex)
         {
             _outputManager.WriteLine(ex.Message);
-        }
-        _outputManager.Display();
-        
+        }        
     }
-    private void ListItems<T>(List<T> itemList) where T : Item
+    private void ListItemsFullDetails<T>(List<T> itemList) where T : Item
     {
         foreach (var item in itemList)
         {
-            _outputManager.Write($"\t{item.Name}", ConsoleColor.Yellow);
-
             if (item is Weapon weapon)
-            {
-                _outputManager.Write(", Attack Power: ");
-                _outputManager.Write(weapon.AttackPower.ToString(), ConsoleColor.Red);
-            }
-            else if (item is Armor armor)
-            {
-                _outputManager.Write(", Defense Power: ");
-                _outputManager.Write(armor.DefensePower.ToString(), ConsoleColor.Green);
-            }
-
-            _outputManager.Write(", Weight: ");
-            _outputManager.Write(item.Weight.ToString(), ConsoleColor.Magenta);
-
-            if (item.Inventory != null)
-            {
-                _outputManager.Write(", Held by: ");
-                _outputManager.Write(item.Inventory.Player.Name, ConsoleColor.Cyan);
-            }
-
-            _outputManager.WriteLine();
+                _outputManager.WriteLine(weapon.ToString());
+            if (item is Armor armor)
+                _outputManager.WriteLine(armor.ToString());
         }
+    }
+    private Item SelectItem(string purpose) 
+    {
+        string prompt = "\tEnter item number: ";
+        if (purpose == "EditItem")
+            prompt = "\tEnter item number to edit: ";
+        else if (purpose == "RemoveItem")
+            prompt = "\tEnter item number to remove: ";
+
+        for (int i = 0; i < items.Count; i++)
+            {
+                _outputManager.WriteLine($"{i + 1}. {items[i].Name}");
+            }
+        int index = _inputManager.ReadInt(prompt, items.Count);
+        return items[index - 1];
     }
     private void SelectCharacter()
     {
@@ -360,25 +369,143 @@ public class InventoryManager(GameContext context, InputManager inputManager, Ou
         {
             _outputManager.WriteLine($"{i + 1}. {characters[i].Name}");
         }
-        _outputManager.Write("\tWhich character's inventory would you like to manage? ", ConsoleColor.DarkGreen);
-        _outputManager.Display();
+        
+        int index = _inputManager.ReadInt("\tEnter number of character for which inventory you'd like to manage: ", characters.Count);
 
-        while (player == null) { 
-            var input = _inputManager.ReadString();
-            bool isNumber = int.TryParse(input, out int index);
-            if (isNumber && index > 0 && index <= characters.Count)
+        player = characters[index - 1];
+    }    
+    private void AddItem()
+    {
+        string itemType = _inputManager.ReadString("\nWeapon or armor? ", ["weapon", "armor"]).ToLower();
+
+        string name = _inputManager.ReadString("Enter item name: ");
+
+        string description = _inputManager.ReadString("Enter item description: ");
+
+        decimal value = _inputManager.ReadDecimal("Enter item value: ");
+
+        int durability = _inputManager.ReadInt("Enter item durability: ");
+
+        decimal weight = _inputManager.ReadDecimal("Enter item weight: ");
+
+        int attackPower = 0;
+        int defensePower = 0;
+
+        if (itemType.Equals("weapon"))
+            attackPower = _inputManager.ReadInt("Enter item attack power: ");
+        else if (itemType.Equals("armor"))
+            defensePower = _inputManager.ReadInt("Enter item defense power: ");
+
+        Item item = itemType switch
+        {
+            "weapon" => new Weapon(name, value, description, durability, weight, attackPower),
+            "armor" => new Armor(name, value, description, durability, weight, defensePower),
+            _ => throw new ArgumentException("Invalid item type.")
+        };
+
+        items.Add(item);
+        _context.Items.Add(item);
+        _context.SaveChanges();
+
+        _outputManager.WriteLine($"\nItem {item.Name} successfully created.", ConsoleColor.Green);
+    }
+    private void EditItem()
+    {
+        _outputManager.WriteLine();
+        Item item = SelectItem("EditItem");
+
+        while (true) { 
+            _outputManager.WriteLine($"\nEditing item {item.Name}.", ConsoleColor.Cyan);
+
+            if (item is Weapon w)
+                _outputManager.WriteLine(w.ToString(), ConsoleColor.Magenta);
+            else if (item is Armor a)
+                _outputManager.WriteLine(a.ToString(), ConsoleColor.DarkYellow);
+
+            string[] validResponses = { "name", "description", "value", "durability", "weight", "attack power", "defense power", "exit"};
+
+            string response = _inputManager.ReadString("\nWhat property would you like to edit? (exit to leave) ", validResponses).ToLower();
+
+            if (response.Equals("exit"))
             {
-                player = characters[index - 1];
-            }
-            else if (characters.Any(c => c.Name.Equals(input, StringComparison.OrdinalIgnoreCase)))
-            {
-                player = characters.FirstOrDefault(c => c.Name.Equals(input, StringComparison.OrdinalIgnoreCase));
+                _context.UpdateItem(item);
+                _outputManager.WriteLine($"\nItem {item.Name} successfully updated.", ConsoleColor.Green);
+                return;
             }
             else
             {
-                _outputManager.Write("Invalid selection. Please try again: ");
-                _outputManager.Display();
+                string newString = "";
+                int newInt = -1;
+                decimal newDecimal = -1M;
+
+                if (response == "name" || response == "description" || response == "weight")
+                {
+                    newString = _inputManager.ReadString($"\nEnter new {response}: ");
+                }
+                else if (response == "durability" || response == "attack power" || response == "defense power")
+                {
+                    newInt = _inputManager.ReadInt($"\nEnter new {response}: ");
+                }
+                else if (response == "weight" || response == "value")
+                {
+                    newDecimal = _inputManager.ReadDecimal($"\nEnter new {response}: ");
+                }
+
+                switch (response)
+                {
+                    case "name":
+                        item.Name = newString;
+                        break;
+                    case "description":
+                        item.Description = newString;
+                        break;
+                    case "value":
+                        item.Value = newDecimal;
+                        break;
+                    case "durability":
+                        item.Durability = newInt;
+                        break;
+                    case "weight":
+                        item.Weight = newDecimal;
+                        break;
+                    case "attack power":
+                        if (item is Weapon weapon)
+                            weapon.AttackPower = newInt;
+                        else
+                            _outputManager.WriteLine("Item is not a weapon.");
+                        break;
+                    case "defense power":
+                        if (item is Armor armor)
+                            armor.DefensePower = newInt;
+                        else
+                            _outputManager.WriteLine("Item is not an armor.");
+                        break;
+                }
             }
         }
-    }    
+    }
+    private void RemoveItem()
+    {
+        _outputManager.WriteLine();
+        Item itemToDelete = SelectItem("RemoveItem");
+
+        string confirm = _inputManager.ReadString($"\nPlease confirm deletion of {itemToDelete.Name} (y/n): ", ["y", "n"]);
+
+        if (confirm == "y")
+        {
+            //update local list
+            items.Remove(itemToDelete);
+
+            //update database
+            _context.Items.Remove(itemToDelete);
+            _context.SaveChanges();
+
+            //confirm deletion
+            _outputManager.WriteLine("Item has been removed successfully!", ConsoleColor.Green);
+        }
+        else
+        {
+            _outputManager.WriteLine($"Deletion cancelled. Item [{itemToDelete.Name}] has not been removed.", ConsoleColor.Red);
+        }
+    }
 }

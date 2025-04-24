@@ -30,12 +30,11 @@ public class CharacterManager(GameContext context, InputManager inputManager, Ou
         while (true)
         {
             _outputManager.Write("Character Main Menu", ConsoleColor.Cyan);
-            _outputManager.Write("\n1. View Characters"
+            string menuPrompt = "\n1. View Characters"
                 + "\n2. Manage Characters"
                 + "\n3. Return to Main Menu"
-                + "\n\tSelect an option: ");
-            _outputManager.Display();
-            string choice = _inputManager.ReadString();
+                + "\n\tSelect an option: ";
+            string choice = _inputManager.ReadString(menuPrompt);
 
             switch (choice)
             {
@@ -49,7 +48,7 @@ public class CharacterManager(GameContext context, InputManager inputManager, Ou
                     _outputManager.WriteLine();
                     return;
                 default:
-                    _outputManager.Write("Invalid choice. Please try again.\n");
+                    _outputManager.WriteLine("Invalid choice. Please try again.\n");
                     break;
             }
         }
@@ -59,12 +58,11 @@ public class CharacterManager(GameContext context, InputManager inputManager, Ou
         while (true)
         {
             _outputManager.WriteLine("\nCharacter Display Menu", ConsoleColor.Cyan);
-            _outputManager.Write("1. List All Characters"
+            string menuPrompt = "1. List All Characters"
                 + "\n2. Search Character By Name"
                 + "\n3. Return to Character Main Menu"
-                + "\n\tSelect an option: ");
-            _outputManager.Display();
-            string choice = _inputManager.ReadString();
+                + "\n\tSelect an option: ";
+            string choice = _inputManager.ReadString(menuPrompt);
 
             switch (choice)
             {
@@ -88,13 +86,12 @@ public class CharacterManager(GameContext context, InputManager inputManager, Ou
         while (true)
         {
             _outputManager.WriteLine("\nCharacter Management Menu", ConsoleColor.Cyan);
-            _outputManager.Write("1. Add Character"
+            string menuPrompt = "1. Add Character"
                 + "\n2. Edit Character"
                 + "\n3. Remove Character"
                 + "\n4. Return to Character Main Menu"
-                + "\n\tSelect an option: ");
-            _outputManager.Display();
-            string choice = _inputManager.ReadString();
+                + "\n\tSelect an option: ";
+            string choice = _inputManager.ReadString(menuPrompt);
 
             switch (choice)
             {
@@ -125,50 +122,28 @@ public class CharacterManager(GameContext context, InputManager inputManager, Ou
         }
         _outputManager.Display();
     }
-    private Player SelectCharacter(string prompt)
+    private Player SelectCharacter(string purpose)
     {
-        int choice = -1;
+        string prompt = "\tSelect the number of a character: ";
 
+        if (purpose.Equals("EditCharacter"))
+            prompt = "\tSelect the number of the character you'd like to edit: ";
+        else if (purpose.Equals("RemoveCharacter"))
+            prompt = "\tSelect the number of the character you'd like to remove: ";
+        
         _outputManager.WriteLine();
         for (int i = 0; i < characters.Count; i++)
         {
             _outputManager.WriteLine($"{i + 1}. {characters[i].Name}");
         }
-        _outputManager.Write($"\t{prompt}: ");
-        _outputManager.Display();
 
-        while (true)
-        {
-            string input = _inputManager.ReadString();
+        int index = _inputManager.ReadInt(prompt, characters.Count);
 
-            if (int.TryParse(input, out int index) && index > 0 && index <= characters.Count)
-            {
-                choice = index - 1;
-                break;
-            }
-            else
-            {
-                //find character by name
-                var character = characters.FirstOrDefault(c => c.Name.Equals(input, StringComparison.OrdinalIgnoreCase));
-                if (character != null)
-                {
-                    choice = characters.IndexOf(character);
-                }
-                else
-                {
-                    _outputManager.Write("Invalid choice. Please choose again: ");
-                    _outputManager.Display();
-                }
-            }
-        }
-
-        return characters[choice];
+        return characters[index - 1];
     }
     private void FindCharacterByName()
     {
-        _outputManager.Write("\nEnter name of character: ");
-        _outputManager.Display();
-        string name = _inputManager.ReadString();
+        string name = _inputManager.ReadString("\nEnter name of character: ");
 
         var characterList = characters
             .Where(c => c.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
@@ -176,7 +151,7 @@ public class CharacterManager(GameContext context, InputManager inputManager, Ou
 
         if (characterList.Count == 0)
         {
-            _outputManager.WriteLine($"\nNo characters found matching [{name}]\n");
+            _outputManager.WriteLine($"\nNo characters found matching [{name}]");
         }
         else
         {
@@ -186,35 +161,13 @@ public class CharacterManager(GameContext context, InputManager inputManager, Ou
     }
     private void AddCharacter()
     {
-        _outputManager.Write("\nEnter character name: ");
-        _outputManager.Display();
-        string name = _inputManager.ReadString();
+        string name = _inputManager.ReadString("\nEnter character name: ");
 
-        _outputManager.Write("Enter character's starting health: ");
-        _outputManager.Display();
-        int health = _inputManager.ReadInt();
+        int health = _inputManager.ReadInt("Enter character's starting health: ");
 
-        while (health < 0)
-        {
-            _outputManager.Write("\tInvalid input. Please enter a positive number: ");
-            _outputManager.Display();
-            health = _inputManager.ReadInt();
-        }
-
-        _outputManager.Write("Enter character's starting gold: ");
-        _outputManager.Display();
-        int gold = _inputManager.ReadInt();
+        int gold = _inputManager.ReadInt("Enter character's starting gold: ");
         
-        while (gold == -1)
-        {
-            _outputManager.Write("\tInvalid input. Please enter a positive number: ");
-            _outputManager.Display();
-            gold = _inputManager.ReadInt();
-        }
-
-        _outputManager.Write("Enter character's weight carrying capacity: ");
-        _outputManager.Display();
-        int capacity = _inputManager.ReadInt();
+        int capacity = _inputManager.ReadInt("Enter character's weight carrying capacity: ");
 
         List<Ability> abilities = new List<Ability>();
         List<Item> items = new List<Item>();
@@ -238,17 +191,13 @@ public class CharacterManager(GameContext context, InputManager inputManager, Ou
 
         characters.Add(newCharacter);
 
-        _outputManager.Write($"\nWould you like to assign {name} some starting abilities? (y/n) ");
-        _outputManager.Display();
-        string assignAbilities = _inputManager.ReadString().ToLower();
+        string assignAbilities = _inputManager.ReadString($"\nWould you like to assign {name} some starting abilities? (y/n) ").ToLower();
         if (assignAbilities == "y")
             _outputManager.Write("TO BE ADDED LATER");
         else
             _outputManager.WriteLine("No abilities assigned. Abilities can be added later through the main menu.");
         
-        _outputManager.Write($"\nWould you like to assign {name} some starting items? (y/n) ");
-        _outputManager.Display();
-        string assignItems = _inputManager.ReadString().ToLower();
+        string assignItems = _inputManager.ReadString($"\nWould you like to assign {name} some starting items? (y/n) ").ToLower();
         if (assignItems == "y")
             _inventoryManager.InventoryMainMenu("Character Menu", newCharacter);
         else
@@ -259,99 +208,61 @@ public class CharacterManager(GameContext context, InputManager inputManager, Ou
     }
     private void EditCharacter()
     {
-        Player character = SelectCharacter("Select A Character To Edit");
+        Player character = SelectCharacter("EditCharacter");
 
-        string[] editableProperties = { "Name", "Health", "Experience", "Gold", "Capacity" };
+        string[] validResponses = { "Name", "Health", "Experience", "Gold", "Capacity", "exit" };
 
         while (true)
         {
             _outputManager.WriteLine($"\nEditing character: {character.Name}", ConsoleColor.Cyan);
-            _outputManager.Write($"{character.ToString()}"
-                + "\n\n\tWhat property would you like to edit? (exit to quit) ");
-            _outputManager.Display();
+            _outputManager.Write($"{character.ToString()}\n\n\t");
 
-            string input = _inputManager.ReadString().Trim();
+            string input = _inputManager.ReadString("What property would you like to edit? (exit to quit) ", validResponses).ToLower();
 
             if (input.Equals("exit", StringComparison.OrdinalIgnoreCase))
             {
                 _context.UpdatePlayer(character);
-                _outputManager.WriteLine($"Changes successfuly saved to {character.Name}\n");
+                _outputManager.WriteLine($"\nChanges successfuly saved to {character.Name}", ConsoleColor.Green);
                 return;
-            }
-            else if (editableProperties.Any(property => property.Equals(input, StringComparison.OrdinalIgnoreCase)))
-            {
-                _outputManager.Write($"\tEnter new value for {input}: ");
-                _outputManager.Display();
-                string newValue = _inputManager.ReadString().Trim();
-                bool isNumber = int.TryParse(newValue, out int newIntValue);
-
-                switch (input.ToLower())
-                {
-                    case "name":
-                        character.Name = newValue;
-                        break;
-                    case "health":
-                        if (isNumber)
-                        {
-                            character.Health = newIntValue;
-                        }
-                        else
-                        {
-                            _outputManager.WriteLine("Invalid input. Health must be a number.");
-                            continue;
-                        }
-                        break;
-                    case "experience":
-                        if (isNumber)
-                        {
-                            character.Experience = newIntValue;
-                        }
-                        else
-                        {
-                            _outputManager.WriteLine("Invalid input. Experience must be a number.");
-                            continue;
-                        }
-                        break;
-                    case "gold":
-                        if (isNumber)
-                        {
-                            character.Inventory.Gold = newIntValue;
-                        }
-                        else
-                        {
-                            _outputManager.WriteLine("Invalid input. Gold must be a number.");
-                            continue;
-                        }
-                        break;
-                    case "capacity":
-                        if (isNumber)
-                        {
-                            character.Inventory.Capacity = newIntValue;
-                        }
-                        else
-                        {
-                            _outputManager.WriteLine("Invalid input. Capacity must be a number.");
-                            continue;
-                        }
-                        break;
-                }
             }
             else
             {
-                _outputManager.WriteLine("Invalid property. Please try again.\n");
-                continue;
+                string newName = "";
+                int newValue = -1;
+                
+                if (input == "name")
+                    newName = _inputManager.ReadString($"\tEnter new value for {input}: ");
+                else
+                    newValue = _inputManager.ReadInt($"\tEnter new value for {input}: ");
+
+                switch (input)
+                {
+                    case "name":
+                        character.Name = newName;
+                        break;
+                    case "health":
+                        character.Health = newValue;
+                        break;
+                    case "experience":
+                        character.Experience = newValue;
+                        break;
+                    case "gold":
+                        character.Inventory.Gold = newValue;
+                        break;
+                    case "capacity":
+                        character.Inventory.Capacity = newValue;
+                        break;
+                }
             }
         }
     }
     private void RemoveCharacter()
     {
-        Player characterToRemove = SelectCharacter("Select A Character To Remove");
+        Player characterToRemove = SelectCharacter("RemoveCharacter");
 
-        _outputManager.Write($"\nPlease confirm deletion of {characterToRemove.Name} (y/n): ");
-        _outputManager.Display();
-        char confirm = _inputManager.ReadString().Trim().ToLower()[0];
+        string confirm = _inputManager.ReadString($"\nPlease confirm deletion of {characterToRemove.Name} (y/n): ", ["y", "n"]);
 
-        if (confirm == 'y')
+        if (confirm == "y")
         {
             //update local list
             characters.Remove(characterToRemove);

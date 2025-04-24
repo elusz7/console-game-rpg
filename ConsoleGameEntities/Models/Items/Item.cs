@@ -22,4 +22,17 @@ public abstract class Item
     public Inventory? Inventory { get; set; }
 
     public abstract int Use();
+
+    public override string ToString()
+    {
+        var sb = new StringBuilder();
+
+        sb.Append($"Name: {Name}, ");
+        sb.Append($"Description: {Description}, ");
+        sb.Append($"Value: {Value}, ");
+        sb.Append($"Weight: {Weight} , ");
+        sb.Append($"Durability: {Durability}");
+        
+        return sb.ToString();
+    }
 }
