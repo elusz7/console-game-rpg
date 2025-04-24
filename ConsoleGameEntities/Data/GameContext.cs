@@ -41,6 +41,10 @@ namespace ConsoleGameEntities.Data
                 .Property(i => i.Weight)
                 .HasColumnType("decimal(18,2)");
 
+            modelBuilder.Entity<Inventory>()
+                .Property(i => i.Capacity)
+                .HasColumnType("decimal(18,2)");
+
             modelBuilder.Entity<Player>()
                 .HasOne(p => p.Inventory)
                 .WithOne(i => i.Player)
@@ -72,6 +76,16 @@ namespace ConsoleGameEntities.Data
                 .WithMany(r => r.Monsters)
                 .HasForeignKey(m => m.RoomId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Room>()
+                .Property(r => r.Name)
+                .IsRequired()
+                .HasColumnName("Name");
+
+            modelBuilder.Entity<Room>()
+                .Property(r => r.Description)
+                .IsRequired()
+                .HasColumnName("Description");
 
             modelBuilder.Entity<Room>()
                 .HasOne(r => r.North)

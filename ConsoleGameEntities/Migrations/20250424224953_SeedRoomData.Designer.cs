@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleGameEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    [Migration("20250424044100_RoomSeedData")]
-    partial class RoomSeedData
+    [Migration("20250424224953_SeedRoomData")]
+    partial class SeedRoomData
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -114,19 +114,11 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("Health")
                         .HasColumnType("int");
 
-                    b.Property<int>("InventoryId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("RoomId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("RoomId");
 
                     b.ToTable("Players");
                 });
@@ -139,8 +131,8 @@ namespace ConsoleGameEntities.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int>("Capacity")
-                        .HasColumnType("int");
+                    b.Property<decimal>("Capacity")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("Gold")
                         .HasColumnType("int");
@@ -205,10 +197,23 @@ namespace ConsoleGameEntities.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Description");
+
                     b.Property<int?>("EastId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Name");
+
                     b.Property<int?>("NorthId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PlayerId")
                         .HasColumnType("int");
 
                     b.Property<int?>("SouthId")
@@ -222,6 +227,10 @@ namespace ConsoleGameEntities.Migrations
                     b.HasIndex("EastId");
 
                     b.HasIndex("NorthId");
+
+                    b.HasIndex("PlayerId")
+                        .IsUnique()
+                        .HasFilter("[PlayerId] IS NOT NULL");
 
                     b.HasIndex("SouthId");
 
@@ -292,16 +301,8 @@ namespace ConsoleGameEntities.Migrations
                 {
                     b.HasOne("ConsoleGameEntities.Models.Rooms.Room", "Room")
                         .WithMany("Monsters")
-                        .HasForeignKey("RoomId");
-
-                    b.Navigation("Room");
-                });
-
-            modelBuilder.Entity("ConsoleGameEntities.Models.Characters.Player", b =>
-                {
-                    b.HasOne("ConsoleGameEntities.Models.Rooms.Room", "Room")
-                        .WithMany()
-                        .HasForeignKey("RoomId");
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Room");
                 });
@@ -338,6 +339,10 @@ namespace ConsoleGameEntities.Migrations
                         .HasForeignKey("NorthId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("ConsoleGameEntities.Models.Characters.Player", "Player")
+                        .WithOne("Room")
+                        .HasForeignKey("ConsoleGameEntities.Models.Rooms.Room", "PlayerId");
+
                     b.HasOne("ConsoleGameEntities.Models.Rooms.Room", "South")
                         .WithMany()
                         .HasForeignKey("SouthId")
@@ -352,6 +357,8 @@ namespace ConsoleGameEntities.Migrations
 
                     b.Navigation("North");
 
+                    b.Navigation("Player");
+
                     b.Navigation("South");
 
                     b.Navigation("West");
@@ -361,6 +368,8 @@ namespace ConsoleGameEntities.Migrations
                 {
                     b.Navigation("Inventory")
                         .IsRequired();
+
+                    b.Navigation("Room");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Items.Inventory", b =>
