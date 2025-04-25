@@ -5,8 +5,8 @@ namespace ConsoleGame.Helpers;
 public class MapManager
 {
     private const int RoomNameLength = 5;
-    private const int gridRows = 5;
-    private const int gridCols = 5;
+    private const int gridRows = 8;
+    private const int gridCols = 8;
     private readonly OutputManager _outputManager;
     private readonly string[,] mapGrid;
     private Room _currentRoom;

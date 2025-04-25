@@ -46,5 +46,22 @@ public class Room
     {
         Monsters.Remove(monster);
     }
+    public override string ToString()
+    {
+        var sb = new System.Text.StringBuilder();
 
+        sb.Append($"{Name}: {Description}");
+
+        if (Monsters.Any())
+        {
+            sb.Append($"\n\tMonsters: {String.Join(", ", Monsters.Select(m => m.Name))}");
+        }
+
+        if (North != null) sb.Append($"\n\tNorth: {North.Name}");
+        if (South != null) sb.Append($"\n\tSouth: {South.Name}");
+        if (East != null) sb.Append($"\n\tEast: {East.Name}");
+        if (West != null) sb.Append($"\n\tWest: {West.Name}");
+
+        return sb.ToString();
+    }
 }

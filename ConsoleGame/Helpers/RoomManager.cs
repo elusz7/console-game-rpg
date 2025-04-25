@@ -97,9 +97,87 @@ public class RoomManager(GameContext context, InputManager inputManager, OutputM
         _mapManager.UpdateCurrentRoom(currentRoom);
         _mapManager.DisplayMap();
 
-        _outputManager.WriteLine("\nPress enter to return to the menu.");
+        _outputManager.WriteLine("\nPress direction keys to change room or any other key to return to the menu.");
         _outputManager.Display();
-        _inputManager.ReadKey();
+
+        while (true)
+        {
+            
+            ConsoleKeyInfo key = _inputManager.ReadKey();
+
+            if (key.Key == ConsoleKey.UpArrow)
+            {
+                if (currentRoom.North != null)
+                {
+                    currentRoom = currentRoom.North;
+                    _outputManager.Clear();
+                    _mapManager.UpdateCurrentRoom(currentRoom);
+                    _mapManager.DisplayMap();
+                    _outputManager.WriteLine("\nPress direction keys to change room or any other key to return to the menu.");
+                    _outputManager.Display();
+                }
+                else
+                {
+                    _outputManager.WriteLine("No room to the North.", ConsoleColor.Red);
+                    _outputManager.Display();
+                }
+            }
+            else if (key.Key == ConsoleKey.DownArrow)
+            {
+                if (currentRoom.South != null)
+                {
+                    currentRoom = currentRoom.South;
+                    _outputManager.Clear();
+                    _mapManager.UpdateCurrentRoom(currentRoom);
+                    _mapManager.DisplayMap();
+                    _outputManager.WriteLine("\nPress direction keys to change room or any other key to return to the menu.");
+                    _outputManager.Display();
+                }
+                else
+                {
+                    _outputManager.WriteLine("No room to the South.", ConsoleColor.Red);
+                    _outputManager.Display();
+                }
+            }
+            else if (key.Key == ConsoleKey.LeftArrow)
+            {
+                if (currentRoom.West != null)
+                {
+                    currentRoom = currentRoom.West;
+                    _outputManager.Clear();
+                    _mapManager.UpdateCurrentRoom(currentRoom);
+                    _mapManager.DisplayMap();
+                    _outputManager.WriteLine("\nPress direction keys to change room or any other key to return to the menu.");
+                    _outputManager.Display();
+                }
+                else
+                {
+                    _outputManager.WriteLine("No room to the West.", ConsoleColor.Red);
+                    _outputManager.Display();
+                }
+            }
+            else if (key.Key == ConsoleKey.RightArrow)
+            {
+                if (currentRoom.East != null)
+                {
+                    currentRoom = currentRoom.East;
+                    _outputManager.Clear();
+                    _mapManager.UpdateCurrentRoom(currentRoom);
+                    _mapManager.DisplayMap();
+                    _outputManager.WriteLine("\nPress direction keys to change room or any other key to return to the menu.");
+                    _outputManager.Display();
+                }
+                else
+                {
+                    _outputManager.WriteLine("No room to the East.", ConsoleColor.Red);
+                    _outputManager.Display();
+                }
+            }
+            else
+            {
+                break; // any other key exits the map view
+            }
+        }
         _outputManager.Clear();
     }
     private void ManageRooms()
@@ -120,7 +198,7 @@ public class RoomManager(GameContext context, InputManager inputManager, OutputM
                     AddRoom();
                     break;
                 case "2":
-                    //UpdateRoom();
+                    UpdateRoom();
                     break;
                 case "3":
                     //DeleteRoom();
@@ -134,77 +212,95 @@ public class RoomManager(GameContext context, InputManager inputManager, OutputM
             }
         }
     }
-
-    private void AddRoom()
+    public void AddRoom()
     {
-        _outputManager.WriteLine("\nCreate New Room", ConsoleColor.Cyan);
+        Dictionary<string, string[]> availableRooms = [];
 
-        string name = "";
+        for (int i = 0; i < rooms.Count; i++)
+        {
+            Room room = rooms[i];
+            string availableDirections = "";
+            if (room.North == null && !HasReverseConflict(room, "North")) availableDirections += "North ";
+            if (room.South == null && !HasReverseConflict(room, "South")) availableDirections += "South ";
+            if (room.East == null && !HasReverseConflict(room, "East")) availableDirections += "East ";
+            if (room.West == null && !HasReverseConflict(room, "West")) availableDirections += "West ";
+
+            if (string.IsNullOrEmpty(availableDirections)) continue;
+
+            _outputManager.WriteLine($"{availableRooms.Count + 1}. {room.Name} - Available directions: {availableDirections}");
+
+            availableRooms.Add(room.Name, availableDirections.Trim().Split(" ", StringSplitOptions.RemoveEmptyEntries));
+        }
+
+        int index = _inputManager.ReadInt("Select a room to add onto by number: ", availableRooms.Count);
+
+        Room roomToAddOnto = rooms.Where(r => r.Name == availableRooms.ElementAt(index - 1).Key).First();
+        string[] directions = availableRooms[roomToAddOnto.Name];
+        _outputManager.WriteLine($"You selected {roomToAddOnto.Name}. Available directions: {string.Join(", ", directions)}", ConsoleColor.Green);
+
+        string directToAddOnto = _inputManager.ReadString($"Enter direction to add room ({string.Join("/", directions)}): ", directions);
+
+        Room newRoom = CreateRoom();
+
+        switch (directToAddOnto)
+        {
+            case "North":
+                roomToAddOnto.North = newRoom;
+                newRoom.South = roomToAddOnto;
+                break;
+            case "South":
+                roomToAddOnto.South = newRoom;
+                newRoom.North = roomToAddOnto;
+                break;
+            case "East":
+                roomToAddOnto.East = newRoom;
+                newRoom.West = roomToAddOnto;
+                break;
+            case "West":
+                roomToAddOnto.West = newRoom;
+                newRoom.East = roomToAddOnto;
+                break;
+        }
+
+        rooms.Add(newRoom);
+        // Save the new room to the database
+        _context.Rooms.Add(newRoom);
+        _context.SaveChanges();
+    }
+    private Room CreateRoom()
+    {
+        // Create the new room
+        string name;
         while (true)
         {
-            name = _inputManager.ReadString("Enter room name: ");
+            name = _inputManager.ReadString("Enter name for the new room: ");
             if (rooms.Any(r => r.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
             {
                 _outputManager.WriteLine("Room name already exists. Please choose a different name.", ConsoleColor.Red);
             }
-            else
-            {
-                break;
-            }
+            else break;
         }
-        string description = _inputManager.ReadString("Enter room description: ");
 
-        Room newRoom = new Room(name, description);
-
-        // Add directional links
-        AddDirectionalLink(newRoom, "North", r => r.North, (r, linkedRoom) => r.North = linkedRoom, (linkedRoom, r) => linkedRoom.South = r);
-        AddDirectionalLink(newRoom, "South", r => r.South, (r, linkedRoom) => r.South = linkedRoom, (linkedRoom, r) => linkedRoom.North = r);
-        AddDirectionalLink(newRoom, "East", r => r.East, (r, linkedRoom) => r.East = linkedRoom, (linkedRoom, r) => linkedRoom.West = r);
-        AddDirectionalLink(newRoom, "West", r => r.West, (r, linkedRoom) => r.West = linkedRoom, (linkedRoom, r) => linkedRoom.East = r);
-
-        // Add to memory and database
-        rooms.Add(newRoom);
-        try
-        {
-            _context.Rooms.Add(newRoom);
-            _context.SaveChanges();
-            _outputManager.WriteLine($"Room '{newRoom.Name}' created successfully!", ConsoleColor.Green);
-        }
-        catch (Exception ex)
-        {
-            _outputManager.WriteLine($"Failed to save the room to the database: {ex.Message}", ConsoleColor.Red);
-        }
+        string description = _inputManager.ReadString("Enter description: ");
+        return new Room(name, description);
     }
-    private void AddDirectionalLink(Room newRoom, string direction,
-        Func<Room, Room?> getLink, Action<Room, Room> setLink, Action<Room, Room> setReverseLink)
+    private bool HasReverseConflict(Room baseRoom, string direction)
     {
-        string addDirection = _inputManager.ReadString($"Add {direction} Room? (y/n): ", new[] { "y", "n" });
-        if (addDirection == "y")
+        return rooms.Any(r => direction switch
         {
-            Room linkedRoom = FindAvailableRoom(direction);
-            if (linkedRoom != null)
-            {
-                setLink(newRoom, linkedRoom);
-                setReverseLink(linkedRoom, newRoom);
-            }
-            else
-            {
-                _outputManager.WriteLine($"No available room to the {direction}.", ConsoleColor.Red);
-            }
-        }
+            "North" => r.South == baseRoom,
+            "South" => r.North == baseRoom,
+            "East" => r.West == baseRoom,
+            "West" => r.East == baseRoom,
+            _ => false
+        });
     }
 
-    private Room FindAvailableRoom(string direction)
+    private void UpdateRoom()
     {
-        List<Room> availableRooms = direction switch
+        while (true)
         {
-            "North" => rooms.Where(r => r.North == null && r.South == null).ToList(),
-            "South" => rooms.Where(r => r.South == null && r.North == null).ToList(),
-            "East" => rooms.Where(r => r.East == null && r.West == null).ToList(),
-            "West" => rooms.Where(r => r.West == null && r.East == null).ToList(),
-            _ => new List<Room>()
-        };
-
-        return availableRooms.Count > 0 ? SelectARoom(availableRooms) : null;
+            
+        }
     }
 }

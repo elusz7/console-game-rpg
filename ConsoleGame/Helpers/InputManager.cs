@@ -2,9 +2,9 @@
 public class InputManager(OutputManager outputManager)
 {
     private readonly OutputManager _outputManager = outputManager;
-    public void ReadKey()
+    public ConsoleKeyInfo ReadKey()
     {
-        Console.ReadKey();
+        return Console.ReadKey();
     }
     public int ReadInt(string prompt, int? max = null, bool cancel = false)
     {
