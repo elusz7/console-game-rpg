@@ -509,16 +509,75 @@ public class RoomManager(GameContext context, InputManager inputManager, OutputM
     private void AddConnectionBetweenRooms()
     {
         //Find rooms that are next to each other but not connected
-        Dictionary<string, Room[]> unlinkedNextDoorRooms = FindUnlinkedRooms();
+        Dictionary<string, string> unlinkedNextDoorRooms = FindUnlinkedRooms();
+
+        foreach (var kvp in unlinkedNextDoorRooms)
+        {
+            string key = kvp.Value;
+            string[] roomNames = kvp.Key.Split('-');
+
+            Room[] roomArray = new Room[2];
+            roomArray[0] = rooms.First(r => r.Name == roomNames[0]);
+            roomArray[1] = rooms.First(r => r.Name == roomNames[1]);
+
+            _outputManager.WriteLine($"\nUnlinked Rooms: {roomArray[0].Name} and {roomArray[1].Name}");
+            _outputManager.WriteLine($"\tAvailable Directions: {key}");
+            //string directionToAdd = _inputManager.ReadString($"Enter direction to add connection ({key}): ", new[] { key });
+            //LinkRooms(rooms[0], rooms[1], directionToAdd);
+        }
         //Find rooms that don't have a path to the entrance
     }
-    private Dictionary<string, Room[]> FindUnlinkedRooms()
+    private Dictionary<string, string> FindUnlinkedRooms()
     {
-        Dictionary<string, Room[]> unlinkedNextDoorRooms = [];
+        Dictionary<string, string> unlinkedNextDoorRooms = new();
+
         foreach (var room in rooms)
         {
-            
+            var grid = GetRoomGrid(room);
+            var (x, y) = FindRoomCoordinates(grid, room);
+
+            var directions = new Dictionary<string, (int dx, int dy)>
+        {
+            { "North", (0, -1) },
+            { "South", (0, 1) },
+            { "East", (1, 0) },
+            { "West", (-1, 0) }
+        };
+
+            foreach (var dir in directions)
+            {
+                int nx = x + dir.Value.dx;
+                int ny = y + dir.Value.dy;
+
+                if (grid.TryGetValue((nx, ny), out Room neighbor))
+                {
+
+                    // Check if the room is not linked
+                    if (room.North == neighbor || room.South == neighbor || room.East == neighbor || room.West == neighbor)
+                        continue;
+
+                    string key = $"{room.Name}-{neighbor.Name}";
+
+                    string opposite = GetOppositeDirection(dir.Key);
+                    string value = dir.Key.CompareTo(opposite) < 0
+                            ? $"{dir.Key}-{opposite}"
+                            : $"{opposite}-{dir.Key}";
+
+                    if (!unlinkedNextDoorRooms.ContainsKey(key))
+                        unlinkedNextDoorRooms[key] = value;
+
+                }
+            }
         }
+
         return unlinkedNextDoorRooms;
     }
+    private string GetOppositeDirection(string dir) => dir switch
+    {
+        "North" => "South",
+        "South" => "North",
+        "East" => "West",
+        "West" => "East",
+        _ => throw new ArgumentException("Invalid direction", nameof(dir))
+    };
 }
