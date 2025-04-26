@@ -120,7 +120,7 @@ public class RoomManager(GameContext context, InputManager inputManager, OutputM
 
         while (true)
         {
-            
+
             ConsoleKeyInfo key = _inputManager.ReadKey();
 
             if (key.Key == ConsoleKey.UpArrow)
@@ -234,13 +234,23 @@ public class RoomManager(GameContext context, InputManager inputManager, OutputM
     {
         Dictionary<string, string[]> availableRooms = GetAvailableDirections();
 
-        int index = _inputManager.ReadInt("Select a room to add onto by number: ", availableRooms.Count);
+        int index = _inputManager.ReadInt("\tSelect a room to add onto by number: ", availableRooms.Count);
 
         Room roomToAddOnto = rooms.Where(r => r.Name == availableRooms.ElementAt(index - 1).Key).First();
         string[] directions = availableRooms[roomToAddOnto.Name];
-        _outputManager.WriteLine($"You selected {roomToAddOnto.Name}. Available directions: {string.Join(", ", directions)}", ConsoleColor.Green);
 
-        string directionToAddOnto = _inputManager.ReadString($"\nEnter direction to add room ({string.Join("/", directions)}): ", directions);
+        string directionToAddOnto;
+
+        if (directions.Length == 1)
+        {
+            directionToAddOnto = directions[0];
+            _outputManager.WriteLine($"\nAdding new room to the {directionToAddOnto} of {roomToAddOnto.Name}.", ConsoleColor.Green);
+        }
+        else
+        {
+            _outputManager.WriteLine($"\nYou selected {roomToAddOnto.Name}. Available directions: {string.Join(", ", directions)}", ConsoleColor.Green);
+            directionToAddOnto = _inputManager.ReadString($"Enter direction to add room ({string.Join("/", directions)}): ", directions);
+        }
 
         Room newRoom = CreateRoom();
 
@@ -281,7 +291,7 @@ public class RoomManager(GameContext context, InputManager inputManager, OutputM
             if (room == editingRoom) continue;
 
             string availableDirections = "";
-            
+
             if (room.North == null && !HasReverseConflict(room, "North")) availableDirections += "North ";
             if (room.South == null && !HasReverseConflict(room, "South")) availableDirections += "South ";
             if (room.East == null && !HasReverseConflict(room, "East")) availableDirections += "East ";
@@ -289,7 +299,7 @@ public class RoomManager(GameContext context, InputManager inputManager, OutputM
 
             if (string.IsNullOrEmpty(availableDirections)) continue;
 
-            availableDirections = RemoveLogicalConflicts(availableDirections, room);
+            availableDirections = RemoveLogicalConflicts(room, availableDirections);
 
             if (availableDirections.Length == 0) continue;
 
@@ -300,67 +310,69 @@ public class RoomManager(GameContext context, InputManager inputManager, OutputM
 
         return availableRooms;
     }
-    private string RemoveLogicalConflicts(string availableDirections, Room room)
+    private record RoomPosition(Room Room, int X, int Y);
+    private Dictionary<(int x, int y), Room> GetRoomGrid(Room root)
     {
-        string[] directions = availableDirections.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+        var visited = new HashSet<Room>();
+        var grid = new Dictionary<(int x, int y), Room>();
+        var queue = new Queue<RoomPosition>();
 
-        if (directions.Contains("North"))
+        queue.Enqueue(new RoomPosition(root, 0, 0));
+
+        while (queue.Count > 0)
         {
-            if (room.East != null || room.West != null)
+            var current = queue.Dequeue();
+            if (!visited.Add(current.Room)) continue;
+
+            grid[(current.X, current.Y)] = current.Room;
+
+            if (current.Room.North != null)
+                queue.Enqueue(new RoomPosition(current.Room.North, current.X, current.Y + 1));
+            if (current.Room.South != null)
+                queue.Enqueue(new RoomPosition(current.Room.South, current.X, current.Y - 1));
+            if (current.Room.East != null)
+                queue.Enqueue(new RoomPosition(current.Room.East, current.X + 1, current.Y));
+            if (current.Room.West != null)
+                queue.Enqueue(new RoomPosition(current.Room.West, current.X - 1, current.Y));
+        }
+
+        return grid;
+    }
+    private string RemoveLogicalConflicts(Room baseRoom, string availableDirections)
+    {
+        var grid = GetRoomGrid(baseRoom);
+        var baseCoords = FindRoomCoordinates(grid, baseRoom);
+        var directions = availableDirections.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+        var result = new List<string>();
+
+        foreach (var dir in directions)
+        {
+            var (dx, dy) = dir switch
             {
-                if (room.East?.North != null || room.West?.North != null)
-                {
-                    if (room.East?.North?.West != null || room.West?.North?.East != null)
-                    {
-                        availableDirections = availableDirections.Replace("North", "");
-                    }
-                }
+                "North" => (0, 1),
+                "South" => (0, -1),
+                "East" => (1, 0),
+                "West" => (-1, 0),
+                _ => (0, 0)
+            };
+
+            var targetCoords = (baseCoords.x + dx, baseCoords.y + dy);
+            if (!grid.ContainsKey(targetCoords)) // only allow direction if no room exists at target
+            {
+                result.Add(dir);
             }
         }
 
-        if (directions.Contains("South"))
+        return string.Join(" ", result);
+    }
+    private (int x, int y) FindRoomCoordinates(Dictionary<(int x, int y), Room> grid, Room room)
+    {
+        foreach (var kvp in grid)
         {
-            if (room.East != null || room.West != null)
-            {
-                if (room.East?.South != null || room.West?.South != null)
-                {
-                    if (room.East?.South?.West != null || room.West?.South?.East != null)
-                    {
-                        availableDirections = availableDirections.Replace("South", "");
-                    }
-                }
-            }
+            if (kvp.Value == room)
+                return kvp.Key;
         }
-
-        if (directions.Contains("East"))
-        {
-            if (room.North != null || room.South != null)
-            {
-                if (room.North?.East != null || room.South?.East != null)
-                {
-                    if (room.North?.East?.South != null || room.South?.East?.North != null)
-                    {
-                        availableDirections = availableDirections.Replace("East", "");
-                    }
-                }
-            }
-        }
-
-        if (directions.Contains("West"))
-        {
-            if (room.North != null || room.South != null)
-            {
-                if (room.North?.West != null || room.South?.West != null)
-                {
-                    if (room.North?.West?.South != null || room.South?.West?.North != null)
-                    {
-                        availableDirections = availableDirections.Replace("West", "");
-                    }
-                }
-            }
-        }
-
-        return availableDirections.Trim();
+        throw new Exception("Room not found in grid.");
     }
     private bool HasReverseConflict(Room baseRoom, string direction)
     {
@@ -417,7 +429,7 @@ public class RoomManager(GameContext context, InputManager inputManager, OutputM
                     ChangeRoomPlacement();
                     break;
                 case "3":
-                    //AddConnectionBetweenRooms();
+                    AddConnectionBetweenRooms();
                     break;
                 case "4":
                     //RemoveConnectionBetweenRooms();
@@ -438,7 +450,7 @@ public class RoomManager(GameContext context, InputManager inputManager, OutputM
         Room roomToEdit = SelectARoom("Select A Room To Edit Description: ", rooms.Where(r => r.Name != "Entrance").ToList());
 
         string newDescription = _inputManager.ReadString($"\nEnter new description for {roomToEdit.Name}: ");
-        
+
         roomToEdit.Description = newDescription;
 
         _context.SaveChanges();
@@ -484,7 +496,7 @@ public class RoomManager(GameContext context, InputManager inputManager, OutputM
             room.South = null;
         }
         if (room.East != null)
-        { 
+        {
             room.East.West = null;
             room.East = null;
         }
@@ -494,5 +506,19 @@ public class RoomManager(GameContext context, InputManager inputManager, OutputM
             room.West = null;
         }
     }
-
+    private void AddConnectionBetweenRooms()
+    {
+        //Find rooms that are next to each other but not connected
+        Dictionary<string, Room[]> unlinkedNextDoorRooms = FindUnlinkedRooms();
+        //Find rooms that don't have a path to the entrance
+    }
+    private Dictionary<string, Room[]> FindUnlinkedRooms()
+    {
+        Dictionary<string, Room[]> unlinkedNextDoorRooms = [];
+        foreach (var room in rooms)
+        {
+            
+        }
+        return unlinkedNextDoorRooms;
+    }
 }
