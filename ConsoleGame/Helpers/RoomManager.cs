@@ -1,5 +1,7 @@
-﻿using ConsoleGameEntities.Data;
+﻿using System.Net.Sockets;
+using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Models.Rooms;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace ConsoleGame.Helpers;
 
@@ -511,19 +513,14 @@ public class RoomManager(GameContext context, InputManager inputManager, OutputM
         //Find rooms that are next to each other but not connected
         Dictionary<string, string> unlinkedNextDoorRooms = FindUnlinkedRooms();
 
-        foreach (var kvp in unlinkedNextDoorRooms)
+        for (int i = 0; i < unlinkedNextDoorRooms.Count; i++) 
         {
-            string key = kvp.Value;
-            string[] roomNames = kvp.Key.Split('-');
+            string key = unlinkedNextDoorRooms.ElementAt(i).Key;
+            string value = unlinkedNextDoorRooms.ElementAt(i).Value;
 
-            Room[] roomArray = new Room[2];
-            roomArray[0] = rooms.First(r => r.Name == roomNames[0]);
-            roomArray[1] = rooms.First(r => r.Name == roomNames[1]);
+            Room[] roomArr = key.Split('-').Select(r => rooms.First(room => room.Name == r)).ToArray();
 
-            _outputManager.WriteLine($"\nUnlinked Rooms: {roomArray[0].Name} and {roomArray[1].Name}");
-            _outputManager.WriteLine($"\tAvailable Directions: {key}");
-            //string directionToAdd = _inputManager.ReadString($"Enter direction to add connection ({key}): ", new[] { key });
-            //LinkRooms(rooms[0], rooms[1], directionToAdd);
+            _outputManager.WriteLine($"\nUnlinked Rooms: {key} and {value}");
         }
         //Find rooms that don't have a path to the entrance
     }
@@ -551,21 +548,30 @@ public class RoomManager(GameContext context, InputManager inputManager, OutputM
 
                 if (grid.TryGetValue((nx, ny), out Room neighbor))
                 {
+                    bool alreadyLinked =
+                        (room.North == neighbor && neighbor.South == room) ||
+                        (room.South == neighbor && neighbor.North == room) ||
+                        (room.East == neighbor && neighbor.West == room) ||
+                        (room.West == neighbor && neighbor.East == room);
 
-                    // Check if the room is not linked
-                    if (room.North == neighbor || room.South == neighbor || room.East == neighbor || room.West == neighbor)
+                    if (alreadyLinked)
                         continue;
 
-                    string key = $"{room.Name}-{neighbor.Name}";
+                    string key, value;
 
-                    string opposite = GetOppositeDirection(dir.Key);
-                    string value = dir.Key.CompareTo(opposite) < 0
-                            ? $"{dir.Key}-{opposite}"
-                            : $"{opposite}-{dir.Key}";
+                    if (room.Name.CompareTo(neighbor.Name) < 0)
+                    {
+                        key = $"{room.Name}-{neighbor.Name}";
+                        value = dir.Key;
+                    }
+                    else
+                    {
+                        key = $"{neighbor.Name}-{room.Name}";
+                        value = GetOppositeDirection(dir.Key);
+                    }
 
                     if (!unlinkedNextDoorRooms.ContainsKey(key))
                         unlinkedNextDoorRooms[key] = value;
-
                 }
             }
         }
@@ -581,3 +587,5 @@ public class RoomManager(GameContext context, InputManager inputManager, OutputM
         _ => throw new ArgumentException("Invalid direction", nameof(dir))
     };
 }
+
+
