@@ -1,4 +1,5 @@
-﻿using ConsoleGame.Helpers;
+﻿using ConsoleGame.GameDao;
+using ConsoleGame.Helpers;
 using ConsoleGame.Services;
 using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Helpers;
@@ -43,16 +44,33 @@ public static class Startup
             ConfigurationHelper.ConfigureDbContextOptions(options, connectionString);
         });
 
-
         // Register your services
         services.AddTransient<GameEngine>();
         services.AddTransient<StartMenuManager>();
+
         services.AddTransient<InventoryManager>();
-        services.AddTransient<CharacterManager>();
-        services.AddTransient<MapManager>();
+        services.AddTransient<InventoryManagement>();
+        services.AddTransient<ItemManagement>();
+        services.AddTransient<ItemDisplay>();
+
+        services.AddTransient<PlayerManager>();
+        services.AddTransient<PlayerDisplay>();
+        services.AddTransient<PlayerManagement>();
+
         services.AddTransient<RoomManager>();
+        services.AddTransient<RoomDisplay>();
+        services.AddTransient<MapManager>();
+        services.AddTransient<RoomManagement>();
+        services.AddTransient<RoomConnectionManagement>();
+
         services.AddTransient<MonsterManager>();
+
         services.AddSingleton<InputManager>();
         services.AddSingleton<OutputManager>();
+
+        services.AddSingleton<PlayerDao>();
+        services.AddSingleton<ItemDao>();
+        services.AddSingleton<InventoryDao>();
+        services.AddSingleton<RoomDao>();
     }
 }

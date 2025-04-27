@@ -5,28 +5,38 @@ using Microsoft.Extensions.Logging;
 
 namespace ConsoleGame.Services;
 
-public class GameEngine(GameContext context, StartMenuManager menuManager, InputManager inputManager, OutputManager outputManager, CharacterManager characterManager, InventoryManager inventoryManager, RoomManager roomManager, MonsterManager monsterManager)
+public class GameEngine
 {
-    private readonly GameContext _context = context;
-    private readonly StartMenuManager _menuManager = menuManager;
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
-    private readonly CharacterManager _characterManager = characterManager;
-    private readonly InventoryManager _inventoryManager = inventoryManager;
-    private readonly RoomManager _roomManager = roomManager;
-    private readonly MonsterManager _monsterManager = monsterManager;
+    private readonly StartMenuManager _menuManager;
+    private readonly InputManager _inputManager;
+    private readonly OutputManager _outputManager;
+    private readonly PlayerManager _playerManager;
+    private readonly InventoryManager _inventoryManager;
+    private readonly RoomManager _roomManager;
+    private readonly MonsterManager _monsterManager;
 
-    private IPlayer? _player;
-    private IMonster? _goblin;
+    public GameEngine(
+        StartMenuManager menuManager, InputManager inputManager, OutputManager outputManager,
+        PlayerManager playerManager, InventoryManager inventoryManager, RoomManager roomManager,
+        MonsterManager monsterManager
+    )
+    {
+        _menuManager = menuManager;
+        _inputManager = inputManager;
+        _outputManager = outputManager;
+        _playerManager = playerManager;
+        _inventoryManager = inventoryManager;
+        _roomManager = roomManager;
+        _monsterManager = monsterManager;
+    }
 
     public void Run()
     {
-        if (_menuManager.ShowMainMenu())
+        if (_menuManager.ShowStartMenu())
         {
             GameLoop();
         }
     }
-
     private void GameLoop()
     {
         _outputManager.Clear();
@@ -34,7 +44,7 @@ public class GameEngine(GameContext context, StartMenuManager menuManager, Input
         while (true)
         {
             _outputManager.WriteLine("Main Menu:", ConsoleColor.Cyan);
-            string menuPrompt = "1. Character Management"
+            string menuPrompt = "1. Player Management"
                 + "\n2. Inventory Management"
                 + "\n3. Room Management"
                 + "\n4. Quit"
@@ -45,16 +55,13 @@ public class GameEngine(GameContext context, StartMenuManager menuManager, Input
             switch (input)
             {
                 case "1":
-                    _characterManager.CharacterMainMenu();
-                    _outputManager.Clear();
+                    _playerManager.PlayerMainMenu();
                     break;
                 case "2":
-                    _inventoryManager.InventoryMainMenu("Main Menu");
-                    _outputManager.Clear();
+                    _inventoryManager.InventoryMainMenu();
                     break;
                 case "3":
                     _roomManager.RoomMainMenu();
-                    _outputManager.Clear();
                     break;
                 case "4":
                     _outputManager.WriteLine("Exiting game...", ConsoleColor.Red);

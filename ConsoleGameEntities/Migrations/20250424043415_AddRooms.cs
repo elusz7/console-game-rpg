@@ -98,7 +98,8 @@ public partial class AddRooms : Migration
             table: "Monsters",
             column: "RoomId",
             principalTable: "Rooms",
-            principalColumn: "Id");
+            principalColumn: "Id",
+            onDelete: ReferentialAction.SetNull);
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)
