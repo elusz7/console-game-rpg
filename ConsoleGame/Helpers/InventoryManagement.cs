@@ -36,7 +36,7 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
         _outputManager.Clear();
         while (true)
         {
-            _outputManager.WriteLine($"{player.Name}'s Inventory Management", ConsoleColor.Cyan);
+            _outputManager.WriteLine($"{_player.Name}'s Inventory Management", ConsoleColor.Cyan);
             string menuPrompt = "1. Add Item to Inventory"
                 + "\n2. Remove Item from Inventory"
                 + "\n3. Return to Previous Menu"
@@ -97,7 +97,7 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
             _outputManager.WriteLine("No items in inventory to remove.");
             return;
         }
-        Item itemToRemove = SelectItem("\tSelect an item to remove by number: ", _player.Inventory.Items.ToList());
+        Item itemToRemove = SelectItem("\nSelect an item to remove from inventory: ", _player.Inventory.Items.ToList());
 
         string confirm = _inputManager.ReadString($"\nPlease confirm removal of {itemToRemove.Name} (y/n): ", new[] { "y", "n" });
 

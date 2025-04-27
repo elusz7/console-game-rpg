@@ -7,11 +7,12 @@ namespace ConsoleGame.GameDao;
 public class ItemDao
 {
     private readonly GameContext _context;
-    public string SortOrder;
+    public string SortOrder { get; set; }
 
     public ItemDao(GameContext context)
     {
         _context = context;
+        SortOrder = "ASC"; // Default sort order
     }
     public void AddItem(Item item)
     {
@@ -38,7 +39,7 @@ public class ItemDao
 
     public List<Item> GetAllItems(string name)
     {
-        List<Item> matchingItems = _context.Items
+        List<Item> matchingItems = _context.Items.ToList()
             .Where(i => i.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
             .ToList();
 
@@ -60,18 +61,19 @@ public class ItemDao
 
     public List<Item> GetItemsByType(string type)
     {
+        type = type.ToLower();
         List<Item> items = type switch
         {
-            "Weapon" => _context.Items.OfType<Weapon>().ToList<Item>(),
-            "Armor" => _context.Items.OfType<Armor>().ToList<Item>()
+            "weapon" => _context.Items.OfType<Weapon>().ToList<Item>(),
+            "armor" => _context.Items.OfType<Armor>().ToList<Item>()
         };
 
         items = (type, SortOrder) switch
         {
-            ("Weapon", "ASC") => items.OrderBy(i => ((Weapon)i).AttackPower).ToList(),
-            ("Weapon", "DESC") => items.OrderByDescending(i => ((Weapon)i).AttackPower).ToList(),
-            ("Armor", "ASC") => items.OrderBy(i => ((Armor)i).DefensePower).ToList(),
-            ("Armor", "DESC") => items.OrderByDescending(i => ((Armor)i).DefensePower).ToList()
+            ("weapon", "ASC") => items.OrderBy(i => ((Weapon)i).AttackPower).ToList(),
+            ("weapon", "DESC") => items.OrderByDescending(i => ((Weapon)i).AttackPower).ToList(),
+            ("armor", "ASC") => items.OrderBy(i => ((Armor)i).DefensePower).ToList(),
+            ("armor", "DESC") => items.OrderByDescending(i => ((Armor)i).DefensePower).ToList()
         };
 
         return items;

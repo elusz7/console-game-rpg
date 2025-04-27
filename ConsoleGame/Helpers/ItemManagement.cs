@@ -37,7 +37,7 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
                     EditItem();
                     break;
                 case "3":
-                    RemoveItem();
+                    DeleteItem();
                     break;
                 case "4":
                     _outputManager.Clear();
@@ -52,7 +52,7 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
     {
         string itemType = _inputManager.ReadString("\nWeapon or armor? ", ["weapon", "armor"]).ToLower();
 
-        string name = _inputManager.ReadString("Enter item name: ");
+        string name = _inputManager.ReadString("\nEnter item name: ");
 
         string description = _inputManager.ReadString("Enter item description: ");
 
@@ -78,49 +78,51 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
 
         _itemDao.AddItem(item);
 
-        _outputManager.WriteLine($"\nItem {item.Name} successfully created.", ConsoleColor.Green);
+        _outputManager.WriteLine($"\nItem {item.Name} successfully created.\n", ConsoleColor.Green);
     }
     private void EditItem()
     {
-        _outputManager.WriteLine();
-
-        string itemName = _inputManager.ReadString("\nEnter item name to edit: ");
-
-        Item item = _itemDao.GetItemByName(itemName);
-
+        Item item = SelectItem("\tSelect item to edit by number: ");
 
         if (item == null)
         {
-            _outputManager.WriteLine($"\nItem {itemName} not found.", ConsoleColor.Red);
-
-            List<Item> items = _itemDao.GetAllItems(itemName);
-
-            item = SelectItem("\tSelect item to edit: ", items);
+            _outputManager.WriteLine($"\nItem Editing Cancelled.\n", ConsoleColor.Red);
+            return;
         }
 
+        string[] validResponses = item switch
+        {
+            Weapon => new[] { "Name", "Description", "Value", "Durability", "Weight", "Attack power" },
+            Armor => new[] { "Name", "Description", "Value", "Durability", "Weight", "Defense power" }
+        };
 
         while (true)
         {
-            _outputManager.WriteLine($"\nEditing item {item.Name}.", ConsoleColor.Cyan);
+            _outputManager.Clear();
+            _outputManager.WriteLine($"Editing item {item.Name}.", ConsoleColor.Cyan);
             DisplayItemDetails(item);
+            _outputManager.WriteLine();
+            for (int i = 0; i < validResponses.Length; i++)
+            {
+                _outputManager.WriteLine($"{i + 1}. {validResponses[i]}");
+            }
+            _outputManager.WriteLine($"{validResponses.Length + 1}. Exit");
 
-            string response = _inputManager.ReadString("\nWhat property would you like to edit? (exit to leave): ",
-                new[] { "name", "description", "value", "durability", "weight", "attack power", "defense power", "exit" }).ToLower();
+            int index = _inputManager.ReadInt("\nSelect property to edit by number: ", validResponses.Length + 1) - 1;
 
-            if (response == "exit")
+            if (index == validResponses.Length)
             {
                 _itemDao.UpdateItem(item);
-                _outputManager.WriteLine($"\nItem {item.Name} successfully updated.", ConsoleColor.Green);
+                _outputManager.WriteLine($"\nItem {item.Name} successfully updated.\n", ConsoleColor.Green);
                 return;
             }
 
-            UpdateItemProperty(item, response);
+            UpdateItemProperty(item, validResponses[index]);
         }
     }
-    private void RemoveItem()
+    private void DeleteItem()
     {
-        _outputManager.WriteLine();
-        Item itemToDelete = SelectItem("\tSelect an item to delete by number: ", _itemDao.GetAllItems());
+        Item itemToDelete = SelectItem("\tSelect an item to delete by number: ");
 
         string confirm = _inputManager.ReadString($"\nPlease confirm deletion of {itemToDelete.Name} (y/n): ", ["y", "n"]);
 
@@ -128,20 +130,26 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
         {
             _itemDao.DeleteItem(itemToDelete);
 
-            _outputManager.WriteLine("Item has been removed successfully!", ConsoleColor.Green);
+            _outputManager.WriteLine("\nItem has been deleted successfully!\n", ConsoleColor.Green);
         }
         else
         {
-            _outputManager.WriteLine($"Deletion cancelled. Item [{itemToDelete.Name}] has not been removed.", ConsoleColor.Red);
+            _outputManager.WriteLine($"\nDeletion cancelled. Item [{itemToDelete.Name}] has not been deleted.\n", ConsoleColor.Red);
         }
     }
-    private Item SelectItem(string prompt, List<Item> itemList)
+    private Item SelectItem(string prompt)
     {
+        List<Item> itemList = _itemDao.GetAllItems();
+        _outputManager.WriteLine();
         for (int i = 0; i < itemList.Count; i++)
         {
             _outputManager.WriteLine($"{i + 1}. {itemList[i].Name}");
         }
-        int index = _inputManager.ReadInt(prompt, itemList.Count);
+        int index = _inputManager.ReadInt(prompt, itemList.Count, true);
+
+        if (index == -1)
+            return null;
+
         return itemList[index - 1];
     }
     private void DisplayItemDetails(Item item)
@@ -155,32 +163,26 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
     {
         switch (property)
         {
-            case "name":
+            case "Name":
                 item.Name = _inputManager.ReadString("\nEnter new name: ");
                 break;
-            case "description":
+            case "Description":
                 item.Description = _inputManager.ReadString("\nEnter new description: ");
                 break;
-            case "value":
+            case "Value":
                 item.Value = _inputManager.ReadDecimal("\nEnter new value: ");
                 break;
-            case "durability":
+            case "Durability":
                 item.Durability = _inputManager.ReadInt("\nEnter new durability: ");
                 break;
-            case "weight":
+            case "Weight":
                 item.Weight = _inputManager.ReadDecimal("\nEnter new weight: ");
                 break;
-            case "attack power":
-                if (item is Weapon weapon)
-                    weapon.AttackPower = _inputManager.ReadInt("\nEnter new attack power: ");
-                else
-                    _outputManager.WriteLine("Item is not a weapon.");
+            case "Attack power":
+                ((Weapon)item).AttackPower = _inputManager.ReadInt("\nEnter new attack power: ");
                 break;
-            case "defense power":
-                if (item is Armor armor)
-                    armor.DefensePower = _inputManager.ReadInt("\nEnter new defense power: ");
-                else
-                    _outputManager.WriteLine("Item is not an armor.");
+            case "Defense power":
+                    ((Armor)item).DefensePower = _inputManager.ReadInt("\nEnter new defense power: ");
                 break;
         }
     }

@@ -19,12 +19,12 @@ public class ItemDisplay(InputManager inputManager, OutputManager outputManager,
         _outputManager.Clear();
         while (true)
         {
-            _outputManager.WriteLine("\nItem Display Menu", ConsoleColor.Cyan);
+            _outputManager.WriteLine("Item Display Menu", ConsoleColor.Cyan);
             string menuPrompt = "1. List All Items"
                 + "\n2. Search For Item(s) By Name"
                 + "\n3. List Items By Type"
                 + $"\n4. Change Sort Order (currently: {_itemDao.SortOrder})"
-                + "\n4. Return To Inventory Main Menu"
+                + "\n5. Return To Inventory Main Menu"
                     + "\n\tChoose an option: ";
             var input = _inputManager.ReadString(menuPrompt);
 
@@ -41,6 +41,7 @@ public class ItemDisplay(InputManager inputManager, OutputManager outputManager,
                     break;
                 case "4":
                     _itemDao.SortOrder = _itemDao.SortOrder == "ASC" ? "DESC" : "ASC";
+                    _outputManager.WriteLine($"\nSorting now by {_itemDao.SortOrder}!\n");
                     break;
                 case "5":
                     _outputManager.Clear();
@@ -72,11 +73,11 @@ public class ItemDisplay(InputManager inputManager, OutputManager outputManager,
 
         if (!itemsFound.Any())
         {
-            _outputManager.WriteLine($"\n\tNo items found matching [{itemName}]");
+            _outputManager.WriteLine($"\n\tNo items found matching [{itemName}]\n");
         }
         else
         {
-            _outputManager.WriteLine($"\n\t{itemsFound.Count} items found matching [{itemName}]\n");
+            _outputManager.WriteLine($"\n\t{itemsFound.Count} items found matching [{itemName}]");
             ListItemsFullDetails(itemsFound);
         }
     }
@@ -98,10 +99,12 @@ public class ItemDisplay(InputManager inputManager, OutputManager outputManager,
     }
     private void ListItemsFullDetails<T>(List<T> itemList) where T : Item
     {
+        _outputManager.WriteLine();
         foreach (var item in itemList)
         {
             DisplayItemDetails(item);
         }
+        _outputManager.WriteLine();
     }
     private void DisplayItemDetails(Item item)
     {
