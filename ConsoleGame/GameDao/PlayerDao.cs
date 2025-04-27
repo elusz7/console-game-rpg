@@ -6,48 +6,45 @@ namespace ConsoleGame.GameDao;
 
 public class PlayerDao
 {
-    private readonly IDbContextFactory<GameContext> _contextFactory;
+    private readonly GameContext _context;
 
-    public PlayerDao(IDbContextFactory<GameContext> contextFactory)
+    public PlayerDao(GameContext context)
     {
-        _contextFactory = contextFactory;
+        _context = context;
     }
 
     public void AddPlayer(Player player)
     {
-        using var context = _contextFactory.CreateDbContext();
-        context.Players.Add(player);
-        context.SaveChanges();
+        _context.Players.Add(player);
+        _context.SaveChanges();
     }
 
     public void UpdatePlayer(Player player)
     {
-        using var context = _contextFactory.CreateDbContext();
-        context.Players.Update(player);
-        context.SaveChanges();
+        _context.Players.Update(player);
+        _context.SaveChanges();
     }
 
     public void DeletePlayer(Player player)
     {
-        using var context = _contextFactory.CreateDbContext();
-        context.Players.Remove(player);
-        context.SaveChanges();
+        _context.Players.Remove(player);
+        _context.SaveChanges();
     }
 
     public Player GetPlayerByName(string name)
     {
-        using var context = _contextFactory.CreateDbContext();
-        return context.Players.Where(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+        return _context.Players.FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
     }
 
     public List<Player> GetAllPlayers(string name)
     {
-        using var context = _contextFactory.CreateDbContext();
-        return context.Players.Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase)).ToList();
+        return _context.Players
+            .ToList()
+            .Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
+            .ToList();
     }
     public List<Player> GetAllPlayers()
     {
-        using var context = _contextFactory.CreateDbContext();
-        return context.Players.ToList();
+        return _context.Players.ToList();
     }
 }

@@ -17,7 +17,7 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
         _outputManager.Clear();
         while (true)
         {
-            _outputManager.WriteLine("\nPlayer Management Menu", ConsoleColor.Cyan);
+            _outputManager.WriteLine("Player Management Menu", ConsoleColor.Cyan);
             string menuPrompt = "1. Add Player"
                 + "\n2. Edit Player"
                 + "\n3. Remove Player"
@@ -86,26 +86,32 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
         else
             _outputManager.WriteLine("No items assigned. Items can be added later through the main menu.\n");
 
-        _outputManager.WriteLine($"New Player [{name}] added successfully!");
+        _outputManager.WriteLine($"New Player [{name}] added successfully!\n");
         _outputManager.Display();
     }
     private void EditPlayer()
     {
         Player player = SelectPlayer("Select the number of the player you'd like to edit: ");
 
-        string[] validResponses = { "Name", "Health", "Experience", "Gold", "Capacity", "exit" };
+        string[] validResponses = { "Name", "Health", "Experience", "Gold", "Capacity"};
 
         while (true)
         {
             _outputManager.WriteLine($"\nEditing player: {player.Name}", ConsoleColor.Cyan);
-            _outputManager.Write($"{player.ToString()}\n\n\t");
+            _outputManager.WriteLine($"{player.ToString()}\n", ConsoleColor.Green);
 
-            string input = _inputManager.ReadString("What property would you like to edit? (exit to quit) ", validResponses).ToLower();
+            for (int i = 0; i < validResponses.Length; i++)
+            {
+                _outputManager.WriteLine($"{i + 1}. Change {validResponses[i]}");
+            }
+            _outputManager.WriteLine($"{validResponses.Length + 1}. Exit");
 
-            if (input.Equals("exit", StringComparison.OrdinalIgnoreCase))
+            int index = _inputManager.ReadInt("\nWhat property would you like to edit? (exit to quit) ", validResponses.Length + 1) - 1;
+
+            if (index == validResponses.Length)
             {
                 _playerDao.UpdatePlayer(player);
-                _outputManager.WriteLine($"\nChanges successfuly saved to {player.Name}", ConsoleColor.Green);
+                _outputManager.WriteLine($"\nExiting. Changes successfuly saved to {player.Name}\n", ConsoleColor.Green);
                 return;
             }
             else
@@ -114,28 +120,28 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
                 int newValue = -1;
                 decimal newCapacity = -1.0M;
 
-                if (input == "name")
-                    newName = _inputManager.ReadString($"\tEnter new value for {input}: ");
-                else if (input == "capacity")
-                    newCapacity = _inputManager.ReadDecimal($"\tEnter new value for {input}: ");
+                if (validResponses[index] == "Name")
+                    newName = _inputManager.ReadString($"\nEnter new value for {validResponses[index]}: ");
+                else if (validResponses[index] == "Capacity")
+                    newCapacity = _inputManager.ReadDecimal($"\nEnter new value for {validResponses[index]}: ");
                 else
-                    newValue = _inputManager.ReadInt($"\tEnter new value for {input}: ");
+                    newValue = _inputManager.ReadInt($"\nEnter new value for {validResponses[index]}: ");
 
-                switch (input)
+                switch (validResponses[index])
                 {
-                    case "name":
+                    case "Name":
                         player.Name = newName;
                         break;
-                    case "health":
+                    case "Health":
                         player.Health = newValue;
                         break;
-                    case "experience":
+                    case "Experience":
                         player.Experience = newValue;
                         break;
-                    case "gold":
+                    case "Gold":
                         player.Inventory.Gold = newValue;
                         break;
-                    case "capacity":
+                    case "Capacity":
                         player.Inventory.Capacity = newCapacity;
                         break;
                 }
@@ -152,11 +158,11 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
         {
             _playerDao.DeletePlayer(playerToDelete);
 
-            _outputManager.WriteLine("Character has been removed successfully!", ConsoleColor.Green);
+            _outputManager.WriteLine("\nCharacter has been removed successfully!\n", ConsoleColor.Green);
         }
         else
         {
-            _outputManager.WriteLine($"Deletion cancelled. Character [{playerToDelete.Name}] has not been removed.", ConsoleColor.Red);
+            _outputManager.WriteLine($"\nDeletion cancelled. Character [{playerToDelete.Name}] has not been removed.\n", ConsoleColor.Red);
         }
     }
     private Player SelectPlayer(string prompt)

@@ -6,45 +6,39 @@ namespace ConsoleGame.GameDao;
 
 public class ItemDao
 {
-    private readonly IDbContextFactory<GameContext> _contextFactory;
+    private readonly GameContext _context;
     public string SortOrder;
-    public ItemDao(IDbContextFactory<GameContext> contextFactory)
+
+    public ItemDao(GameContext context)
     {
-        _contextFactory = contextFactory;
-        SortOrder = "ASC";
+        _context = context;
     }
     public void AddItem(Item item)
     {
-        using var context = _contextFactory.CreateDbContext();
-        context.Items.Add(item);
-        context.SaveChanges();
+        _context.Items.Add(item);
+        _context.SaveChanges();
     }
 
     public void UpdateItem(Item item)
-    {
-        using var context = _contextFactory.CreateDbContext();
-        context.Items.Update(item);
-        context.SaveChanges();
+    {        
+        _context.Items.Update(item);
+        _context.SaveChanges();
     }
 
     public void DeleteItem(Item item)
-    {
-        using var context = _contextFactory.CreateDbContext();
-        context.Items.Remove(item);
-        context.SaveChanges();
+    {        
+        _context.Items.Remove(item);
+        _context.SaveChanges();
     }
 
     public Item GetItemByName(string name)
-    {
-        using var context = _contextFactory.CreateDbContext();
-        return context.Items.Where(i => i.Name.Equals(name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+    {        
+        return _context.Items.Where(i => i.Name.Equals(name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
     }
 
     public List<Item> GetAllItems(string name)
     {
-        using var context = _contextFactory.CreateDbContext();
-        
-        List<Item> matchingItems = context.Items
+        List<Item> matchingItems = _context.Items
             .Where(i => i.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
             .ToList();
 
@@ -57,23 +51,19 @@ public class ItemDao
 
     public List<Item> GetAllItems()
     {
-        using var context = _contextFactory.CreateDbContext();
-        
         return SortOrder switch
         {
-            "ASC" => context.Items.OrderBy(i => i.Name).ToList(),
-            "DESC" => context.Items.OrderByDescending(i => i.Name).ToList()
+            "ASC" => _context.Items.OrderBy(i => i.Name).ToList(),
+            "DESC" => _context.Items.OrderByDescending(i => i.Name).ToList()
         };
     }
 
     public List<Item> GetItemsByType(string type)
     {
-        using var context = _contextFactory.CreateDbContext();
-
         List<Item> items = type switch
         {
-            "Weapon" => context.Items.OfType<Weapon>().ToList<Item>(),
-            "Armor" => context.Items.OfType<Armor>().ToList<Item>()
+            "Weapon" => _context.Items.OfType<Weapon>().ToList<Item>(),
+            "Armor" => _context.Items.OfType<Armor>().ToList<Item>()
         };
 
         items = (type, SortOrder) switch

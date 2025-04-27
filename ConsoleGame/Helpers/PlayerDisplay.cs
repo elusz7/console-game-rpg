@@ -13,7 +13,7 @@ public class PlayerDisplay(InputManager inputManager, OutputManager outputManage
         _outputManager.Clear();
         while (true)
         {
-            _outputManager.WriteLine("\nPlayer Display Menu", ConsoleColor.Cyan);
+            _outputManager.WriteLine("Player Display Menu", ConsoleColor.Cyan);
             string menuPrompt = "1. List All Players"
                 + "\n2. Search Player By Name"
                 + "\n3. Return to Player Main Menu"
@@ -47,6 +47,7 @@ public class PlayerDisplay(InputManager inputManager, OutputManager outputManage
         {
             _outputManager.WriteLine(p.ToString());
         }
+        _outputManager.WriteLine();
         _outputManager.Display();
     }
     private void FindPlayerByName()
@@ -57,7 +58,7 @@ public class PlayerDisplay(InputManager inputManager, OutputManager outputManage
 
         if (matchingPlayers.Count == 0)
         {
-            _outputManager.WriteLine($"\nNo Players found matching [{name}]");
+            _outputManager.WriteLine($"\nNo Players found matching [{name}]\n");
         }
         else
         {

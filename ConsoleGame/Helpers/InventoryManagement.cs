@@ -36,7 +36,7 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
         _outputManager.Clear();
         while (true)
         {
-            _outputManager.WriteLine($"\n{player.Name}'s Inventory Management", ConsoleColor.Cyan);
+            _outputManager.WriteLine($"{player.Name}'s Inventory Management", ConsoleColor.Cyan);
             string menuPrompt = "1. Add Item to Inventory"
                 + "\n2. Remove Item from Inventory"
                 + "\n3. Return to Previous Menu"
@@ -56,7 +56,7 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
                     _outputManager.Clear();
                     return;
                 default:
-                    _outputManager.WriteLine("Invalid option. Please try again.");
+                    _outputManager.WriteLine("\nInvalid option. Please try again.\n");
                     break;
             }
         }
@@ -86,7 +86,9 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
             return;
         }
 
-        _inventoryDao.AddItemToInventory(_player, itemToAdd);
+        _player.Inventory.Items.Add(itemToAdd);
+        _inventoryDao.UpdateInventory(_player.Inventory);
+        _outputManager.WriteLine($"\nItem {itemToAdd.Name} added to inventory.\n", ConsoleColor.Green);
     }
     private void RemoveItemFromInventory()
     {
@@ -95,9 +97,9 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
             _outputManager.WriteLine("No items in inventory to remove.");
             return;
         }
-        Item itemToDelete = SelectItem("\tSelect an item to remove by number: ", _player.Inventory.Items.ToList());
+        Item itemToRemove = SelectItem("\tSelect an item to remove by number: ", _player.Inventory.Items.ToList());
 
-        string confirm = _inputManager.ReadString($"\nPlease confirm removal of {itemToDelete.Name} (y/n): ", new[] { "y", "n" });
+        string confirm = _inputManager.ReadString($"\nPlease confirm removal of {itemToRemove.Name} (y/n): ", new[] { "y", "n" });
 
         if (confirm == "n")
         {
@@ -105,10 +107,14 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
             return;
         }
 
-        _inventoryDao.RemoveItemFromInventory(_player, itemToDelete);
+        _player.Inventory.Items.Remove(itemToRemove);
+        _inventoryDao.UpdateInventory(_player.Inventory);
+
+        _outputManager.WriteLine($"\nItem Successfully Removed From {_player.Name}'s Inventory\n", ConsoleColor.Green);
     }
     private Item SelectItem(string prompt, List<Item> itemList)
     {
+        _outputManager.WriteLine();
         for (int i = 0; i < itemList.Count; i++)
         {
             if (itemList[i] is Weapon weapon)

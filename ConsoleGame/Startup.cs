@@ -44,7 +44,12 @@ public static class Startup
             ConfigurationHelper.ConfigureDbContextOptions(options, connectionString);
         });
 
-        // Register your services
+
+        services.AddScoped<RoomDao>();
+        services.AddScoped<PlayerDao>();
+        services.AddScoped<ItemDao>();
+        services.AddScoped<InventoryDao>();
+
         services.AddTransient<GameEngine>();
         services.AddTransient<StartMenuManager>();
 
@@ -67,10 +72,5 @@ public static class Startup
 
         services.AddSingleton<InputManager>();
         services.AddSingleton<OutputManager>();
-
-        services.AddSingleton<PlayerDao>();
-        services.AddSingleton<ItemDao>();
-        services.AddSingleton<InventoryDao>();
-        services.AddSingleton<RoomDao>();
     }
 }

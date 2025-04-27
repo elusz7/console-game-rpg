@@ -6,44 +6,38 @@ namespace ConsoleGame.GameDao;
 
 public class RoomDao
 {
-    private readonly IDbContextFactory<GameContext> _contextFactory;
-    public RoomDao(IDbContextFactory<GameContext> contextFactory)
+    private readonly GameContext _context;
+    public RoomDao(GameContext context)
     {
-        _contextFactory = contextFactory;
+        _context = context;
     }
     public void AddRoom(Room room)
-    {
-        using var context = _contextFactory.CreateDbContext();
-        context.Rooms.Add(room);
-        context.SaveChanges();
+    {        
+        _context.Rooms.Add(room);
+        _context.SaveChanges();
     }
     public void UpdateRoom(Room room)
-    {
-        using var context = _contextFactory.CreateDbContext();
-        context.Rooms.Update(room);
-        context.SaveChanges();
+    {        
+        _context.Rooms.Update(room);
+        _context.SaveChanges();
     }
     public void UpdateAllRooms(List<Room> rooms)
-    {
-        using var context = _contextFactory.CreateDbContext();
-        context.Rooms.UpdateRange(rooms);
-        context.SaveChanges();
+    {        
+        _context.Rooms.UpdateRange(rooms);
+        _context.SaveChanges();
     }
     public void DeleteRoom(Room room)
-    {
-        using var context = _contextFactory.CreateDbContext();
-        context.Rooms.Remove(room);
-        context.SaveChanges();
+    {        
+        _context.Rooms.Remove(room);
+        _context.SaveChanges();
     }
     public List<Room> GetAllRooms()
-    {
-        using var context = _contextFactory.CreateDbContext();
-        return context.Rooms.ToList();
+    {        
+        return _context.Rooms.ToList();
     }
     public List<Room> GetAllEditableRooms()
-    {
-        using var context = _contextFactory.CreateDbContext();
-        return context.Rooms.Where(r => !r.Name.Equals("Entrance")).ToList();
+    {        
+        return _context.Rooms.Where(r => !r.Name.Equals("Entrance")).ToList();
     }
     public List<Room> GetAllDeletableRooms()
     {
@@ -65,23 +59,19 @@ public class RoomDao
     }
     public Room GetEntrance()
     {
-        using var context = _contextFactory.CreateDbContext();
-        return context.Rooms.FirstOrDefault(r => r.Name.Equals("Entrance"));
+        return _context.Rooms.FirstOrDefault(r => r.Name.Equals("Entrance"));
     }
     public Room FindRoomByName(string name)
     {
-        using var context = _contextFactory.CreateDbContext();
-        return context.Rooms.FirstOrDefault(r => r.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        return _context.Rooms.FirstOrDefault(r => r.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
     }
     public bool RoomExists(string name)
-    {
-        using var context = _contextFactory.CreateDbContext();
-        return context.Rooms.Any(r => r.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+    {        
+        return _context.Rooms.Any(r => r.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
     }
     public bool HasReverseConflict(Room baseRoom, string direction)
-    {
-        using var context = _contextFactory.CreateDbContext();
-        return context.Rooms.ToList().Any(r => direction switch
+    {        
+        return _context.Rooms.ToList().Any(r => direction switch
         {
             "North" => r.South == baseRoom,
             "South" => r.North == baseRoom,

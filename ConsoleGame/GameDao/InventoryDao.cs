@@ -7,73 +7,43 @@ namespace ConsoleGame.GameDao;
 
 public class InventoryDao
 {
-    private readonly IDbContextFactory<GameContext> _contextFactory;
-    public InventoryDao(IDbContextFactory<GameContext> contextFactory)
+    private readonly GameContext _context;
+
+    public InventoryDao(GameContext context)
     {
-        _contextFactory = contextFactory;
+        _context = context;
     }
 
     public List<Player> GetAllPlayers()
     {
-        using var context = _contextFactory.CreateDbContext();
-        return context.Players.ToList();
+        return _context.Players.ToList();
     }
-
     public void UpdateInventory(Inventory inventory)
     {
-        using var context = _contextFactory.CreateDbContext();
-        context.Inventories.Update(inventory);
-        context.SaveChanges();
-    }
-
-    public void AddItemToInventory(Player player, Item item)
-    {
-        using var context = _contextFactory.CreateDbContext();
-        bool success = true;
-
-        var inventory = context.Inventories.Include(i => i.Items).First(i => i.PlayerId == player.Id);
-        
-        inventory.Items.Add(item);
-
-        context.SaveChanges();
-    }
-    public void RemoveItemFromInventory(Player player, Item item)
-    {
-        using var context = _contextFactory.CreateDbContext();
-        
-        var inventory = context.Inventories.Include(i => i.Items).First(i => i.PlayerId == player.Id);
-
-        inventory.Items.Remove(item);
-        
-        context.SaveChanges();
+        _context.Inventories.Update(inventory);
+        _context.SaveChanges();
     }
     public Inventory GetInventory(Player player)
     {
-        using var context = _contextFactory.CreateDbContext();
-        return context.Inventories
+        return _context.Inventories
             .Include(i => i.Items)
             .First(i => i.PlayerId == player.Id);
     }
-
     public List<Item> GetEquippableItems(Player player)
     {
-        using var context = _contextFactory.CreateDbContext();
-
-        decimal availableCapacity = context.Inventories
+        decimal availableCapacity = _context.Inventories
             .Where(i => i.PlayerId == player.Id)
             .Select(i => i.Capacity - i.Items.Sum(item => item.Weight))
             .First();
 
-        return context.Items
+        return _context.Items
             .Where(i => i.Weight <= availableCapacity)
             .Where(i => i.InventoryId == null)
             .ToList();
     }
-
     public decimal GetInventoryWeight(Player player)
     {
-        using var context = _contextFactory.CreateDbContext();
-        return context.Inventories
+        return _context.Inventories
             .Where(i => i.PlayerId == player.Id)
             .Select(i => i.Items.Sum(item => item.Weight))
             .FirstOrDefault();
