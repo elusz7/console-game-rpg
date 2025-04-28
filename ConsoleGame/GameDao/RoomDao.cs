@@ -35,6 +35,17 @@ public class RoomDao
     {        
         return _context.Rooms.ToList();
     }
+
+    public List<Room> GetAllRoomsWithConnections()
+    {
+        return _context.Rooms
+            .Where(r =>
+                r.North != null ||
+                r.South != null ||
+                r.East != null ||
+                r.West != null
+            ).ToList();
+    }
     public List<Room> GetAllEditableRooms()
     {        
         return _context.Rooms.Where(r => !r.Name.Equals("Entrance")).ToList();
@@ -63,11 +74,11 @@ public class RoomDao
     }
     public Room FindRoomByName(string name)
     {
-        return _context.Rooms.FirstOrDefault(r => r.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        return _context.Rooms.FirstOrDefault(r => r.Name.Equals(name));
     }
     public bool RoomExists(string name)
     {        
-        return _context.Rooms.Any(r => r.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        return _context.Rooms.Any(r => r.Name.Equals(name));
     }
     public bool HasReverseConflict(Room baseRoom, string direction)
     {        

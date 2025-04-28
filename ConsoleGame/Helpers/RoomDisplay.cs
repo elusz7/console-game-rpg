@@ -55,5 +55,6 @@ public class RoomDisplay
         {
             _outputManager.WriteLine(room.ToString());
         }
+        _outputManager.WriteLine();
     }
 }

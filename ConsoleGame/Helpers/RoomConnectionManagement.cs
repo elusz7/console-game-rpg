@@ -11,19 +11,17 @@ public class RoomConnectionManagement(InputManager inputManager, OutputManager o
     private readonly RoomDao _roomDao = roomDao;
     private readonly MapManager _mapManager = mapManager;
 
-    private Dictionary<(int x, int y), Room> _roomGridCache;
-    private bool _gridDirty = true;
-
     public void Menu()
     {
         _outputManager.Clear();
         while (true)
         {
-            _outputManager.WriteLine("\nRoom Connection Management Menu", ConsoleColor.Cyan);
-            string menuPrompt = "1. Change Room Placement"
-                + "\n2. Add Room Connection"
-                + "\n3. Remove Room Connection"
-                + "\n4. Return to Main Menu"
+            _outputManager.WriteLine("Room Connection Management Menu", ConsoleColor.Cyan);
+            string menuPrompt = "1. Change Room Location"
+                + "\n2. Connect Room to Entrance"
+                + "\n3. Add Connection Between Unlinked Neighbors"
+                + "\n4. Remove Connections"
+                + "\n5. Return to Main Menu"
                 + "\n\tSelect an option: ";
             string choice = _inputManager.ReadString(menuPrompt);
             switch (choice)
@@ -32,16 +30,19 @@ public class RoomConnectionManagement(InputManager inputManager, OutputManager o
                     ChangeRoomPlacement();
                     break;
                 case "2":
-                    //EditRoomConnection();
+                    ConnectRoomToEntrance();
                     break;
                 case "3":
-                    //RemoveRoomConnection();
+                    LinkNeighbors();
                     break;
                 case "4":
+                    RemoveConnections();
+                    break;
+                case "5":
                     _outputManager.Clear();
                     return;
                 default:
-                    _outputManager.Write("Invalid choice. Please try again.\n");
+                    _outputManager.WriteLine("\nInvalid choice. Please try again.\n");
                     break;
             }
         }
@@ -59,48 +60,13 @@ public class RoomConnectionManagement(InputManager inputManager, OutputManager o
 
         Room roomToChange = editableRooms[index - 1];
 
-        Dictionary<string, string[]> availableRooms = GetAvailableDirections(roomToChange);
+        MoveRoom(roomToChange);
 
-        if (availableRooms.Count == 0)
+        var again = _inputManager.ReadString("Would you like to move another? (y/n): ", new[] { "y", "n" }).ToLower();
+        if (again == "y")
         {
-            _outputManager.WriteLine("No valid rooms to place this room next to.", ConsoleColor.Red);
-            return;
+            ChangeRoomPlacement();
         }
-
-        int addOntoIndex = _inputManager.ReadInt($"\tEnter number of room where {roomToChange.Name} will go: ", availableRooms.Count);
-
-        string selectedRoomName = availableRooms.ElementAt(addOntoIndex - 1).Key;
-
-        Room roomToAddOnto = _roomDao.FindRoomByName(selectedRoomName);
-
-        string[] directions = availableRooms[selectedRoomName];
-
-        _outputManager.WriteLine($"\nYou selected {roomToAddOnto.Name}. Available directions: {string.Join(", ", directions)}", ConsoleColor.Green);
-
-        string directionToAddOnto = directions.Length == 1
-            ? directions[0]
-            : _inputManager.ReadString($"\tEnter direction to add room ({string.Join("/", directions)}): ", directions);
-
-        string confirm = _inputManager.ReadString($"\nAre you sure you want to move {roomToChange.Name} to the {directionToAddOnto} of {roomToAddOnto.Name}? (y/n): ", new[] { "y", "n" });
-
-        if (confirm == "n")
-        {
-            _outputManager.WriteLine("Room change placement cancelled.", ConsoleColor.Red);
-            return;
-        }
-
-        UnlinkRoom(roomToChange);
-        LinkRooms(roomToAddOnto, roomToChange, directionToAddOnto);
-        _gridDirty = true;
-
-        _roomDao.UpdateRoom(roomToChange);
-        _roomDao.UpdateRoom(roomToAddOnto);
-
-        List<Room> allRooms = _roomDao.GetAllRooms();
-        RemoveLinksInUnconnectedRooms(allRooms);
-        _gridDirty = true;
-
-        _roomDao.UpdateAllRooms(allRooms);
     }
     private int SelectARoom(string prompt, List<Room> roomList)
     {
@@ -112,85 +78,6 @@ public class RoomConnectionManagement(InputManager inputManager, OutputManager o
         }
 
         return _inputManager.ReadInt($"\t{prompt}", roomList.Count, true);
-    }
-    private Dictionary<string, string[]> GetAvailableDirections(Room? editingRoom = null)
-    {
-        var availableRooms = new Dictionary<string, string[]>();
-        var allRooms = _roomDao.GetAllRooms();
-
-        _outputManager.WriteLine();
-        for (int i = 0; i < allRooms.Count; i++)
-        {
-            var room = allRooms[i];
-
-            if (room == editingRoom) continue;
-
-            string? availableDirections = "";
-
-            if (room.North == null && !_roomDao.HasReverseConflict(room, "North")) availableDirections += "North ";
-            if (room.South == null && !_roomDao.HasReverseConflict(room, "South")) availableDirections += "South ";
-            if (room.East == null && !_roomDao.HasReverseConflict(room, "East")) availableDirections += "East ";
-            if (room.West == null && !_roomDao.HasReverseConflict(room, "West")) availableDirections += "West ";
-
-            if (string.IsNullOrEmpty(availableDirections)) continue;
-
-            availableDirections = RemoveLogicalConflicts(room, availableDirections);
-
-            if (availableDirections?.Length == 0 || string.IsNullOrEmpty(availableDirections)) continue;
-
-            _outputManager.WriteLine($"{availableRooms.Count + 1}. {room.Name} - Available directions: {availableDirections}");
-
-            availableRooms.Add(room.Name, availableDirections.Trim().Split(" ", StringSplitOptions.RemoveEmptyEntries));
-        }
-
-        return availableRooms;
-    }
-    private string RemoveLogicalConflicts(Room baseRoom, string availableDirections)
-    {
-        string finalDirections = null;
-
-        var grid = GetRoomGrid();
-        try
-        {
-            var baseCoords = _mapManager.FindRoomCoordinates(baseRoom, grid);
-
-            var directions = availableDirections.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-            var validDirections = new List<string>();
-
-            foreach (var dir in directions)
-            {
-                var (dx, dy) = GetDirectionOffset(dir);
-
-                var targetCoords = (baseCoords.x + dx, baseCoords.y + dy);
-
-                if (!grid.ContainsKey(targetCoords))
-                {
-                    validDirections.Add(dir);
-                }
-            }
-
-            if (validDirections.Count > 0)
-            {
-                finalDirections = string.Join(" ", validDirections);
-            }
-        }
-        catch (InvalidOperationException)
-        {
-            finalDirections = null;
-        }
-
-        return finalDirections;
-    }
-    private (int dx, int dy) GetDirectionOffset(string direction)
-    {
-        return direction switch
-        {
-            "North" => (0, 1),
-            "South" => (0, -1),
-            "East" => (1, 0),
-            "West" => (-1, 0),
-            _ => (0, 0)  // Default case if direction is unrecognized
-        };
     }
     private void UnlinkRoom(Room room)
     {
@@ -232,27 +119,245 @@ public class RoomConnectionManagement(InputManager inputManager, OutputManager o
                 break;
         }
     }
-    private void RemoveLinksInUnconnectedRooms(List<Room> roomList)
+    private void MoveRoom(Room roomToMove)
     {
-        var grid = GetRoomGrid();
-        foreach (var room in roomList)
+        Dictionary<string, string[]> availableRooms = _mapManager.GetAvailableDirections(roomToMove);
+
+        if (availableRooms.Count == 0)
         {
-            try
-            {
-                var coords = _mapManager.FindRoomCoordinates(room, grid);
-            }
-            catch (InvalidOperationException ex) { 
-                UnlinkRoom(room);
-            }
+            _outputManager.WriteLine("No valid rooms to place this room next to.", ConsoleColor.Red);
+            return;
+        }
+
+        int addOntoIndex = _inputManager.ReadInt($"\tEnter number of room where {roomToMove.Name} will go: ", availableRooms.Count);
+
+        string selectedRoomName = availableRooms.ElementAt(addOntoIndex - 1).Key;
+
+        Room roomToAddOnto = _roomDao.FindRoomByName(selectedRoomName);
+
+        string[] directions = availableRooms[selectedRoomName];
+
+        _outputManager.WriteLine($"\nYou selected {roomToAddOnto.Name}. Available directions: {string.Join(", ", directions)}", ConsoleColor.Green);
+
+        string directionToAddOnto = directions.Length == 1
+            ? directions[0]
+            : _inputManager.ReadString($"\tEnter direction to add room ({string.Join("/", directions)}): ", directions);
+
+        string confirm = _inputManager.ReadString($"\nAre you sure you want to move {roomToMove.Name} to the {directionToAddOnto} of {roomToAddOnto.Name}? (y/n): ", new[] { "y", "n" });
+
+        if (confirm == "n")
+        {
+            _outputManager.WriteLine("Room change placement cancelled.", ConsoleColor.Red);
+            return;
+        }
+
+        UnlinkRoom(roomToMove);
+        LinkRooms(roomToAddOnto, roomToMove, directionToAddOnto);
+        _mapManager.DirtyGrid = true;
+
+        _roomDao.UpdateRoom(roomToMove);
+        _roomDao.UpdateRoom(roomToAddOnto);
+
+        _mapManager.CheckForDisconnectedRooms();
+        
+        _outputManager.WriteLine($"\n{roomToMove.Name} successfully moved!\n", ConsoleColor.Green);
+    }
+    private void ConnectRoomToEntrance()
+    {
+        var unconnectedRooms = _mapManager.FindUnconnectedRooms();
+
+        if (unconnectedRooms.Count == 0)
+        {
+            _outputManager.WriteLine("\nAll rooms have a path back to the entrance!\n", ConsoleColor.Green);
+            return;
+        }
+
+        var index = SelectARoom("Select a room to add onto the map (-1 to cancel): ", unconnectedRooms);
+
+        if (index == -1)
+        {
+            _outputManager.WriteLine("Room movement cancelled. Returning to menu.", ConsoleColor.Red);
+            return;
+        }
+
+        Room room = unconnectedRooms[index - 1];
+
+        MoveRoom(room);
+
+        var again = _inputManager.ReadString("Would you like to connect another? (y/n): ", new[] { "y", "n" }).ToLower();
+        if (again == "y")
+        {
+            ConnectRoomToEntrance();
         }
     }
-    private Dictionary<(int x, int y), Room> GetRoomGrid()
+    private void LinkNeighbors()
     {
-        if (_gridDirty || _roomGridCache == null)
+        string again;
+        var unlinkedNeighbors = _mapManager.FindUnlinkedNeighbors();
+        do
+        {             
+            _outputManager.WriteLine();
+
+            if (unlinkedNeighbors.Count == 0)
+            {
+                _outputManager.WriteLine("No unlinked neighbors found.", ConsoleColor.Yellow);
+                break;
+            }
+
+            for (int i = 0; i < unlinkedNeighbors.Count; i++)
+            {
+                var entry = unlinkedNeighbors.ElementAt(i);
+                var keyParts = entry.Key.Split("-");
+                var (name1, direction) = ParseKey(entry.Key);
+                var name2 = entry.Value;
+
+                _outputManager.WriteLine($"{i + 1}. {name2} is {direction} of {name1}");
+            }
+
+            int index = _inputManager.ReadInt("\nSelect which rooms you'd like to link (-1 to cancel): ", unlinkedNeighbors.Count, cancel: true);
+
+            if (index == -1)
+            {
+                _outputManager.WriteLine("\nLinking cancelled.", ConsoleColor.Red);
+                break;
+            }
+
+            var selectedEntry = unlinkedNeighbors.ElementAt(index - 1);
+            var parts = selectedEntry.Key.Split("-");
+            var (roomName1, directionToLink) = ParseKey(selectedEntry.Key);
+            var roomName2 = selectedEntry.Value;
+
+            var confirm = _inputManager.ReadString($"\nConfirm linking {roomName2} to the {directionToLink} of {roomName1} (y/n): ", new[] { "y", "n" }).ToLower();
+
+            if (confirm == "n")
+            {
+                _outputManager.WriteLine("\nLinking cancelled.", ConsoleColor.Red);
+                break;
+            }
+
+            var roomA = _roomDao.FindRoomByName(roomName1);
+            var roomB = _roomDao.FindRoomByName(roomName2);
+
+            LinkRooms(roomA, roomB, directionToLink);
+
+            _roomDao.UpdateRoom(roomA);
+            _roomDao.UpdateRoom(roomB);
+
+            _mapManager.DirtyGrid = true;
+
+            _outputManager.WriteLine($"\n{roomName1} and {roomName2} have been successfully linked!\n", ConsoleColor.Green);
+
+            unlinkedNeighbors = _mapManager.FindUnlinkedNeighbors();
+            if (unlinkedNeighbors.Count == 0)
+            {
+                _outputManager.WriteLine("\nNo more unlinked neighbors remaining!", ConsoleColor.Green);
+                break;
+            }
+
+            again = _inputManager.ReadString("Would you like to link another? (y/n): ", new[] { "y", "n" }).ToLower();
+
+        } while (again == "y");
+        _outputManager.WriteLine();
+    }
+    private (string name, string direction) ParseKey(string key)
+    {
+        var parts = key.Split("-");
+        return (parts[0], parts[1]);
+    }
+
+    private void RemoveConnections()
+    {
+        string again;
+        do
         {
-            _roomGridCache = _mapManager.GetRoomGrid();
-            _gridDirty = false;
+            var rooms = _roomDao.GetAllRoomsWithConnections();
+            if (!rooms.Any())
+            {
+                _outputManager.WriteLine("\nNo rooms available with all connections intact.", ConsoleColor.Yellow);
+                break;
+            }
+
+            var index = SelectARoom("Select The Room You Wish To Remove A Connection From: ", rooms);
+
+            if (index == -1)
+            {
+                _outputManager.WriteLine("\nConnection Removal Cancelled.", ConsoleColor.Red);
+                break;
+            }
+
+            var roomToChange = rooms[index - 1];
+            var directions = new Dictionary<string, Room>();
+
+            if (roomToChange.North != null) directions.Add("North", roomToChange.North);
+            if (roomToChange.South != null) directions.Add("South", roomToChange.South);
+            if (roomToChange.East != null) directions.Add("East", roomToChange.East);
+            if (roomToChange.West != null) directions.Add("West", roomToChange.West);
+
+            _outputManager.Write($"\n{roomToChange.Name} has {directions.Count} connection(s): ");
+
+            int loopCount = directions.Count;
+            foreach (var dir in directions)
+            {
+                loopCount--;
+                _outputManager.Write($"{dir.Key} - {dir.Value.Name}");
+                if (loopCount != 0)
+                    _outputManager.Write(", ");
+                else
+                    _outputManager.Write("\n");
+            }
+
+            var removeDirection = directions.ElementAt(0).Key;
+            if (directions.Count != 1)
+            {
+                for (int i = 0; i < directions.Count; i++)
+                {
+                    _outputManager.WriteLine($"{i + 1}. {directions.ElementAt(i).Key}");
+                }
+                var choice = _inputManager.ReadInt("Select the direction you'd like to remove: ", directions.Count) - 1;
+                removeDirection = directions.ElementAt(choice).Key;
+            }
+
+            var confirm = _inputManager.ReadString($"\nConfirm removal of link between {roomToChange.Name} and {directions[removeDirection].Name} (y/n): ", new[] { "y", "n" }).ToLower();
+            if (confirm == "n")
+            {
+                _outputManager.WriteLine("\nConnection Removal Cancelled.", ConsoleColor.Red);
+                break;
+            }
+
+            UnlinkRoom(roomToChange, directions[removeDirection], removeDirection);
+
+            _roomDao.UpdateRoom(roomToChange);
+            _roomDao.UpdateRoom(directions[removeDirection]);
+            _mapManager.DirtyGrid = true;
+
+            _mapManager.CheckForDisconnectedRooms();
+
+            _outputManager.WriteLine($"\n{roomToChange.Name} and {directions[removeDirection].Name} have been successfully disconnected!\n", ConsoleColor.Green);
+
+            again = _inputManager.ReadString("Would you like to disconnect another link? (y/n): ", new[] { "y", "n" }).ToLower();
+        } while (again == "y");
+        _outputManager.WriteLine();
+    }
+    private void UnlinkRoom(Room from, Room to, string direction)
+    {
+        switch (direction)
+        {
+            case "North":
+                from.North = null;
+                to.South = null;
+                break;
+            case "South":
+                from.South = null;
+                to.North = null;
+                break;
+            case "East":
+                from.East = null;
+                to.West = null;
+                break;
+            case "West":
+                from.West = null;
+                to.East = null;
+                break;
         }
-        return _roomGridCache;
     }
 }
