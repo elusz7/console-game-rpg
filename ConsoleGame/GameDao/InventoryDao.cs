@@ -1,5 +1,5 @@
 ﻿using ConsoleGameEntities.Data;
-using ConsoleGameEntities.Models.Characters;
+using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 using Microsoft.EntityFrameworkCore;
 

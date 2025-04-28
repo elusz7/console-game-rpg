@@ -1,8 +1,8 @@
 ﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Models.Rooms;
+using ConsoleGameEntities.Models.Entities;
 
-namespace ConsoleGameEntities.Models.Characters.Monsters;
+namespace ConsoleGameEntities.Models.Monsters;
 public abstract class Monster : IMonster, ITargetable
 {
     public int Id { get; set; }

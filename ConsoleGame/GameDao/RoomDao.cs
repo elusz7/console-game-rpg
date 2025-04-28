@@ -1,6 +1,5 @@
 ﻿using ConsoleGameEntities.Data;
-using ConsoleGameEntities.Models.Rooms;
-using Microsoft.EntityFrameworkCore;
+using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.GameDao;
 
@@ -35,26 +34,13 @@ public class RoomDao
     {        
         return _context.Rooms.ToList();
     }
-
-    public List<Room> GetAllRoomsWithConnections()
-    {
-        return _context.Rooms
-            .Where(r =>
-                r.North != null ||
-                r.South != null ||
-                r.East != null ||
-                r.West != null
-            ).ToList();
-    }
     public List<Room> GetAllEditableRooms()
     {        
         return _context.Rooms.Where(r => !r.Name.Equals("Entrance")).ToList();
     }
-    public List<Room> GetAllDeletableRooms()
+    public List<Room> GetAllRoomsMaxConnections(int maxConnections)
     {
-        List<Room> allRooms = GetAllEditableRooms();
-
-        List<Room> deletableRooms = allRooms
+        return GetAllEditableRooms()
             .Where(r =>
             {
                 int connections = 0;
@@ -62,11 +48,9 @@ public class RoomDao
                 if (r.South != null) connections++;
                 if (r.East != null) connections++;
                 if (r.West != null) connections++;
-                return connections <= 1; // 0 or 1 connections
+                return connections <= maxConnections;
             })
             .ToList();
-
-        return deletableRooms;
     }
     public Room GetEntrance()
     {

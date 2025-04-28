@@ -1,11 +1,8 @@
 ﻿using ConsoleGame.GameDao;
-using ConsoleGameEntities.Models.Rooms;
+using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Helpers;
 
-/// <summary>
-/// Handles creation, editing, and deletion of rooms.
-/// </summary>
 public class RoomManagement
 {
     private readonly InputManager _inputManager;

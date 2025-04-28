@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGameEntities.Models.Items;
 

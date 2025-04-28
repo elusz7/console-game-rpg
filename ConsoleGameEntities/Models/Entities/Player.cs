@@ -1,13 +1,11 @@
-﻿using ConsoleGameEntities.Models.Abilities;
-using ConsoleGameEntities.Models.Characters.Monsters;
-using ConsoleGameEntities.Models.Items;
-using ConsoleGameEntities.Models.Rooms;
+﻿using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Exceptions;
 using System.Text;
-using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Interfaces;
 
-namespace ConsoleGameEntities.Models.Characters;
+namespace ConsoleGameEntities.Models.Entities;
 
 public class Player : ITargetable, IPlayer
 {
@@ -15,9 +13,7 @@ public class Player : ITargetable, IPlayer
     public int Id { get; set; }
     public string Name { get; set; }
     public int Health { get; set; }
-    public virtual ICollection<Ability> Abilities { get; set; } = new List<Ability>();
     public virtual Inventory Inventory { get; set; } 
-    public virtual Room? Room { get; set; }
     public void Attack(ITargetable target)
     {
         if (CanAttack(target))
@@ -51,21 +47,6 @@ public class Player : ITargetable, IPlayer
                     ColorDisplay(weapon.Name, ConsoleColor.Blue);
                     Console.WriteLine(" is broken and cannot be used!");
                 }
-            }
-        }
-    }
-    public void UseAbility(IAbility ability, ITargetable target)
-    {
-        if (CanAttack(target))
-        {
-            if (Abilities.Contains(ability))
-            {
-                ability.Activate(this, target);
-                GainExperience(target);
-            }
-            else
-            {
-                throw new AbilityNotFoundException($"{Name} does not have the ability [{ability.Name}]!");
             }
         }
     }
@@ -177,7 +158,7 @@ public class Player : ITargetable, IPlayer
     }
     private void GainExperience(ITargetable target)
     {
-        if ((target is Monster monster) && (monster.Health <= 0))
+        if (target is Monster monster && monster.Health <= 0)
         {
             Experience += monster.AggressionLevel;
             Console.WriteLine($"{Name} gained {monster.AggressionLevel} experience!");
@@ -207,11 +188,6 @@ public class Player : ITargetable, IPlayer
 
         builder.Append(", Gold: ");
         builder.Append(Inventory?.Gold.ToString() ?? "N/A");
-
-        builder.Append("\n\tAbilities: ");
-        builder.Append(Abilities != null
-            ? string.Join(", ", Abilities.Select(a => a.Name))
-            : "None");
 
         builder.Append("\n\tInventory: ");
         builder.Append(Inventory?.Items != null && Inventory.Items.Any()

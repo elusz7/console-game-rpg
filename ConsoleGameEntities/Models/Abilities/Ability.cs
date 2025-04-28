@@ -1,6 +1,6 @@
 ﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Models.Characters;
+using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGameEntities.Models.Abilities
 {
@@ -10,13 +10,6 @@ namespace ConsoleGameEntities.Models.Abilities
         public string Name { get; set; }
         public string Description { get; set; }
         public string AbilityType { get; set; }
-
-        public virtual IEnumerable<Player> Players { get; set; }
-
-        protected Ability()
-        {
-            Players = new List<Player>();
-        }
 
         public abstract void Activate(IPlayer user, ITargetable target);
     }

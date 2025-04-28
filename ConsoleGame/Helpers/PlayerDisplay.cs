@@ -1,5 +1,5 @@
 ﻿using ConsoleGame.GameDao;
-using ConsoleGameEntities.Models.Characters;
+using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Helpers;
 

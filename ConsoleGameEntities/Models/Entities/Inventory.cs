@@ -1,7 +1,7 @@
 ﻿using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Models.Characters;
+using ConsoleGameEntities.Models.Items;
 
-namespace ConsoleGameEntities.Models.Items;
+namespace ConsoleGameEntities.Models.Entities;
 
 public class Inventory
 {
@@ -49,19 +49,6 @@ public class Inventory
         }
     }
 
-    public void RemoveItem(string itemName)
-    {
-        Item itemToRemove = Items.FirstOrDefault(i => i.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase));
-        if (itemToRemove != null)
-        {
-            Items.Remove(itemToRemove);
-        }
-        else
-        {
-            throw new ItemNotFoundException($"You do not have {itemName} in your inventory.");
-        }
-    }
-
     public void UseItem(Item item)
     {
         if (Items.Contains(item))
@@ -87,34 +74,6 @@ public class Inventory
         else
         {
             Console.WriteLine($"You do not have {item.Name} in your inventory.");
-        }
-    }
-    public void UseItem(string itemName)
-    {
-        Item item = Items.FirstOrDefault(i => i.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase));
-        if (item != null)
-        {
-            if (item.Durability <= 0)
-            {
-                Console.WriteLine($"{item.Name} is broken and cannot be used anymore!");
-            }
-            else
-            {
-                if (item is Weapon weapon)
-                {
-                    weapon.Use();
-                    Console.WriteLine($"{weapon.Name} has been used.");
-                }
-                else if (item is Armor armor)
-                {
-                    armor.Use();
-                    Console.WriteLine($"{armor.Name} has been used.");
-                }
-            }
-        }
-        else
-        {
-            Console.WriteLine($"You do not have {itemName} in your inventory.");
         }
     }
 }

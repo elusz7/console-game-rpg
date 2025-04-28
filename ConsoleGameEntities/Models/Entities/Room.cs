@@ -1,7 +1,6 @@
-﻿using ConsoleGameEntities.Models.Characters;
-using ConsoleGameEntities.Models.Characters.Monsters;
+﻿using ConsoleGameEntities.Models.Monsters;
 
-namespace ConsoleGameEntities.Models.Rooms;
+namespace ConsoleGameEntities.Models.Entities;
 
 public class Room
 {
@@ -9,9 +8,6 @@ public class Room
     public virtual ICollection<Monster> Monsters { get; set; } = new List<Monster>();
     public string Name { get; set; }
     public string Description { get; set; }
-
-    public int? PlayerId { get; set; }
-    public virtual Player? Player { get; set; }
     public int? NorthId { get; set; }
     public virtual Room? North { get; set; }
     public int? SouthId { get; set; }
@@ -27,16 +23,6 @@ public class Room
         Name = name;
         Description = description;
     }
-
-    public void Enter()
-    {
-        /*_outputManager.WriteLine($"You have entered {Name}. {Description}", ConsoleColor.Green);
-        foreach (var character in Characters)
-        {
-            _outputManager.WriteLine($"{character.Name} is here.", ConsoleColor.Red);
-        }*/
-    }
-
     public void AddMonster(Monster monster)
     {
         Monsters.Add(monster);
@@ -54,7 +40,7 @@ public class Room
 
         if (Monsters.Any())
         {
-            sb.Append($"\n\tMonsters: {String.Join(", ", Monsters.Select(m => m.Name))}");
+            sb.Append($"\n\tMonsters: {string.Join(", ", Monsters.Select(m => m.Name))}");
         }
 
         if (North != null) sb.Append($"\n\tNorth: {North.Name}");

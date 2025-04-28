@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ConsoleGame.GameDao;
 using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Models.Characters;
+using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 using Microsoft.EntityFrameworkCore;
 
@@ -86,7 +86,7 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
             return;
         }
 
-        _player.Inventory.Items.Add(itemToAdd);
+        _player.Inventory.AddItem(itemToAdd);
         _inventoryDao.UpdateInventory(_player.Inventory);
         _outputManager.WriteLine($"\nItem {itemToAdd.Name} added to inventory.\n", ConsoleColor.Green);
     }
@@ -107,7 +107,7 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
             return;
         }
 
-        _player.Inventory.Items.Remove(itemToRemove);
+        _player.Inventory.RemoveItem(itemToRemove);
         _inventoryDao.UpdateInventory(_player.Inventory);
 
         _outputManager.WriteLine($"\nItem Successfully Removed From {_player.Name}'s Inventory\n", ConsoleColor.Green);

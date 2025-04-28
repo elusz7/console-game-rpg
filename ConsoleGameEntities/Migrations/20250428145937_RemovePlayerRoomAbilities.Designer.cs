@@ -4,6 +4,7 @@ using ConsoleGameEntities.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleGameEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    partial class GameContextModelSnapshot : ModelSnapshot
+    [Migration("20250428145937_RemovePlayerRoomAbilities")]
+    partial class RemovePlayerRoomAbilities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -82,6 +84,9 @@ namespace ConsoleGameEntities.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<int?>("AbilityId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Experience")
                         .HasColumnType("int");
 
@@ -93,6 +98,8 @@ namespace ConsoleGameEntities.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AbilityId");
 
                     b.ToTable("Players");
                 });
@@ -269,6 +276,13 @@ namespace ConsoleGameEntities.Migrations
                     b.Navigation("Player");
                 });
 
+            modelBuilder.Entity("ConsoleGameEntities.Models.Entities.Player", b =>
+                {
+                    b.HasOne("ConsoleGameEntities.Models.Abilities.Ability", null)
+                        .WithMany("Players")
+                        .HasForeignKey("AbilityId");
+                });
+
             modelBuilder.Entity("ConsoleGameEntities.Models.Entities.Room", b =>
                 {
                     b.HasOne("ConsoleGameEntities.Models.Entities.Room", "East")
@@ -317,6 +331,11 @@ namespace ConsoleGameEntities.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Room");
+                });
+
+            modelBuilder.Entity("ConsoleGameEntities.Models.Abilities.Ability", b =>
+                {
+                    b.Navigation("Players");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Entities.Inventory", b =>

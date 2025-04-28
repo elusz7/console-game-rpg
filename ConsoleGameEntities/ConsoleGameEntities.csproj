@@ -8,11 +8,8 @@
 
   <ItemGroup>
     <Compile Remove="Models\Abilities\MonsterAbilities\**" />
-    <Compile Remove="Models\Characters\Npcs\**" />
     <EmbeddedResource Remove="Models\Abilities\MonsterAbilities\**" />
-    <EmbeddedResource Remove="Models\Characters\Npcs\**" />
     <None Remove="Models\Abilities\MonsterAbilities\**" />
-    <None Remove="Models\Characters\Npcs\**" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,10 +1,4 @@
-﻿using ConsoleGameEntities.Data;
-using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Models.Characters;
-using ConsoleGameEntities.Models.Items;
-using Microsoft.EntityFrameworkCore;
-
-namespace ConsoleGame.Helpers;
+﻿namespace ConsoleGame.Helpers;
 
 public class InventoryManager
 {

@@ -1,6 +1,7 @@
 ﻿using ConsoleGame.GameDao;
+using ConsoleGameEntities.Models;
 using ConsoleGameEntities.Models.Abilities;
-using ConsoleGameEntities.Models.Characters;
+using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 using Microsoft.EntityFrameworkCore;
 
@@ -68,17 +69,10 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
                 Gold = gold,
                 Capacity = capacity,
                 Items = items
-            },
-            Abilities = abilities
+            }
         };
 
         _playerDao.AddPlayer(newPlayer);
-
-        string assignAbilities = _inputManager.ReadString($"\nWould you like to assign {name} some starting abilities? (y/n) ").ToLower();
-        if (assignAbilities == "y")
-            _outputManager.Write("TO BE ADDED LATER");
-        else
-            _outputManager.WriteLine("No abilities assigned. Abilities can be added later through the main menu.");
 
         string assignItems = _inputManager.ReadString($"\nWould you like to assign {name} some starting items? (y/n) ").ToLower();
         if (assignItems == "y")

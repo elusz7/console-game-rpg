@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using ConsoleGame.GameDao;
-using ConsoleGameEntities.Models.Rooms;
+using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Helpers;
 
@@ -270,7 +270,7 @@ public class MapManager
         _roomDao.UpdateAllRooms(list);
         DirtyGrid = true;
     }
-    public List<Room> FindUnconnectedRooms()
+    /*public List<Room> FindUnconnectedRooms()
     {
         var list = new List<Room>();
 
@@ -289,7 +289,7 @@ public class MapManager
         }
 
         return list;
-    }
+    }*/
     private int CountPathsToEntranceThroughRoom(Room startRoom, Room requiredRoom, Room entrance)
     {
         int pathCount = 0;

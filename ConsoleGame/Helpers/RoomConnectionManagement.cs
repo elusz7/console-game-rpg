@@ -1,5 +1,5 @@
 ﻿using ConsoleGame.GameDao;
-using ConsoleGameEntities.Models.Rooms;
+using ConsoleGameEntities.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.Helpers;
@@ -30,7 +30,8 @@ public class RoomConnectionManagement(InputManager inputManager, OutputManager o
                     ChangeRoomPlacement();
                     break;
                 case "2":
-                    ConnectRoomToEntrance();
+                    //ConnectRoomToEntrance();
+                    ChangeRoomPlacement(true);
                     break;
                 case "3":
                     LinkNeighbors();
@@ -47,26 +48,28 @@ public class RoomConnectionManagement(InputManager inputManager, OutputManager o
             }
         }
     }
-    private void ChangeRoomPlacement()
+    private void ChangeRoomPlacement(bool disconnect = false)
     {
-        List<Room> editableRooms = _roomDao.GetAllEditableRooms();
-        int index = SelectARoom("Select a room to move (-1 to cancel): ", editableRooms);
-
-        if (index == -1)
+        string again;
+        int connections = disconnect ? 0 : 4;
+        do
         {
-            _outputManager.WriteLine("Room placement cancelled. Returning to menu.", ConsoleColor.Red);
-            return;
-        }
+            List<Room> rooms = _roomDao.GetAllRoomsMaxConnections(connections);
+            int index = SelectARoom("Select a room to move (-1 to cancel): ", rooms);
 
-        Room roomToChange = editableRooms[index - 1];
+            if (index == -1)
+            {
+                _outputManager.WriteLine("\nRoom placement cancelled. Returning to menu.", ConsoleColor.Red);
+                break;
+            }
 
-        MoveRoom(roomToChange);
+            Room roomToChange = rooms[index - 1];
 
-        var again = _inputManager.ReadString("Would you like to move another? (y/n): ", new[] { "y", "n" }).ToLower();
-        if (again == "y")
-        {
-            ChangeRoomPlacement();
-        }
+            MoveRoom(roomToChange);
+
+            again = _inputManager.ReadString("Would you like to move another? (y/n): ", new[] { "y", "n" }).ToLower();
+        } while (again == "y");
+        _outputManager.WriteLine();
     }
     private int SelectARoom(string prompt, List<Room> roomList)
     {
@@ -125,7 +128,7 @@ public class RoomConnectionManagement(InputManager inputManager, OutputManager o
 
         if (availableRooms.Count == 0)
         {
-            _outputManager.WriteLine("No valid rooms to place this room next to.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nNo valid rooms to place this room next to.\n", ConsoleColor.Red);
             return;
         }
 
@@ -147,7 +150,7 @@ public class RoomConnectionManagement(InputManager inputManager, OutputManager o
 
         if (confirm == "n")
         {
-            _outputManager.WriteLine("Room change placement cancelled.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nRoom change placement cancelled.\n", ConsoleColor.Red);
             return;
         }
 
@@ -162,34 +165,6 @@ public class RoomConnectionManagement(InputManager inputManager, OutputManager o
         
         _outputManager.WriteLine($"\n{roomToMove.Name} successfully moved!\n", ConsoleColor.Green);
     }
-    private void ConnectRoomToEntrance()
-    {
-        var unconnectedRooms = _mapManager.FindUnconnectedRooms();
-
-        if (unconnectedRooms.Count == 0)
-        {
-            _outputManager.WriteLine("\nAll rooms have a path back to the entrance!\n", ConsoleColor.Green);
-            return;
-        }
-
-        var index = SelectARoom("Select a room to add onto the map (-1 to cancel): ", unconnectedRooms);
-
-        if (index == -1)
-        {
-            _outputManager.WriteLine("Room movement cancelled. Returning to menu.", ConsoleColor.Red);
-            return;
-        }
-
-        Room room = unconnectedRooms[index - 1];
-
-        MoveRoom(room);
-
-        var again = _inputManager.ReadString("Would you like to connect another? (y/n): ", new[] { "y", "n" }).ToLower();
-        if (again == "y")
-        {
-            ConnectRoomToEntrance();
-        }
-    }
     private void LinkNeighbors()
     {
         string again;
@@ -200,7 +175,7 @@ public class RoomConnectionManagement(InputManager inputManager, OutputManager o
 
             if (unlinkedNeighbors.Count == 0)
             {
-                _outputManager.WriteLine("No unlinked neighbors found.", ConsoleColor.Yellow);
+                _outputManager.WriteLine("\nNo unlinked neighbors found.", ConsoleColor.Yellow);
                 break;
             }
 
@@ -264,13 +239,12 @@ public class RoomConnectionManagement(InputManager inputManager, OutputManager o
         var parts = key.Split("-");
         return (parts[0], parts[1]);
     }
-
     private void RemoveConnections()
     {
         string again;
         do
         {
-            var rooms = _roomDao.GetAllRoomsWithConnections();
+            var rooms = _roomDao.GetAllRoomsMaxConnections(0);
             if (!rooms.Any())
             {
                 _outputManager.WriteLine("\nNo rooms available with all connections intact.", ConsoleColor.Yellow);
@@ -324,7 +298,7 @@ public class RoomConnectionManagement(InputManager inputManager, OutputManager o
                 break;
             }
 
-            UnlinkRoom(roomToChange, directions[removeDirection], removeDirection);
+            UnlinkDirection(roomToChange, directions[removeDirection], removeDirection);
 
             _roomDao.UpdateRoom(roomToChange);
             _roomDao.UpdateRoom(directions[removeDirection]);
@@ -338,7 +312,7 @@ public class RoomConnectionManagement(InputManager inputManager, OutputManager o
         } while (again == "y");
         _outputManager.WriteLine();
     }
-    private void UnlinkRoom(Room from, Room to, string direction)
+    private void UnlinkDirection(Room from, Room to, string direction)
     {
         switch (direction)
         {

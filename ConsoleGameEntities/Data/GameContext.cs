@@ -1,9 +1,8 @@
-﻿using ConsoleGameEntities.Models.Characters;
-using ConsoleGameEntities.Models.Items;
-using ConsoleGameEntities.Models.Characters.Monsters;
+﻿using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Models.Monsters;
 using Microsoft.EntityFrameworkCore;
 using ConsoleGameEntities.Models.Abilities;
-using ConsoleGameEntities.Models.Rooms;
+using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGameEntities.Data
 {
@@ -24,7 +23,7 @@ namespace ConsoleGameEntities.Data
         {
             //set up monsters
             modelBuilder.Entity<Monster>()
-                .HasDiscriminator<string>(m=> m.MonsterType)
+                .HasDiscriminator<string>(m => m.MonsterType)
                 .HasValue<Goblin>("Goblin");
 
             //set up inventory      
@@ -59,17 +58,6 @@ namespace ConsoleGameEntities.Data
             modelBuilder.Entity<Ability>()
                 .HasDiscriminator<string>(pa => pa.AbilityType)
                 .HasValue<ShoveAbility>("ShoveAbility");
-
-            modelBuilder.Entity<Player>()
-                .HasMany(p => p.Abilities)
-                .WithMany(a => a.Players)
-                .UsingEntity(j => j.ToTable("PlayerAbilities"));
-
-            //set up rooms
-            modelBuilder.Entity<Player>()
-                .HasOne(p => p.Room)
-                .WithOne(r => r.Player)
-                .HasForeignKey<Room>(r => r.PlayerId);
 
             modelBuilder.Entity<Monster>()
                 .HasOne(m => m.Room)
@@ -112,34 +100,6 @@ namespace ConsoleGameEntities.Data
                 .OnDelete(DeleteBehavior.SetNull);
 
             base.OnModelCreating(modelBuilder);
-        }
-
-        public void UpdatePlayer(Player player)
-        {
-            Players.Update(player);
-            SaveChanges();
-        }
-        public void UpdateMonster(Monster monster)
-        {
-            Monsters.Update(monster);
-            SaveChanges();
-        }
-        public void UpdateAbility(Ability ability)
-        {
-            Abilities.Update(ability);
-            List<Player> players = Players.Where(p => p.Abilities.Contains(ability)).ToList();
-            Players.UpdateRange(players);
-            SaveChanges();
-        }
-        public void UpdateItem(Item item)
-        {
-            Items.Update(item);
-            SaveChanges();
-        }
-        public void UpdateInventory(Inventory inventory)
-        {
-            Inventories.Update(inventory);
-            SaveChanges();
         }
     }
 }

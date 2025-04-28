@@ -1,6 +1,5 @@
 ﻿using ConsoleGameEntities.Data;
-using ConsoleGameEntities.Models.Characters;
-using Microsoft.EntityFrameworkCore;
+using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.GameDao;
 
