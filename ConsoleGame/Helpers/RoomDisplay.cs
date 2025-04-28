@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleGame.GameDao;
+﻿using ConsoleGame.GameDao;
+using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Helpers;
 
@@ -24,37 +21,29 @@ public class RoomDisplay
         _outputManager.Clear();
         while (true)
         {
-            string menuPrompt = "Room Display Menu:"
-                + "\n1. View All Rooms"
-                + "\n2. Return to Room Menu"
-                + "\n\tSelect an option: ";
+            _outputManager.WriteLine("=== Room Display Menu ===", ConsoleColor.Cyan);
+            _outputManager.WriteLine("1. View All Rooms"
+                + "\n2. Return to Room Menu");
 
-            var input = _inputManager.ReadString(menuPrompt);
+            var input = _inputManager.ReadMenuKey(2);
 
             switch (input)
             {
-                case "1":
+                case 1:
                     ViewAllRooms();
                     break;
-                case "2":
+                case 2:
                     _outputManager.Clear();
                     return;
-                default:
-                    _outputManager.WriteLine("Invalid option. Please try again.", ConsoleColor.Red);
-                    break;
             }
-
         }
     }
-    private void ViewAllRooms()
+    public void ViewAllRooms()
     {
-        _outputManager.Clear();
         var rooms = _roomDao.GetAllRooms();
         
-        foreach (var room in rooms)
-        {
-            _outputManager.WriteLine(room.ToString());
-        }
-        _outputManager.WriteLine();
+        _inputManager.PaginateList(rooms, r => r.Name);
+
+        _outputManager.Clear();
     }
 }

@@ -44,33 +44,28 @@ public class GameEngine
         while (true)
         {
             _outputManager.WriteLine("Main Menu:", ConsoleColor.Cyan);
-            string menuPrompt = "1. Player Management"
+            _outputManager.WriteLine("1. Player Management"
                 + "\n2. Inventory Management"
                 + "\n3. Room Management"
-                + "\n4. Quit"
-                + "\n\tSelect an option: ";
+                + "\n4. Quit");
 
-            var input = _inputManager.ReadString(menuPrompt);
+            var input = _inputManager.ReadMenuKey(4);
 
             switch (input)
             {
-                case "1":
+                case 1:
                     _playerManager.PlayerMainMenu();
                     break;
-                case "2":
+                case 2:
                     _inventoryManager.InventoryMainMenu();
                     break;
-                case "3":
+                case 3:
                     _roomManager.RoomMainMenu();
                     break;
-                case "4":
+                case 4:
                     _outputManager.WriteLine("Exiting game...", ConsoleColor.Red);
                     _outputManager.Display();
-                    Environment.Exit(0);
-                    break;
-                default:
-                    _outputManager.WriteLine("Invalid selection. Please try again.", ConsoleColor.Red);
-                    break;
+                    return;
             }
         }
     }

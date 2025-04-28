@@ -1,22 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleGame.GameDao;
-using ConsoleGameEntities.Exceptions;
+﻿using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
-using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.Helpers;
 
-public class InventoryManagement(InputManager inputManager, OutputManager outputManager, ItemDao itemDao, InventoryDao inventoryDao)
+public class InventoryManagement
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
-    private readonly InventoryDao _inventoryDao = inventoryDao;
-    private Player _player = null;
+    private readonly InputManager _inputManager;
+    private readonly OutputManager _outputManager;
+    private readonly InventoryDao _inventoryDao;
+    private Player _player;
+
+    public InventoryManagement(InputManager inputManager, OutputManager outputManager, ItemDao itemDao, InventoryDao inventoryDao)
+    {
+        _inputManager = inputManager;
+        _outputManager = outputManager;
+        _inventoryDao = inventoryDao;
+    }
     public void Menu(Player? player = null)
     {
         _outputManager.Clear();
@@ -25,45 +25,48 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
         if (_player == null)
         {
             List<Player> players = _inventoryDao.GetAllPlayers();
-            for (int i = 0; i < players.Count; i++)
+
+            if (players.Count == 0)
             {
-                _outputManager.WriteLine($"{i + 1}. {players[i].Name}");
+                _outputManager.WriteLine("No players available to manage inventory.", ConsoleColor.Red);
+                return;
             }
-            int index = _inputManager.ReadInt("\nSelect a player to manage their inventory: ", players.Count);
-            _player = players[index - 1];
+
+            _player = _inputManager.PaginateList(players, p => p.Name, "player", "manage inventory of", true);
+            
+            if (_player == null)
+            {
+                _outputManager.WriteLine("No player selected. Returning to previous menu.", ConsoleColor.Red);
+                return;
+            }
         }
 
         _outputManager.Clear();
         while (true)
         {
-            _outputManager.WriteLine($"{_player.Name}'s Inventory Management", ConsoleColor.Cyan);
-            string menuPrompt = "1. Add Item to Inventory"
+            _outputManager.WriteLine($"=== {_player.Name}'s Inventory Management ===", ConsoleColor.Cyan);
+            _outputManager.WriteLine("1. Add Item to Inventory"
                 + "\n2. Remove Item from Inventory"
-                + "\n3. Return to Previous Menu"
-                + "\n\tChoose an option: ";
-            var input = _inputManager.ReadString(menuPrompt);
+                + "\n3. Return to Previous Menu");
+            var input = _inputManager.ReadMenuKey(3);
 
             switch (input)
             {
-                case "1":
+                case 1:
                     AddItemToInventory();
                     break;
-                case "2":
+                case 2:
                     RemoveItemFromInventory();
                     break;
-                case "3":
+                case 3:
                     player = null;
                     _outputManager.Clear();
                     return;
-                default:
-                    _outputManager.WriteLine("\nInvalid option. Please try again.\n");
-                    break;
             }
         }
     }
     private void AddItemToInventory()
     {
-        string again;
         do
         {
             var equippableItems = _inventoryDao.GetEquippableItems(_player);
@@ -75,45 +78,39 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
 
             if (!equippableItems.Any())
             {
-                _outputManager.WriteLine("\nNo equippable items available.");
+                _outputManager.WriteLine("\nNo equippable items available.\n");
                 break;
             }
+            Item itemToAdd = _inputManager.PaginateList(equippableItems, i => i.ToString(), "item", "add to inventory", true);
 
-            Item itemToAdd = SelectItem("\nSelect an item to add to inventory: ", equippableItems);
-
-            string confirm = _inputManager.ReadString($"\nPlease confirm addition of {itemToAdd.Name} (y/n): ", new[] { "y", "n" });
-
-            if (confirm == "n")
+            if (itemToAdd == null || !ConfirmAction("addition"))
             {
-                _outputManager.WriteLine($"\nItem {itemToAdd.Name} not added to inventory.", ConsoleColor.Red);
-                return;
+                _outputManager.WriteLine($"\nItem not added to inventory.\n", ConsoleColor.Red);
+                continue;
             }
 
             _player.Inventory.AddItem(itemToAdd);
             _inventoryDao.UpdateInventory(_player.Inventory);
             _outputManager.WriteLine($"\nItem {itemToAdd.Name} added to inventory.\n", ConsoleColor.Green);
 
-            again = _inputManager.ReadString("Would you like to add another? (y/n): ", new[] { "y", "n" }).ToLower();
-        } while (again == "y");
+        } while (LoopAgain("add"));
         _outputManager.WriteLine();
     }
     private void RemoveItemFromInventory()
     {
-        string again;
         do
         {
             if (_player.Inventory.Items.Count == 0)
             {
-                _outputManager.WriteLine("\nNo items in inventory to remove.");
+                _outputManager.WriteLine("\nNo items in inventory to remove.\n");
                 break;
             }
-            Item itemToRemove = SelectItem("\nSelect an item to remove from inventory: ", _player.Inventory.Items.ToList());
 
-            string confirm = _inputManager.ReadString($"\nPlease confirm removal of {itemToRemove.Name} (y/n): ", new[] { "y", "n" });
+            Item itemToRemove = _inputManager.PaginateList<Item>(_player.Inventory.Items.ToList(), i => i.ToString(), "item", "remove from inventory", true);
 
-            if (confirm == "n")
+            if (itemToRemove == null || !ConfirmAction("removal"))
             {
-                _outputManager.WriteLine("\nItem Removal Cancelled.");
+                _outputManager.WriteLine("\nItem Removal Cancelled.\n");
                 break;
             }
 
@@ -121,32 +118,17 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
             _inventoryDao.UpdateInventory(_player.Inventory);
 
             _outputManager.WriteLine($"\nItem Successfully Removed From {_player.Name}'s Inventory\n", ConsoleColor.Green);
-            again = _inputManager.ReadString("Would you like to remove another? (y/n): ", new[] { "y", "n" }).ToLower();
-        } while (again == "y");
+        } while (LoopAgain("remove"));
         _outputManager.WriteLine();
     }
-    private Item SelectItem(string prompt, List<Item> itemList)
+    private bool ConfirmAction(string action)
     {
-        _outputManager.WriteLine();
-        for (int i = 0; i < itemList.Count; i++)
-        {
-            if (itemList[i] is Weapon weapon)
-                _outputManager.WriteLine($"{i + 1}. {GetItemDetails(itemList[i])}", ConsoleColor.DarkRed);
-            else
-                _outputManager.WriteLine($"{i + 1}. {GetItemDetails(itemList[i])}", ConsoleColor.DarkYellow);
-        }
-        int index = _inputManager.ReadInt(prompt, itemList.Count);
-        return itemList[index - 1];
+        string confirm = _inputManager.ReadString($"\n\nPlease confirm {action} of item (y/n): ", new[] { "y", "n" });
+        return confirm == "y";
     }
-    private string GetItemDetails(Item item)
+    private bool LoopAgain(string action)
     {
-        string returnString = item.ToString();
-
-        if (item is Weapon weapon)
-            returnString = weapon.ToString();
-        else if (item is Armor armor)
-           returnString = armor.ToString();
-
-        return returnString;
+        string again = _inputManager.ReadString($"Would you like to {action} another? (y/n): ", new[] { "y", "n" }).ToLower();
+        return again == "y";
     }
 }

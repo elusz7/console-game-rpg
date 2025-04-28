@@ -23,30 +23,27 @@ public class ItemManagement
         while (true)
         {
             _outputManager.WriteLine("Item Management Menu", ConsoleColor.Cyan);
-            string menuPrompt = "1. Add Item"
+            _outputManager.WriteLine("1. Add Item"
                 + "\n2. Edit Item"
                 + "\n3. Remove Item"
-                + "\n4. Return to Inventory Main Menu"
-                + "\n\tChoose an option: ";
-            string input = _inputManager.ReadString(menuPrompt);
+                + "\n4. Return to Inventory Main Menu");
+            
+            var input = _inputManager.ReadMenuKey(4);
 
             switch (input)
             {
-                case "1":
+                case 1:
                     AddItem();
                     break;
-                case "2":
+                case 2:
                     EditItem();
                     break;
-                case "3":
+                case 3:
                     DeleteItem();
                     break;
-                case "4":
+                case 4:
                     _outputManager.Clear();
                     return;
-                default:
-                    _outputManager.WriteLine("Invalid option. Please try again.");
-                    break;
             }
         }
     }
@@ -79,7 +76,6 @@ public class ItemManagement
 
         return itemTypes[index];
     }
-
     private Item CreateItem(ItemType itemType)
     {
         string name = _inputManager.ReadString("\nEnter item name: ");
@@ -111,10 +107,17 @@ public class ItemManagement
             _ => throw new ArgumentException("Invalid item type")
         };
     }
-
     private void EditItem()
     {
-        Item item = SelectItem("\tSelect item to edit by number: ");
+        List<Item> items = _itemDao.GetAllItems();
+
+        if (items.Count == 0)
+        {
+            _outputManager.WriteLine("\nNo items available to edit.\n", ConsoleColor.Red);
+            return;
+        }
+
+        Item item = _inputManager.PaginateList(items, i => i.Name, "item", "edit", true);
 
         if (item == null)
         {
@@ -156,7 +159,15 @@ public class ItemManagement
     {
         do
         {
-            Item itemToDelete = SelectItem("\tSelect an item to delete by number: ");
+            var items = _itemDao.GetAllItems();
+
+            if (items.Count == 0)
+            {
+                _outputManager.WriteLine("\nNo items available to delete.\n", ConsoleColor.Red);
+                break;
+            } 
+
+            Item itemToDelete = _inputManager.PaginateList(items, i => i.Name, "item", "delete", true);
 
             if (itemToDelete == null)
             {
@@ -178,29 +189,6 @@ public class ItemManagement
 
         } while (LoopAgain("delete"));
         _outputManager.WriteLine();
-    }
-    private Item SelectItem(string prompt)
-    {
-        List<Item> itemList = _itemDao.GetAllItems();
-
-        if (itemList.Count == 0)
-        {
-            return null;
-        }
-
-        _outputManager.WriteLine();
-        for (int i = 0; i < itemList.Count; i++)
-        {
-            _outputManager.WriteLine($"{i + 1}. {itemList[i].Name}");
-        }
-        int index = _inputManager.ReadInt(prompt, itemList.Count);
-
-        if (index == -1)
-        {
-            return null;
-        }
-
-        return itemList[index - 1];
     }
     private void DisplayItemDetails(Item item)
     {

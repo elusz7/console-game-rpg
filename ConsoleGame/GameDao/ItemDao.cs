@@ -1,5 +1,6 @@
 ﻿using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Models.Items;
+using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.GameDao;
 
@@ -33,12 +34,15 @@ public class ItemDao
 
     public Item GetItemByName(string name)
     {        
-        return _context.Items.Where(i => i.Name.Equals(name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+        return _context.Items
+            .Include(i => i.Inventory)
+            .ThenInclude(i => i.Player)
+            .Where(i => i.Name.Equals(name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
     }
 
     public List<Item> GetAllItems(string name)
     {
-        List<Item> matchingItems = _context.Items.ToList()
+        var matchingItems = _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).ToList()
             .Where(i => i.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
             .ToList();
 
@@ -51,10 +55,12 @@ public class ItemDao
 
     public List<Item> GetAllItems()
     {
+        var items = _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).ToList();
+        
         return SortOrder switch
         {
-            "ASC" => _context.Items.OrderBy(i => i.Name).ToList(),
-            "DESC" => _context.Items.OrderByDescending(i => i.Name).ToList()
+            "ASC" => items.OrderBy(i => i.Name).ToList(),
+            "DESC" => items.OrderByDescending(i => i.Name).ToList()
         };
     }
 
@@ -63,8 +69,8 @@ public class ItemDao
         type = type.ToLower();
         List<Item> items = type switch
         {
-            "weapon" => _context.Items.OfType<Weapon>().ToList<Item>(),
-            "armor" => _context.Items.OfType<Armor>().ToList<Item>()
+            "weapon" => _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Weapon>().ToList<Item>(),
+            "armor" => _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Armor>().ToList<Item>()
         };
 
         items = (type, SortOrder) switch

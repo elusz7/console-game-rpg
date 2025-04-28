@@ -14,45 +14,41 @@ public class PlayerDisplay(InputManager inputManager, OutputManager outputManage
         while (true)
         {
             _outputManager.WriteLine("Player Display Menu", ConsoleColor.Cyan);
-            string menuPrompt = "1. List All Players"
+            _outputManager.WriteLine("1. List All Players"
                 + "\n2. Search Player By Name"
-                + "\n3. Return to Player Main Menu"
-                + "\n\tSelect an option: ";
-            string choice = _inputManager.ReadString(menuPrompt);
+                + "\n3. Return to Player Main Menu");
+
+            var choice = _inputManager.ReadMenuKey(3);
 
             switch (choice)
             {
-                case "1":
-                    ListPlayersFullInfo();
+                case 1:
+                    ListAllPlayers();
                     break;
-                case "2":
+                case 2:
                     FindPlayerByName();
                     break;
-                case "3":
+                case 3:
                     _outputManager.Clear();
                     return;
-                default:
-                    _outputManager.Write("Invalid choice. Please try again.\n");
-                    break;
             }
         }
     }
-    private void ListPlayersFullInfo(List<Player>? playerList = null)
+    private void ListAllPlayers()
     {
-        if (playerList == null)
-            playerList = _playerDao.GetAllPlayers();
+        var playerList = _playerDao.GetAllPlayers();
 
-        _outputManager.WriteLine();
-        foreach (var p in playerList)
+        if (playerList.Count == 0)
         {
-            _outputManager.WriteLine(p.ToString());
+            _outputManager.WriteLine("\nNo Players found.\n");
+            return;
         }
-        _outputManager.WriteLine();
-        _outputManager.Display();
+
+        _inputManager.PaginateList(playerList, i => i.ToString());
     }
     private void FindPlayerByName()
     {
-        string name = _inputManager.ReadString("\nEnter name of Player: ");
+        var name = _inputManager.ReadString("\nEnter name of Player: ");
 
         var matchingPlayers = _playerDao.GetAllPlayers(name);
 
@@ -63,7 +59,7 @@ public class PlayerDisplay(InputManager inputManager, OutputManager outputManage
         else
         {
             _outputManager.WriteLine($"\nFound {matchingPlayers.Count} Player(s) matching [{name}]:");
-            ListPlayersFullInfo(matchingPlayers);
+            _inputManager.PaginateList(matchingPlayers, i => i.ToString());
         }
     }
 }

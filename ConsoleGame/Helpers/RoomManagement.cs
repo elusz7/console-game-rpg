@@ -23,29 +23,27 @@ public class RoomManagement
         while (true)
         {
             _outputManager.WriteLine("Room Management Menu", ConsoleColor.Cyan);
-            string menuPrompt = "1. Add Room"
+            _outputManager.WriteLine("1. Add Room"
                 + "\n2. Edit Room Description"
                 + "\n3. Delete Room"
-                + "\n4. Return to Main Menu"
-                + "\n\tSelect an option: ";
-            string choice = _inputManager.ReadString(menuPrompt);
+                + "\n4. Return to Main Menu");
+
+            var choice = _inputManager.ReadMenuKey(4);
+
             switch (choice)
             {
-                case "1":
+                case 1:
                     AddRoom();
                     break;
-                case "2":
+                case 2:
                     EditRoomDescription();
                     break;
-                case "3":
+                case 3:
                     DeleteRoom();
                     break;
-                case "4":
+                case 4:
                     _outputManager.Clear();
                     return;
-                default:
-                    _outputManager.Write("Invalid choice. Please try again.\n");
-                    break;
             }
         }
     }
@@ -122,7 +120,7 @@ public class RoomManagement
     {
         _outputManager.Write("\nnote: Entrance cannot be edited", ConsoleColor.Yellow);
 
-        Room roomToEdit = SelectARoom("Select A Room To Edit Description: ");
+        Room roomToEdit = _inputManager.PaginateList(_roomDao.GetAllEditableRooms(), r => r.Name, "room", "edit description of", true);
 
         if (roomToEdit == null)
         {
@@ -145,30 +143,12 @@ public class RoomManagement
 
         _outputManager.WriteLine($"{roomToEdit.Name}'s description updated successfully!\n", ConsoleColor.Green);
     }
-    private Room SelectARoom(string prompt)
-    {
-        List<Room> rooms = _roomDao.GetAllEditableRooms();
-
-        _outputManager.WriteLine();
-        for (int i = 0; i < rooms.Count; i++)
-        {
-            _outputManager.WriteLine($"{i + 1}. {rooms[i].Name}");
-        }
-
-        int index = _inputManager.ReadInt($"\t{prompt}", rooms.Count, true);
-
-        Room selectedRoom = null;
-
-        if (index != -1)
-            selectedRoom = rooms[index - 1];
-        
-        return selectedRoom; 
-    }
     private void DeleteRoom()
     {
         _outputManager.WriteLine("\nnote: Entrance cannot be removed\n", ConsoleColor.Yellow);
         
-        Room roomToRemove = SelectARoom("Select A Room To Remove (-1 to cancel): ");
+        Room roomToRemove = _inputManager.PaginateList(_roomDao.GetAllEditableRooms(), r => r.Name, "room", "remove", true);
+
         if (roomToRemove == null)
         {
             _outputManager.WriteLine("\nRoom deletion cancelled.\n", ConsoleColor.Red);

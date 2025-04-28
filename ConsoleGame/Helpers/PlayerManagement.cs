@@ -26,30 +26,27 @@ public class PlayerManagement
         while (true)
         {
             _outputManager.WriteLine("Player Management Menu", ConsoleColor.Cyan);
-            string menuPrompt = "1. Add Player"
+            _outputManager.WriteLine("1. Add Player"
                 + "\n2. Edit Player"
                 + "\n3. Remove Player"
-                + "\n4. Return to Player Main Menu"
-                + "\n\tSelect an option: ";
-            string choice = _inputManager.ReadString(menuPrompt);
+                + "\n4. Return to Player Main Menu");
+
+            var choice = _inputManager.ReadMenuKey(4);
 
             switch (choice)
             {
-                case "1":
+                case 1:
                     AddPlayer();
                     break;
-                case "2":
+                case 2:
                     EditPlayer();
                     break;
-                case "3":
+                case 3:
                     DeletePlayer();
                     break;
-                case "4":
+                case 4:
                     _outputManager.Clear();
                     return;
-                default:
-                    _outputManager.Write("Invalid choice. Please try again.\n");
-                    break;
             }
         }
     }

@@ -20,26 +20,23 @@ public class PlayerManager
         while (true)
         {
             _outputManager.WriteLine("Player Main Menu", ConsoleColor.Cyan);
-            string menuPrompt = "1. View Players"
+            _outputManager.WriteLine("1. View Players"
                 + "\n2. Manage Players"
-                + "\n3. Return to Main Menu"
-                + "\n\tSelect an option: ";
-            string choice = _inputManager.ReadString(menuPrompt);
+                + "\n3. Return to Main Menu");
+            
+            var choice = _inputManager.ReadMenuKey(3);
 
             switch (choice)
             {
-                case "1":
+                case 1:
                     _playerDisplayMenu.Menu();
                     break;
-                case "2":
+                case 2:
                     _playerManagementMenu.Menu();
                     break;
-                case "3":
+                case 3:
                     _outputManager.Clear();
                     return;
-                default:
-                    _outputManager.WriteLine("Invalid choice. Please try again.\n");
-                    break;
             }
         }
     }    

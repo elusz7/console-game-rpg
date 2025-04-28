@@ -1,4 +1,5 @@
-﻿using ConsoleGameEntities.Data;
+﻿using System.Linq.Expressions;
+using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 using Microsoft.EntityFrameworkCore;
@@ -23,12 +24,6 @@ public class InventoryDao
         _context.Inventories.Update(inventory);
         _context.SaveChanges();
     }
-    public Inventory GetInventory(Player player)
-    {
-        return _context.Inventories
-            .Include(i => i.Items)
-            .First(i => i.PlayerId == player.Id);
-    }
     public List<Item> GetEquippableItems(Player player)
     {
         decimal availableCapacity = _context.Inventories
@@ -46,6 +41,6 @@ public class InventoryDao
         return _context.Inventories
             .Where(i => i.PlayerId == player.Id)
             .Select(i => i.Items.Sum(item => item.Weight))
-            .FirstOrDefault();
+            .First();
     }
 }

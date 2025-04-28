@@ -23,31 +23,27 @@ public class InventoryManager
         while (true)
         {
             _outputManager.WriteLine("Inventory Main Menu", ConsoleColor.Cyan);
-            string menuPrompt = "1. View Items"
+            _outputManager.WriteLine("1. View Items"
                 + "\n2. Manage Items"
                 + "\n3. Manage Character's Inventory"
-                + $"\n4. Return to Main Menu"
-                + "\n\tChoose an option: ";
+                + $"\n4. Return to Main Menu");
 
-            var input = _inputManager.ReadString(menuPrompt);
+            var input = _inputManager.ReadMenuKey(4);
 
             switch (input)
             {
-                case "1":
+                case 1:
                     _itemDisplay.Menu();
                     break;
-                case "2":
+                case 2:
                     _itemManagement.Menu();
                     break;
-                case "3":
+                case 3:
                     _inventoryManagement.Menu();
                     break;
-                case "4":
+                case 4:
                     _outputManager.Clear();
                     return;
-                default:
-                    _outputManager.WriteLine("Invalid option. Please try again.\n");
-                    break;
             }
         }
     } 

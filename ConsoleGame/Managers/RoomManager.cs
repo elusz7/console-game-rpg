@@ -25,35 +25,31 @@ public class RoomManager
         while (true)
         {
             _outputManager.WriteLine("Room Main Menu", ConsoleColor.Cyan);
-            string menuPrompt = "1. View Rooms"
+            _outputManager.WriteLine("1. View Rooms"
                 + "\n2. View Map"
                 + "\n3. Manage Rooms"
                 + "\n4. Update Room Connections"
-                + "\n5. Return to Main Menu"
-                + "\n\tSelect an option: ";
-            string input = _inputManager.ReadString(menuPrompt);
+                + "\n5. Return to Main Menu");
+            
+            var input = _inputManager.ReadMenuKey(5);
 
             switch (input)
             {
-                case "1":
-                    _roomDisplay.Menu();
+                case 1:
+                    _roomDisplay.ViewAllRooms();
                     break;
-                case "2":
+                case 2:
                     _mapManager.TraverseMap();
                     break;
-                case "3":
+                case 3:
                     _roomManagement.Menu();
                     break;
-                case "4":
+                case 4:
                     _roomConnectionManagement.Menu();
                     break;
-                case "5":
+                case 5:
                     _outputManager.Clear();
                     return;
-                default:
-                    _outputManager.WriteLine("Invalid option. Please try again.", ConsoleColor.Red);
-                    RoomMainMenu();
-                    break;
             }
         }
     }

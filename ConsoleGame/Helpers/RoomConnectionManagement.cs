@@ -17,29 +17,30 @@ public class RoomConnectionManagement(InputManager inputManager, OutputManager o
         while (true)
         {
             _outputManager.WriteLine("Room Connection Management Menu", ConsoleColor.Cyan);
-            string menuPrompt = "1. Change Room Location"
+            _outputManager.WriteLine("1. Change Room Location"
                 + "\n2. Connect Room to Entrance"
                 + "\n3. Add Connection Between Unlinked Neighbors"
                 + "\n4. Remove Connections"
-                + "\n5. Return to Main Menu"
-                + "\n\tSelect an option: ";
-            string choice = _inputManager.ReadString(menuPrompt);
+                + "\n5. Return to Main Menu");
+
+            var choice = _inputManager.ReadMenuKey(5);
+
             switch (choice)
             {
-                case "1":
+                case 1:
                     ChangeRoomPlacement();
                     break;
-                case "2":
+                case 2:
                     //ConnectRoomToEntrance();
                     ChangeRoomPlacement(true);
                     break;
-                case "3":
+                case 3:
                     LinkNeighbors();
                     break;
-                case "4":
+                case 4:
                     RemoveConnections();
                     break;
-                case "5":
+                case 5:
                     _outputManager.Clear();
                     return;
                 default:
