@@ -13,7 +13,9 @@ public class Player : ITargetable, IPlayer
     public int Id { get; set; }
     public string Name { get; set; }
     public int Health { get; set; }
-    public virtual Inventory Inventory { get; set; } 
+    public virtual Inventory Inventory { get; set; }
+    public int? RoomId { get; set; }
+    public virtual Room? CurrentRoom { get; set; }
     public void Attack(ITargetable target)
     {
         if (CanAttack(target))

@@ -49,6 +49,18 @@ namespace ConsoleGameEntities.Data
                 .WithOne(i => i.Player)
                 .HasForeignKey<Inventory>(i => i.PlayerId);
 
+            modelBuilder.Entity<Player>()
+                .HasOne(p => p.CurrentRoom)
+                .WithMany()
+                .HasForeignKey(p => p.RoomId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Monster>()
+                .HasOne(m => m.Room)
+                .WithMany()
+                .HasForeignKey(m => m.RoomId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             modelBuilder.Entity<Inventory>()
                 .HasMany(i => i.Items)
                 .WithOne(item => item.Inventory)
@@ -58,12 +70,6 @@ namespace ConsoleGameEntities.Data
             modelBuilder.Entity<Ability>()
                 .HasDiscriminator<string>(pa => pa.AbilityType)
                 .HasValue<ShoveAbility>("ShoveAbility");
-
-            modelBuilder.Entity<Monster>()
-                .HasOne(m => m.Room)
-                .WithMany(r => r.Monsters)
-                .HasForeignKey(m => m.RoomId)
-                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Room>()
                 .Property(r => r.Name)

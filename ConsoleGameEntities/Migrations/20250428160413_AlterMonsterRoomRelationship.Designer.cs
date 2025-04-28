@@ -4,6 +4,7 @@ using ConsoleGameEntities.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleGameEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    partial class GameContextModelSnapshot : ModelSnapshot
+    [Migration("20250428160413_AlterMonsterRoomRelationship")]
+    partial class AlterMonsterRoomRelationship
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -278,8 +280,7 @@ namespace ConsoleGameEntities.Migrations
                 {
                     b.HasOne("ConsoleGameEntities.Models.Entities.Room", "CurrentRoom")
                         .WithMany()
-                        .HasForeignKey("RoomId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("RoomId");
 
                     b.Navigation("CurrentRoom");
                 });
@@ -328,8 +329,7 @@ namespace ConsoleGameEntities.Migrations
                 {
                     b.HasOne("ConsoleGameEntities.Models.Entities.Room", "Room")
                         .WithMany()
-                        .HasForeignKey("RoomId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("RoomId");
 
                     b.Navigation("Room");
                 });

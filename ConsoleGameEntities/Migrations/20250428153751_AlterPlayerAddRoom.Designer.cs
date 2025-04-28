@@ -4,6 +4,7 @@ using ConsoleGameEntities.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleGameEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    partial class GameContextModelSnapshot : ModelSnapshot
+    [Migration("20250428153751_AlterPlayerAddRoom")]
+    partial class AlterPlayerAddRoom
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -278,8 +280,7 @@ namespace ConsoleGameEntities.Migrations
                 {
                     b.HasOne("ConsoleGameEntities.Models.Entities.Room", "CurrentRoom")
                         .WithMany()
-                        .HasForeignKey("RoomId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("RoomId");
 
                     b.Navigation("CurrentRoom");
                 });
@@ -327,7 +328,7 @@ namespace ConsoleGameEntities.Migrations
             modelBuilder.Entity("ConsoleGameEntities.Models.Monsters.Monster", b =>
                 {
                     b.HasOne("ConsoleGameEntities.Models.Entities.Room", "Room")
-                        .WithMany()
+                        .WithMany("Monsters")
                         .HasForeignKey("RoomId")
                         .OnDelete(DeleteBehavior.SetNull);
 
@@ -343,6 +344,11 @@ namespace ConsoleGameEntities.Migrations
                 {
                     b.Navigation("Inventory")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ConsoleGameEntities.Models.Entities.Room", b =>
+                {
+                    b.Navigation("Monsters");
                 });
 #pragma warning restore 612, 618
         }

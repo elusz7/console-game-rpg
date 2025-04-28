@@ -5,7 +5,6 @@ namespace ConsoleGameEntities.Models.Entities;
 public class Room
 {
     public int Id { get; set; }
-    public virtual ICollection<Monster> Monsters { get; set; } = new List<Monster>();
     public string Name { get; set; }
     public string Description { get; set; }
     public int? NorthId { get; set; }
@@ -23,25 +22,12 @@ public class Room
         Name = name;
         Description = description;
     }
-    public void AddMonster(Monster monster)
-    {
-        Monsters.Add(monster);
-    }
 
-    public void RemoveMonster(Monster monster)
-    {
-        Monsters.Remove(monster);
-    }
     public override string ToString()
     {
         var sb = new System.Text.StringBuilder();
 
         sb.Append($"{Name}: {Description}");
-
-        if (Monsters.Any())
-        {
-            sb.Append($"\n\tMonsters: {string.Join(", ", Monsters.Select(m => m.Name))}");
-        }
 
         if (North != null) sb.Append($"\n\tNorth: {North.Name}");
         if (South != null) sb.Append($"\n\tSouth: {South.Name}");

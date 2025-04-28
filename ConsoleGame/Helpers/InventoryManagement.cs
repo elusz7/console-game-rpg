@@ -63,54 +63,67 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
     }
     private void AddItemToInventory()
     {
-        var equippableItems = _inventoryDao.GetEquippableItems(_player);
-
-        decimal currentCarryingWeight = _inventoryDao.GetInventoryWeight(_player);
-        decimal weightAvailable = _player.Inventory.Capacity - currentCarryingWeight;
-
-        _outputManager.WriteLine($"\nCapacity: {currentCarryingWeight} / {_player.Inventory.Capacity}");
-
-        if (!equippableItems.Any())
+        string again;
+        do
         {
-            _outputManager.WriteLine("No equippable items available.\n");
-            return;
-        }
+            var equippableItems = _inventoryDao.GetEquippableItems(_player);
 
-        Item itemToAdd = SelectItem("\nSelect an item to add to inventory: ", equippableItems);
+            decimal currentCarryingWeight = _inventoryDao.GetInventoryWeight(_player);
+            decimal weightAvailable = _player.Inventory.Capacity - currentCarryingWeight;
 
-        string confirm = _inputManager.ReadString($"\nPlease confirm addition of {itemToAdd.Name} (y/n): ", new[] { "y", "n" });
+            _outputManager.WriteLine($"\nCapacity: {currentCarryingWeight} / {_player.Inventory.Capacity}");
 
-        if (confirm == "n")
-        {
-            _outputManager.WriteLine($"\nItem {itemToAdd.Name} not added to inventory.", ConsoleColor.Red);
-            return;
-        }
+            if (!equippableItems.Any())
+            {
+                _outputManager.WriteLine("\nNo equippable items available.");
+                break;
+            }
 
-        _player.Inventory.AddItem(itemToAdd);
-        _inventoryDao.UpdateInventory(_player.Inventory);
-        _outputManager.WriteLine($"\nItem {itemToAdd.Name} added to inventory.\n", ConsoleColor.Green);
+            Item itemToAdd = SelectItem("\nSelect an item to add to inventory: ", equippableItems);
+
+            string confirm = _inputManager.ReadString($"\nPlease confirm addition of {itemToAdd.Name} (y/n): ", new[] { "y", "n" });
+
+            if (confirm == "n")
+            {
+                _outputManager.WriteLine($"\nItem {itemToAdd.Name} not added to inventory.", ConsoleColor.Red);
+                return;
+            }
+
+            _player.Inventory.AddItem(itemToAdd);
+            _inventoryDao.UpdateInventory(_player.Inventory);
+            _outputManager.WriteLine($"\nItem {itemToAdd.Name} added to inventory.\n", ConsoleColor.Green);
+
+            again = _inputManager.ReadString("Would you like to add another? (y/n): ", new[] { "y", "n" }).ToLower();
+        } while (again == "y");
+        _outputManager.WriteLine();
     }
     private void RemoveItemFromInventory()
     {
-        if (_player.Inventory.Items.Count == 0)
+        string again;
+        do
         {
-            _outputManager.WriteLine("No items in inventory to remove.");
-            return;
-        }
-        Item itemToRemove = SelectItem("\nSelect an item to remove from inventory: ", _player.Inventory.Items.ToList());
+            if (_player.Inventory.Items.Count == 0)
+            {
+                _outputManager.WriteLine("\nNo items in inventory to remove.");
+                break;
+            }
+            Item itemToRemove = SelectItem("\nSelect an item to remove from inventory: ", _player.Inventory.Items.ToList());
 
-        string confirm = _inputManager.ReadString($"\nPlease confirm removal of {itemToRemove.Name} (y/n): ", new[] { "y", "n" });
+            string confirm = _inputManager.ReadString($"\nPlease confirm removal of {itemToRemove.Name} (y/n): ", new[] { "y", "n" });
 
-        if (confirm == "n")
-        {
-            _outputManager.WriteLine("Item Removal Cancelled.");
-            return;
-        }
+            if (confirm == "n")
+            {
+                _outputManager.WriteLine("\nItem Removal Cancelled.");
+                break;
+            }
 
-        _player.Inventory.RemoveItem(itemToRemove);
-        _inventoryDao.UpdateInventory(_player.Inventory);
+            _player.Inventory.RemoveItem(itemToRemove);
+            _inventoryDao.UpdateInventory(_player.Inventory);
 
-        _outputManager.WriteLine($"\nItem Successfully Removed From {_player.Name}'s Inventory\n", ConsoleColor.Green);
+            _outputManager.WriteLine($"\nItem Successfully Removed From {_player.Name}'s Inventory\n", ConsoleColor.Green);
+            again = _inputManager.ReadString("Would you like to remove another? (y/n): ", new[] { "y", "n" }).ToLower();
+        } while (again == "y");
+        _outputManager.WriteLine();
     }
     private Item SelectItem(string prompt, List<Item> itemList)
     {

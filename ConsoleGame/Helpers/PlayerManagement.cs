@@ -1,18 +1,25 @@
 ﻿using ConsoleGame.GameDao;
-using ConsoleGameEntities.Models;
 using ConsoleGameEntities.Models.Abilities;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
-using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.Helpers;
 
-public class PlayerManagement(InputManager inputManager, OutputManager outputManager, PlayerDao playerDao, InventoryManagement inventoryManagement)
+public class PlayerManagement
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
-    private readonly PlayerDao _playerDao = playerDao;
-    private readonly InventoryManagement _inventoryManagement = inventoryManagement;
+    private readonly InputManager _inputManager;
+    private readonly OutputManager _outputManager;
+    private readonly PlayerDao _playerDao;
+    private readonly InventoryManagement _inventoryManagement;
+
+    public PlayerManagement(InputManager inputManager, OutputManager outputManager, PlayerDao playerDao, InventoryManagement inventoryManagement)
+    {
+        _inputManager = inputManager;
+        _outputManager = outputManager;
+        _playerDao = playerDao;
+        _inventoryManagement = inventoryManagement;
+    }
+
     public void Menu()
     {
         _outputManager.Clear();
@@ -35,7 +42,7 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
                     EditPlayer();
                     break;
                 case "3":
-                    RemovePlayer();
+                    DeletePlayer();
                     break;
                 case "4":
                     _outputManager.Clear();
@@ -48,7 +55,18 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
     }
     private void AddPlayer()
     {
-        string name = _inputManager.ReadString("\nEnter player name: ");
+        do
+        {
+            CreatePlayer();
+
+        } while (LoopAgain("add"));
+        _outputManager.WriteLine();
+    }
+
+    private void CreatePlayer()
+    {
+        _outputManager.WriteLine();
+        string name = _inputManager.ReadString("Enter player name: ");
 
         int health = _inputManager.ReadInt("Enter player's starting health: ");
 
@@ -74,108 +92,112 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
 
         _playerDao.AddPlayer(newPlayer);
 
-        string assignItems = _inputManager.ReadString($"\nWould you like to assign {name} some starting items? (y/n) ").ToLower();
+        string assignItems = _inputManager.ReadString($"\nWould you like to assign {name} some starting items? (y/n) ", new[] {"y", "n"}).ToLower();
         if (assignItems == "y")
             _inventoryManagement.Menu(newPlayer);
         else
             _outputManager.WriteLine("No items assigned. Items can be added later through the main menu.\n");
 
-        _outputManager.WriteLine($"New Player [{name}] added successfully!\n");
-        _outputManager.Display();
+        _outputManager.WriteLine($"New Player [{name}] added successfully!\n", ConsoleColor.Green);
     }
     private void EditPlayer()
     {
         Player player = SelectPlayer("Select the number of the player you'd like to edit: ");
 
-        string[] validResponses = { "Name", "Health", "Experience", "Gold", "Capacity"};
+        if (player == null)
+        {
+            _outputManager.WriteLine("\nNo players available for editing.\n", ConsoleColor.Red);
+            return;
+        }
+
+        var propertyActions = new Dictionary<string, Action>
+    {
+        { "Name", () => player.Name = _inputManager.ReadString("\nEnter new value for Name: ") },
+        { "Health", () => player.Health = _inputManager.ReadInt("\nEnter new value for Health: ") },
+        { "Experience", () => player.Experience = _inputManager.ReadInt("\nEnter new value for Experience: ") },
+        { "Gold", () => player.Inventory.Gold = _inputManager.ReadInt("\nEnter new value for Gold: ") },
+        { "Capacity", () => player.Inventory.Capacity = _inputManager.ReadDecimal("\nEnter new value for Capacity: ") }
+    };
 
         while (true)
         {
             _outputManager.WriteLine($"\nEditing player: {player.Name}", ConsoleColor.Cyan);
-            _outputManager.WriteLine($"{player.ToString()}\n", ConsoleColor.Green);
+            _outputManager.WriteLine($"{player}\n", ConsoleColor.Green);
 
-            for (int i = 0; i < validResponses.Length; i++)
-            {
-                _outputManager.WriteLine($"{i + 1}. Change {validResponses[i]}");
-            }
-            _outputManager.WriteLine($"{validResponses.Length + 1}. Exit");
+            int option = DisplayEditMenu(propertyActions.Keys.ToList());
 
-            int index = _inputManager.ReadInt("\nWhat property would you like to edit? (exit to quit) ", validResponses.Length + 1) - 1;
-
-            if (index == validResponses.Length)
+            if (option == propertyActions.Count + 1)
             {
                 _playerDao.UpdatePlayer(player);
-                _outputManager.WriteLine($"\nExiting. Changes successfuly saved to {player.Name}\n", ConsoleColor.Green);
+                _outputManager.WriteLine($"\nExiting. Any changes made have been successfully saved to {player.Name}\n", ConsoleColor.Green);
                 return;
             }
-            else
-            {
-                string newName = "";
-                int newValue = -1;
-                decimal newCapacity = -1.0M;
 
-                if (validResponses[index] == "Name")
-                    newName = _inputManager.ReadString($"\nEnter new value for {validResponses[index]}: ");
-                else if (validResponses[index] == "Capacity")
-                    newCapacity = _inputManager.ReadDecimal($"\nEnter new value for {validResponses[index]}: ");
-                else
-                    newValue = _inputManager.ReadInt($"\nEnter new value for {validResponses[index]}: ");
-
-                switch (validResponses[index])
-                {
-                    case "Name":
-                        player.Name = newName;
-                        break;
-                    case "Health":
-                        player.Health = newValue;
-                        break;
-                    case "Experience":
-                        player.Experience = newValue;
-                        break;
-                    case "Gold":
-                        player.Inventory.Gold = newValue;
-                        break;
-                    case "Capacity":
-                        player.Inventory.Capacity = newCapacity;
-                        break;
-                }
-            }
+            string selectedProperty = propertyActions.Keys.ElementAt(option - 1);
+            propertyActions[selectedProperty].Invoke();
         }
     }
-    private void RemovePlayer()
+    private int DisplayEditMenu(List<string> properties)
     {
-        Player playerToDelete = SelectPlayer("Select the number of the player you'd like to delete: ");
-
-        string confirm = _inputManager.ReadString($"\nPlease confirm deletion of {playerToDelete.Name} (y/n): ", ["y", "n"]);
-
-        if (confirm == "y")
+        for (int i = 0; i < properties.Count; i++)
         {
+            _outputManager.WriteLine($"{i + 1}. Change {properties[i]}");
+        }
+        _outputManager.WriteLine($"{properties.Count + 1}. Exit", ConsoleColor.Red);
+
+        return _inputManager.ReadInt("\nWhat property would you like to edit? ", properties.Count + 1);
+    }
+
+    private void DeletePlayer()
+    {
+        do
+        {
+            _outputManager.WriteLine();
+            Player playerToDelete = SelectPlayer("Select the number of the player you'd like to delete: ");
+
+            if (playerToDelete == null)
+            {
+                _outputManager.WriteLine("No players available to delete.", ConsoleColor.Red);
+                break;
+            }
+
+            if (!ConfirmAction("deletion"))
+            {
+                _outputManager.WriteLine($"\nDeletion cancelled. Character [{playerToDelete.Name}] has not been deleted.", ConsoleColor.Red);
+                break;
+            }
+
             _playerDao.DeletePlayer(playerToDelete);
 
-            _outputManager.WriteLine("\nCharacter has been removed successfully!\n", ConsoleColor.Green);
-        }
-        else
-        {
-            _outputManager.WriteLine($"\nDeletion cancelled. Character [{playerToDelete.Name}] has not been removed.\n", ConsoleColor.Red);
-        }
+            _outputManager.WriteLine("\nCharacter has been deleted successfully!\n", ConsoleColor.Green);
+        } while (LoopAgain("delete"));
+        _outputManager.WriteLine();
     }
     private Player SelectPlayer(string prompt)
     {
         List<Player> players = _playerDao.GetAllPlayers();
         Player selectedPlayer = null;
 
-        if (players.Count == 0)
-            _outputManager.WriteLine($"\nNo players found.");
-
-        _outputManager.WriteLine();
-        for (int i = 0; i < players.Count; i++)
+        if (players.Count != 0)
         {
-            _outputManager.WriteLine($"{i + 1}. {players[i].Name}");
+            for (int i = 0; i < players.Count; i++)
+            {
+                _outputManager.WriteLine($"{i + 1}. {players[i].Name}");
+            }
+
+            int index = _inputManager.ReadInt($"\t{prompt}", players.Count);
+            selectedPlayer = players[index - 1];
         }
-
-        int index = _inputManager.ReadInt($"\t{prompt}", players.Count);
-        selectedPlayer = players[index - 1];
-
         return selectedPlayer;
+    }
+    private bool ConfirmAction(string action)
+    {
+        string confirm = _inputManager.ReadString($"\nPlease confirm {action} (y/n): ", new[] { "y", "n" }).ToLower();
+        return confirm == "y";
+    }
+    private bool LoopAgain(string action)
+    {
+        string again = _inputManager.ReadString($"Would you like to {action} another? (y/n): ", new[] { "y", "n" }).ToLower();
+        return again == "y";
     }
 }
