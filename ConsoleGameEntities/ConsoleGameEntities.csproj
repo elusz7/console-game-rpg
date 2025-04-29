@@ -7,15 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Models\Abilities\MonsterAbilities\**" />
-    <EmbeddedResource Remove="Models\Abilities\MonsterAbilities\**" />
-    <None Remove="Models\Abilities\MonsterAbilities\**" />
+    <Compile Remove="Models\Skills\MonsterAbilities\**" />
+    <EmbeddedResource Remove="Models\Skills\MonsterAbilities\**" />
+    <None Remove="Models\Skills\MonsterAbilities\**" />
   </ItemGroup>
 
   <ItemGroup>
     <None Remove="Migrations\Scripts\InitialSeedData.rollback.sql" />
     <None Remove="Migrations\Scripts\InitialSeedData.sql" />
-    <None Remove="Models\Abilities\Ability.cs~RF7a28a58b.TMP" />
+    <None Remove="Models\Skills\Ability.cs~RF7a28a58b.TMP" />
     <None Remove="Interfaces\Attributes\ITargetable.cs~RF7fb34c69.TMP" />
   </ItemGroup>
 

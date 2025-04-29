@@ -4,6 +4,7 @@ using ConsoleGameEntities.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleGameEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    partial class GameContextModelSnapshot : ModelSnapshot
+    [Migration("20250429192232_RefactoryArchetypes")]
+    partial class RefactoryArchetypes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -82,7 +84,7 @@ namespace ConsoleGameEntities.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("AttackMultiplier")
-                        .HasColumnType("decimal(3,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("CurrentResource")
                         .HasColumnType("int");
@@ -91,7 +93,7 @@ namespace ConsoleGameEntities.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("DefenseMultiplier")
-                        .HasColumnType("decimal(3,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -104,7 +106,7 @@ namespace ConsoleGameEntities.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("MagicMultiplier")
-                        .HasColumnType("decimal(3,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("MaxResource")
                         .HasColumnType("int");
@@ -120,7 +122,7 @@ namespace ConsoleGameEntities.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("ResourceMultiplier")
-                        .HasColumnType("decimal(3,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("ResourceName")
                         .IsRequired()
@@ -130,7 +132,7 @@ namespace ConsoleGameEntities.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("SpeedMultiplier")
-                        .HasColumnType("decimal(3,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 

@@ -4,6 +4,7 @@ using ConsoleGameEntities.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleGameEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    partial class GameContextModelSnapshot : ModelSnapshot
+    [Migration("20250429180847_AddArchetypesRefactorAbilityToSkill")]
+    partial class AddArchetypesRefactorAbilityToSkill
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -31,7 +33,6 @@ namespace ConsoleGameEntities.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<int?>("ArchetypeId")
-                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<int>("Cooldown")
@@ -64,10 +65,10 @@ namespace ConsoleGameEntities.Migrations
 
                     b.HasIndex("ArchetypeId");
 
-                    b.ToTable("Skills");
+                    b.ToTable("Abilities");
                 });
 
-            modelBuilder.Entity("ConsoleGameEntities.Models.Entities.Archetype", b =>
+            modelBuilder.Entity("ConsoleGameEntities.Models.Archetypes.Archetype", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -75,23 +76,11 @@ namespace ConsoleGameEntities.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int>("ArchetypeType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AttackBonus")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("AttackMultiplier")
-                        .HasColumnType("decimal(3,2)");
-
                     b.Property<int>("CurrentResource")
                         .HasColumnType("int");
 
                     b.Property<int>("DefenseBonus")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("DefenseMultiplier")
-                        .HasColumnType("decimal(3,2)");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -100,12 +89,6 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("HealthBase")
                         .HasColumnType("int");
 
-                    b.Property<int>("MagicBonus")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("MagicMultiplier")
-                        .HasColumnType("decimal(3,2)");
-
                     b.Property<int>("MaxResource")
                         .HasColumnType("int");
 
@@ -113,28 +96,20 @@ namespace ConsoleGameEntities.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("RecoveryGrowth")
-                        .HasColumnType("int");
-
                     b.Property<int>("RecoveryRate")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("ResourceMultiplier")
-                        .HasColumnType("decimal(3,2)");
-
-                    b.Property<string>("ResourceName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("SkillId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Speed")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("SpeedMultiplier")
-                        .HasColumnType("decimal(3,2)");
-
                     b.HasKey("Id");
 
-                    b.ToTable("Archetypes");
+                    b.HasIndex("SkillId");
+
+                    b.ToTable("Archetype");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Entities.Inventory", b =>
@@ -348,13 +323,20 @@ namespace ConsoleGameEntities.Migrations
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Abilities.Skill", b =>
                 {
-                    b.HasOne("ConsoleGameEntities.Models.Entities.Archetype", "Archetype")
+                    b.HasOne("ConsoleGameEntities.Models.Archetypes.Archetype", null)
                         .WithMany("Skills")
-                        .HasForeignKey("ArchetypeId")
+                        .HasForeignKey("ArchetypeId");
+                });
+
+            modelBuilder.Entity("ConsoleGameEntities.Models.Archetypes.Archetype", b =>
+                {
+                    b.HasOne("ConsoleGameEntities.Models.Abilities.Skill", "ArchetypeSkill")
+                        .WithMany()
+                        .HasForeignKey("SkillId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Archetype");
+                    b.Navigation("ArchetypeSkill");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Entities.Inventory", b =>
@@ -370,7 +352,7 @@ namespace ConsoleGameEntities.Migrations
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Entities.Player", b =>
                 {
-                    b.HasOne("ConsoleGameEntities.Models.Entities.Archetype", "Archetype")
+                    b.HasOne("ConsoleGameEntities.Models.Archetypes.Archetype", "Archetype")
                         .WithMany()
                         .HasForeignKey("ArchetypeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -436,7 +418,7 @@ namespace ConsoleGameEntities.Migrations
                     b.Navigation("Room");
                 });
 
-            modelBuilder.Entity("ConsoleGameEntities.Models.Entities.Archetype", b =>
+            modelBuilder.Entity("ConsoleGameEntities.Models.Archetypes.Archetype", b =>
                 {
                     b.Navigation("Skills");
                 });

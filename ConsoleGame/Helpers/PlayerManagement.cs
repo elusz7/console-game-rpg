@@ -71,7 +71,7 @@ public class PlayerManagement
 
         decimal capacity = _inputManager.ReadDecimal("Enter player's weight carrying capacity: ");
 
-        List<Ability> abilities = new List<Ability>();
+        List<Skill> abilities = new List<Skill>();
         List<Item> items = new List<Item>();
 
         Player newPlayer = new Player

@@ -8,6 +8,6 @@ public interface IPlayer
 {
     int Id { get; set; }
     string Name { get; set; }
-    Inventory Inventory { get; set; }
     void Attack(ITargetable target);
+    void LevelUp();
 }

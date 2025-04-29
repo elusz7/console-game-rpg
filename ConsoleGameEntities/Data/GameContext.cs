@@ -10,10 +10,12 @@ namespace ConsoleGameEntities.Data
     {
         public DbSet<Player>? Players { get; set; }
         public DbSet<Monster>? Monsters { get; set; }
-        public DbSet<Ability>? Abilities { get; set; }
+        public DbSet<Skill> Skills { get; set; }
         public DbSet<Item>? Items { get; set; }
         public DbSet<Inventory>? Inventories { get; set; }
         public DbSet<Room>? Rooms { get; set; }
+
+        public DbSet<Archetype> Archetypes { get; set; }
 
         public GameContext(DbContextOptions<GameContext> options) : base(options)
         {
@@ -66,11 +68,6 @@ namespace ConsoleGameEntities.Data
                 .WithOne(item => item.Inventory)
                 .HasForeignKey(item => item.InventoryId);
 
-            // set up abilities
-            modelBuilder.Entity<Ability>()
-                .HasDiscriminator<string>(pa => pa.AbilityType)
-                .HasValue<ShoveAbility>("ShoveAbility");
-
             modelBuilder.Entity<Room>()
                 .Property(r => r.Name)
                 .IsRequired()
@@ -104,6 +101,31 @@ namespace ConsoleGameEntities.Data
                 .WithMany()
                 .HasForeignKey(r => r.WestId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Skill>()
+                .HasOne(s => s.Archetype)
+                .WithMany(a => a.Skills)
+                .HasForeignKey(s => s.ArchetypeId);
+
+            modelBuilder.Entity<Archetype>()
+                .Property("AttackMultiplier")
+                .HasColumnType("decimal(3,2)");
+
+            modelBuilder.Entity<Archetype>()
+                .Property("MagicMultiplier")
+                .HasColumnType("decimal(3,2)");
+
+            modelBuilder.Entity<Archetype>()
+                .Property("DefenseMultiplier")
+                .HasColumnType("decimal(3,2)");
+
+            modelBuilder.Entity<Archetype>()
+                .Property("SpeedMultiplier")
+                .HasColumnType("decimal(3,2)");
+
+            modelBuilder.Entity<Archetype>()
+                .Property("ResourceMultiplier")
+                .HasColumnType("decimal(3,2)");
 
             base.OnModelCreating(modelBuilder);
         }
