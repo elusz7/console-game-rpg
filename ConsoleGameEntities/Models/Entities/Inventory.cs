@@ -3,7 +3,7 @@ using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGameEntities.Models.Entities;
 
-public class Inventory
+public class Inventory : IInventory
 {
     public int Id { get; set; }
     public int Gold { get; set; }
@@ -12,7 +12,6 @@ public class Inventory
     public virtual Player Player { get; set; }
     public virtual ICollection<Item> Items { get; set; } = new List<Item>();
 
-    //adding, using, equipping, and removing items 
     public void AddItem(Item item)
     {
         decimal currentCarryingWeight = Items.Sum(i => i.Weight);

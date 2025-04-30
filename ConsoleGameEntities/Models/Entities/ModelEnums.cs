@@ -9,12 +9,13 @@ public class ModelEnums
         Weapon = 0,
         Armor = 1
     }
-    public enum SkillType
+    public enum SkillTypeEnum
     {
-        Martial,
-        Magic,
-        Support,
-        Utility
+        Generic = 0,
+        Martial = 1,
+        Magic = 2,
+        Support = 3,
+        Ultimate = 4
     }
     public enum TargetType
     {
@@ -28,5 +29,21 @@ public class ModelEnums
     {
         Martial = 0,
         Magical = 1
+    }
+
+    public enum StatType
+    {
+        Health = 0,
+        Attack = 1,
+        Magic = 2,
+        Defense = 3,
+        Resistance = 4,
+        Speed = 5
+    }
+
+    public enum SupportEffectType
+    {
+        Boost,
+        Reduce
     }
 }

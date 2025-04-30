@@ -5,9 +5,10 @@ namespace ConsoleGameEntities.Models.Items;
 public class Armor : Item
 {
     public int DefensePower { get; set; }
+    public int Resistance { get; set; }
 
-    public Armor() { }  
-    public Armor(string name, decimal value, string description, int durability, decimal weight, int defensePower)
+    //public Armor() { }  
+    /*public Armor(string name, decimal value, string description, int durability, decimal weight, int defensePower)
     {
         Name = name;
         Value = value;
@@ -16,11 +17,10 @@ public class Armor : Item
         Weight = weight;
         DefensePower = defensePower;
         ItemType = "Armor";
-    }
+    }*/
 
     public override int Use()
     {
-        // Implement the Use logic for Armor  
         return 0;
     }
 
@@ -30,7 +30,7 @@ public class Armor : Item
 
         sb.Insert(0, "[Armor] ");
 
-        sb.Append($", Defense Power: {DefensePower}");
+        sb.Append($", Defense Power: {DefensePower}, Resistance: {Resistance}");
 
         if (Inventory != null)
         {

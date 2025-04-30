@@ -77,7 +77,7 @@ public class PlayerManagement
         Player newPlayer = new Player
         {
             Name = name,
-            Health = health,
+            MaxHealth = health,
             Experience = 0,
             Inventory = new Inventory
             {
@@ -110,7 +110,7 @@ public class PlayerManagement
         var propertyActions = new Dictionary<string, Action>
     {
         { "Name", () => player.Name = _inputManager.ReadString("\nEnter new value for Name: ") },
-        { "Health", () => player.Health = _inputManager.ReadInt("\nEnter new value for Health: ") },
+        { "Health", () => player.MaxHealth = _inputManager.ReadInt("\nEnter new value for Health: ") },
         { "Experience", () => player.Experience = _inputManager.ReadInt("\nEnter new value for Experience: ") },
         { "Gold", () => player.Inventory.Gold = _inputManager.ReadInt("\nEnter new value for Gold: ") },
         { "Capacity", () => player.Inventory.Capacity = _inputManager.ReadDecimal("\nEnter new value for Capacity: ") }

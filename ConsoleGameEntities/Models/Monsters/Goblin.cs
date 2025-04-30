@@ -17,6 +17,6 @@ public class Goblin : Monster
 
     public override string ToString()
     {
-        return $"Goblin: {Name}, Health: {Health}";
+        return $"Goblin: {Name}, Health: {MaxHealth}";
     }
 }

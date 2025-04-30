@@ -1,4 +1,4 @@
-﻿using ConsoleGameEntities.Models.Abilities;
+﻿using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Interfaces;
@@ -16,6 +16,8 @@ public interface IArchetype
     decimal MagicMultiplier { get; set; }
     int DefenseBonus { get; set; }
     decimal DefenseMultiplier { get; set; }
+    int ResistanceBonus { get; set; }
+    decimal ResistanceMultiplier { get; set; }
     int Speed { get; set; }
     decimal SpeedMultiplier { get; set; }
 

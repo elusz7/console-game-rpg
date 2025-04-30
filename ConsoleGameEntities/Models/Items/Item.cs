@@ -1,9 +1,10 @@
 ﻿using System.Text;
+using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGameEntities.Models.Items;
 
-public abstract class Item
+public abstract class Item : IItem
 {
     public int Id { get; set; }
     public string Name { get; set; }
@@ -15,7 +16,7 @@ public abstract class Item
     public string ItemType { get; set; }
 
     public int? InventoryId { get; set; }
-    public Inventory? Inventory { get; set; }
+    public virtual Inventory? Inventory { get; set; }
 
     public abstract int Use();
 

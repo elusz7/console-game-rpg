@@ -1,8 +1,9 @@
 ﻿using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Monsters;
 using Microsoft.EntityFrameworkCore;
-using ConsoleGameEntities.Models.Abilities;
+using ConsoleGameEntities.Models.Skills;
 using ConsoleGameEntities.Models.Entities;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Data
 {
@@ -14,7 +15,6 @@ namespace ConsoleGameEntities.Data
         public DbSet<Item>? Items { get; set; }
         public DbSet<Inventory>? Inventories { get; set; }
         public DbSet<Room>? Rooms { get; set; }
-
         public DbSet<Archetype> Archetypes { get; set; }
 
         public GameContext(DbContextOptions<GameContext> options) : base(options)
@@ -103,9 +103,27 @@ namespace ConsoleGameEntities.Data
                 .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Skill>()
+                .HasCheckConstraint("CK_Skill_OnlyOneOwner",
+                @"((""ArchetypeId"" IS NOT NULL AND ""MonsterId"" IS NULL) OR (""ArchetypeId"" IS NULL AND ""MonsterId"" IS NOT NULL))");
+
+            // Configure relationships
+
+            modelBuilder.Entity<Skill>()
+                .HasDiscriminator<string>(i => i.SkillType)
+                .HasValue<MartialSkill>("MartialSkill")
+                .HasValue<MagicSkill>("MagicSkill")
+                .HasValue<SupportSkill>("SupportSkill")
+                .HasValue<UltimateSkill>("UltimateSkill");
+
+            modelBuilder.Entity<Skill>()
                 .HasOne(s => s.Archetype)
                 .WithMany(a => a.Skills)
                 .HasForeignKey(s => s.ArchetypeId);
+
+            modelBuilder.Entity<Skill>()
+                .HasOne(s => s.Monster)
+                .WithMany(m => m.Skills)
+                .HasForeignKey(s => s.MonsterId);
 
             modelBuilder.Entity<Archetype>()
                 .Property("AttackMultiplier")
@@ -117,6 +135,10 @@ namespace ConsoleGameEntities.Data
 
             modelBuilder.Entity<Archetype>()
                 .Property("DefenseMultiplier")
+                .HasColumnType("decimal(3,2)");
+
+            modelBuilder.Entity<Archetype>()
+                .Property("ResistanceMultiplier")
                 .HasColumnType("decimal(3,2)");
 
             modelBuilder.Entity<Archetype>()

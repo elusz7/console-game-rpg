@@ -1,5 +1,4 @@
 ﻿using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Interfaces;
@@ -14,7 +13,7 @@ public interface ISkill
     int ElapsedTime { get; set; }
     int Cooldown { get; set; }
     TargetType TargetType { get; set; }
-    SkillType SkillType { get; set; }
-    void Activate();
+    bool Activate(ITargetable self, List<ITargetable>? targets = null);
     void UpdateElapsedTime();
+    void Reset();
 }
