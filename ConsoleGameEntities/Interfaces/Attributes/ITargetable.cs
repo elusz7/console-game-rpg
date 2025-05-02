@@ -4,12 +4,8 @@ namespace ConsoleGameEntities.Interfaces.Attributes;
 
 public interface ITargetable
 {
-    string Name { get; set; }
-
-    void TakeDamage(int damage, SkillTypeEnum? skillType = null);
+    void TakeDamage(int damage, DamageType damageType);
     void Heal(int regainedHealth);
-
     int GetStat(StatType stat);
-    void BoostStat(StatType stat, int power, int? original = null);
-    void ReduceStat(StatType stat, int power, int? original = null);
+    void ModifyStat(StatType stat, int amount);
 }

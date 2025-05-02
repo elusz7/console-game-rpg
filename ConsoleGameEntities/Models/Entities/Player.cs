@@ -63,4 +63,9 @@ public class Player : ITargetable, IPlayer
     public void BoostStat(StatType stat, int power, int? original = null) { }
 
     public void ReduceStat(StatType stat, int power, int? original = null) { }
+
+    public void ModifyStat(StatType stat, int amount)
+    {
+        throw new NotImplementedException();
+    }
 }

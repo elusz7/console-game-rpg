@@ -2,48 +2,53 @@
 using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Models.Monsters;
+using ConsoleGameEntities.Exceptions;
 
 namespace ConsoleGameEntities.Models.Skills;
 
 public class MartialSkill : Skill
 {
-    public override bool Activate(ITargetable? caster, List<ITargetable>? targets = null)
+    public override void Activate(ITargetable? caster, ITargetable? target = null, List<ITargetable>? targets = null)
     {
-        if (ElapsedTime < Cooldown || targets == null || targets.Count == 0)
-            return false;
+        if (IsOnCooldown) 
+            throw new SkillCooldownException();
+
+        if (target == null || targets == null || targets.Count == 0)
+            throw new InvalidTargetException("MartialSkill");
 
         if (caster is Player player)
         {
+            if (player.Level < RequiredLevel)
+                throw new InvalidSkillLevelException();
+
             try
             {
                 player.Archetype.UseResource(Cost);
             }
-            catch (InvalidOperationException) { return false; }
+            catch (InvalidOperationException) { throw new SkillResourceException(); }
 
             switch (TargetType)
             {
                 case TargetType.SingleEnemy:
                 case TargetType.RandomEnemy:
-                    if (targets[0] is Monster singleTarget)
-                        singleTarget.TakeDamage(Power, ESkillType);
+                        target.TakeDamage(Power, DamageType);
                     break;
 
                 case TargetType.AllEnemies:
-                    foreach (var target in targets)
-                        target.TakeDamage(Power, ESkillType);
+                    foreach (var tar in targets)
+                        tar.TakeDamage(Power, DamageType);
                     break;
             }
 
             ElapsedTime = 0;
-            return true;
         }
-        else if (caster is Monster)
+        else if (caster is Monster monster)
         {
-            targets[0].TakeDamage(Power, ESkillType);
-            ElapsedTime = 0;
-            return true;
-        }
+            if (monster.Level < RequiredLevel)
+                throw new InvalidSkillLevelException();
 
-        return false;
+            target.TakeDamage(Power, DamageType);
+            ElapsedTime = 0;
+        }
     }
 }

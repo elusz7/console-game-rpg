@@ -13,9 +13,7 @@ public class ModelEnums
     {
         Generic = 0,
         Martial = 1,
-        Magic = 2,
-        Support = 3,
-        Ultimate = 4
+        Magic = 2
     }
     public enum TargetType
     {
@@ -46,4 +44,31 @@ public class ModelEnums
         Boost,
         Reduce
     }
+
+    public enum DamageType
+    {
+        Generic = 0,
+        Martial = 1,
+        Magical = 2,
+        Hybrid = 3
+    }
+
+    public enum SkillCategory
+    {
+        Basic = 0,
+        Support = 1,
+        Ultimate = 2
+    }
+
+    public enum MonsterBehaviorType
+    {
+        Default = 0,
+        Berserker = 1,
+        Offensive = 2,
+        Defensive = 3,
+        Cautious = 4,
+        Cunning = 5,
+        Boss = 6
+    }
+
 }

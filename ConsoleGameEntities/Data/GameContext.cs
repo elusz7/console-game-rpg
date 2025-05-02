@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ConsoleGameEntities.Models.Skills;
 using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
+using ConsoleGameEntities.Models.Monsters.Common;
 
 namespace ConsoleGameEntities.Data
 {

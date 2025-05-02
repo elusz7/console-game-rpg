@@ -1,24 +1,27 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
+using Microsoft.Extensions.Logging;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Skills;
 
 public class SupportSkill : Skill
 {
-
-    public int Duration { get; set; }
+    public int Duration { get; set; } // Duration MUST be less than cooldown
     public StatType StatAffected { get; set; }
     public SupportEffectType Effect { get; set; }
-    [NotMapped]
-    public Dictionary<ITargetable, int> TargetsAffected { get; set; } = new Dictionary<ITargetable, int>();
 
-    public override bool Activate(ITargetable? caster, List<ITargetable>? targets)
+    // Track how many turns each target has left under the effect
+    [NotMapped]
+    public Dictionary<ITargetable, int> TargetsAffected { get; set; } = new();
+
+    public override void Activate(ITargetable? caster, ITargetable? target = null, List<ITargetable>? targets = null)
     {
         if (IsOnCooldown)
-            return false;
+            throw new SkillCooldownException();
 
         if (caster is Player self)
         {
@@ -26,101 +29,103 @@ public class SupportSkill : Skill
             {
                 self.Archetype.UseResource(Cost);
             }
-            catch (InvalidOperationException) { return false; }
+            catch (InvalidOperationException)
+            {
+                throw new SkillResourceException();
+            }
 
             if (TargetType == TargetType.Self)
-                PlayerBoost(self);
+            {
+                ApplyEffect(self);
+            }
             else if (TargetType == TargetType.SingleEnemy || TargetType == TargetType.RandomEnemy)
             {
-                if (targets == null || targets.Count == 0) return false;
-                
-                MonsterReduction((Monster)targets[0]);
+                if (target == null)
+                    throw new InvalidTargetException("Support");
+
+                ApplyEffect(target);
             }
             else if (TargetType == TargetType.AllEnemies)
             {
-                if (targets == null || targets.Count == 0) return false;
-                foreach (var target in targets)
-                    MonsterReduction((Monster)target);
+                if (targets == null || targets.Count == 0)
+                    throw new InvalidTargetException("Support");
+
+                foreach (var tar in targets)
+                {
+                    try
+                    {
+                        ApplyEffect(tar);
+                    }
+                    catch (InvalidTargetException) { /*do nothing, the stat has been effected*/ }
+                }
             }
-            else { return false; }
 
             ElapsedTime = 0;
-            return true;
         }
         else if (caster is Monster monster)
         {
             if (TargetType == TargetType.Self)
-                MonsterBoost(monster);
+            {
+                ApplyEffect(monster);
+            }
             else if (TargetType == TargetType.SingleEnemy)
             {
-                if (targets == null || targets.Count == 0) return false;
-                PlayerReduction((Player)targets[0]);
+                if (target == null)
+                    throw new InvalidTargetException("Support");
+
+                ApplyEffect(target);
             }
-            else { return false; }
 
             ElapsedTime = 0;
-            return true;
         }
-
-        return false;
     }
+
     public override void UpdateElapsedTime()
     {
-        ElapsedTime++;
-        if (ElapsedTime >= Duration)
-            RevertEffect();
-    }
-
-    public override void Reset()
-    {
-        RevertEffect();
-        ElapsedTime = 0;
-    }
-
-    private void RevertEffect()
-    {
-        if (TargetsAffected.Count == 0) return;
+        var expiredTargets = new List<ITargetable>();
 
         foreach (var kvp in TargetsAffected)
         {
             var target = kvp.Key;
-            var originalStat = kvp.Value;
+            int turnsRemaining = kvp.Value - 1;
 
-            if (Effect == SupportEffectType.Boost)
-                target.ReduceStat(StatAffected, Power, originalStat);
+            if (turnsRemaining <= 0)
+            {
+                RevertEffect(target);
+                expiredTargets.Add(target);
+            }
             else
-                target.BoostStat(StatAffected, Power, originalStat);
+            {
+                TargetsAffected[target] = turnsRemaining;
+            }
         }
 
-        TargetsAffected.Clear();
+        foreach (var target in expiredTargets)
+            TargetsAffected.Remove(target);
     }
 
-    private void PlayerBoost(Player p)
+    public override void Reset()
     {
-        TargetsAffected[p] = p.GetStat(StatAffected); // Store the original stat
-        p.BoostStat(StatAffected, Power);
-        Effect = SupportEffectType.Boost;
+        foreach (var target in TargetsAffected.Keys)
+            RevertEffect(target);
+
+        TargetsAffected.Clear();
         ElapsedTime = 0;
     }
-    private void PlayerReduction(Player p)
+
+    private void ApplyEffect(ITargetable target)
     {
-        TargetsAffected[p] = p.GetStat(StatAffected); // Store the original stat
-        p.ReduceStat(StatAffected, Power);
-        Effect = SupportEffectType.Reduce;
-        ElapsedTime = 0;
+        if (TargetsAffected.ContainsKey(target))
+            throw new InvalidTargetException("Cannot apply multiple effects to same target with same skill");
+
+        int modifier = Effect == SupportEffectType.Boost ? Power : -Power;
+        target.ModifyStat(StatAffected, modifier);
+        TargetsAffected[target] = Duration;
     }
-    private void MonsterBoost(Monster m)
+
+    private void RevertEffect(ITargetable target)
     {
-        TargetsAffected[m] = m.GetStat(StatAffected); // Store the original stat
-        m.BoostStat(StatAffected, Power);
-        Effect = SupportEffectType.Boost;
-        ElapsedTime = 0;
-    }
-    private void MonsterReduction(Monster m)
-    {
-        TargetsAffected[m] = m.GetStat(StatAffected); // Store the original stat
-        m.ReduceStat(StatAffected, Power);
-        Effect = SupportEffectType.Reduce;
-        ElapsedTime = 0;
+        int modifier = Effect == SupportEffectType.Boost ? -Power : Power;
+        target.ModifyStat(StatAffected, modifier);
     }
 }
