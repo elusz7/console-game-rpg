@@ -14,7 +14,7 @@ public class BerserkerStrategy : DefaultStrategy
     /*
      *  Use a damage skill if available; otherwise, strike once with 1.5× base attack
     */
-    public override void ExecuteAttack(IMonster monster, ITargetable target)
+    public override void ExecuteAttack(IMonster monster, IPlayer target)
     {
         var damageSkill = MonsterSkillHelper.GetHighestDamageSkill(monster);
 

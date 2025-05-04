@@ -8,11 +8,11 @@ public interface IArchetype
     int Id { get; set; }
     string Name { get; set; }
     string Description { get; set; }
+    
     int HealthBase { get; set; }
     int AttackBonus { get; set; }
     decimal AttackMultiplier { get; set; }
     int MagicBonus { get; set; }
-
     decimal MagicMultiplier { get; set; }
     int DefenseBonus { get; set; }
     decimal DefenseMultiplier { get; set; }

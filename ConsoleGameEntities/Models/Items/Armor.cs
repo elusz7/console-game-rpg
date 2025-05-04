@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Items;
 
@@ -6,19 +7,7 @@ public class Armor : Item
 {
     public int DefensePower { get; set; }
     public int Resistance { get; set; }
-
-    //public Armor() { }  
-    /*public Armor(string name, decimal value, string description, int durability, decimal weight, int defensePower)
-    {
-        Name = name;
-        Value = value;
-        Description = description;
-        Durability = durability;
-        Weight = weight;
-        DefensePower = defensePower;
-        ItemType = "Armor";
-    }*/
-
+    public ArmorType ArmorType { get; set; }
     public override int Use()
     {
         return 0;

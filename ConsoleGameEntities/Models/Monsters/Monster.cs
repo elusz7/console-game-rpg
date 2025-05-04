@@ -6,13 +6,15 @@ using ConsoleGameEntities.Models.Skills;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters.Strategies;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
+using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGameEntities.Models.Monsters;
 public class Monster : IMonster
-{
-    private static Random _rng = new Random(DateTime.Now.Millisecond);
+{    
+    private static readonly Random _rng = new(DateTime.Now.Millisecond);
     public int Id { get; set; }
     public string Name { get; set; }
+    public string Description { get; set; }
     public int Level { get; set; }
     [NotMapped]
     public int CurrentHealth { get; set; }
@@ -26,19 +28,25 @@ public class Monster : IMonster
         { StatType.Magic, 0 },
     };
     public int MaxHealth { get; set; }
+    public ThreatLevel ThreatLevel { get; set; }
     public int AggressionLevel { get; set; }
-    public int DesiredHitsToKillPlayer { get; set; } = 3;
-    public int DesiredHitsToBeKilledByPlayer { get; set; } = 3;
+    [NotMapped]
+    public int DesiredHitsToKillPlayer { get; set; }
+    [NotMapped]
+    public int DesiredHitsToBeKilledByPlayer { get; set; }
+    private double DodgeChance { get; set; } = 0.01;
     public string MonsterType { get; set; }
-    public ICollection<Skill>? Skills { get; set; } = new List<Skill>();
+    public virtual ICollection<Skill>? Skills { get; set; } = new List<Skill>();
     public int? RoomId { get; set; }
-    public Room? Room { get; set; }
+    public virtual Room? Room { get; set; }
+    public int? ItemId { get; set; }
+    public virtual Item? Treasure { get; set; }
     public int DefensePower { get; set; }
     public int AttackPower { get; set; } //base damage for all types
     public DamageType DamageType { get; set; }
     public int Resistance { get; set; }
     [NotMapped]
-    public IMonsterStrategy Strategy { get; set; }
+    public virtual IMonsterStrategy Strategy { get; set; }
     [NotMapped]
     private Dictionary<DamageType, int> DamageRecord = new Dictionary<DamageType, int>
     {
@@ -48,7 +56,7 @@ public class Monster : IMonster
     [NotMapped]
     public bool MoreMartialDamageTaken => DamageRecord[DamageType.Martial] > DamageRecord[DamageType.Magical];
 
-    public virtual void Attack(ITargetable target)
+    public virtual void Attack(IPlayer target)
     {
         Strategy.ExecuteAttack(this, target);
     }
@@ -86,30 +94,33 @@ public class Monster : IMonster
         variableIncrease.Remove(index);
         //health
         MaxHealth += (int)Math.Floor(variableIncrease[0] * MaxHealth);
+        DodgeChance += 0.002;
     }
     public virtual void TakeDamage(int damage, DamageType damageType)
     {
+        var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
+        bool dodged = _rng.Next(0, 100) < chance;
+
+        if (dodged) return;
+
         int damageTaken = 0;
         switch (damageType)
         {
             case DamageType.Generic:
-                damageTaken = damage;
+                damageTaken = Math.Max(1, damage);
                 break;
             case DamageType.Martial:
-                damageTaken = damage - GetStat(StatType.Defense);
+                damageTaken = Math.Max(1, damage - GetStat(StatType.Defense));
                 DamageRecord[DamageType.Martial] += 1;
                 break;
             case DamageType.Magical:
-                damageTaken = damage - GetStat(StatType.Resistance);
+                damageTaken = Math.Max(1, damage - GetStat(StatType.Resistance));
                 DamageRecord[DamageType.Magical] += 1;
                 break;
             case DamageType.Hybrid:
-                damageTaken = damage - (Math.Max(GetStat(StatType.Defense), GetStat(StatType.Resistance)) / 2);
+                damageTaken = Math.Max(1, damage - (Math.Max(GetStat(StatType.Defense), GetStat(StatType.Resistance)) / 2));
                 break;
         }
-
-        if (damageTaken < 1)
-            throw new HealthReductionException("Monster");
 
         CurrentHealth -= damageTaken;
 

@@ -1,4 +1,5 @@
 ﻿using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGameEntities.Models.Entities;
@@ -14,7 +15,15 @@ public class Inventory : IInventory
 
     public void AddItem(Item item)
     {
-        decimal currentCarryingWeight = Items.Sum(i => i.Weight);
+        if (item is Consumable)
+        {
+            AddConsumable(item);
+            return;
+        }
+
+        decimal currentCarryingWeight = Items
+            .Where(i => i is not Consumable)
+            .Sum(i => i.Weight);
 
         decimal wiggleRoom = Capacity - currentCarryingWeight;
 
@@ -35,7 +44,6 @@ public class Inventory : IInventory
             throw new InventoryException($"An error has occured trying to add {item.Name} to your inventory.");
         }
     }
-
     public void RemoveItem(Item item)
     {
         if (Items.Contains(item))
@@ -47,32 +55,25 @@ public class Inventory : IInventory
             throw new ItemNotFoundException($"You do not have {item.Name} in your inventory.");
         }
     }
-
-    public void UseItem(Item item)
+    private void AddConsumable(IItem item)
     {
-        if (Items.Contains(item))
+        var cap = Math.Max(3m, Capacity * 0.10m);
+        int consumableCap = (int)Math.Floor(cap);
+
+
+        if (item is Consumable consumable)
         {
-            if (item.Durability <= 0)
+            var currentCount = Items.OfType<Consumable>()
+                .Count(c => c.ConsumableType == consumable.ConsumableType);
+
+            if (currentCount < consumableCap)
             {
-                Console.WriteLine($"{item.Name} is broken and cannot be used anymore!");
+                Items.Add(consumable);
             }
             else
             {
-                if (item is Weapon weapon)
-                {
-                    weapon.Use();
-                    Console.WriteLine($"{weapon.Name} has been used.");
-                }
-                else if (item is Armor armor)
-                {
-                    armor.Use();
-                    Console.WriteLine($"{armor.Name} has been used.");
-                }
+                throw new InventoryException($"You cannot carry more than {consumableCap} {consumable.ConsumableType} consumables.");
             }
-        }
-        else
-        {
-            Console.WriteLine($"You do not have {item.Name} in your inventory.");
         }
     }
 }

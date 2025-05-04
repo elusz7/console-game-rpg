@@ -113,7 +113,6 @@ public class Skill : ISkill
             ElapsedTime = 0;
         }
     }
-
     public virtual void UpdateElapsedTime()
     {
         ElapsedTime++;

@@ -9,12 +9,7 @@ public class ModelEnums
         Weapon = 0,
         Armor = 1
     }
-    public enum SkillTypeEnum
-    {
-        Generic = 0,
-        Martial = 1,
-        Magic = 2
-    }
+
     public enum TargetType
     {
         Self,            // Buffs, heals yourself
@@ -71,4 +66,27 @@ public class ModelEnums
         Boss = 6
     }
 
+    public enum ThreatLevel
+    {
+        Low = 0,
+        Medium = 1,
+        High = 2,
+        Elite = 3,
+        Boss = 4
+    }
+
+    public enum ArmorType
+    {
+        Helmet = 0,
+        Chest = 1,
+        Arms = 2,
+        Legs = 3
+    }
+
+    public enum ConsumableType
+    {
+        Health = 0,
+        Durability = 1,
+        Resource = 2
+    }
 }

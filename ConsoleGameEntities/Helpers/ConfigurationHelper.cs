@@ -6,7 +6,7 @@ namespace ConsoleGameEntities.Helpers
 {
     public static class ConfigurationHelper
     {
-        public static IConfigurationRoot GetConfiguration(string basePath = null, string environmentName = null)
+        public static IConfigurationRoot GetConfiguration(string? basePath = null, string? environmentName = null)
         {
             basePath ??= Directory.GetCurrentDirectory();
 

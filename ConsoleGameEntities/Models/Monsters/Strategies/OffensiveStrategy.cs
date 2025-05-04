@@ -12,7 +12,7 @@ public class OffensiveStrategy : DefaultStrategy
      *  use buff or healing skill if can
      *  basic attack with a slightly higher power
     */
-    public override void ExecuteAttack(IMonster monster, ITargetable target)
+    public override void ExecuteAttack(IMonster monster, IPlayer target)
     {
         var damageSkill = MonsterSkillHelper.GetHighestDamageSkill(monster);
         if (damageSkill != null)

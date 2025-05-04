@@ -51,6 +51,13 @@ public class Archetype : IArchetype
     {
         CurrentResource = Math.Min(CurrentResource + RecoveryRate, MaxResource);
     }
+    public void RecoverResource(int x)
+    {
+        if (CurrentResource + x > MaxResource)
+            CurrentResource = MaxResource;
+        else
+            CurrentResource += x;
+    }
     public virtual int LevelUp(int newLevel)
     {
         if (ArchetypeType == ArchetypeType.Martial)

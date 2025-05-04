@@ -1,10 +1,12 @@
 ﻿using System.Text;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Items;
 
 public class Weapon : Item
 {
     public int AttackPower { get; set; }
+    public DamageType DamageType { get; set; }
     
     public Weapon() { }
     public Weapon(string name, decimal value, string description, int durability, decimal weight, int attackPower)

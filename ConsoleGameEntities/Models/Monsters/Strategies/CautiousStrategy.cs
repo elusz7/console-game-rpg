@@ -15,7 +15,7 @@ public class CautiousStrategy : DefaultStrategy
         CautiousMonsterStrategy:
         debuff > damage > heal > buff
     */
-    public override void ExecuteAttack(IMonster monster, ITargetable target)
+    public override void ExecuteAttack(IMonster monster, IPlayer target)
     {
         var debuffUsed = false;
 

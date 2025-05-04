@@ -15,7 +15,7 @@ public class DefaultStrategy : IMonsterStrategy
      * heal if at less than a 1/3 health, buff if between 1/2 health and maximum, else debuff
      * use attack skill if one's available otherwise basic attack
     */
-    public virtual void ExecuteAttack(IMonster monster, ITargetable target)
+    public virtual void ExecuteAttack(IMonster monster, IPlayer target)
     {
         bool usedSupportSkill = false;
 

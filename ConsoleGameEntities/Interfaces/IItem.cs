@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Monsters;
 
 namespace ConsoleGameEntities.Interfaces;
 
@@ -15,6 +16,13 @@ public interface IItem
     string Description { get; set; }
     int Durability { get; set; }
     decimal Weight { get; set; }
+    bool IsCursed { get; set; }
+    int RequiredLevel { get; set; }
+
+    Inventory? Inventory { get; set; }
+    Monster? Monster { get; set; }
 
     int Use();
+    void Purify();
+    void Sell();
 }

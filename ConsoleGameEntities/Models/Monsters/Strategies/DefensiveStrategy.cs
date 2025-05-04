@@ -11,7 +11,7 @@ public class DefensiveStrategy : DefaultStrategy
      * 2. If not heal, try to use an damage skill or debuff skill
      * 3. slightly weaker basic attack as last resort or followup
      */
-    public override void ExecuteAttack(IMonster monster, ITargetable target)
+    public override void ExecuteAttack(IMonster monster, IPlayer target)
     {
         bool healingUsed = false;
 

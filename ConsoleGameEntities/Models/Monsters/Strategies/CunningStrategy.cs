@@ -22,7 +22,7 @@ public class CunningStrategy : DefaultStrategy
      * - Else, fallback to basic attack.
     */
 
-    public override void ExecuteAttack(IMonster monster, ITargetable target)
+    public override void ExecuteAttack(IMonster monster, IPlayer target)
     {
         bool supportUsed = false;
         int healthLost = monster.MaxHealth - monster.CurrentHealth;

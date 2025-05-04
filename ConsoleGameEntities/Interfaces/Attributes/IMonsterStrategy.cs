@@ -2,5 +2,5 @@
 
 public interface IMonsterStrategy
 {
-    void ExecuteAttack(IMonster monster, ITargetable target);
+    void ExecuteAttack(IMonster monster, IPlayer target);
 }

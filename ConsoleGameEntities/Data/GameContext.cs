@@ -3,8 +3,6 @@ using ConsoleGameEntities.Models.Monsters;
 using Microsoft.EntityFrameworkCore;
 using ConsoleGameEntities.Models.Skills;
 using ConsoleGameEntities.Models.Entities;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
-using ConsoleGameEntities.Models.Monsters.Common;
 
 namespace ConsoleGameEntities.Data
 {
@@ -27,7 +25,13 @@ namespace ConsoleGameEntities.Data
             //set up monsters
             modelBuilder.Entity<Monster>()
                 .HasDiscriminator<string>(m => m.MonsterType)
-                .HasValue<Goblin>("Goblin");
+                .HasValue<EliteMonster>("EliteMonster")
+                .HasValue<BossMonster>("BossMonster");
+
+            modelBuilder.Entity<Monster>()
+                .Property(m => m.Description)
+                .IsRequired()
+                .HasColumnName("Description");
 
             //set up inventory      
             modelBuilder.Entity<Item>()

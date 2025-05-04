@@ -20,6 +20,13 @@ public static class MonsterSkillHelper
             ?? Enumerable.Empty<SupportSkill>();
     }
 
+    public static IEnumerable<BossSkill> GetAvailableBossSkills(IMonster monster)
+    {
+        return (monster.Skills ?? Enumerable.Empty<Skill>())
+            .OfType<BossSkill>()
+            .Where(s => !s.IsOnCooldown);
+    }
+
     public static Skill? GetHighestDamageSkill(IMonster monster)
     {
         return GetAvailableSkills(monster)?
@@ -71,6 +78,12 @@ public static class MonsterSkillHelper
             .FirstOrDefault();
     }
 
+    public static Skill? GetUltimate(IMonster monster)
+    {
+        return monster.Skills?.OfType<UltimateSkill>()
+            .Where(s => s.IsReady).FirstOrDefault();
+    }
+    
     public static List<T> FilterByType<T>(IMonster monster) where T : Skill
     {
         return monster.Skills?

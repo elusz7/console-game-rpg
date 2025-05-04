@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Models.Entities;
+﻿using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
@@ -28,7 +26,7 @@ public interface ISkill
     Archetype? Archetype { get; set; }
     Monster? Monster { get; set; }
 
-    void Activate(ITargetable self, ITargetable? target = null, List<ITargetable>? targets = null);
+    void Activate(Attributes.ITargetable self, Attributes.ITargetable? target = null, List<Attributes.ITargetable>? targets = null);
     void UpdateElapsedTime();
     void Reset();
 }
