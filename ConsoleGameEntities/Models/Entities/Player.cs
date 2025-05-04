@@ -36,7 +36,8 @@ public class Player : IPlayer
         { StatType.Attack, 0 },
         { StatType.Magic, 0 },
     };
-    public void Attack(ITargetable target) {
+    public void Attack(ITargetable target) 
+    {
         if (Archetype.ArchetypeType == ArchetypeType.Martial)
         {
             target.TakeDamage(GetStat(StatType.Attack), DamageType.Martial);
@@ -49,6 +50,8 @@ public class Player : IPlayer
         {
             throw new NotImplementedException();
         }
+
+        CheckWeaponDurability();
     }
     public void TakeDamage(int damage, DamageType damageType) 
     {
@@ -66,10 +69,12 @@ public class Player : IPlayer
             _ => damage
         };
 
-        CurrentHealth -= damageTaken;
+        CurrentHealth -= damageTaken;        
 
         if (CurrentHealth <= 0)
             throw new PlayerDeathException();
+
+        CheckArmorDurability();
     }
     public void Heal(int regainedHealth) 
     {
@@ -139,6 +144,9 @@ public class Player : IPlayer
         if (item.RequiredLevel > Level)
             throw new EquipmentException("Your level is too low to equip this item");
 
+        if (item.Durability < 1)
+            throw new EquipmentException("This item is broken and cannot be equipped");
+
         if (item is Weapon newWeapon)
         {
             if ((newWeapon.DamageType == DamageType.Martial && Archetype.ArchetypeType == ArchetypeType.Magical)
@@ -150,11 +158,11 @@ public class Player : IPlayer
 
             if (weapon != null)
             {
-                weapon.IsEquipped = false;
+                weapon.Unequip();
                 Equipment.Remove(weapon);
             }
 
-            newWeapon.IsEquipped = true;
+            newWeapon.Equip();
             Equipment.Add(newWeapon);
         }
         else if (item is Armor newArmor)
@@ -163,11 +171,11 @@ public class Player : IPlayer
 
             if (armorPiece != null)
             {
-                armorPiece.IsEquipped = false;
+                armorPiece.Unequip();
                 Equipment.Remove(armorPiece);
             }
 
-            newArmor.IsEquipped = true;
+            newArmor.Equip();
             Equipment.Add(newArmor);            
         }
         else
@@ -247,5 +255,42 @@ public class Player : IPlayer
             m.ItemId = null;
 
         monster.Treasure = null;
+    }
+    public void Unequip(IItem item)
+    {
+        Equipment.Remove(item);
+        item.Unequip();
+    }
+    private void CheckArmorDurability()
+    {
+        var damagedArmor = Equipment.OfType<Armor>().OrderBy(_ => _rng.Next()).FirstOrDefault();
+        if (damagedArmor != null)
+        {
+            try
+            {
+                damagedArmor.Use();
+            }
+            catch (ItemDurabilityException)
+            {
+                Equipment.Remove(damagedArmor);
+                damagedArmor.Unequip();
+            }
+        }
+    }
+    private void CheckWeaponDurability()
+    {
+        var weapon = Equipment.OfType<Armor>().FirstOrDefault();
+        if (weapon != null)
+        {
+            try
+            {
+                weapon.Use();
+            }
+            catch (ItemDurabilityException)
+            {
+                Equipment.Remove(weapon);
+                weapon.Unequip();
+            }
+        }
     }
 }

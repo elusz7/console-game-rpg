@@ -19,18 +19,6 @@ public class Weapon : Item
         AttackPower = attackPower;
     }
     
-    public override int Use()
-    {
-        if (Durability > 0)
-        {
-            Durability--;
-            return AttackPower;
-        }
-        else
-        {
-            return -1;
-        }
-    }
     public override string ToString()
     {
         var sb = new StringBuilder(base.ToString());

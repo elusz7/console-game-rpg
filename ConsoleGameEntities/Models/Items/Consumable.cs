@@ -7,7 +7,7 @@ public class Consumable : Item
 {
     public int Power { get; set; }
     public ConsumableType ConsumableType { get; set; }
-    public override int Use()
+    public override void Use()
     {
         throw new InvalidTargetException("You need something to use this consumable on.");
     }
@@ -19,7 +19,7 @@ public class Consumable : Item
                 player.Heal(Power);
                 break;
             case IItem item when ConsumableType == ConsumableType.Durability:
-                item.Durability += Power;
+                item.RecoverDurability(Power);
                 break;
             case IPlayer player when ConsumableType == ConsumableType.Resource:
                 player.Archetype.RecoverResource(Power);

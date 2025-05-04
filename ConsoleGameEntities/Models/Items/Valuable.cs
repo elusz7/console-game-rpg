@@ -4,9 +4,9 @@ namespace ConsoleGameEntities.Models.Items;
 
 public class Valuable : Item
 {
-    public override int Use()
+    public override void Use()
     {
-        throw new NotImplementedException(); //A valuable cannot be used
+        throw new InvalidOperationException(); //A valuable cannot be used
     }
 
     public override string ToString()

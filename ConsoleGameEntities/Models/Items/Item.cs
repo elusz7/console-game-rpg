@@ -16,7 +16,7 @@ public abstract class Item : IItem
     public int Durability { get; set; }
     public decimal Weight { get; set; }
     [NotMapped]
-    public bool IsEquipped { get; set; }
+    private bool ItemEquipped { get; set; }
     public bool IsCursed { get; set; }
     public int RequiredLevel { get; set; }
     public string ItemType { get; set; }
@@ -26,7 +26,12 @@ public abstract class Item : IItem
     public int? MonsterId { get; set; }
     public Monster? Monster { get; set; }
 
-    public abstract int Use();
+    public virtual void Use()
+    {
+        Durability--;
+        if (Durability < 1)
+            throw new ItemDurabilityException("This item is broken and can't be used");
+    }
     public virtual void Purify()
     {
         if (!IsCursed)
@@ -45,7 +50,7 @@ public abstract class Item : IItem
     }
     public virtual void Sell()
     {
-        if (IsEquipped)
+        if (ItemEquipped)
             throw new InvalidOperationException("Cannot sell an equipped item.");
 
         if (Inventory != null)
@@ -54,7 +59,6 @@ public abstract class Item : IItem
         InventoryId = null;
         Inventory = null;
     }
-
     public virtual void Buy(IPlayer player) {
         var price = (int)Math.Floor(Value * 1.25M);
 
@@ -70,6 +74,22 @@ public abstract class Item : IItem
         }
 
         player.Inventory.Gold -= price;
+    }
+    public virtual void Equip()
+    {
+        ItemEquipped = true;
+    }
+    public virtual void Unequip()
+    {
+        ItemEquipped = false;
+    }
+    public virtual bool IsEquipped() => ItemEquipped;
+    public virtual void RecoverDurability(int power)
+    {
+        if (Durability + power > 100)
+            Durability = 100;
+        else
+            Durability += power;
     }
     public override string ToString()
     {

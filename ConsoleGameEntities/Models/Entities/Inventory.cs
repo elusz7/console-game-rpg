@@ -76,4 +76,8 @@ public class Inventory : IInventory
             }
         }
     }
+    public IEnumerable<T> GetItemsOfType<T>() where T : Item
+    {
+        return Items.OfType<T>();
+    }
 }
