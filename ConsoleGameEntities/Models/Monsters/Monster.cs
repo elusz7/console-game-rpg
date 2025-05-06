@@ -106,9 +106,6 @@ public class Monster : IMonster
         int damageTaken = 0;
         switch (damageType)
         {
-            case DamageType.Generic:
-                damageTaken = Math.Max(1, damage);
-                break;
             case DamageType.Martial:
                 damageTaken = Math.Max(1, damage - GetStat(StatType.Defense));
                 DamageRecord[DamageType.Martial] += 1;

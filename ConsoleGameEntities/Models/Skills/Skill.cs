@@ -16,6 +16,7 @@ public class Skill : ISkill
     public int RequiredLevel { get; set; }
     public int Cost { get; set; }
     public int Power { get; set; }
+    [NotMapped]
     public int ElapsedTime { get; set; } // time since skill was last used
     public int Cooldown { get; set; }
     [NotMapped]
@@ -66,7 +67,6 @@ public class Skill : ISkill
                     break;
 
                 case TargetType.SingleEnemy:
-                case TargetType.RandomEnemy:
                     if (target == null)
                         throw new InvalidTargetException("Skill");
 

@@ -62,7 +62,6 @@ public class Player : IPlayer
 
         int damageTaken = damageType switch
         {
-            DamageType.Generic => damage,
             DamageType.Martial => Math.Max(1, damage - GetStat(StatType.Defense)),
             DamageType.Magical => Math.Max(1, damage - GetStat(StatType.Resistance)),
             DamageType.Hybrid => Math.Max(1, damage - (Math.Max(GetStat(StatType.Defense), GetStat(StatType.Resistance)) / 2)),

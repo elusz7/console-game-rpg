@@ -25,6 +25,12 @@ namespace ConsoleGameEntities.Migrations
                 table: "Skills",
                 newName: "SkillCategory");
 
+            migrationBuilder.AddColumn<int>(
+                name: "SupportEffectType",
+                table: "Skills",
+                type: "int",
+                nullable: true);
+
             migrationBuilder.RenameColumn(
                 name: "MartialBonus",
                 table: "Monsters",

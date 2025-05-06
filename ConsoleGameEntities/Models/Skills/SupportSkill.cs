@@ -12,7 +12,7 @@ public class SupportSkill : Skill
 {
     public int Duration { get; set; } // Duration MUST be less than cooldown
     public StatType StatAffected { get; set; }
-    public SupportEffectType Effect { get; set; }
+    public int SupportEffect { get; set; }
 
     // Track how many turns each target has left under the effect
     [NotMapped]
@@ -38,7 +38,7 @@ public class SupportSkill : Skill
             {
                 ApplyEffect(self);
             }
-            else if (TargetType == TargetType.SingleEnemy || TargetType == TargetType.RandomEnemy)
+            else if (TargetType == TargetType.SingleEnemy)
             {
                 if (target == null)
                     throw new InvalidTargetException("Support");
@@ -118,14 +118,14 @@ public class SupportSkill : Skill
         if (TargetsAffected.ContainsKey(target))
             throw new InvalidTargetException("Cannot apply multiple effects to same target with same skill");
 
-        int modifier = Effect == SupportEffectType.Boost ? Power : -Power;
+        int modifier = SupportEffect == (int)SupportEffectType.Boost ? Power : -Power;
         target.ModifyStat(StatAffected, modifier);
         TargetsAffected[target] = Duration;
     }
 
     private void RevertEffect(ITargetable target)
     {
-        int modifier = Effect == SupportEffectType.Boost ? -Power : Power;
+        int modifier = SupportEffect == (int)SupportEffectType.Boost ? -Power : Power;
         target.ModifyStat(StatAffected, modifier);
     }
 }

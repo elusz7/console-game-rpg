@@ -4,6 +4,7 @@ using ConsoleGameEntities.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleGameEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    partial class GameContextModelSnapshot : ModelSnapshot
+    [Migration("20250505205814_ReSeedItems")]
+    partial class ReSeedItems
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -334,6 +336,9 @@ namespace ConsoleGameEntities.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("ElapsedTime")
+                        .HasColumnType("int");
+
                     b.Property<int?>("MonsterId")
                         .HasColumnType("int");
 
@@ -433,18 +438,6 @@ namespace ConsoleGameEntities.Migrations
                     b.HasDiscriminator().HasValue("EliteMonster");
                 });
 
-            modelBuilder.Entity("ConsoleGameEntities.Models.Skills.BossSkill", b =>
-                {
-                    b.HasBaseType("ConsoleGameEntities.Models.Skills.Skill");
-
-                    b.Property<int>("Phase")
-                        .HasColumnType("int");
-
-                    b.HasDiscriminator().HasValue("BossSkill");
-
-                    b.HasCheckConstraint("CK_Skill_OnlyOneOwner", "((\"ArchetypeId\" IS NOT NULL AND \"MonsterId\" IS NULL) OR (\"ArchetypeId\" IS NULL AND \"MonsterId\" IS NOT NULL))");
-                });
-
             modelBuilder.Entity("ConsoleGameEntities.Models.Skills.MagicSkill", b =>
                 {
                     b.HasBaseType("ConsoleGameEntities.Models.Skills.Skill");
@@ -470,10 +463,10 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("Duration")
                         .HasColumnType("int");
 
-                    b.Property<int>("StatAffected")
+                    b.Property<int>("Effect")
                         .HasColumnType("int");
 
-                    b.Property<int>("SupportEffect")
+                    b.Property<int>("StatAffected")
                         .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue("SupportSkill");

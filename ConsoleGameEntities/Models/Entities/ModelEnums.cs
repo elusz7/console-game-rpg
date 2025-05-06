@@ -12,10 +12,9 @@ public class ModelEnums
 
     public enum TargetType
     {
-        Self,            // Buffs, heals yourself
-        SingleEnemy,     // Single-target attacks
-        AllEnemies,      // AoE attacks
-        RandomEnemy      // Randomly strike one enemy (good for "chaotic" abilities)
+        Self = 0,            // Buffs, heals yourself
+        SingleEnemy = 1,     // Single-target attacks
+        AllEnemies = 2     // AoE attacks
     }
 
     public enum ArchetypeType
@@ -36,16 +35,15 @@ public class ModelEnums
 
     public enum SupportEffectType
     {
-        Boost,
-        Reduce
+        Boost = 0,
+        Reduce = 1
     }
 
     public enum DamageType
     {
-        Generic = 0,
-        Martial = 1,
-        Magical = 2,
-        Hybrid = 3
+        Martial = 0,
+        Magical = 1,
+        Hybrid = 2
     }
 
     public enum SkillCategory
@@ -77,7 +75,7 @@ public class ModelEnums
 
     public enum ArmorType
     {
-        Helmet = 0,
+        Head = 0,
         Chest = 1,
         Arms = 2,
         Legs = 3

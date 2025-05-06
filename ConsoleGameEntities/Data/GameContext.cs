@@ -33,11 +33,20 @@ namespace ConsoleGameEntities.Data
                 .IsRequired()
                 .HasColumnName("Description");
 
+            modelBuilder.Entity<Monster>()
+                .HasOne(m => m.Treasure)
+                .WithOne(i => i.Monster)
+                .HasForeignKey<Monster>(m => m.ItemId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+
             //set up inventory      
             modelBuilder.Entity<Item>()
                 .HasDiscriminator<string>(i => i.ItemType)
                 .HasValue<Weapon>("Weapon")
-                .HasValue<Armor>("Armor");
+                .HasValue<Armor>("Armor")
+                .HasValue<Valuable>("Valuable")
+                .HasValue<Consumable>("Consumable");
 
             modelBuilder.Entity<Item>()
                 .Property(i => i.Value)
@@ -118,7 +127,12 @@ namespace ConsoleGameEntities.Data
                 .HasValue<MartialSkill>("MartialSkill")
                 .HasValue<MagicSkill>("MagicSkill")
                 .HasValue<SupportSkill>("SupportSkill")
-                .HasValue<UltimateSkill>("UltimateSkill");
+                .HasValue<UltimateSkill>("UltimateSkill")
+                .HasValue<BossSkill>("BossSkill");
+
+            /*modelBuilder.Entity<SupportSkill>()
+                .Property(s => s.SupportEffect)
+                .HasColumnName("SupportEffect");*/
 
             modelBuilder.Entity<Skill>()
                 .HasOne(s => s.Archetype)

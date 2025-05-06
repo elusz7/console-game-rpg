@@ -17,6 +17,7 @@ public abstract class Item : IItem
     public decimal Weight { get; set; }
     [NotMapped]
     private bool ItemEquipped { get; set; }
+    [NotMapped]
     public bool IsCursed { get; set; }
     public int RequiredLevel { get; set; }
     public string ItemType { get; set; }

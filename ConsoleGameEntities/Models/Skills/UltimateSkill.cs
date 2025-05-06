@@ -13,6 +13,8 @@ public class UltimateSkill : Skill
     // ElapsedTime must meet or exceed Cooldown.
     [NotMapped]
     public bool IsReady => ElapsedTime >= Cooldown;
+    private int BasePower = 0;
+
 
     public override void Activate(ITargetable? caster, ITargetable? target = null, List<ITargetable>? targets = null)
     {
@@ -25,6 +27,8 @@ public class UltimateSkill : Skill
             if (player.Level < RequiredLevel)
                 throw new InvalidSkillLevelException();
 
+            ScalePowerWithLevel(player.Level);
+
             try
             {
                 player.Archetype.UseResource(Cost);
@@ -34,7 +38,6 @@ public class UltimateSkill : Skill
             switch (TargetType)
             {
                 case TargetType.SingleEnemy:
-                case TargetType.RandomEnemy:
                     target.TakeDamage(Power, DamageType);
                     break;
 
@@ -53,6 +56,22 @@ public class UltimateSkill : Skill
 
             target.TakeDamage(Power, DamageType);
             ElapsedTime = 0;
+        }
+    }
+
+    private void ScalePowerWithLevel(int level)
+    {
+        if (BasePower == 0)
+            BasePower = Power;
+
+        Power = Power * (int)(1 + (Math.Pow((level - 3), 1.2) / 5));
+
+        switch (level)
+        {
+            case 5: Cooldown = 7; break;
+            case 7: Cooldown = 8; break;
+            case 9: Cooldown = 9; break;
+            case 10: Cooldown = 10; break;
         }
     }
 }

@@ -4,6 +4,7 @@ using ConsoleGameEntities.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleGameEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    partial class GameContextModelSnapshot : ModelSnapshot
+    [Migration("20250506041014_DropSupportEffectType")]
+    partial class DropSupportEffectType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -334,6 +336,9 @@ namespace ConsoleGameEntities.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("ElapsedTime")
+                        .HasColumnType("int");
+
                     b.Property<int?>("MonsterId")
                         .HasColumnType("int");
 
@@ -473,8 +478,9 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("StatAffected")
                         .HasColumnType("int");
 
-                    b.Property<int>("SupportEffect")
-                        .HasColumnType("int");
+                    b.Property<int>("SupportEffectType")
+                        .HasColumnType("int")
+                        .HasColumnName("SupportEffectType");
 
                     b.HasDiscriminator().HasValue("SupportSkill");
 

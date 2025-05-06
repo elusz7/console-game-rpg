@@ -30,7 +30,6 @@ public class MagicSkill : Skill
             switch (TargetType)
             {
                 case TargetType.SingleEnemy:
-                case TargetType.RandomEnemy:
                         target.TakeDamage(Power, DamageType);
                     break;
 

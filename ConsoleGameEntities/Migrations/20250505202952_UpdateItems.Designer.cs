@@ -4,6 +4,7 @@ using ConsoleGameEntities.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleGameEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    partial class GameContextModelSnapshot : ModelSnapshot
+    [Migration("20250505202952_UpdateItems")]
+    partial class UpdateItems
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -224,6 +226,9 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int?>("MonsterId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("MonsterId1")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -240,6 +245,8 @@ namespace ConsoleGameEntities.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("InventoryId");
+
+                    b.HasIndex("MonsterId1");
 
                     b.ToTable("Items");
 
@@ -299,9 +306,7 @@ namespace ConsoleGameEntities.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ItemId")
-                        .IsUnique()
-                        .HasFilter("[ItemId] IS NOT NULL");
+                    b.HasIndex("ItemId");
 
                     b.HasIndex("RoomId");
 
@@ -333,6 +338,9 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ElapsedTime")
+                        .HasColumnType("int");
 
                     b.Property<int?>("MonsterId")
                         .HasColumnType("int");
@@ -433,18 +441,6 @@ namespace ConsoleGameEntities.Migrations
                     b.HasDiscriminator().HasValue("EliteMonster");
                 });
 
-            modelBuilder.Entity("ConsoleGameEntities.Models.Skills.BossSkill", b =>
-                {
-                    b.HasBaseType("ConsoleGameEntities.Models.Skills.Skill");
-
-                    b.Property<int>("Phase")
-                        .HasColumnType("int");
-
-                    b.HasDiscriminator().HasValue("BossSkill");
-
-                    b.HasCheckConstraint("CK_Skill_OnlyOneOwner", "((\"ArchetypeId\" IS NOT NULL AND \"MonsterId\" IS NULL) OR (\"ArchetypeId\" IS NULL AND \"MonsterId\" IS NOT NULL))");
-                });
-
             modelBuilder.Entity("ConsoleGameEntities.Models.Skills.MagicSkill", b =>
                 {
                     b.HasBaseType("ConsoleGameEntities.Models.Skills.Skill");
@@ -470,10 +466,10 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("Duration")
                         .HasColumnType("int");
 
-                    b.Property<int>("StatAffected")
+                    b.Property<int>("Effect")
                         .HasColumnType("int");
 
-                    b.Property<int>("SupportEffect")
+                    b.Property<int>("StatAffected")
                         .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue("SupportSkill");
@@ -556,14 +552,20 @@ namespace ConsoleGameEntities.Migrations
                         .WithMany("Items")
                         .HasForeignKey("InventoryId");
 
+                    b.HasOne("ConsoleGameEntities.Models.Monsters.Monster", "Monster")
+                        .WithMany()
+                        .HasForeignKey("MonsterId1");
+
                     b.Navigation("Inventory");
+
+                    b.Navigation("Monster");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Monsters.Monster", b =>
                 {
                     b.HasOne("ConsoleGameEntities.Models.Items.Item", "Treasure")
-                        .WithOne("Monster")
-                        .HasForeignKey("ConsoleGameEntities.Models.Monsters.Monster", "ItemId")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("ConsoleGameEntities.Models.Entities.Room", "Room")
@@ -605,11 +607,6 @@ namespace ConsoleGameEntities.Migrations
                 {
                     b.Navigation("Inventory")
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("ConsoleGameEntities.Models.Items.Item", b =>
-                {
-                    b.Navigation("Monster");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Monsters.Monster", b =>
