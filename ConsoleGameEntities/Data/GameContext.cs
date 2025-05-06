@@ -116,10 +116,6 @@ namespace ConsoleGameEntities.Data
                 .HasForeignKey(r => r.WestId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity<Skill>()
-                .HasCheckConstraint("CK_Skill_OnlyOneOwner",
-                @"((""ArchetypeId"" IS NOT NULL AND ""MonsterId"" IS NULL) OR (""ArchetypeId"" IS NULL AND ""MonsterId"" IS NOT NULL))");
-
             // Configure relationships
 
             modelBuilder.Entity<Skill>()

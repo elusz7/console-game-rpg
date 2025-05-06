@@ -4,6 +4,7 @@ using ConsoleGameEntities.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleGameEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    partial class GameContextModelSnapshot : ModelSnapshot
+    [Migration("20250506044407_DropSkillCheckConstraint")]
+    partial class DropSkillCheckConstraint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -366,6 +368,8 @@ namespace ConsoleGameEntities.Migrations
                     b.ToTable("Skills");
 
                     b.HasDiscriminator<string>("SkillType").HasValue("Skill");
+
+                    b.HasCheckConstraint("CK_Skill_OnlyOneOwner", "((\"ArchetypeId\" IS NOT NULL AND \"MonsterId\" IS NULL) OR (\"ArchetypeId\" IS NULL AND \"MonsterId\" IS NOT NULL))");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Items.Armor", b =>
@@ -439,6 +443,8 @@ namespace ConsoleGameEntities.Migrations
                         .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue("BossSkill");
+
+                    b.HasCheckConstraint("CK_Skill_OnlyOneOwner", "((\"ArchetypeId\" IS NOT NULL AND \"MonsterId\" IS NULL) OR (\"ArchetypeId\" IS NULL AND \"MonsterId\" IS NOT NULL))");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Skills.MagicSkill", b =>
@@ -446,6 +452,8 @@ namespace ConsoleGameEntities.Migrations
                     b.HasBaseType("ConsoleGameEntities.Models.Skills.Skill");
 
                     b.HasDiscriminator().HasValue("MagicSkill");
+
+                    b.HasCheckConstraint("CK_Skill_OnlyOneOwner", "((\"ArchetypeId\" IS NOT NULL AND \"MonsterId\" IS NULL) OR (\"ArchetypeId\" IS NULL AND \"MonsterId\" IS NOT NULL))");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Skills.MartialSkill", b =>
@@ -453,6 +461,8 @@ namespace ConsoleGameEntities.Migrations
                     b.HasBaseType("ConsoleGameEntities.Models.Skills.Skill");
 
                     b.HasDiscriminator().HasValue("MartialSkill");
+
+                    b.HasCheckConstraint("CK_Skill_OnlyOneOwner", "((\"ArchetypeId\" IS NOT NULL AND \"MonsterId\" IS NULL) OR (\"ArchetypeId\" IS NULL AND \"MonsterId\" IS NOT NULL))");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Skills.SupportSkill", b =>
@@ -469,6 +479,8 @@ namespace ConsoleGameEntities.Migrations
                         .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue("SupportSkill");
+
+                    b.HasCheckConstraint("CK_Skill_OnlyOneOwner", "((\"ArchetypeId\" IS NOT NULL AND \"MonsterId\" IS NULL) OR (\"ArchetypeId\" IS NULL AND \"MonsterId\" IS NOT NULL))");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Skills.UltimateSkill", b =>
@@ -476,6 +488,8 @@ namespace ConsoleGameEntities.Migrations
                     b.HasBaseType("ConsoleGameEntities.Models.Skills.Skill");
 
                     b.HasDiscriminator().HasValue("UltimateSkill");
+
+                    b.HasCheckConstraint("CK_Skill_OnlyOneOwner", "((\"ArchetypeId\" IS NOT NULL AND \"MonsterId\" IS NULL) OR (\"ArchetypeId\" IS NULL AND \"MonsterId\" IS NOT NULL))");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Entities.Inventory", b =>
