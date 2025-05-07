@@ -24,7 +24,7 @@ public class Skill : ISkill
     public TargetType TargetType { get; set; }
     public string SkillType { get; set; }
     public SkillCategory SkillCategory { get; set; }
-    public DamageType DamageType { get; set; }
+    public DamageType? DamageType { get; set; }
     public int? ArchetypeId { get; set; }
     public virtual Archetype? Archetype { get; set; }
     public int? MonsterId { get; set; }

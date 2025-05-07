@@ -20,17 +20,17 @@ namespace ConsoleGameEntities.Migrations
                {
                     188, 26, "Thousand Masks",
                     "Unleash a storm of illusions, each striking with deadly precision.",
-                    10, 1, 80, 10, 2, "UltimateSkill", 2, 2
+                    10, 1, 80, 10, 2, "BossSkill", 2, 2
                 },
                 {
                     189, 27, "Soul Cataclysm",
                     "Rend the battlefield asunder with necrotic force and cursed souls.",
-                    10, 1, 85, 10, 2, "UltimateSkill", 2, 2
+                    10, 1, 85, 10, 2, "BossSkill", 2, 2
                 },
                 {
                     190, 28, "Crimson Requiem",
                     "Drain the blood and vitality of all enemies, healing yourself with their life force.",
-                    10, 1, 75, 10, 2, "UltimateSkill", 2, 2
+                    10, 1, 75, 10, 2, "BossSkill", 2, 2
                 },
                 { 191, 26, "Void Fang", "Sink fangs into the target, draining both health and light.", 10, 1, 18, 3, 1, "MartialSkill", 0, 0 },
                 { 192, 26, "Foxfire Burst", "Launch an explosive orb of ghostly blue fire.", 10, 1, 20, 3, 1, "MagicalSkill", 0, 1 },

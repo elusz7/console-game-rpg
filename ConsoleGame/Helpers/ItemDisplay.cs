@@ -59,7 +59,7 @@ public class ItemDisplay(InputManager inputManager, OutputManager outputManager,
             return;
         }
 
-        _inputManager.PaginateList(items, i => i.ToString());
+        _inputManager.PaginateList(items);
     }
 
     private void SearchItemByName()
@@ -68,25 +68,25 @@ public class ItemDisplay(InputManager inputManager, OutputManager outputManager,
 
         var itemsFound = _itemDao.GetAllItems(itemName);
 
-        if (!itemsFound.Any())
+        if (itemsFound.Count == 0)
         {
             _outputManager.WriteLine($"\n\tNo items found matching [{itemName}]\n");
         }
         else
         {
             _outputManager.WriteLine($"\n\t{itemsFound.Count} items found matching [{itemName}]");
-            _inputManager.PaginateList(itemsFound, i => i.ToString());
+            _inputManager.PaginateList(itemsFound);
         }
     }
     private void ListItemsByType()
     {
-        string category = _inputManager.ReadString("\nWeapon or Armor? ", new[] {"weapon", "armor"}).ToLower();
+        string category = _inputManager.ReadString("\nWeapon, Armor, Valuable, or Consumable? ", ["weapon", "armor", "valuable", "consumable"]).ToLower();
 
         List<Item> items = _itemDao.GetItemsByType(category);
 
         if (items.Count != 0)
         {
-            _inputManager.PaginateList(items, i => i.ToString());
+            _inputManager.PaginateList(items);
         }
         else
         {

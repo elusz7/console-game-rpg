@@ -21,11 +21,7 @@ public class Inventory : IInventory
             return;
         }
 
-        decimal currentCarryingWeight = Items
-            .Where(i => i is not Consumable)
-            .Sum(i => i.Weight);
-
-        decimal wiggleRoom = Capacity - currentCarryingWeight;
+        decimal wiggleRoom = Capacity - GetCarryingWeight();
 
         if (Items.Contains(item))
         {
@@ -79,5 +75,12 @@ public class Inventory : IInventory
     public IEnumerable<T> GetItemsOfType<T>() where T : Item
     {
         return Items.OfType<T>();
+    }
+
+    public decimal GetCarryingWeight()
+    {
+        return Items
+            .Where(i => i is not Consumable)
+            .Sum(i => i.Weight);
     }
 }

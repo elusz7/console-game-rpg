@@ -1,0 +1,69 @@
+﻿using ConsoleGameEntities.Models.Entities;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
+using ConsoleGame.GameDao;
+
+namespace ConsoleGame.Helpers;
+
+public class ArchetypeDisplay
+{
+    private readonly InputManager _inputManager;
+    private readonly OutputManager _outputManager;
+    private readonly ArchetypeDao _archetypeDao;
+
+    public ArchetypeDisplay(InputManager inputManager, OutputManager outputManager, ArchetypeDao archetypeDao)
+    {
+        _inputManager = inputManager;
+        _outputManager = outputManager;
+        _archetypeDao = archetypeDao;
+    }
+    public void Menu()
+    {
+        _outputManager.Clear();
+        while (true)
+        {
+            _outputManager.WriteLine("=== Archetype Display Menu ===");
+            _outputManager.WriteLine("1. List All Archetypes"
+                + "\n2. List Archetypes By Type"
+                + "\n3. Return to Archetype Main Menu");
+
+            var choice = _inputManager.ReadMenuKey(3);
+
+            switch (choice)
+            {
+                case 1:
+                    ListArchetypes();
+                    break;
+                case 2:
+                    ListArchetypes("Type");
+                    break;
+                case 3:
+                    _outputManager.Clear();
+                    return;
+            }
+        }
+    }
+
+    private void ListArchetypes(string? criteria = null)
+    {
+        List<Archetype> archetypes = [];
+        
+        if (criteria == null)
+            archetypes = _archetypeDao.GetAllArchetypes();
+        else if (criteria.Equals("Type"))
+        {
+            _outputManager.WriteLine("Choose Archetype Type:", ConsoleColor.Yellow);
+            var typeChoice = _inputManager.ReadInt("1. Martial Archetypes\n2. Magical Archetypes", 2);
+            var archetypeType = (typeChoice == 1) ? ArchetypeType.Martial : ArchetypeType.Magical;
+
+            archetypes = _archetypeDao.GetArchetypesByType(archetypeType);
+        }
+
+        if (archetypes.Count == 0)
+        {
+            _outputManager.WriteLine("\nNo archetypes found.", ConsoleColor.Red);
+            return;
+        }
+
+        _inputManager.PaginateList(archetypes);
+    }
+}

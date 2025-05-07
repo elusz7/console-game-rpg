@@ -42,7 +42,7 @@ public class RoomDisplay
     {
         var rooms = _roomDao.GetAllRooms();
         
-        _inputManager.PaginateList(rooms, r => r.Name);
+        _inputManager.PaginateList(rooms);
 
         _outputManager.Clear();
     }

@@ -7,6 +7,7 @@ using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters.Strategies;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Models.Items;
+using System.Text;
 
 namespace ConsoleGameEntities.Models.Monsters;
 public class Monster : IMonster
@@ -96,7 +97,7 @@ public class Monster : IMonster
         MaxHealth += (int)Math.Floor(variableIncrease[0] * MaxHealth);
         DodgeChance += 0.002;
     }
-    public virtual void TakeDamage(int damage, DamageType damageType)
+    public virtual void TakeDamage(int damage, DamageType? damageType)
     {
         var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
         bool dodged = _rng.Next(0, 100) < chance;
@@ -179,5 +180,15 @@ public class Monster : IMonster
             ActiveEffects[stat] += amount;
         else
             throw new StatTypeException("Invalid stat to modify");
+    }
+
+    public override string ToString()
+    {
+        var sb = new StringBuilder();
+        sb.Append($"({MonsterType}) {Name} : {Description}");
+        sb.Append($"\n\tLevel: {Level}, Health: {MaxHealth}, DamageType: {DamageType}, ThreatLevel: {ThreatLevel}");
+        sb.Append($"\n\tAttack: {AttackPower}, Defense: {DefensePower}, Resistance: {Resistance}, Speed: {AggressionLevel}");
+
+        return sb.ToString();
     }
 }

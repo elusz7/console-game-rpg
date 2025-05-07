@@ -60,7 +60,7 @@ public class ItemManagement
 
             _outputManager.WriteLine($"\nItem {item.Name} successfully created.\n", ConsoleColor.Green);
 
-        } while (LoopAgain("add"));
+        } while (_inputManager.LoopAgain("add"));
         _outputManager.WriteLine();
     }
     private ItemType GetItemType()
@@ -83,6 +83,7 @@ public class ItemManagement
         decimal value = _inputManager.ReadDecimal("Enter item value: ");
         int durability = _inputManager.ReadInt("Enter item durability: ");
         decimal weight = _inputManager.ReadDecimal("Enter item weight: ");
+        int level = _inputManager.ReadInt("Enter item required level: ");
 
         return itemType switch
         {
@@ -93,7 +94,9 @@ public class ItemManagement
                 Description = description,
                 Durability = durability,
                 Weight = weight,
-                AttackPower = _inputManager.ReadInt("Enter item attack power: ")
+                RequiredLevel = level,
+                AttackPower = _inputManager.ReadInt("Enter item attack power: "),
+                DamageType = (DamageType)(_inputManager.ReadInt("Enter item damage type (1: Physical, 2: Magical): ", 2) - 1)
             },
             ItemType.Armor => new Armor
             {
@@ -102,7 +105,30 @@ public class ItemManagement
                 Description = description,
                 Durability = durability,
                 Weight = weight,
-                DefensePower = _inputManager.ReadInt("Enter item defense power: ")
+                RequiredLevel = level,
+                DefensePower = _inputManager.ReadInt("Enter item defense power: "),
+                Resistance = _inputManager.ReadInt("Enter item resistance: "),
+                ArmorType = (ArmorType)(_inputManager.ReadInt("Enter item armor type (1: Head, 2: Chest, 3: Arms, 4: Legs): ", 4) - 1)
+            },
+            ItemType.Valuable => new Valuable
+            {
+                Name = name,
+                Value = value,
+                Description = description,
+                Durability = durability,
+                Weight = weight,
+                RequiredLevel = level
+            },
+            ItemType.Consumable => new Consumable
+            {
+                Name = name,
+                Value = value,
+                Description = description,
+                Durability = durability,
+                Weight = weight,
+                RequiredLevel = level,
+                Power = _inputManager.ReadInt("Enter item power: "),
+                ConsumableType = (ConsumableType)(_inputManager.ReadInt("Enter item consumable type (1: Health, 2: Durability, 3: Resource): ", 3) - 1)
             },
             _ => throw new ArgumentException("Invalid item type")
         };
@@ -117,7 +143,7 @@ public class ItemManagement
             return;
         }
 
-        Item item = _inputManager.PaginateList(items, i => i.Name, "item", "edit", true);
+        Item? item = _inputManager.PaginateList(items, "item", "edit", true);
 
         if (item == null)
         {
@@ -127,15 +153,18 @@ public class ItemManagement
 
         string[] validResponses = item switch
         {
-            Weapon => new[] { "Name", "Description", "Value", "Durability", "Weight", "Attack power" },
-            Armor => new[] { "Name", "Description", "Value", "Durability", "Weight", "Defense power" }
+            Weapon => ["Name", "Description", "Value", "Durability", "Weight", "Attack power", "Damage type"],
+            Armor => ["Name", "Description", "Value", "Durability", "Weight", "Defense power", "Resistance"],
+            Valuable => ["Name", "Description", "Value", "Durability", "Weight"],
+            Consumable => ["Name", "Description", "Value", "Durability", "Weight", "Power"],
+            _ => throw new ArgumentException("Invalid item type")
         };
 
         while (true)
         {
             _outputManager.Clear();
             _outputManager.WriteLine($"Editing item {item.Name}.", ConsoleColor.Cyan);
-            DisplayItemDetails(item);
+            ColorfulToStringHelper.ColorItemString(item, _outputManager);
             _outputManager.WriteLine();
             for (int i = 0; i < validResponses.Length; i++)
             {
@@ -167,7 +196,7 @@ public class ItemManagement
                 break;
             } 
 
-            Item itemToDelete = _inputManager.PaginateList(items, i => i.Name, "item", "delete", true);
+            Item? itemToDelete = _inputManager.PaginateList(items, "item", "delete", true);
 
             if (itemToDelete == null)
             {
@@ -187,15 +216,8 @@ public class ItemManagement
 
             _outputManager.WriteLine("\nItem has been deleted successfully!\n", ConsoleColor.Green);
 
-        } while (LoopAgain("delete"));
+        } while (_inputManager.LoopAgain("delete"));
         _outputManager.WriteLine();
-    }
-    private void DisplayItemDetails(Item item)
-    {
-        if (item is Weapon weapon)
-            _outputManager.WriteLine(weapon.ToString(), ConsoleColor.Magenta);
-        else if (item is Armor armor)
-            _outputManager.WriteLine(armor.ToString(), ConsoleColor.DarkYellow);
     }
     private void UpdateItemProperty(Item item, string property)
     {
@@ -208,13 +230,11 @@ public class ItemManagement
             "Weight" => () => item.Weight = _inputManager.ReadDecimal("\nEnter new weight: "),
             "Attack power" => () => ((Weapon)item).AttackPower = _inputManager.ReadInt("\nEnter new attack power: "),
             "Defense power" => () => ((Armor)item).DefensePower = _inputManager.ReadInt("\nEnter new defense power: "),
+            "Resistance" => () => ((Armor)item).Resistance = _inputManager.ReadInt("\nEnter new resistance: "),
+            "Damage type" => () => ((Weapon)item).DamageType = (DamageType)(_inputManager.ReadInt("\nEnter new damage type (1: Physical, 2: Magical): ", 2) - 1),
+            "Power" => () => ((Consumable)item).Power = _inputManager.ReadInt("\nEnter new power: "),
             _ => throw new ArgumentException("Invalid property")
         };
         updateAction();
-    }
-    private bool LoopAgain(string action)
-    {
-        string again = _inputManager.ReadString($"Would you like to {action} another? (y/n): ", new[] { "y", "n" }).ToLower();
-        return again == "y";
     }
 }

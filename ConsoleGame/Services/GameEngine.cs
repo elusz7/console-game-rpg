@@ -1,7 +1,5 @@
 ﻿using ConsoleGame.Helpers;
-using ConsoleGameEntities.Data;
-using ConsoleGameEntities.Interfaces;
-using Microsoft.Extensions.Logging;
+using ConsoleGame.Managers;
 
 namespace ConsoleGame.Services;
 
@@ -14,12 +12,13 @@ public class GameEngine
     private readonly InventoryManager _inventoryManager;
     private readonly RoomManager _roomManager;
     private readonly MonsterManager _monsterManager;
+    private readonly ArchetypeManager _archetypeManager;
+    private readonly SkillManager _skillManager;
 
     public GameEngine(
         StartMenuManager menuManager, InputManager inputManager, OutputManager outputManager,
         PlayerManager playerManager, InventoryManager inventoryManager, RoomManager roomManager,
-        MonsterManager monsterManager
-    )
+        MonsterManager monsterManager, ArchetypeManager archetypeManager, SkillManager skillManager)
     {
         _menuManager = menuManager;
         _inputManager = inputManager;
@@ -28,6 +27,8 @@ public class GameEngine
         _inventoryManager = inventoryManager;
         _roomManager = roomManager;
         _monsterManager = monsterManager;
+        _archetypeManager = archetypeManager;
+        _skillManager = skillManager;
     }
 
     public void Run()
@@ -47,9 +48,12 @@ public class GameEngine
             _outputManager.WriteLine("1. Player Management"
                 + "\n2. Inventory Management"
                 + "\n3. Room Management"
-                + "\n4. Quit");
+                + "\n4. Monster Management"
+                + "\n5. Archetype Management"
+                + "\n6. Skill Management"
+                + "\n7. Quit");
 
-            var input = _inputManager.ReadMenuKey(4);
+            var input = _inputManager.ReadMenuKey(7);
 
             switch (input)
             {
@@ -63,6 +67,15 @@ public class GameEngine
                     _roomManager.RoomMainMenu();
                     break;
                 case 4:
+                    _monsterManager.MonsterMainMenu();
+                    break;
+                case 5:
+                    _archetypeManager.ArchetypeMainMenu();
+                    break;
+                case 6:
+                    _skillManager.SkillMainMenu();
+                    break;
+                case 7:
                     _outputManager.WriteLine("Exiting game...", ConsoleColor.Red);
                     _outputManager.Display();
                     return;

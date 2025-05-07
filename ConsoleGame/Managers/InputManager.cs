@@ -1,4 +1,8 @@
-﻿namespace ConsoleGame.Helpers;
+﻿using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Monsters;
+using ConsoleGameEntities.Models.Skills;
+namespace ConsoleGame.Helpers;
 public class InputManager(OutputManager outputManager)
 {
     private readonly OutputManager _outputManager = outputManager;
@@ -83,47 +87,66 @@ public class InputManager(OutputManager outputManager)
         }
         while (true);
     }
-    public T? PaginateList<T>(List<T> list, Func<T, string> formatter, string? tType = null, string? purpose = null, bool allowSelection = false)
+    public T? PaginateList<T>(List<T> list, string? tType = null, string? purpose = null, bool allowSelection = false, bool clearScreen = true)
     {
-        int pageSize = 9;
+        const int pageSize = 8;
         int currentPage = 0;
         int totalPages = (int)Math.Ceiling(list.Count / (double)pageSize);
 
+        if (clearScreen) _outputManager.Clear();
+
         while (true)
         {
-            _outputManager.Clear();
             _outputManager.WriteLine("=== List ===", ConsoleColor.Cyan);
 
             var pageItems = list.Skip(currentPage * pageSize).Take(pageSize).ToList();
 
             for (int i = 0; i < pageItems.Count; i++)
             {
-                if (i % 2 == 1)
-                    _outputManager.WriteLine($"{i + 1}. {formatter(pageItems[i])}", ConsoleColor.Yellow);
-                else
-                    _outputManager.WriteLine($"{i + 1}. {formatter(pageItems[i])}", ConsoleColor.Blue);
+                _outputManager.Write($"[{i + 1}] ", ConsoleColor.DarkGray);
+
+                switch (pageItems[i])
+                {
+                    case Item item:
+                        ColorfulToStringHelper.ColorItemString(item, _outputManager);
+                        break;
+                    case Player player:
+                        ColorfulToStringHelper.ColorPlayerOutput(player, _outputManager);
+                        break;
+                    case Room room:
+                        ColorfulToStringHelper.ColorRoomOutput(room, _outputManager);
+                        break;
+                    case Monster monster:
+                        ColorfulToStringHelper.ColorMonsterOutput(monster, _outputManager);
+                        break;
+                    case Skill skill:
+                        ColorfulToStringHelper.ColorSkillOutput(skill, _outputManager);
+                        break;
+                    case Archetype archetype:
+                        ColorfulToStringHelper.ColorArchetypeOutput(archetype, _outputManager);
+                        break;
+                    default:
+                        _outputManager.WriteLine(pageItems[i]?.ToString() ?? "Unknown", ConsoleColor.Cyan);
+                        break;
+                }
+
+                _outputManager.WriteLine();
             }
 
             var pageInfo = $"{currentPage + 1} of {totalPages}";
-
             if (totalPages > 1)
             {
-                if (currentPage > 0) pageInfo = " <-- " + pageInfo;
+                if (currentPage > 0) pageInfo = "<-- " + pageInfo;
                 if (currentPage < totalPages - 1) pageInfo += " -->";
             }
-            pageInfo = "\n" + pageInfo;
+            _outputManager.WriteLine($"\n{pageInfo}", ConsoleColor.DarkGreen);
 
-            _outputManager.WriteLine(pageInfo, ConsoleColor.DarkGreen);
-
-            
-            var prompt = "\nUse arrow keys to navigate pages, ";
-
+            string prompt = "\n";
+            if (totalPages > 1)
+                prompt += "Use ←/→ arrows to navigate pages. ";
             if (allowSelection)
-            {
-                prompt += $"Enter number of {tType} to {purpose}, ";
-            }
-            prompt += "or 'q' to quit.\n";
-
+                prompt += $"Enter number (1-{pageItems.Count}) of {tType} to {purpose}. ";
+            prompt += "Press 'q' to quit.\n";
 
             _outputManager.WriteLine(prompt);
             _outputManager.Display();
@@ -132,19 +155,19 @@ public class InputManager(OutputManager outputManager)
             {
                 var key = ReadKey();
 
-                if ((key.Key == ConsoleKey.DownArrow || key.Key == ConsoleKey.RightArrow) && (currentPage < totalPages - 1))
+                if ((key.Key == ConsoleKey.RightArrow || key.Key == ConsoleKey.DownArrow) && currentPage < totalPages - 1)
                 {
                     currentPage++;
                     break;
                 }
-                else if ((key.Key == ConsoleKey.UpArrow || key.Key == ConsoleKey.LeftArrow) && (currentPage > 0))
+                else if ((key.Key == ConsoleKey.LeftArrow || key.Key == ConsoleKey.UpArrow) && currentPage > 0)
                 {
                     currentPage--;
                     break;
                 }
                 else if (key.Key == ConsoleKey.Q)
                 {
-                    _outputManager.WriteLine();
+                    _outputManager.Clear();
                     return default;
                 }
                 else if (allowSelection && char.IsDigit(key.KeyChar))
@@ -152,7 +175,6 @@ public class InputManager(OutputManager outputManager)
                     int selection = int.Parse(key.KeyChar.ToString());
                     if (selection > 0 && selection <= pageItems.Count)
                     {
-                        _outputManager.WriteLine();
                         return pageItems[selection - 1];
                     }
                 }
@@ -162,6 +184,19 @@ public class InputManager(OutputManager outputManager)
                     _outputManager.Display();
                 }
             }
+
+            _outputManager.Clear();
         }
+    }
+
+    public bool LoopAgain(string action)
+    {        
+        string again = ReadString($"Would you like to {action} another? (y/n): ", ["y", "n"]).ToLower();
+        return again == "y";
+    }
+    public bool ConfirmAction(string action)
+    {
+        string confirm = ReadString($"\nPlease confirm {action} (y/n): ", ["y", "n"]).ToLower();
+        return confirm == "y";
     }
 }

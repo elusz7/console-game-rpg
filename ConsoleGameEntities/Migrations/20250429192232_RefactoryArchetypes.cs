@@ -92,6 +92,8 @@ namespace ConsoleGameEntities.Migrations
                 principalTable: "Archetypes",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.Sql("UPDATE Players SET Level = 1 WHERE Id = 1");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

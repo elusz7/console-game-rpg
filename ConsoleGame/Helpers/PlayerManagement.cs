@@ -1,5 +1,4 @@
 ﻿using ConsoleGame.GameDao;
-using ConsoleGameEntities.Models.Abilities;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 
@@ -10,13 +9,15 @@ public class PlayerManagement
     private readonly InputManager _inputManager;
     private readonly OutputManager _outputManager;
     private readonly PlayerDao _playerDao;
+    private readonly ArchetypeDao _archetypeDao;
     private readonly InventoryManagement _inventoryManagement;
 
-    public PlayerManagement(InputManager inputManager, OutputManager outputManager, PlayerDao playerDao, InventoryManagement inventoryManagement)
+    public PlayerManagement(InputManager inputManager, OutputManager outputManager, PlayerDao playerDao, ArchetypeDao archetypeDao, InventoryManagement inventoryManagement)
     {
         _inputManager = inputManager;
         _outputManager = outputManager;
         _playerDao = playerDao;
+        _archetypeDao = archetypeDao;
         _inventoryManagement = inventoryManagement;
     }
 
@@ -56,7 +57,7 @@ public class PlayerManagement
         {
             CreatePlayer();
 
-        } while (LoopAgain("add"));
+        } while (_inputManager.LoopAgain("create"));
         _outputManager.WriteLine();
     }
 
@@ -65,20 +66,33 @@ public class PlayerManagement
         _outputManager.WriteLine();
         string name = _inputManager.ReadString("Enter player name: ");
 
-        int health = _inputManager.ReadInt("Enter player's starting health: ");
+        var archetypes = _archetypeDao.GetArchetypeNames();
 
-        int gold = _inputManager.ReadInt("Enter player's starting gold: ");
+        var selectedArchetype = _inputManager.PaginateList(archetypes, "archetype", $"assign {name}", true, false);
+
+        if (selectedArchetype == null)
+        {
+            _outputManager.WriteLine("\nNo archetype selected. Player creation cancelled.\n", ConsoleColor.Red);
+            return;
+        }
+        int archetypeId = _archetypeDao.GetArchetypeId(selectedArchetype);
+        _outputManager.WriteLine($"Archetype Assigned: {selectedArchetype}", ConsoleColor.Green);
+
+        int health = _inputManager.ReadInt("Enter player's health: ");
+
+        int gold = _inputManager.ReadInt("Enter player's gold: ");
 
         decimal capacity = _inputManager.ReadDecimal("Enter player's weight carrying capacity: ");
 
-        List<Skill> abilities = new List<Skill>();
-        List<Item> items = new List<Item>();
+        List<Item> items = [];
 
-        Player newPlayer = new Player
+        Player newPlayer = new()
         {
             Name = name,
+            ArchetypeId = archetypeId,
             MaxHealth = health,
             Experience = 0,
+            Level = 1,
             Inventory = new Inventory
             {
                 Gold = gold,
@@ -108,13 +122,15 @@ public class PlayerManagement
         }
 
         var propertyActions = new Dictionary<string, Action>
-    {
-        { "Name", () => player.Name = _inputManager.ReadString("\nEnter new value for Name: ") },
-        { "Health", () => player.MaxHealth = _inputManager.ReadInt("\nEnter new value for Health: ") },
-        { "Experience", () => player.Experience = _inputManager.ReadInt("\nEnter new value for Experience: ") },
-        { "Gold", () => player.Inventory.Gold = _inputManager.ReadInt("\nEnter new value for Gold: ") },
-        { "Capacity", () => player.Inventory.Capacity = _inputManager.ReadDecimal("\nEnter new value for Capacity: ") }
-    };
+        {
+            { "Name", () => player.Name = _inputManager.ReadString("\nEnter new value for Name: ") },
+            { "Health", () => player.MaxHealth = _inputManager.ReadInt("\nEnter new value for Health: ") },
+            { "Level", () => player.Level = _inputManager.ReadInt("\nEnter new value for Level: ") },
+            { "Archetype", () => player.ArchetypeId = _archetypeDao.GetArchetypeId(_inputManager.PaginateList(_archetypeDao.GetArchetypeNames(), "archetype", $"assign to {player.Name}", true, false)) },
+            { "Experience", () => player.Experience = _inputManager.ReadInt("\nEnter new value for Experience: ") },
+            { "Gold", () => player.Inventory.Gold = _inputManager.ReadInt("\nEnter new value for Gold: ") },
+            { "Capacity", () => player.Inventory.Capacity = _inputManager.ReadDecimal("\nEnter new value for Capacity: ") }
+        };
 
         while (true)
         {
@@ -158,7 +174,7 @@ public class PlayerManagement
                 break;
             }
 
-            if (!ConfirmAction("deletion"))
+            if (!_inputManager.ConfirmAction("delete"))
             {
                 _outputManager.WriteLine($"\nDeletion cancelled. Character [{playerToDelete.Name}] has not been deleted.", ConsoleColor.Red);
                 break;
@@ -167,7 +183,7 @@ public class PlayerManagement
             _playerDao.DeletePlayer(playerToDelete);
 
             _outputManager.WriteLine("\nCharacter has been deleted successfully!\n", ConsoleColor.Green);
-        } while (LoopAgain("delete"));
+        } while (_inputManager.LoopAgain("delete"));
         _outputManager.WriteLine();
     }
     private Player SelectPlayer(string prompt)
@@ -186,15 +202,5 @@ public class PlayerManagement
             selectedPlayer = players[index - 1];
         }
         return selectedPlayer;
-    }
-    private bool ConfirmAction(string action)
-    {
-        string confirm = _inputManager.ReadString($"\nPlease confirm {action} (y/n): ", new[] { "y", "n" }).ToLower();
-        return confirm == "y";
-    }
-    private bool LoopAgain(string action)
-    {
-        string again = _inputManager.ReadString($"Would you like to {action} another? (y/n): ", new[] { "y", "n" }).ToLower();
-        return again == "y";
     }
 }

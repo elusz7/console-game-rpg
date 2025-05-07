@@ -3,6 +3,7 @@ using ConsoleGame.Helpers;
 using ConsoleGame.Services;
 using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Helpers;
+using ConsoleGame.Managers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,6 +50,9 @@ public static class Startup
         services.AddScoped<PlayerDao>();
         services.AddScoped<ItemDao>();
         services.AddScoped<InventoryDao>();
+        services.AddScoped<ArchetypeDao>();
+        services.AddScoped<MonsterDao>();
+        services.AddScoped<SkillDao>();
 
         services.AddTransient<GameEngine>();
         services.AddTransient<StartMenuManager>();
@@ -69,6 +73,12 @@ public static class Startup
         services.AddTransient<RoomConnectionManagement>();
 
         services.AddTransient<MonsterManager>();
+        services.AddTransient<MonsterDisplay>();
+        services.AddTransient<MonsterManagement>();
+
+        services.AddTransient<SkillManager>();
+        services.AddTransient<SkillDisplay>();
+        services.AddTransient<SkillManagement>();
 
         services.AddSingleton<InputManager>();
         services.AddSingleton<OutputManager>();

@@ -1,4 +1,5 @@
 ﻿using ConsoleGameEntities.Exceptions;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Interfaces.Attributes;
 
 namespace ConsoleGameEntities.Models.Skills;

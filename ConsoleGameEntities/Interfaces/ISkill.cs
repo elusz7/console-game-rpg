@@ -20,7 +20,7 @@ public interface ISkill
     
     TargetType TargetType { get; set; }
     SkillCategory SkillCategory { get; set; }
-    DamageType DamageType { get; set; }
+    DamageType? DamageType { get; set; }
 
     //relationship info
     Archetype? Archetype { get; set; }

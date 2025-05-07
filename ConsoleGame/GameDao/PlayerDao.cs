@@ -30,20 +30,38 @@ public class PlayerDao
         _context.SaveChanges();
     }
 
-    public Player GetPlayerByName(string name)
+    public Player? GetPlayerByName(string name)
     {
         return _context.Players.FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
     }
 
     public List<Player> GetAllPlayers(string name)
     {
-        return _context.Players
+        return [.. _context.Players
             .ToList()
-            .Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
-            .ToList();
+            .Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase))];
     }
     public List<Player> GetAllPlayers()
     {
-        return _context.Players.ToList();
+        return [.. _context.Players];
+    }
+
+    public List<string> GetAllPlayerArchetypes()
+    {
+        return [.. _context.Players
+         .Select(p => p.Archetype.Name)
+         .Distinct()];
+    }
+
+    public List<Player> GetAllPlayersByArchetype(string archetype)
+    {
+        return [.. _context.Players.ToList()
+            .Where(p => p.Archetype.Name.Equals(archetype, StringComparison.OrdinalIgnoreCase))];
+    }
+
+    public List<Player> GetAllPlayersByLevel(int level)
+    {
+        return [.. _context.Players
+            .Where(p => p.Level == level)];
     }
 }

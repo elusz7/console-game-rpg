@@ -7,7 +7,9 @@ public class ModelEnums
     public enum ItemType
     {
         Weapon = 0,
-        Armor = 1
+        Armor = 1,
+        Valuable = 2,
+        Consumable = 3
     }
 
     public enum TargetType

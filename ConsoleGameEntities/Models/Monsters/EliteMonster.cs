@@ -20,4 +20,9 @@ public class EliteMonster : Monster
         }
         Strategy.ExecuteAttack(this, target);
     }
+
+    public override string ToString()
+    {
+        return base.ToString();
+    }
 }

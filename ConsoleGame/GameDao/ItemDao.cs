@@ -70,15 +70,21 @@ public class ItemDao
         List<Item> items = type switch
         {
             "weapon" => _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Weapon>().ToList<Item>(),
-            "armor" => _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Armor>().ToList<Item>()
+            "armor" => _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Armor>().ToList<Item>(),
+            "valuable" => _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Valuable>().ToList<Item>(),
+            "consumable" => _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Consumable>().ToList<Item>()
         };
 
         items = (type, SortOrder) switch
         {
-            ("weapon", "ASC") => items.OrderBy(i => ((Weapon)i).AttackPower).ToList(),
-            ("weapon", "DESC") => items.OrderByDescending(i => ((Weapon)i).AttackPower).ToList(),
-            ("armor", "ASC") => items.OrderBy(i => ((Armor)i).DefensePower).ToList(),
-            ("armor", "DESC") => items.OrderByDescending(i => ((Armor)i).DefensePower).ToList()
+            ("weapon", "ASC") => [.. items.OrderBy(i => ((Weapon)i).AttackPower)],
+            ("weapon", "DESC") => [.. items.OrderByDescending(i => ((Weapon)i).AttackPower)],
+            ("armor", "ASC") => [.. items.OrderBy(i => ((Armor)i).DefensePower)],
+            ("armor", "DESC") => [.. items.OrderByDescending(i => ((Armor)i).DefensePower)],
+            ("valuable", "ASC") => [.. items.OrderBy(i => ((Valuable)i).Value)],
+            ("valuable", "DESC") => [.. items.OrderByDescending(i => ((Valuable)i).Value)],
+            ("consumable", "ASC") => [.. items.OrderBy(i => ((Consumable)i).Power)],
+            ("consumable", "DESC") => [.. items.OrderByDescending(i => ((Consumable)i).Power)],
         };
 
         return items;

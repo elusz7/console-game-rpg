@@ -6,7 +6,7 @@ namespace ConsoleGameEntities.Helpers;
 
 public static class MonsterSkillHelper
 {
-    private static IEnumerable<Skill> GetAvailableSkills(IMonster monster)
+    public static IEnumerable<Skill> GetAvailableSkills(IMonster monster)
     {
         return monster.Skills?
             .Where(s => s.RequiredLevel <= monster.Level && !s.IsOnCooldown)
@@ -18,13 +18,6 @@ public static class MonsterSkillHelper
         return monster.Skills?.OfType<SupportSkill>()
             .Where(s => s.RequiredLevel <= monster.Level && !s.IsOnCooldown)
             ?? Enumerable.Empty<SupportSkill>();
-    }
-
-    public static IEnumerable<BossSkill> GetAvailableBossSkills(IMonster monster)
-    {
-        return (monster.Skills ?? Enumerable.Empty<Skill>())
-            .OfType<BossSkill>()
-            .Where(s => !s.IsOnCooldown);
     }
 
     public static Skill? GetHighestDamageSkill(IMonster monster)

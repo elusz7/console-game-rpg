@@ -21,8 +21,7 @@ public class InventoryManagement
     {
         _outputManager.Clear();
 
-        _player = player;
-        if (_player == null)
+        if (player == null)
         {
             List<Player> players = _inventoryDao.GetAllPlayers();
 
@@ -32,14 +31,16 @@ public class InventoryManagement
                 return;
             }
 
-            _player = _inputManager.PaginateList(players, p => p.Name, "player", "manage inventory of", true);
+            player = _inputManager.PaginateList(players, "player", "manage inventory of", true, false);
             
-            if (_player == null)
+            if (player == null)
             {
                 _outputManager.WriteLine("No player selected. Returning to previous menu.", ConsoleColor.Red);
                 return;
             }
         }
+
+        _player = player;
 
         _outputManager.Clear();
         while (true)
@@ -76,24 +77,31 @@ public class InventoryManagement
 
             _outputManager.WriteLine($"\nCapacity: {currentCarryingWeight} / {_player.Inventory.Capacity}");
 
-            if (!equippableItems.Any())
+            if (equippableItems.Count == 0)
             {
                 _outputManager.WriteLine("\nNo equippable items available.\n");
                 break;
             }
-            Item itemToAdd = _inputManager.PaginateList(equippableItems, i => i.ToString(), "item", "add to inventory", true);
+            Item? itemToAdd = _inputManager.PaginateList(equippableItems, "item", "add to inventory", true, false);
 
-            if (itemToAdd == null || !ConfirmAction("addition"))
+            if (itemToAdd == null)
             {
-                _outputManager.WriteLine($"\nItem not added to inventory.\n", ConsoleColor.Red);
+                _outputManager.WriteLine($"\nNo item selected to add to inventory.\n", ConsoleColor.Red);
                 continue;
+            }
+
+            _outputManager.WriteLine("You have selected [{itemToAdd.Name}]", ConsoleColor.Green);
+
+            if( !_inputManager.ConfirmAction("addition"))
+            {
+                _outputManager.WriteLine($"\nAction cancelled. {itemToAdd.Name} not added to inventory.\n", ConsoleColor.Red);
             }
 
             _player.Inventory.AddItem(itemToAdd);
             _inventoryDao.UpdateInventory(_player.Inventory);
             _outputManager.WriteLine($"\nItem {itemToAdd.Name} added to inventory.\n", ConsoleColor.Green);
 
-        } while (LoopAgain("add"));
+        } while (_inputManager.LoopAgain("add"));
         _outputManager.WriteLine();
     }
     private void RemoveItemFromInventory()
@@ -106,9 +114,9 @@ public class InventoryManagement
                 break;
             }
 
-            Item itemToRemove = _inputManager.PaginateList<Item>(_player.Inventory.Items.ToList(), i => i.ToString(), "item", "remove from inventory", true);
+            Item? itemToRemove = _inputManager.PaginateList<Item>(_player.Inventory.Items.ToList(), "item", "remove from inventory", true);
 
-            if (itemToRemove == null || !ConfirmAction("removal"))
+            if (itemToRemove == null || !_inputManager.ConfirmAction("removal"))
             {
                 _outputManager.WriteLine("\nItem Removal Cancelled.\n");
                 break;
@@ -118,17 +126,7 @@ public class InventoryManagement
             _inventoryDao.UpdateInventory(_player.Inventory);
 
             _outputManager.WriteLine($"\nItem Successfully Removed From {_player.Name}'s Inventory\n", ConsoleColor.Green);
-        } while (LoopAgain("remove"));
+        } while (_inputManager.LoopAgain("remove"));
         _outputManager.WriteLine();
-    }
-    private bool ConfirmAction(string action)
-    {
-        string confirm = _inputManager.ReadString($"\n\nPlease confirm {action} of item (y/n): ", new[] { "y", "n" });
-        return confirm == "y";
-    }
-    private bool LoopAgain(string action)
-    {
-        string again = _inputManager.ReadString($"Would you like to {action} another? (y/n): ", new[] { "y", "n" }).ToLower();
-        return again == "y";
     }
 }

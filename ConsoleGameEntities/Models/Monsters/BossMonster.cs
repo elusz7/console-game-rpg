@@ -58,7 +58,7 @@ public class BossMonster : Monster
         }
     }
 
-    public override void TakeDamage(int damage, DamageType damageType)
+    public override void TakeDamage(int damage, DamageType? damageType)
     {
         var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
         bool dodged = _rng.Next(0, 100) < chance;
@@ -77,6 +77,10 @@ public class BossMonster : Monster
 
         if (CurrentHealth <= 0)
             CheckPhaseChange();
+    }
+    public override string ToString()
+    {
+        return base.ToString();
     }
 }
 

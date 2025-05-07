@@ -44,16 +44,16 @@ public class MapManager
         {
             var startRow = gridRows / 2;
             var startCol = gridCols / 2;
-            PlaceRoom(_currentRoom, startRow, startCol, new HashSet<Room>());
+            PlaceRoom(_currentRoom, startRow, startCol, []);
         }
 
         for (var i = 0; i < gridRows; i++)
         {
             for (var j = 0; j < gridCols; j++)
             {
-                if (mapGrid[i, j].Contains("[") && mapGrid[i, j].Contains("]"))
+                if (mapGrid[i, j].Contains('[') && mapGrid[i, j].Contains(']'))
                 {
-                    if (mapGrid[i, j] == $"[{_currentRoom.Name.Substring(0, RoomNameLength)}]")
+                    if (mapGrid[i, j] == $"[{_currentRoom?.Name[..RoomNameLength]}]")
                     {
                         _outputManager.Write($"{mapGrid[i, j],-7}", ConsoleColor.Green);
                     }
@@ -84,7 +84,7 @@ public class MapManager
         visitedRooms.Add(room); // Mark this room as visited
 
         var roomName = room.Name.Length > RoomNameLength
-            ? room.Name.Substring(0, RoomNameLength)
+            ? room.Name[..RoomNameLength]
             : room.Name.PadRight(RoomNameLength);
 
         mapGrid[row, col] = $"[{roomName}]";
@@ -211,7 +211,7 @@ public class MapManager
         {
             var root = _roomDao.GetEntrance();
             var visited = new HashSet<Room>();
-            _gridCache = new Dictionary<(int x, int y), Room>();
+            _gridCache = [];
             var queue = new Queue<RoomPosition>();
 
             queue.Enqueue(new RoomPosition(root, 0, 0));
@@ -237,7 +237,7 @@ public class MapManager
         DirtyGrid = false;
         return _gridCache;
     }
-    private (int x, int y) FindRoomCoordinates(Room room, Dictionary<(int x, int y), Room> grid)
+    private static (int x, int y)  FindRoomCoordinates(Room room, Dictionary<(int x, int y), Room> grid)
     {
         foreach (var kvp in grid)
         {
@@ -258,7 +258,7 @@ public class MapManager
             {
                 FindRoomCoordinates(room, grid);
             }
-            catch (InvalidOperationException ex1)
+            catch (InvalidOperationException)
             {
                 //set disconnected room connects to null
                 room.North = room.South = room.East = room.West = null;
@@ -290,7 +290,7 @@ public class MapManager
 
         return list;
     }*/
-    private int CountPathsToEntranceThroughRoom(Room startRoom, Room requiredRoom, Room entrance)
+    private static int CountPathsToEntranceThroughRoom(Room startRoom, Room requiredRoom, Room entrance)
     {
         int pathCount = 0;
 
@@ -377,7 +377,7 @@ public class MapManager
             }
         });
 
-        return singlePathRooms.ToList();
+        return [.. singlePathRooms];
     }
     public Dictionary<string, string[]> GetAvailableDirections(Room? editingRoom = null)
     {
@@ -391,7 +391,7 @@ public class MapManager
             var room = allRooms[i];
 
             if (room == editingRoom) continue;
-            if (editingRoom != null && singlePathRooms.Contains(room)) continue;
+            if (editingRoom != null && singlePathRooms != null && singlePathRooms.Contains(room)) continue;
 
             string? availableDirections = "";
 
@@ -420,7 +420,7 @@ public class MapManager
         var grid = GetRoomGrid();
         try
         {
-            var baseCoords = FindRoomCoordinates(baseRoom, grid);
+            var (x, y) = FindRoomCoordinates(baseRoom, grid);
 
             var directions = availableDirections.Split(" ", StringSplitOptions.RemoveEmptyEntries);
             var validDirections = new List<string>();
@@ -429,7 +429,7 @@ public class MapManager
             {
                 var (dx, dy) = GetDirectionOffset(dir);
 
-                var targetCoords = (baseCoords.x + dx, baseCoords.y + dy);
+                var targetCoords = (x + dx, y + dy);
 
                 if (!grid.ContainsKey(targetCoords))
                 {
@@ -449,7 +449,7 @@ public class MapManager
 
         return finalDirections;
     }
-    private (int dx, int dy) GetDirectionOffset(string direction)
+    private static (int dx, int dy) GetDirectionOffset(string direction)
     {
         return direction switch
         {
@@ -473,7 +473,7 @@ public class MapManager
             {
                 var (x, y) = FindRoomCoordinates(room, grid);
 
-                string[] directions = { "North", "South", "East", "West" };
+                string[] directions = ["North", "South", "East", "West"];
 
                 foreach (var direction in directions)
                 {
@@ -514,7 +514,7 @@ public class MapManager
 
         return unlinkedNeighbors;
     }
-    private Room? GetNeighbor(Room room, string direction)
+    private static Room? GetNeighbor(Room room, string direction)
     {
         return direction switch
         {
@@ -525,7 +525,7 @@ public class MapManager
             _ => null
         };
     }
-    private string GetReverseDirection(string direction)
+    private static string GetReverseDirection(string direction)
     {
         return direction switch
         {
