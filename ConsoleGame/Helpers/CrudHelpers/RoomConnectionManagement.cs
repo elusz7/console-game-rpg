@@ -2,7 +2,7 @@
 using ConsoleGameEntities.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace ConsoleGame.Helpers;
+namespace ConsoleGame.Helpers.CrudHelpers;
 
 public class RoomConnectionManagement(InputManager inputManager, OutputManager outputManager, RoomDao roomDao, MapManager mapManager)
 {
@@ -21,7 +21,7 @@ public class RoomConnectionManagement(InputManager inputManager, OutputManager o
                 + "\n2. Connect Room to Entrance"
                 + "\n3. Add Connection Between Unlinked Neighbors"
                 + "\n4. Remove Connections"
-                + "\n5. Return to Main Menu");
+                + "\n5. Return to Room Menu");
 
             var choice = _inputManager.ReadMenuKey(5);
 
@@ -131,6 +131,12 @@ public class RoomConnectionManagement(InputManager inputManager, OutputManager o
         {
             _outputManager.WriteLine("\nNo valid rooms to place this room next to.\n", ConsoleColor.Red);
             return;
+        }
+
+        for (int i = 0; i < availableRooms.Count; i++)
+        {
+            var entry = availableRooms.ElementAt(i);
+            _outputManager.WriteLine($"{i + 1}. {entry.Key} ({string.Join(", ", entry.Value)})");
         }
 
         int addOntoIndex = _inputManager.ReadInt($"\tEnter number of room where {roomToMove.Name} will go: ", availableRooms.Count);

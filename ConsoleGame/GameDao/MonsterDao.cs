@@ -1,5 +1,6 @@
 ﻿using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Models.Monsters;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.GameDao;
 
@@ -55,5 +56,17 @@ public class MonsterDao
     {
         if (_context.Monsters == null) throw new InvalidOperationException("Monsters DbSet is null.");
         return [.. _context.Monsters.Where(m => (int)m.DamageType == damageType)];
+    }
+
+    public List<Monster> GetNonBossMonstersByMaxLevel(int level)
+    {
+        if (_context.Monsters == null) throw new InvalidOperationException("Monsters DbSet is null.");
+        return [.. _context.Monsters.Where(m => m.Level <= level && m.ThreatLevel != ThreatLevel.Boss)];
+    }
+
+    public List<Monster> GetMonstersByMaxLevelAndThreatLevel(int level, int threatLevel)
+    {
+        if (_context.Monsters == null) throw new InvalidOperationException("Monsters DbSet is null.");
+        return [.. _context.Monsters.Where(m => m.Level <= level && (int)m.ThreatLevel == threatLevel)];
     }
 }

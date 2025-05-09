@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Items;
 
-namespace ConsoleGame.Helpers;
+namespace ConsoleGame.Helpers.DisplayHelpers;
 
 public class ItemDisplay(InputManager inputManager, OutputManager outputManager, ItemDao itemDao)
 {
@@ -25,19 +25,19 @@ public class ItemDisplay(InputManager inputManager, OutputManager outputManager,
                 + "\n3. List Items By Type"
                 + $"\n4. Change Sort Order (currently: {_itemDao.SortOrder})"
                 + "\n5. Return To Inventory Main Menu");
-            
+
             var input = _inputManager.ReadMenuKey(5);
 
             switch (input)
             {
                 case 1:
-                    ListAllItems();
+                    ListItems();
                     break;
                 case 2:
-                    SearchItemByName();
+                    ListItems("Search");
                     break;
                 case 3:
-                    ListItemsByType();
+                    ListItems("Type");
                     break;
                 case 4:
                     _itemDao.SortOrder = _itemDao.SortOrder == "ASC" ? "DESC" : "ASC";
@@ -49,49 +49,31 @@ public class ItemDisplay(InputManager inputManager, OutputManager outputManager,
             }
         }
     }
-    private void ListAllItems()
+    private void ListItems(string? criteria = null)
     {
-        var items = _itemDao.GetAllItems();
-        
+        var items = new List<Item>();
+
+        switch (criteria)
+        {
+            case "Search":
+                var itemName = _inputManager.ReadString("\nEnter item name to find: ");
+                items = _itemDao.GetAllItems(itemName);
+                break;
+            case "Type":
+                var itemType = _inputManager.ReadString("\nWeapon, Armor, Valuable, or Consumable? ", ["weapon", "armor", "valuable", "consumable"]).ToLower();
+                items = _itemDao.GetItemsByType(itemType);
+                break;
+            default:
+                items = _itemDao.GetAllItems();
+                break;
+        }
+
         if (items == null || items.Count == 0)
         {
-            _outputManager.WriteLine("No items found.");
+            _outputManager.WriteLine("\nNo items found.\n", ConsoleColor.Red);
             return;
         }
 
         _inputManager.PaginateList(items);
-    }
-
-    private void SearchItemByName()
-    {
-        string itemName = _inputManager.ReadString("\nEnter item name to find: ");
-
-        var itemsFound = _itemDao.GetAllItems(itemName);
-
-        if (itemsFound.Count == 0)
-        {
-            _outputManager.WriteLine($"\n\tNo items found matching [{itemName}]\n");
-        }
-        else
-        {
-            _outputManager.WriteLine($"\n\t{itemsFound.Count} items found matching [{itemName}]");
-            _inputManager.PaginateList(itemsFound);
-        }
-    }
-    private void ListItemsByType()
-    {
-        string category = _inputManager.ReadString("\nWeapon, Armor, Valuable, or Consumable? ", ["weapon", "armor", "valuable", "consumable"]).ToLower();
-
-        List<Item> items = _itemDao.GetItemsByType(category);
-
-        if (items.Count != 0)
-        {
-            _inputManager.PaginateList(items);
-        }
-        else
-        {
-            _outputManager.WriteLine("No items found.");
-            _outputManager.Display();
-        }
     }
 }

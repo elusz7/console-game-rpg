@@ -1,9 +1,12 @@
 ﻿using ConsoleGame.GameDao;
+using ConsoleGame.Helpers;
+using ConsoleGame.Helpers.CrudHelpers;
+using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGameEntities.Data;
 
-namespace ConsoleGame.Helpers;
+namespace ConsoleGame.Menus;
 
-public class MonsterManager(GameContext context, InputManager inputManager, OutputManager outputManager, MonsterDisplay monsterDisplay, MonsterManagement monsterManagement)
+public class MonsterMenu(GameContext context, InputManager inputManager, OutputManager outputManager, MonsterDisplay monsterDisplay, MonsterManagement monsterManagement)
 {
     private readonly GameContext _context = context;
     private readonly InputManager _inputManager = inputManager;
@@ -19,7 +22,7 @@ public class MonsterManager(GameContext context, InputManager inputManager, Outp
             _outputManager.WriteLine("Monster Main Menu", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. View Monsters"
                 + "\n2. Manage Monsters"
-                + "\n3. Return to Main Menu");
+                + "\n3. Return to Admin Menu");
             var input = _inputManager.ReadMenuKey(3);
             switch (input)
             {

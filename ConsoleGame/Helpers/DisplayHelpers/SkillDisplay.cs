@@ -1,7 +1,7 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Skills;
 
-namespace ConsoleGame.Helpers;
+namespace ConsoleGame.Helpers.DisplayHelpers;
 
 public class SkillDisplay
 {
@@ -27,7 +27,7 @@ public class SkillDisplay
                 + "\n3. List Skills By Archetype"
                 + "\n4. List Skills By Monster"
                 + "\n5. List Unassigned Skills"
-                + "\n6. Return to Main Menu");
+                + "\n6. Return to Skill Menu");
             
             var input = _inputManager.ReadMenuKey(6);
             

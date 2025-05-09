@@ -11,7 +11,7 @@ namespace ConsoleGameEntities.Models.Entities;
 
 public class Player : IPlayer
 {
-    private static readonly Random _rng = new(DateTime.Now.Millisecond);
+    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
     public int Experience { get; set; }
     public int Level { get; set; }
     public int Id { get; set; }

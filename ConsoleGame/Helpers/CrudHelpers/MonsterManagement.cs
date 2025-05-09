@@ -3,7 +3,7 @@ using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
-namespace ConsoleGame.Helpers;
+namespace ConsoleGame.Helpers.CrudHelpers;
 
 public class MonsterManagement
 {
@@ -27,7 +27,7 @@ public class MonsterManagement
             _outputManager.WriteLine("1. Add Monster"
                 + "\n2. Edit Monster"
                 + "\n3. Delete Monster"
-                + "\n4. Return to Main Menu");
+                + "\n4. Return to Monster Menu");
             var input = _inputManager.ReadMenuKey(4);
             switch (input)
             {
@@ -115,7 +115,7 @@ public class MonsterManagement
 
         if (monsters == null || monsters.Count == 0)
         {
-            _outputManager.WriteLine("No monsters available to edit.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nNo monsters available to edit.\n", ConsoleColor.Red);
             return;
         }
 
@@ -123,7 +123,7 @@ public class MonsterManagement
 
         if (monsterToEdit == null)
         {
-            _outputManager.WriteLine("No monster selected for editing.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nNo monster selected for editing.\n", ConsoleColor.Red);
             return;
         }
 
@@ -176,19 +176,19 @@ public class MonsterManagement
         var monsters = _monsterDao.GetAllNonCoreMonsters();
         if (monsters == null || monsters.Count == 0)
         {
-            _outputManager.WriteLine("No monsters available to delete.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nNo monsters available to delete.\n", ConsoleColor.Red);
             return;
         }
         var monsterToDelete = _inputManager.PaginateList(monsters, "monster", "delete", true, false);
         if (monsterToDelete == null)
         {
-            _outputManager.WriteLine("No monster selected for deletion.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nNo monster selected for deletion.\n", ConsoleColor.Red);
             return;
         }
 
         if (!_inputManager.ConfirmAction($"deletion"))
         {
-            _outputManager.WriteLine("Deletion cancelled.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nDeletion cancelled.\n", ConsoleColor.Red);
             return;
         }
         _monsterDao.DeleteMonster(monsterToDelete);

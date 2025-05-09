@@ -3,12 +3,15 @@ using ConsoleGame.Helpers;
 using ConsoleGame.Services;
 using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Helpers;
-using ConsoleGame.Managers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NReco.Logging.File;
+using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGame.Helpers.CrudHelpers;
+using ConsoleGame.Menus;
+using ConsoleGame.Factories;
 
 namespace ConsoleGame;
 
@@ -45,7 +48,6 @@ public static class Startup
             ConfigurationHelper.ConfigureDbContextOptions(options, connectionString);
         });
 
-
         services.AddScoped<RoomDao>();
         services.AddScoped<PlayerDao>();
         services.AddScoped<ItemDao>();
@@ -55,30 +57,40 @@ public static class Startup
         services.AddScoped<SkillDao>();
 
         services.AddTransient<GameEngine>();
-        services.AddTransient<StartMenuManager>();
+        services.AddTransient<StartMenu>();
+        services.AddTransient<AdminMenu>();
 
-        services.AddTransient<InventoryManager>();
+        services.AddTransient<InventoryMenu>();
         services.AddTransient<InventoryManagement>();
         services.AddTransient<ItemManagement>();
         services.AddTransient<ItemDisplay>();
 
-        services.AddTransient<PlayerManager>();
+        services.AddTransient<PlayerMenu>();
         services.AddTransient<PlayerDisplay>();
         services.AddTransient<PlayerManagement>();
 
-        services.AddTransient<RoomManager>();
+        services.AddTransient<RoomMenu>();
         services.AddTransient<RoomDisplay>();
         services.AddTransient<MapManager>();
         services.AddTransient<RoomManagement>();
         services.AddTransient<RoomConnectionManagement>();
 
-        services.AddTransient<MonsterManager>();
+        services.AddTransient<MonsterMenu>();
         services.AddTransient<MonsterDisplay>();
         services.AddTransient<MonsterManagement>();
 
-        services.AddTransient<SkillManager>();
+        services.AddTransient<SkillMenu>();
         services.AddTransient<SkillDisplay>();
         services.AddTransient<SkillManagement>();
+
+        services.AddTransient<ArchetypeMenu>();
+        services.AddTransient<ArchetypeDisplay>();
+        services.AddTransient<ArchetypeManagement>();
+
+        services.AddTransient<FloorFactory>();
+        services.AddTransient<MonsterFactory>();
+        services.AddTransient<ItemFactory>();
+        services.AddTransient<MapFactory>();
 
         services.AddSingleton<InputManager>();
         services.AddSingleton<OutputManager>();

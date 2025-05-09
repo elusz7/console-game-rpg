@@ -4,7 +4,7 @@ using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
-namespace ConsoleGame.Helpers;
+namespace ConsoleGame.Helpers.CrudHelpers;
 
 public class SkillManagement
 {
@@ -314,16 +314,16 @@ public class SkillManagement
     }
     private void AssignSkill()
     {
-        var skills = _skillDao.GetUnassignedNonCoreSkills();
-        if (skills.Count == 0)
-        {
-            _outputManager.WriteLine("No skills available for assignment.", ConsoleColor.Red);
-            return;
-        }
         do
         {
+            var skills = _skillDao.GetUnassignedNonCoreSkills();
+            if (skills.Count == 0)
+            {
+                _outputManager.WriteLine("No skills available for assignment.", ConsoleColor.Red);
+                return;
+            }
+        
             var skill = _inputManager.PaginateList(skills, "skill", "assign", true, false);
-
             if (skill == null)
             {
                 _outputManager.WriteLine("\nNo skill selected for assignment.\n", ConsoleColor.Red);
@@ -403,6 +403,14 @@ public class SkillManagement
             _outputManager.WriteLine("\nNo skill selected for deletion.\n", ConsoleColor.Red);
             return;
         }
+
+        if (skill.MonsterId != null || skill.ArchetypeId != null)
+        {
+            var assigned = skill.MonsterId == null ? skill.Archetype.Name : skill.Monster.Name;
+            _outputManager.WriteLine($"warning: skill is currently assigned to {assigned}.", ConsoleColor.Red);
+            return;
+        }
+
         if (!_inputManager.ConfirmAction($"deletion"))
         {
             _outputManager.WriteLine("Deletion cancelled.", ConsoleColor.Red);

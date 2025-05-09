@@ -1,11 +1,13 @@
-﻿namespace ConsoleGame.Helpers;
+﻿using ConsoleGame.Helpers;
 
-public class StartMenuManager
+namespace ConsoleGame.Menus;
+
+public class StartMenu
 {
     private readonly OutputManager _outputManager;
     private readonly InputManager _inputManager;
 
-    public StartMenuManager(OutputManager outputManager, InputManager inputManager)
+    public StartMenu(OutputManager outputManager, InputManager inputManager)
     {
         _outputManager = outputManager;
         _inputManager = inputManager;

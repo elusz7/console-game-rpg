@@ -2,7 +2,7 @@
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGame.GameDao;
 
-namespace ConsoleGame.Helpers;
+namespace ConsoleGame.Helpers.DisplayHelpers;
 
 public class ArchetypeDisplay
 {
@@ -45,17 +45,20 @@ public class ArchetypeDisplay
 
     private void ListArchetypes(string? criteria = null)
     {
-        List<Archetype> archetypes = [];
+        var archetypes = new List<Archetype>();
         
-        if (criteria == null)
-            archetypes = _archetypeDao.GetAllArchetypes();
-        else if (criteria.Equals("Type"))
+        switch (criteria)
         {
-            _outputManager.WriteLine("Choose Archetype Type:", ConsoleColor.Yellow);
-            var typeChoice = _inputManager.ReadInt("1. Martial Archetypes\n2. Magical Archetypes", 2);
-            var archetypeType = (typeChoice == 1) ? ArchetypeType.Martial : ArchetypeType.Magical;
+            case "Type":
+                _outputManager.WriteLine("1. Martial Archetypes\n2. Magical Archetypes", ConsoleColor.Yellow);
+                var typeChoice = _inputManager.ReadInt("Choose Archetype Type: ", 2);
+                var archetypeType = typeChoice == 1 ? ArchetypeType.Martial : ArchetypeType.Magical;
 
-            archetypes = _archetypeDao.GetArchetypesByType(archetypeType);
+                archetypes = _archetypeDao.GetArchetypesByType(archetypeType);
+                break;
+            default:
+                archetypes = _archetypeDao.GetAllArchetypes();
+                break;
         }
 
         if (archetypes.Count == 0)

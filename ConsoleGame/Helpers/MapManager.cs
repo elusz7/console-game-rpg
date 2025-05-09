@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.Helpers;
 
@@ -205,11 +206,11 @@ public class MapManager
         _currentRoom = _roomDao.GetEntrance();
         _outputManager.Clear();
     }
-    private Dictionary<(int x, int y), Room> GetRoomGrid()
+    private Dictionary<(int x, int y), Room> GetRoomGrid(Room? rootRoom = null)
     {
         if (DirtyGrid)
         {
-            var root = _roomDao.GetEntrance();
+            var root = rootRoom ?? _roomDao.GetEntrance();
             var visited = new HashSet<Room>();
             _gridCache = [];
             var queue = new Queue<RoomPosition>();
@@ -270,26 +271,6 @@ public class MapManager
         _roomDao.UpdateAllRooms(list);
         DirtyGrid = true;
     }
-    /*public List<Room> FindUnconnectedRooms()
-    {
-        var list = new List<Room>();
-
-        var grid = GetRoomGrid();
-
-        foreach (var room in _roomDao.GetAllEditableRooms())
-        {
-            try
-            {
-                FindRoomCoordinates(room, grid);
-            }
-            catch (InvalidOperationException ex1)
-            {
-                list.Add(room);
-            }
-        }
-
-        return list;
-    }*/
     private static int CountPathsToEntranceThroughRoom(Room startRoom, Room requiredRoom, Room entrance)
     {
         int pathCount = 0;
@@ -361,7 +342,7 @@ public class MapManager
 
         return pathCount;
     }
-    public List<Room> SinglePathThrough(Room requiredRoom)
+    public List<Room>? SinglePathThrough(Room requiredRoom)
     {
         var rooms = _roomDao.GetAllEditableRooms();
         var entrance = _roomDao.GetEntrance();
@@ -386,10 +367,8 @@ public class MapManager
         var singlePathRooms = editingRoom == null ? null : SinglePathThrough(editingRoom);
 
         _outputManager.WriteLine();
-        for (int i = 0; i < allRooms.Count; i++)
+        foreach (Room room in allRooms)
         {
-            var room = allRooms[i];
-
             if (room == editingRoom) continue;
             if (editingRoom != null && singlePathRooms != null && singlePathRooms.Contains(room)) continue;
 
@@ -404,9 +383,7 @@ public class MapManager
 
             availableDirections = RemoveLogicalConflicts(room, availableDirections);
 
-            if (availableDirections?.Length == 0 || string.IsNullOrEmpty(availableDirections)) continue;
-
-            _outputManager.WriteLine($"{availableRooms.Count + 1}. {room.Name} - Available directions: {availableDirections}");
+            if (availableDirections?.Length == 0 || string.IsNullOrEmpty(availableDirections)) continue;            
 
             availableRooms.Add(room.Name, availableDirections.Trim().Split(" ", StringSplitOptions.RemoveEmptyEntries));
         }

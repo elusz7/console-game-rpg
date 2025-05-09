@@ -1,8 +1,9 @@
-﻿using ConsoleGameEntities.Models.Monsters;
+﻿using ConsoleGameEntities.Interfaces;
+using ConsoleGameEntities.Models.Monsters;
 
 namespace ConsoleGameEntities.Models.Entities;
 
-public class Room
+public class Room : IRoom
 {
     public int Id { get; set; }
     public string Name { get; set; }
@@ -15,6 +16,7 @@ public class Room
     public virtual Room? West { get; set; }
     public int? EastId { get; set; }
     public virtual Room? East { get; set; }
+    public virtual List<Monster>? Monsters { get; set; } = new List<Monster>();
 
     public Room() { }
     public Room(string name, string description)

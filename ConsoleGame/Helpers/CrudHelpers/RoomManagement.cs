@@ -1,7 +1,7 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Entities;
 
-namespace ConsoleGame.Helpers;
+namespace ConsoleGame.Helpers.CrudHelpers;
 
 public class RoomManagement
 {
@@ -26,7 +26,7 @@ public class RoomManagement
             _outputManager.WriteLine("1. Add Room"
                 + "\n2. Edit Room Description"
                 + "\n3. Delete Room"
-                + "\n4. Return to Main Menu");
+                + "\n4. Return to Admin Menu");
 
             var choice = _inputManager.ReadMenuKey(4);
 
@@ -50,6 +50,18 @@ public class RoomManagement
     private void AddRoom()
     {
         Dictionary<string, string[]> availableRooms = _mapManager.GetAvailableDirections();
+
+        if (availableRooms.Count == 0)
+        {
+            _outputManager.WriteLine("No available rooms to add onto. Please create a room first.", ConsoleColor.Red);
+            return;
+        }
+
+        for (int i = 0; i < availableRooms.Count; i++)
+        {
+            var entry = availableRooms.ElementAt(i);
+            _outputManager.WriteLine($"[{i + 1}] {entry.Key} ({string.Join(", ", entry.Value)})");
+        }
 
         int index = _inputManager.ReadInt("\tSelect a room to add onto by number: ", availableRooms.Count);
 

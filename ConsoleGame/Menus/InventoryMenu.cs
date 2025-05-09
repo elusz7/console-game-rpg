@@ -1,6 +1,10 @@
-﻿namespace ConsoleGame.Helpers;
+﻿using ConsoleGame.Helpers;
+using ConsoleGame.Helpers.CrudHelpers;
+using ConsoleGame.Helpers.DisplayHelpers;
 
-public class InventoryManager
+namespace ConsoleGame.Menus;
+
+public class InventoryMenu
 {
     private readonly InputManager _inputManager;
     private readonly OutputManager _outputManager;
@@ -8,7 +12,7 @@ public class InventoryManager
     private readonly ItemManagement _itemManagement;
     private readonly InventoryManagement _inventoryManagement;
 
-    public InventoryManager(InputManager inputManager, OutputManager outputManager, ItemDisplay itemDisplay, ItemManagement itemManagement, InventoryManagement inventoryManagement)
+    public InventoryMenu(InputManager inputManager, OutputManager outputManager, ItemDisplay itemDisplay, ItemManagement itemManagement, InventoryManagement inventoryManagement)
     {
         _inputManager = inputManager;
         _outputManager = outputManager;
@@ -26,7 +30,7 @@ public class InventoryManager
             _outputManager.WriteLine("1. View Items"
                 + "\n2. Manage Items"
                 + "\n3. Manage Character's Inventory"
-                + $"\n4. Return to Main Menu");
+                + $"\n4. Return to Admin Menu");
 
             var input = _inputManager.ReadMenuKey(4);
 

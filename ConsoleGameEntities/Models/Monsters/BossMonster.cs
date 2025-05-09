@@ -10,7 +10,7 @@ namespace ConsoleGameEntities.Models.Monsters;
 
 public class BossMonster : Monster
 {
-    private static readonly Random _rng = new(DateTime.Now.Millisecond);
+    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
 
     private int CurrentPhase = 1;
     private const int MaxPhases = 3;

@@ -1,0 +1,31 @@
+﻿using ConsoleGame.GameDao;
+using ConsoleGame.Helpers.FactoryHelpers;
+using ConsoleGameEntities.Models.Entities;
+
+namespace ConsoleGame.Factories;
+
+public class MapFactory(RoomDao roomDao)
+{
+    private readonly RoomDao _roomDao = roomDao;  
+
+    public List<Room> GenerateMap(int level, bool campaign)
+    {
+        var allRooms = _roomDao.GetAllRooms();
+        var rooms = allRooms.ToList(); // Make a copy to mutate safely
+        var entrance = rooms.First(r => r.Name.Equals("Entrance"));
+
+        if (campaign)
+        {
+            var totalRoomsAllowed = Math.Min(level * 3, rooms.Count) + 1;
+            
+            rooms = MapFactoryHelper.CreateCampaignMap(totalRoomsAllowed, entrance, rooms);
+        }
+        else
+        {
+            var unconnectedRooms = MapFactoryHelper.FindUnconnectedRooms(entrance, rooms);
+            rooms.RemoveAll(r => unconnectedRooms.Contains(r));
+        }
+
+        return rooms;
+    }
+}

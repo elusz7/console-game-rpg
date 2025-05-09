@@ -1,12 +1,16 @@
-﻿namespace ConsoleGame.Helpers;
+﻿using ConsoleGame.Helpers;
+using ConsoleGame.Helpers.CrudHelpers;
+using ConsoleGame.Helpers.DisplayHelpers;
 
-public class PlayerManager
+namespace ConsoleGame.Menus;
+
+public class PlayerMenu
 {
     private readonly InputManager _inputManager;
     private readonly OutputManager _outputManager;
     private readonly PlayerDisplay _playerDisplayMenu;
     private readonly PlayerManagement _playerManagementMenu;
-    public PlayerManager(InputManager inputManager, OutputManager outputManager, InventoryManager inventoryManager, PlayerDisplay playerDisplayMenu, PlayerManagement playerManagementMenu)
+    public PlayerMenu(InputManager inputManager, OutputManager outputManager, InventoryMenu inventoryManager, PlayerDisplay playerDisplayMenu, PlayerManagement playerManagementMenu)
     {
         _inputManager = inputManager;
         _outputManager = outputManager;
@@ -22,7 +26,7 @@ public class PlayerManager
             _outputManager.WriteLine("Player Main Menu", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. View Players"
                 + "\n2. Manage Players"
-                + "\n3. Return to Main Menu");
+                + "\n3. Return to Admin Menu");
             
             var choice = _inputManager.ReadMenuKey(3);
 

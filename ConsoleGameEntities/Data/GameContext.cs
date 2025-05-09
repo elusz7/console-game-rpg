@@ -73,7 +73,7 @@ namespace ConsoleGameEntities.Data
 
             modelBuilder.Entity<Monster>()
                 .HasOne(m => m.Room)
-                .WithMany()
+                .WithMany(r => r.Monsters)
                 .HasForeignKey(m => m.RoomId)
                 .OnDelete(DeleteBehavior.SetNull);
 

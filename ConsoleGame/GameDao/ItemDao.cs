@@ -4,16 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.GameDao;
 
-public class ItemDao
+public class ItemDao(GameContext context)
 {
-    private readonly GameContext _context;
-    public string SortOrder { get; set; }
+    private readonly GameContext _context = context;
+    public string SortOrder { get; set; } = "ASC"; // Default sort order
 
-    public ItemDao(GameContext context)
-    {
-        _context = context;
-        SortOrder = "ASC"; // Default sort order
-    }
     public void AddItem(Item item)
     {
         _context.Items.Add(item);
@@ -32,14 +27,6 @@ public class ItemDao
         _context.SaveChanges();
     }
 
-    public Item GetItemByName(string name)
-    {        
-        return _context.Items
-            .Include(i => i.Inventory)
-            .ThenInclude(i => i.Player)
-            .Where(i => i.Name.Equals(name, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-    }
-
     public List<Item> GetAllItems(string name)
     {
         var matchingItems = _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).ToList()
@@ -48,8 +35,8 @@ public class ItemDao
 
         return SortOrder switch
         {
-            "ASC" => matchingItems.OrderBy(i => i.Name).ToList(),
-            "DESC" => matchingItems.OrderByDescending(i => i.Name).ToList()
+            "ASC" => [.. matchingItems.OrderBy(i => i.Name)],
+            "DESC" => [.. matchingItems.OrderByDescending(i => i.Name)]
         };
     }
 
@@ -59,20 +46,19 @@ public class ItemDao
         
         return SortOrder switch
         {
-            "ASC" => items.OrderBy(i => i.Name).ToList(),
-            "DESC" => items.OrderByDescending(i => i.Name).ToList()
+            "ASC" => [.. items.OrderBy(i => i.Name)],
+            "DESC" => [.. items.OrderByDescending(i => i.Name)]
         };
     }
 
     public List<Item> GetItemsByType(string type)
     {
-        type = type.ToLower();
         List<Item> items = type switch
         {
-            "weapon" => _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Weapon>().ToList<Item>(),
-            "armor" => _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Armor>().ToList<Item>(),
-            "valuable" => _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Valuable>().ToList<Item>(),
-            "consumable" => _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Consumable>().ToList<Item>()
+            "weapon" => [.. _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Weapon>()],
+            "armor" => [.. _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Armor>()],
+            "valuable" => [.. _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Valuable>()],
+            "consumable" => [.. _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Consumable>()]
         };
 
         items = (type, SortOrder) switch
@@ -88,5 +74,11 @@ public class ItemDao
         };
 
         return items;
+    }
+
+    public List<Item> GetItemsByMaxLevel(int level)
+    {
+        if (_context.Items == null) throw new InvalidOperationException("Items collection is null.");
+        return [.._context.Items.Where(i => i.RequiredLevel <= level)];
     }
 }

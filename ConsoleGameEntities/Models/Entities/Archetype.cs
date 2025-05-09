@@ -7,7 +7,7 @@ namespace ConsoleGameEntities.Models.Entities;
 
 public class Archetype : IArchetype
 {
-    private static readonly Random _rng = new Random(DateTime.Now.Millisecond);
+    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
 
     public int Id { get; set; }
     public string Name { get; set; }

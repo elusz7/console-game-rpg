@@ -11,7 +11,7 @@ namespace ConsoleGameEntities.Models.Monsters.Strategies;
 
 public class BossStrategy : DefaultStrategy
 {
-    private static Random _rng = new Random(DateTime.Now.Millisecond);
+    private static Random _rng = new Random(Guid.NewGuid().GetHashCode());
 
     public override void ExecuteAttack(IMonster monster, IPlayer target)
     {

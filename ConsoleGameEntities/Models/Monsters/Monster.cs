@@ -12,7 +12,7 @@ using System.Text;
 namespace ConsoleGameEntities.Models.Monsters;
 public class Monster : IMonster
 {    
-    private static readonly Random _rng = new(DateTime.Now.Millisecond);
+    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
     public int Id { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
@@ -73,30 +73,42 @@ public class Monster : IMonster
             _ => new DefaultStrategy()
         };
     }
-    public virtual void LevelUp(int newLevel) 
+    public virtual void LevelUp(int newLevel)
     {
-        List<double> variableIncrease = new List<double>() { 0.3, 0.4, 0.5, 0.6, 0.7};
+        if (newLevel <= Level) return;
 
-        //attackpower
-        int index = _rng.Next(variableIncrease.Count);
-        AttackPower += (int)Math.Floor(variableIncrease[index] * AttackPower);
-        variableIncrease.Remove(index);
-        //defensepower
-        index = _rng.Next(variableIncrease.Count);
-        DefensePower += (int)Math.Floor(variableIncrease[index] * DefensePower);
-        variableIncrease.Remove(index);
-        //resistance
-        index = _rng.Next(variableIncrease.Count);
-        Resistance += (int)Math.Floor(variableIncrease[index] * Resistance);
-        variableIncrease.Remove(index);
-        //aggression level (speed)
-        index = _rng.Next(variableIncrease.Count);
-        AggressionLevel += (int)Math.Floor(variableIncrease[index] * AggressionLevel);
-        variableIncrease.Remove(index);
-        //health
-        MaxHealth += (int)Math.Floor(variableIncrease[0] * MaxHealth);
-        DodgeChance += 0.002;
+        double baseAttack = AttackPower;
+        double baseDefense = DefensePower;
+        double baseResistance = Resistance;
+        double baseAggression = AggressionLevel;
+        double baseHealth = MaxHealth;
+
+        for (int i = Level; i < newLevel; i++)
+        {
+            Level++;
+            List<double> variableIncrease = new List<double>() { 0.3, 0.4, 0.5, 0.6, 0.7 };
+
+            int index = _rng.Next(variableIncrease.Count);
+            AttackPower += (int)(baseAttack * variableIncrease[index]);
+            variableIncrease.RemoveAt(index);
+
+            index = _rng.Next(variableIncrease.Count);
+            DefensePower += (int)(baseDefense * variableIncrease[index]);
+            variableIncrease.RemoveAt(index);
+
+            index = _rng.Next(variableIncrease.Count);
+            Resistance += (int)(baseResistance * variableIncrease[index]);
+            variableIncrease.RemoveAt(index);
+
+            index = _rng.Next(variableIncrease.Count);
+            AggressionLevel += (int)(baseAggression * variableIncrease[index]);
+            variableIncrease.RemoveAt(index);
+
+            MaxHealth += (int)(baseHealth * variableIncrease[0]);
+            DodgeChance += 0.002;
+        }
     }
+
     public virtual void TakeDamage(int damage, DamageType? damageType)
     {
         var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance

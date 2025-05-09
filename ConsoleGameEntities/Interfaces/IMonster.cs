@@ -1,4 +1,5 @@
 ﻿using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
@@ -26,6 +27,7 @@ public interface IMonster : ITargetable
 
     ICollection<Skill>? Skills { get; set; }
     Item? Treasure { get; set; }
+    Room? Room { get; set; }
 
     void Attack(IPlayer target);
 }

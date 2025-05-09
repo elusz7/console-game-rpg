@@ -3,7 +3,7 @@ using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
-namespace ConsoleGame.Helpers;
+namespace ConsoleGame.Helpers.CrudHelpers;
 
 public class ArchetypeManagement
 {
@@ -60,7 +60,7 @@ public class ArchetypeManagement
     {
         _outputManager.WriteLine("1. Martial Archetypes\n2. Magical Archetypes", ConsoleColor.Yellow);
         var typeChoice = _inputManager.ReadInt("Choose Archetype Type: ", 2);
-        var archetypeType = (typeChoice == 1) ? ArchetypeType.Martial : ArchetypeType.Magical;
+        var archetypeType = typeChoice == 1 ? ArchetypeType.Martial : ArchetypeType.Magical;
 
         var damage = archetypeType == ArchetypeType.Martial ? "Attack" : "Magic";
         var resourceName = archetypeType == ArchetypeType.Martial ? "Stamina" : "Mana";

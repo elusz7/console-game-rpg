@@ -1,6 +1,10 @@
-﻿namespace ConsoleGame.Helpers;
+﻿using ConsoleGame.Helpers;
+using ConsoleGame.Helpers.CrudHelpers;
+using ConsoleGame.Helpers.DisplayHelpers;
 
-public class RoomManager
+namespace ConsoleGame.Menus;
+
+public class RoomMenu
 {
     private readonly InputManager _inputManager;
     private readonly OutputManager _outputManager;
@@ -9,7 +13,7 @@ public class RoomManager
     private readonly RoomManagement _roomManagement;
     private readonly RoomConnectionManagement _roomConnectionManagement;
 
-    public RoomManager(InputManager inputManager, OutputManager outputManager, MapManager mapManager, 
+    public RoomMenu(InputManager inputManager, OutputManager outputManager, MapManager mapManager, 
         RoomDisplay roomDisplay, RoomManagement roomManagement, RoomConnectionManagement roomConnectionManagement)
     {
         _inputManager = inputManager;
@@ -29,7 +33,7 @@ public class RoomManager
                 + "\n2. View Map"
                 + "\n3. Manage Rooms"
                 + "\n4. Update Room Connections"
-                + "\n5. Return to Main Menu");
+                + "\n5. Return to Admin Menu");
             
             var input = _inputManager.ReadMenuKey(5);
 

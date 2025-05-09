@@ -7,7 +7,7 @@ using ConsoleGameEntities.Exceptions;
 
 namespace ConsoleGameEntities.Models.Items;
 
-public abstract class Item : IItem
+public class Item : IItem
 {
     public int Id { get; set; }
     public string Name { get; set; }
@@ -25,7 +25,7 @@ public abstract class Item : IItem
     public int? InventoryId { get; set; }
     public virtual Inventory? Inventory { get; set; }
     public int? MonsterId { get; set; }
-    public Monster? Monster { get; set; }
+    public virtual Monster? Monster { get; set; }
 
     public virtual void Use()
     {

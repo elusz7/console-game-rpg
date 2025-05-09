@@ -2,7 +2,7 @@
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 
-namespace ConsoleGame.Helpers;
+namespace ConsoleGame.Helpers.DisplayHelpers;
 
 public class RoomDisplay
 {

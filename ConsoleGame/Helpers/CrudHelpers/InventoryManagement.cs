@@ -2,7 +2,7 @@
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 
-namespace ConsoleGame.Helpers;
+namespace ConsoleGame.Helpers.CrudHelpers;
 
 public class InventoryManagement
 {
@@ -114,7 +114,7 @@ public class InventoryManagement
                 break;
             }
 
-            Item? itemToRemove = _inputManager.PaginateList<Item>(_player.Inventory.Items.ToList(), "item", "remove from inventory", true);
+            Item? itemToRemove = _inputManager.PaginateList(_player.Inventory.Items.ToList(), "item", "remove from inventory", true);
 
             if (itemToRemove == null || !_inputManager.ConfirmAction("removal"))
             {

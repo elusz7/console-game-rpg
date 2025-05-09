@@ -4,17 +4,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ConsoleGame.Helpers;
+using ConsoleGame.Helpers.CrudHelpers;
+using ConsoleGame.Helpers.DisplayHelpers;
 
-namespace ConsoleGame.Managers;
+namespace ConsoleGame.Menus;
 
-public class SkillManager
+public class SkillMenu
 {
     private readonly InputManager _inputManager;
     private readonly OutputManager _outputManager;
     private readonly SkillDisplay _skillDisplay;
     private readonly SkillManagement _skillManagement;
 
-    public SkillManager(InputManager inputManager, OutputManager outputManager, SkillDisplay skillDisplay, SkillManagement skillManagement)
+    public SkillMenu(InputManager inputManager, OutputManager outputManager, SkillDisplay skillDisplay, SkillManagement skillManagement)
     {
         _inputManager = inputManager;
         _outputManager = outputManager;
@@ -30,7 +32,7 @@ public class SkillManager
             _outputManager.WriteLine("=== Skill Main Menu ===", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. View Skills"
                 + "\n2. Manage Skills"
-                + "\n3. Return to Main Menu");
+                + "\n3. Return to Admin Menu");
 
             var choice = _inputManager.ReadMenuKey(3);
             switch (choice)
