@@ -1,4 +1,5 @@
-﻿using ConsoleGameEntities.Interfaces;
+﻿using System.Text;
+using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Monsters;
 
 namespace ConsoleGameEntities.Models.Entities;
@@ -27,7 +28,7 @@ public class Room : IRoom
 
     public override string ToString()
     {
-        var sb = new System.Text.StringBuilder();
+        var sb = new StringBuilder();
 
         sb.Append($"{Name}: {Description}");
 

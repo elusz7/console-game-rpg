@@ -37,6 +37,8 @@ public class BossMonster : Monster
         if (CurrentPhase > MaxPhases)
             throw new MonsterDeathException();
 
+        AddActionItem($"The boss has entered phase {CurrentPhase}!");
+
         foreach (var skill in Skills?.OfType<BossSkill>() ?? new List<BossSkill>())
             skill.Phase = CurrentPhase;
 
@@ -63,7 +65,11 @@ public class BossMonster : Monster
         var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
         bool dodged = _rng.Next(0, 100) < chance;
 
-        if (dodged) return;
+        if (dodged)
+        {
+            AddActionItem($"{Name} dodged the attack!");
+            return;
+        }
 
         int damageTaken = damageType switch
         {
@@ -74,6 +80,7 @@ public class BossMonster : Monster
         };
 
         CurrentHealth -= damageTaken;
+        AddActionItem($"{Name} takes {damageTaken} damage!");
 
         if (CurrentHealth <= 0)
             CheckPhaseChange();

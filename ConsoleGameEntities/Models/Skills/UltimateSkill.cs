@@ -35,6 +35,8 @@ public class UltimateSkill : Skill
             }
             catch (InvalidOperationException) { throw new SkillResourceException("Ultimate"); }
 
+            player.AddActionItem(this);
+
             switch (TargetType)
             {
                 case TargetType.SingleEnemy:
@@ -53,6 +55,10 @@ public class UltimateSkill : Skill
         {
             if (monster.Level < RequiredLevel)
                 throw new InvalidSkillLevelException();
+
+            ScalePowerWithLevel(monster.Level);
+
+            monster.AddActionItem(this);
 
             target.TakeDamage(Power, DamageType);
             ElapsedTime = 0;

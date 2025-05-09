@@ -188,7 +188,6 @@ public class MapManager(OutputManager outputManager, InputManager inputManager)
             }
         }
 
-        _currentRoom = currentRoom;
         _outputManager.Clear();
     }
 }

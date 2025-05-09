@@ -42,7 +42,7 @@ public class RoomDao(GameContext context)
 
     public Room? FindRoomByName(string name)
     {
-        return _context.Rooms?.First(r => r.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        return _context.Rooms?.ToList().FirstOrDefault(r => r.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
     }
 
     public bool RoomExists(string name)

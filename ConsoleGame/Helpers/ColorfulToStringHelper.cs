@@ -48,6 +48,23 @@ public static class ColorfulToStringHelper
     {
         _output.Write($"[{room.Name}] ", ConsoleColor.DarkYellow);
         _output.WriteLine($"{room.Description}");
+
+        var directions = new List<string>();
+
+        if (room.North != null)
+            directions.Add($"North: {room.North.Name}");
+        if (room.South != null)
+            directions.Add($"South: {room.South.Name}");
+        if (room.East != null)
+            directions.Add($"East: {room.East.Name}");
+        if (room.West != null)
+            directions.Add($"West: {room.West.Name}");
+
+        if (directions.Count > 0)
+        {
+            _output.Write("\tConnections: ", ConsoleColor.DarkGreen);
+            _output.WriteLine(string.Join(", ", directions), ConsoleColor.DarkGreen);
+        }
     }
 
     public static void ColorMonsterOutput(Monster monster, OutputManager _output)

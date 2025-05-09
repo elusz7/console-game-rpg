@@ -20,9 +20,11 @@ public class Consumable : Item
                 break;
             case IItem item when ConsumableType == ConsumableType.Durability:
                 item.RecoverDurability(Power);
+                item.Inventory?.Player?.AddActionItem($"{item.Name} has been repaired by {Power} durability!");
                 break;
             case IPlayer player when ConsumableType == ConsumableType.Resource:
                 player.Archetype.RecoverResource(Power);
+                player.AddActionItem($"{Name} has been used to recover {Power} {player.Archetype.ResourceName}!");
                 break;
             default:
                 throw new InvalidTargetException($"{Name} cannot be used on {target.GetType().Name}.");

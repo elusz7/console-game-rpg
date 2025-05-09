@@ -13,6 +13,8 @@ namespace ConsoleGameEntities.Models.Monsters;
 public class Monster : IMonster
 {    
     private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+    [NotMapped]
+    public Dictionary<int, string> ActionItems { get; } = new();
     public int Id { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
@@ -77,6 +79,8 @@ public class Monster : IMonster
     {
         if (newLevel <= Level) return;
 
+        ClearActionItems();
+
         double baseAttack = AttackPower;
         double baseDefense = DefensePower;
         double baseResistance = Resistance;
@@ -114,7 +118,11 @@ public class Monster : IMonster
         var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
         bool dodged = _rng.Next(0, 100) < chance;
 
-        if (dodged) return;
+        if (dodged)
+        {
+            AddActionItem($"{Name} dodged the attack and took no damage!");
+            return;
+        }
 
         int damageTaken = 0;
         switch (damageType)
@@ -132,6 +140,7 @@ public class Monster : IMonster
                 break;
         }
 
+        AddActionItem($"{Name} takes {damageTaken} damage!");
         CurrentHealth -= damageTaken;
 
         if (CurrentHealth <= 0)
@@ -167,9 +176,15 @@ public class Monster : IMonster
     public virtual void Heal(int regainedHealth)
     {
         if (CurrentHealth + regainedHealth > MaxHealth)
+        {
+            AddActionItem($"{Name} heals for {MaxHealth - CurrentHealth} health!");
             CurrentHealth = MaxHealth;
+        }
         else
+        {
+            AddActionItem($"{Name} heals for {regainedHealth} health!");
             CurrentHealth += regainedHealth;
+        }
     }
     public virtual int GetStat(StatType stat)
     {
@@ -189,7 +204,10 @@ public class Monster : IMonster
         if (stat == StatType.Health)
             Heal(amount);
         else if (ActiveEffects.ContainsKey(stat))
+        {
+            AddActionItem($"{Name}'s {stat} is changed by {amount}!");
             ActiveEffects[stat] += amount;
+        }
         else
             throw new StatTypeException("Invalid stat to modify");
     }
@@ -202,5 +220,33 @@ public class Monster : IMonster
         sb.Append($"\n\tAttack: {AttackPower}, Defense: {DefensePower}, Resistance: {Resistance}, Speed: {AggressionLevel}");
 
         return sb.ToString();
+    }
+
+    public void ClearActionItems()
+    {
+        ActionItems.Clear();
+    }
+
+    public void AddActionItem(string action)
+    {
+        ActionItems.Add(DateTime.Now.Millisecond, action);
+    }
+    public void AddActionItem(ISkill skill)
+    {
+        ActionItems.Add(DateTime.Now.Millisecond, $"{Name} uses {skill.Name}!");
+    }
+
+    public Item Loot()
+    {
+        if (Treasure == null)
+            throw new InvalidOperationException($"{Name} has no treasure to loot.");
+        Item loot = Treasure;
+
+        loot.MonsterId = null; // Remove the item from the monster
+        loot.Monster = null; 
+        ItemId = null;
+        Treasure = null; 
+
+        return loot;
     }
 }

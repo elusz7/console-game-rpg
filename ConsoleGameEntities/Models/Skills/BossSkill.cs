@@ -8,7 +8,7 @@ public class BossSkill : Skill
 {
     public int Phase { get; set; }
 
-    public override void Activate(ITargetable? caster, ITargetable? target = null, List<ITargetable>? targets = null)
+    public override void Activate(ITargetable caster, ITargetable? target = null, List<ITargetable>? targets = null)
     {
         if (IsOnCooldown) throw new SkillCooldownException();
 
@@ -19,6 +19,8 @@ public class BossSkill : Skill
             3 => 2.0,
             _ => 1.0 // fallback in case Phase is invalid
         };
+
+        caster.AddActionItem(this);
 
         int damage = (int)(Power * multiplier);
         target?.TakeDamage(damage, DamageType);

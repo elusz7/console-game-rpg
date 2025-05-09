@@ -27,6 +27,8 @@ public class MagicSkill : Skill
             }
             catch (InvalidOperationException) { throw new SkillResourceException(); }
 
+            player.AddActionItem(this);
+
             switch (TargetType)
             {
                 case TargetType.SingleEnemy:
@@ -45,6 +47,8 @@ public class MagicSkill : Skill
         {
             if (monster.Level < RequiredLevel)
                 throw new InvalidSkillLevelException();
+
+            monster.AddActionItem(this);
 
             target.TakeDamage(Power, DamageType);
             ElapsedTime = 0;

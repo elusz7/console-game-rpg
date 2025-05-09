@@ -25,6 +25,9 @@ public class SupportSkill : Skill
 
         if (caster is Player self)
         {
+            if (self.Level < RequiredLevel)
+                throw new InvalidSkillLevelException();
+
             try
             {
                 self.Archetype.UseResource(Cost);
@@ -33,6 +36,8 @@ public class SupportSkill : Skill
             {
                 throw new SkillResourceException();
             }
+
+            self.AddActionItem(this);
 
             if (TargetType == TargetType.Self)
             {
@@ -66,6 +71,7 @@ public class SupportSkill : Skill
         {
             if (TargetType == TargetType.Self)
             {
+                monster.AddActionItem(this);
                 ApplyEffect(monster);
             }
             else if (TargetType == TargetType.SingleEnemy)
@@ -73,6 +79,7 @@ public class SupportSkill : Skill
                 if (target == null)
                     throw new InvalidTargetException("Support");
 
+                monster.AddActionItem(this);
                 ApplyEffect(target);
             }
 
@@ -125,6 +132,7 @@ public class SupportSkill : Skill
 
     private void RevertEffect(ITargetable target)
     {
+        target.AddActionItem($"{Name} effect expired");
         int modifier = SupportEffect == (int)SupportEffectType.Boost ? -Power : Power;
         target.ModifyStat(StatAffected, modifier);
     }

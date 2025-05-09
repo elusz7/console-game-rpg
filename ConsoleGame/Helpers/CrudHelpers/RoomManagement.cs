@@ -110,7 +110,7 @@ public class RoomManagement(InputManager inputManager, OutputManager outputManag
     {
         _outputManager.Write("\nnote: Entrance cannot be edited", ConsoleColor.Yellow);
 
-        Room? roomToEdit = _inputManager.PaginateList(_roomDao.GetAllEditableRooms(), "room", "edit description of", true);
+        Room? roomToEdit = _inputManager.PaginateNames(_roomDao.GetAllEditableRooms(), r => r.Name, "room", "edit description of", true);
 
         if (roomToEdit == null)
         {
@@ -145,7 +145,7 @@ public class RoomManagement(InputManager inputManager, OutputManager outputManag
             return;
         }
         
-        Room? roomToRemove = _inputManager.PaginateList(rooms, "room", "remove", true);
+        Room? roomToRemove = _inputManager.PaginateNames(rooms, r => r.Name, "room", "remove", true);
 
         if (roomToRemove == null)
         {

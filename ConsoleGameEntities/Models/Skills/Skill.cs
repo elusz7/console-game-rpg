@@ -30,7 +30,7 @@ public class Skill : ISkill
     public int? MonsterId { get; set; }
     public virtual Monster? Monster { get; set; }
 
-    public virtual void Activate(ITargetable? caster, ITargetable? target = null, List<ITargetable>? targets = null)
+    public virtual void Activate(ITargetable caster, ITargetable? target = null, List<ITargetable>? targets = null)
     {
         if (IsOnCooldown)
             throw new SkillCooldownException();
@@ -45,6 +45,8 @@ public class Skill : ISkill
                 player.Archetype.UseResource(Cost);
             }
             catch (InvalidOperationException) { throw new SkillResourceException(); }
+
+            player.AddActionItem(this);
 
             switch (TargetType)
             {
@@ -87,6 +89,8 @@ public class Skill : ISkill
         {
             if (monster.Level < RequiredLevel)
                 throw new InvalidSkillLevelException();
+
+            monster.AddActionItem(this);
 
             switch (TargetType)
             {

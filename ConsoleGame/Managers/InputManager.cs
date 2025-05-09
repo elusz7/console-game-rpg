@@ -2,6 +2,7 @@
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
+using Microsoft.Data.SqlClient.Server;
 namespace ConsoleGame.Helpers;
 public class InputManager(OutputManager outputManager)
 {
@@ -89,7 +90,7 @@ public class InputManager(OutputManager outputManager)
     }
     public T? PaginateList<T>(List<T> list, string? tType = null, string? purpose = null, bool allowSelection = false, bool clearScreen = true)
     {
-        const int pageSize = 8;
+        const int pageSize = 6;
         int currentPage = 0;
         int totalPages = (int)Math.Ceiling(list.Count / (double)pageSize);
 
@@ -144,6 +145,80 @@ public class InputManager(OutputManager outputManager)
             string prompt = "\n";
             if (totalPages > 1)
                 prompt += "Use ←/→ arrows to navigate pages. ";
+            if (allowSelection)
+                prompt += $"Enter number (1-{pageItems.Count}) of {tType} to {purpose}. ";
+            prompt += "Press 'q' to quit.\n";
+
+            _outputManager.WriteLine(prompt);
+            _outputManager.Display();
+
+            while (true)
+            {
+                var key = ReadKey();
+
+                if ((key.Key == ConsoleKey.RightArrow || key.Key == ConsoleKey.DownArrow) && currentPage < totalPages - 1)
+                {
+                    currentPage++;
+                    break;
+                }
+                else if ((key.Key == ConsoleKey.LeftArrow || key.Key == ConsoleKey.UpArrow) && currentPage > 0)
+                {
+                    currentPage--;
+                    break;
+                }
+                else if (key.Key == ConsoleKey.Q)
+                {
+                    _outputManager.Clear();
+                    return default;
+                }
+                else if (allowSelection && char.IsDigit(key.KeyChar))
+                {
+                    int selection = int.Parse(key.KeyChar.ToString());
+                    if (selection > 0 && selection <= pageItems.Count)
+                    {
+                        return pageItems[selection - 1];
+                    }
+                }
+                else
+                {
+                    _outputManager.WriteLine("Invalid input. Please try again.", ConsoleColor.Red);
+                    _outputManager.Display();
+                }
+            }
+
+            _outputManager.Clear();
+        }
+    }
+    public T? PaginateNames<T>(List<T> list, Func<T, string> format, string? tType = null, string? purpose = null, bool allowSelection = false, bool clearScreen = true)
+    {
+        const int pageSize = 9;
+        int currentPage = 0;
+        int totalPages = (int)Math.Ceiling(list.Count / (double)pageSize);
+
+        if (clearScreen) _outputManager.Clear();
+
+        while (true)
+        {
+            _outputManager.WriteLine("=== List ===", ConsoleColor.Cyan);
+
+            var pageItems = list.Skip(currentPage * pageSize).Take(pageSize).ToList();
+
+            for (int i = 0; i < pageItems.Count; i++)
+            {
+                _outputManager.WriteLine($"[{i + 1}] {format(pageItems[i])}");
+            }
+
+            var pageInfo = $"{currentPage + 1} of {totalPages}";
+            if (totalPages > 1)
+            {
+                if (currentPage > 0) pageInfo = "<-- " + pageInfo;
+                if (currentPage < totalPages - 1) pageInfo += " -->";
+            }
+            _outputManager.WriteLine($"\n{pageInfo}", ConsoleColor.DarkGreen);
+
+            string prompt = "\n";
+            if (totalPages > 1)
+                prompt += "Use ← → arrows to navigate pages. ";
             if (allowSelection)
                 prompt += $"Enter number (1-{pageItems.Count}) of {tType} to {purpose}. ";
             prompt += "Press 'q' to quit.\n";

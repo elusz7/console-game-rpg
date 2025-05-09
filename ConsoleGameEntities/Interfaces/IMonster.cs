@@ -30,4 +30,5 @@ public interface IMonster : ITargetable
     Room? Room { get; set; }
 
     void Attack(IPlayer target);
+    Item Loot();
 }
