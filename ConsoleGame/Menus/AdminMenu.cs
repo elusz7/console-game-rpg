@@ -26,7 +26,7 @@ public class AdminMenu(InputManager inputManager, OutputManager outputManager,
 
         while (true)
         {
-            _outputManager.WriteLine("Main Menu:", ConsoleColor.Cyan);
+            _outputManager.WriteLine("=== Administrator View ===", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. Player Management"
                 + "\n2. Inventory Management"
                 + "\n3. Room Management"

@@ -106,7 +106,7 @@ public class RoomManagement
         string description = _inputManager.ReadString("Enter description: ");
         return new Room(name, description);
     }
-    private void LinkRooms(Room from, Room to, string direction)
+    private static void LinkRooms(Room from, Room to, string direction)
     {
         switch (direction)
         {
@@ -159,7 +159,7 @@ public class RoomManagement
     {
         _outputManager.WriteLine("\nnote: Entrance cannot be removed\n", ConsoleColor.Yellow);
         
-        Room? roomToRemove = _inputManager.PaginateList(_roomDao.GetAllEditableRooms(), "room", "remove", true);
+        Room? roomToRemove = _inputManager.PaginateList(_roomDao.GetAllDeletableRooms(), "room", "remove", true);
 
         if (roomToRemove == null)
         {

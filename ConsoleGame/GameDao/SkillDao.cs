@@ -5,14 +5,9 @@ using ConsoleGameEntities.Models.Skills;
 
 namespace ConsoleGame.GameDao;
 
-public class SkillDao
+public class SkillDao(GameContext context)
 {
-    private readonly GameContext _context;
-
-    public SkillDao(GameContext context)
-    {
-        _context = context;
-    }
+    private readonly GameContext _context = context;
 
     public void AddSkill(Skill skill)
     {

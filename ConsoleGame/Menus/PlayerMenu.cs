@@ -23,7 +23,7 @@ public class PlayerMenu
         _outputManager.Clear();
         while (true)
         {
-            _outputManager.WriteLine("Player Main Menu", ConsoleColor.Cyan);
+            _outputManager.WriteLine("=== Player Main Menu ===", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. View Players"
                 + "\n2. Manage Players"
                 + "\n3. Return to Admin Menu");

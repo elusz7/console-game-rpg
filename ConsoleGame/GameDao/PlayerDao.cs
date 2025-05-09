@@ -3,14 +3,9 @@ using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.GameDao;
 
-public class PlayerDao
+public class PlayerDao(GameContext context)
 {
-    private readonly GameContext _context;
-
-    public PlayerDao(GameContext context)
-    {
-        _context = context;
-    }
+    private readonly GameContext _context = context;
 
     public void AddPlayer(Player player)
     {

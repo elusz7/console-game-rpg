@@ -26,7 +26,7 @@ public class InventoryMenu
         _outputManager.Clear();
         while (true)
         {
-            _outputManager.WriteLine("Inventory Main Menu", ConsoleColor.Cyan);
+            _outputManager.WriteLine("=== Inventory Main Menu ===", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. View Items"
                 + "\n2. Manage Items"
                 + "\n3. Manage Character's Inventory"

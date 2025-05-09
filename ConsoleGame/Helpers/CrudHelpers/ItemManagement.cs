@@ -135,7 +135,7 @@ public class ItemManagement
     }
     private void EditItem()
     {
-        List<Item> items = _itemDao.GetAllItems();
+        List<Item> items = _itemDao.GetAllNonCoreItems();
 
         if (items.Count == 0)
         {
@@ -188,7 +188,7 @@ public class ItemManagement
     {
         do
         {
-            var items = _itemDao.GetAllItems();
+            var items = _itemDao.GetAllNonCoreItems();
 
             if (items.Count == 0)
             {

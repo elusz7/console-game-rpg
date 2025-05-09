@@ -19,7 +19,7 @@ public class MonsterMenu(GameContext context, InputManager inputManager, OutputM
         _outputManager.Clear();
         while (true)
         {
-            _outputManager.WriteLine("Monster Main Menu", ConsoleColor.Cyan);
+            _outputManager.WriteLine("=== Monster Main Menu ===", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. View Monsters"
                 + "\n2. Manage Monsters"
                 + "\n3. Return to Admin Menu");

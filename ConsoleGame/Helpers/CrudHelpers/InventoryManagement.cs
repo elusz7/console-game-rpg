@@ -72,10 +72,7 @@ public class InventoryManagement
         {
             var equippableItems = _inventoryDao.GetEquippableItems(_player);
 
-            decimal currentCarryingWeight = _inventoryDao.GetInventoryWeight(_player);
-            decimal weightAvailable = _player.Inventory.Capacity - currentCarryingWeight;
-
-            _outputManager.WriteLine($"\nCapacity: {currentCarryingWeight} / {_player.Inventory.Capacity}");
+            _outputManager.WriteLine($"\nCapacity: {_player.Inventory.GetCarryingWeight()} / {_player.Inventory.Capacity}");
 
             if (equippableItems.Count == 0)
             {
@@ -90,7 +87,7 @@ public class InventoryManagement
                 continue;
             }
 
-            _outputManager.WriteLine("You have selected [{itemToAdd.Name}]", ConsoleColor.Green);
+            _outputManager.WriteLine($"You have selected [{itemToAdd.Name}]", ConsoleColor.Green);
 
             if( !_inputManager.ConfirmAction("addition"))
             {

@@ -4,14 +4,10 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.GameDao;
 
-public class ArchetypeDao
+public class ArchetypeDao(GameContext context)
 {
-    private readonly GameContext _context;
+    private readonly GameContext _context = context;
 
-    public ArchetypeDao(GameContext context)
-    {
-        _context = context;
-    }
     public void AddArchetype(Archetype archetype)
     {
         _context.Archetypes.Add(archetype);

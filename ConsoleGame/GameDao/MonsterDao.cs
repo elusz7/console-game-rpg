@@ -4,14 +4,9 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.GameDao;
 
-public class MonsterDao
+public class MonsterDao(GameContext context)
 {
-    private readonly GameContext _context;
-
-    public MonsterDao(GameContext context)
-    {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-    }
+    private readonly GameContext _context = context;
 
     public void AddMonster(Monster monster)
     {

@@ -32,12 +32,12 @@ public class GameEngine
         while (true)
         {
             _outputManager.WriteLine("Main Menu:", ConsoleColor.Cyan);
-            _outputManager.WriteLine("1. Administrator Menu"
+            _outputManager.WriteLine("1. Administrator View"
                 + "\n2. Adventure"
                 + "\n3. Campaign"
                 + "\n4. Quit");
 
-            var input = _inputManager.ReadMenuKey(7);
+            var input = _inputManager.ReadMenuKey(4);
 
             switch (input)
             {

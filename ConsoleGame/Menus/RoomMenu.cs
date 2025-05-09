@@ -28,7 +28,7 @@ public class RoomMenu
         _outputManager.Clear();
         while (true)
         {
-            _outputManager.WriteLine("Room Main Menu", ConsoleColor.Cyan);
+            _outputManager.WriteLine("=== Room Main Menu ===", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. View Rooms"
                 + "\n2. View Map"
                 + "\n3. Manage Rooms"
