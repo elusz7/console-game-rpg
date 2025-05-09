@@ -4,22 +4,13 @@ using ConsoleGame.Helpers.DisplayHelpers;
 
 namespace ConsoleGame.Menus;
 
-public class InventoryMenu
+public class InventoryMenu(InputManager inputManager, OutputManager outputManager, ItemDisplay itemDisplay, ItemManagement itemManagement, InventoryManagement inventoryManagement)
 {
-    private readonly InputManager _inputManager;
-    private readonly OutputManager _outputManager;
-    private readonly ItemDisplay _itemDisplay;
-    private readonly ItemManagement _itemManagement;
-    private readonly InventoryManagement _inventoryManagement;
-
-    public InventoryMenu(InputManager inputManager, OutputManager outputManager, ItemDisplay itemDisplay, ItemManagement itemManagement, InventoryManagement inventoryManagement)
-    {
-        _inputManager = inputManager;
-        _outputManager = outputManager;
-        _itemDisplay = itemDisplay;
-        _itemManagement = itemManagement;
-        _inventoryManagement = inventoryManagement;
-    }
+    private readonly InputManager _inputManager = inputManager;
+    private readonly OutputManager _outputManager = outputManager;
+    private readonly ItemDisplay _itemDisplay = itemDisplay;
+    private readonly ItemManagement _itemManagement = itemManagement;
+    private readonly InventoryManagement _inventoryManagement = inventoryManagement;
 
     public void InventoryMainMenu()
     {

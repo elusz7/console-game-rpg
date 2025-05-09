@@ -9,20 +9,12 @@ using ConsoleGame.Helpers.DisplayHelpers;
 
 namespace ConsoleGame.Menus;
 
-public class SkillMenu
+public class SkillMenu(InputManager inputManager, OutputManager outputManager, SkillDisplay skillDisplay, SkillManagement skillManagement)
 {
-    private readonly InputManager _inputManager;
-    private readonly OutputManager _outputManager;
-    private readonly SkillDisplay _skillDisplay;
-    private readonly SkillManagement _skillManagement;
-
-    public SkillMenu(InputManager inputManager, OutputManager outputManager, SkillDisplay skillDisplay, SkillManagement skillManagement)
-    {
-        _inputManager = inputManager;
-        _outputManager = outputManager;
-        _skillDisplay = skillDisplay;
-        _skillManagement = skillManagement;
-    }
+    private readonly InputManager _inputManager = inputManager;
+    private readonly OutputManager _outputManager = outputManager;
+    private readonly SkillDisplay _skillDisplay = skillDisplay;
+    private readonly SkillManagement _skillManagement = skillManagement;
 
     public void SkillMainMenu()
     {

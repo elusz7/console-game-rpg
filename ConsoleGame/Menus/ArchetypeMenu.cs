@@ -9,20 +9,12 @@ using ConsoleGame.Helpers.DisplayHelpers;
 
 namespace ConsoleGame.Menus;
 
-public class ArchetypeMenu
+public class ArchetypeMenu(InputManager inputManager, OutputManager outputManager, ArchetypeDisplay archetypeDisplay, ArchetypeManagement archetypeManagement)
 {
-    private readonly InputManager _inputManager;
-    private readonly OutputManager _outputManager;
-    private readonly ArchetypeDisplay _archetypeDisplay;
-    private readonly ArchetypeManagement _archetypeManagement;
-
-    public ArchetypeMenu(InputManager inputManager, OutputManager outputManager, ArchetypeDisplay archetypeDisplay, ArchetypeManagement archetypeManagement)
-    {
-        _inputManager = inputManager;
-        _outputManager = outputManager;
-        _archetypeDisplay = archetypeDisplay;
-        _archetypeManagement = archetypeManagement;
-    }
+    private readonly InputManager _inputManager = inputManager;
+    private readonly OutputManager _outputManager = outputManager;
+    private readonly ArchetypeDisplay _archetypeDisplay = archetypeDisplay;
+    private readonly ArchetypeManagement _archetypeManagement = archetypeManagement;
 
     public void ArchetypeMainMenu()
     {

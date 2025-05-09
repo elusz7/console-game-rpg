@@ -10,10 +10,11 @@ public class RoomManagement(InputManager inputManager, OutputManager outputManag
     private readonly RoomDao _roomDao = roomDao;
 
     public void Menu()
-    {
-        _outputManager.Clear();
+    {        
         while (true)
         {
+            _outputManager.Clear();
+
             _outputManager.WriteLine("Room Management Menu", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. Add Room"
                 + "\n2. Edit Room Description"
@@ -113,7 +114,7 @@ public class RoomManagement(InputManager inputManager, OutputManager outputManag
 
         if (roomToEdit == null)
         {
-            _outputManager.WriteLine("Room editing cancelled. Returning to menu.", ConsoleColor.Red);
+            _outputManager.WriteLine("Room editing cancelled.\n", ConsoleColor.Red);
             return;
         }
 
@@ -123,7 +124,7 @@ public class RoomManagement(InputManager inputManager, OutputManager outputManag
         string confirm = _inputManager.ReadString($"\nPlease confirm new description of {roomToEdit.Name} (y/n): ", ["y", "n"]);
         if (confirm == "n")
         {
-            _outputManager.WriteLine($"Editing cancelled. Room [{roomToEdit.Name}] has not been edited.", ConsoleColor.Red);
+            _outputManager.WriteLine($"Editing cancelled. Room [{roomToEdit.Name}] has not been edited.\n", ConsoleColor.Red);
             return;
         }
 
@@ -135,19 +136,26 @@ public class RoomManagement(InputManager inputManager, OutputManager outputManag
     private void DeleteRoom()
     {
         _outputManager.WriteLine("\nnote: Entrance cannot be removed\n", ConsoleColor.Yellow);
+
+        var rooms = _roomDao.GetAllDeletableRooms();
+
+        if (rooms.Count == 0)
+        {
+            _outputManager.WriteLine("No rooms available for deletion.\n", ConsoleColor.Red);
+            return;
+        }
         
-        Room? roomToRemove = _inputManager.PaginateList(_roomDao.GetAllDeletableRooms(), "room", "remove", true);
+        Room? roomToRemove = _inputManager.PaginateList(rooms, "room", "remove", true);
 
         if (roomToRemove == null)
         {
-            _outputManager.WriteLine("\nRoom deletion cancelled.\n", ConsoleColor.Red);
+            _outputManager.WriteLine("Room deletion cancelled.\n", ConsoleColor.Red);
             return;
         }
 
-        string confirm = _inputManager.ReadString($"\nPlease confirm deletion of {roomToRemove.Name} (y/n): ", ["y", "n"]);
-        if (confirm == "n")
+        if (!_inputManager.ConfirmAction("deletion"))
         {
-            _outputManager.WriteLine($"\nDeletion cancelled. Room [{roomToRemove.Name}] has not been removed.\n", ConsoleColor.Red);
+            _outputManager.WriteLine($"Deletion cancelled. Room [{roomToRemove.Name}] has not been removed.\n", ConsoleColor.Red);
             return;
         }
 

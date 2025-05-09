@@ -4,19 +4,12 @@ using ConsoleGame.Helpers.DisplayHelpers;
 
 namespace ConsoleGame.Menus;
 
-public class PlayerMenu
+public class PlayerMenu(InputManager inputManager, OutputManager outputManager, InventoryMenu inventoryManager, PlayerDisplay playerDisplayMenu, PlayerManagement playerManagementMenu)
 {
-    private readonly InputManager _inputManager;
-    private readonly OutputManager _outputManager;
-    private readonly PlayerDisplay _playerDisplayMenu;
-    private readonly PlayerManagement _playerManagementMenu;
-    public PlayerMenu(InputManager inputManager, OutputManager outputManager, InventoryMenu inventoryManager, PlayerDisplay playerDisplayMenu, PlayerManagement playerManagementMenu)
-    {
-        _inputManager = inputManager;
-        _outputManager = outputManager;
-        _playerDisplayMenu = playerDisplayMenu;
-        _playerManagementMenu = playerManagementMenu;
-    }
+    private readonly InputManager _inputManager = inputManager;
+    private readonly OutputManager _outputManager = outputManager;
+    private readonly PlayerDisplay _playerDisplayMenu = playerDisplayMenu;
+    private readonly PlayerManagement _playerManagementMenu = playerManagementMenu;
 
     public void PlayerMainMenu()
     {
