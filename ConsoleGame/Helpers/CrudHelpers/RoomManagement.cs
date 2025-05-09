@@ -3,20 +3,12 @@ using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class RoomManagement
+public class RoomManagement(InputManager inputManager, OutputManager outputManager, RoomDao roomDao)
 {
-    private readonly InputManager _inputManager;
-    private readonly OutputManager _outputManager;
-    private readonly RoomDao _roomDao;
-    private readonly MapManager _mapManager;
+    private readonly InputManager _inputManager = inputManager;
+    private readonly OutputManager _outputManager = outputManager;
+    private readonly RoomDao _roomDao = roomDao;
 
-    public RoomManagement(InputManager inputManager, OutputManager outputManager, RoomDao roomDao, MapManager mapManager)
-    {
-        _inputManager = inputManager;
-        _outputManager = outputManager;
-        _roomDao = roomDao;
-        _mapManager = mapManager;
-    }
     public void Menu()
     {
         _outputManager.Clear();
@@ -49,7 +41,7 @@ public class RoomManagement
     }
     private void AddRoom()
     {
-        Dictionary<string, string[]> availableRooms = _mapManager.GetAvailableDirections();
+        Dictionary<string, string[]> availableRooms = MapHelper.GetAvailableDirections(_roomDao.GetAllRooms());
 
         if (availableRooms.Count == 0)
         {
@@ -65,8 +57,15 @@ public class RoomManagement
 
         int index = _inputManager.ReadInt("\tSelect a room to add onto by number: ", availableRooms.Count);
 
-        Room roomToAddOnto = _roomDao.FindRoomByName(availableRooms.ElementAt(index - 1).Key);
-        
+        Room? roomToAddOnto = _roomDao.FindRoomByName(availableRooms.ElementAt(index - 1).Key);
+
+        if (roomToAddOnto == null)
+        {
+            _outputManager.WriteLine("Invalid room selection. Please try again.", ConsoleColor.Red);
+            //if you're getting this error something went very wrong
+            return;
+        }
+
         string[] directions = availableRooms[roomToAddOnto.Name];
 
         string directionToAddOnto = directions[0];
@@ -81,7 +80,7 @@ public class RoomManagement
 
         Room newRoom = CreateRoom();
 
-        LinkRooms(roomToAddOnto, newRoom, directionToAddOnto);
+        MapHelper.LinkRooms(roomToAddOnto, newRoom, directionToAddOnto);
 
         _roomDao.AddRoom(newRoom);
         _roomDao.UpdateRoom(roomToAddOnto);
@@ -105,28 +104,6 @@ public class RoomManagement
 
         string description = _inputManager.ReadString("Enter description: ");
         return new Room(name, description);
-    }
-    private static void LinkRooms(Room from, Room to, string direction)
-    {
-        switch (direction)
-        {
-            case "North":
-                from.North = to;
-                to.South = from;
-                break;
-            case "South":
-                from.South = to;
-                to.North = from;
-                break;
-            case "East":
-                from.East = to;
-                to.West = from;
-                break;
-            case "West":
-                from.West = to;
-                to.East = from;
-                break;
-        }
     }
     private void EditRoomDescription()
     {
@@ -176,8 +153,13 @@ public class RoomManagement
 
         _roomDao.DeleteRoom(roomToRemove);
 
-        _mapManager.DirtyGrid = true;
-        _mapManager.CheckForDisconnectedRooms();
+        var disconnectedRooms = MapHelper.CheckForDisconnectedRooms(_roomDao.GetAllRooms());
+        if (disconnectedRooms.Count > 0)
+        {
+            _outputManager.WriteLine($"\nWarning: The following rooms are now disconnected: {string.Join(", ", disconnectedRooms.Select(r => r.Name))}", ConsoleColor.Yellow);
+            _outputManager.WriteLine("Please check the map for any issues.", ConsoleColor.DarkYellow);
+            _roomDao.UpdateAllRooms(disconnectedRooms);
+        }        
 
         _outputManager.WriteLine("\nRoom has been successfully deleted!\n", ConsoleColor.Green);
     }

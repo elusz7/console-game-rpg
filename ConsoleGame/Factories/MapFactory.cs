@@ -1,5 +1,5 @@
 ﻿using ConsoleGame.GameDao;
-using ConsoleGame.Helpers.FactoryHelpers;
+using ConsoleGame.Helpers;
 using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Factories;
@@ -18,11 +18,11 @@ public class MapFactory(RoomDao roomDao)
         {
             var totalRoomsAllowed = Math.Min(level * 3, rooms.Count) + 1;
             
-            rooms = MapFactoryHelper.CreateCampaignMap(totalRoomsAllowed, entrance, rooms);
+            rooms = MapHelper.CreateCampaignMap(totalRoomsAllowed, entrance, rooms);
         }
         else
         {
-            var unconnectedRooms = MapFactoryHelper.FindUnconnectedRooms(entrance, rooms);
+            var unconnectedRooms = MapHelper.FindUnconnectedRooms(entrance, rooms);
             rooms.RemoveAll(r => unconnectedRooms.Contains(r));
         }
 

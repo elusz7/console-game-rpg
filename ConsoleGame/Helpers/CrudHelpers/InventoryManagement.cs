@@ -4,45 +4,31 @@ using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class InventoryManagement
+public class InventoryManagement(InputManager inputManager, OutputManager outputManager, ItemDao itemDao, InventoryDao inventoryDao)
 {
-    private readonly InputManager _inputManager;
-    private readonly OutputManager _outputManager;
-    private readonly InventoryDao _inventoryDao;
-    private Player _player;
+    private readonly InputManager _inputManager = inputManager;
+    private readonly OutputManager _outputManager = outputManager;
+    private readonly InventoryDao _inventoryDao = inventoryDao;
+    private Player? _player;
 
-    public InventoryManagement(InputManager inputManager, OutputManager outputManager, ItemDao itemDao, InventoryDao inventoryDao)
-    {
-        _inputManager = inputManager;
-        _outputManager = outputManager;
-        _inventoryDao = inventoryDao;
-    }
     public void Menu(Player? player = null)
     {
         _outputManager.Clear();
 
         if (player == null)
         {
-            List<Player> players = _inventoryDao.GetAllPlayers();
-
-            if (players.Count == 0)
+            if (!SelectPlayer())
             {
-                _outputManager.WriteLine("No players available to manage inventory.", ConsoleColor.Red);
-                return;
-            }
-
-            player = _inputManager.PaginateList(players, "player", "manage inventory of", true, false);
-            
-            if (player == null)
-            {
-                _outputManager.WriteLine("No player selected. Returning to previous menu.", ConsoleColor.Red);
+                _outputManager.WriteLine("No player available or selected. Returning to previous menu.", ConsoleColor.Red);
                 return;
             }
         }
+        else
+        {
+            _player = player;
+        }
 
-        _player = player;
-
-        _outputManager.Clear();
+            _outputManager.Clear();
         while (true)
         {
             _outputManager.WriteLine($"=== {_player.Name}'s Inventory Management ===", ConsoleColor.Cyan);
@@ -60,11 +46,30 @@ public class InventoryManagement
                     RemoveItemFromInventory();
                     break;
                 case 3:
-                    player = null;
+                    _player = null;
                     _outputManager.Clear();
                     return;
             }
         }
+    }
+    private bool SelectPlayer()
+    {
+        List<Player> players = _inventoryDao.GetAllPlayers();
+
+        if (players.Count == 0)
+        {
+            return false;
+        }
+
+        var player = _inputManager.PaginateList(players, "player", "manage inventory of", true, false);
+
+        if (player == null)
+        {
+            return false;
+        }
+
+        _player = player;
+        return true;
     }
     private void AddItemToInventory()
     {

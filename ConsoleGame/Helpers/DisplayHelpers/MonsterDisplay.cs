@@ -9,18 +9,11 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers.DisplayHelpers;
 
-public class MonsterDisplay
+public class MonsterDisplay(OutputManager outputManager, InputManager inputManager, MonsterDao monsterDao)
 {
-    private readonly OutputManager _outputManager;
-    private readonly InputManager _inputManager;
-    private readonly MonsterDao _monsterDao;
-
-    public MonsterDisplay(OutputManager outputManager, InputManager inputManager, MonsterDao monsterDao)
-    {
-        _outputManager = outputManager;
-        _inputManager = inputManager;
-        _monsterDao = monsterDao;
-    }
+    private readonly OutputManager _outputManager = outputManager;
+    private readonly InputManager _inputManager = inputManager;
+    private readonly MonsterDao _monsterDao = monsterDao;
 
     public void Menu()
     {

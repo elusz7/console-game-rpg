@@ -6,22 +6,13 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class SkillManagement
+public class SkillManagement(InputManager inputManager, OutputManager outputManager, SkillDao skillDao, MonsterDao monsterDao, ArchetypeDao archetypeDao)
 {
-    private readonly InputManager _inputManager;
-    private readonly OutputManager _outputManager;
-    private readonly SkillDao _skillDao;
-    private readonly MonsterDao _monsterDao;
-    private readonly ArchetypeDao _archetypeDao;
-
-    public SkillManagement(InputManager inputManager, OutputManager outputManager, SkillDao skillDao, MonsterDao monsterDao, ArchetypeDao archetypeDao)
-    {
-        _inputManager = inputManager;
-        _outputManager = outputManager;
-        _skillDao = skillDao;
-        _monsterDao = monsterDao;
-        _archetypeDao = archetypeDao;
-    }
+    private readonly InputManager _inputManager = inputManager;
+    private readonly OutputManager _outputManager = outputManager;
+    private readonly SkillDao _skillDao = skillDao;
+    private readonly MonsterDao _monsterDao = monsterDao;
+    private readonly ArchetypeDao _archetypeDao = archetypeDao;
 
     public void Menu()
     {

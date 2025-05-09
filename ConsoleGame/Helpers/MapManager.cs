@@ -5,32 +5,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.Helpers;
 
-public class MapManager
+public class MapManager(OutputManager outputManager, InputManager inputManager)
 {
     private const int RoomNameLength = 5;
     private const int gridRows = 8;
     private const int gridCols = 8;
 
-    private readonly InputManager _inputManager;
-    private readonly OutputManager _outputManager;
-    private readonly RoomDao _roomDao;
+    private readonly InputManager _inputManager = inputManager;
+    private readonly OutputManager _outputManager = outputManager;
 
-    private readonly string[,] mapGrid;
+    private readonly string[,] mapGrid = new string[gridRows, gridCols];
     private Room _currentRoom;
 
-    private Dictionary<(int x, int y), Room> _gridCache;
-    public bool DirtyGrid { get; set; }
-    private record RoomPosition(Room Room, int X, int Y);
-
-    public MapManager(OutputManager outputManager, InputManager inputManager, RoomDao roomDao)
-    {
-        _outputManager = outputManager;
-        _inputManager = inputManager;
-        _roomDao = roomDao;
-        mapGrid = new string[gridRows, gridCols];
-        _currentRoom = _roomDao.GetEntrance();
-        DirtyGrid = true;
-    }
     public void DisplayMap()
     {
         for (var i = 0; i < gridRows; i++)
@@ -114,11 +100,10 @@ public class MapManager
             PlaceRoom(room.West, row, col - 2, visitedRooms);
         }
     }
-    public void TraverseMap()
+    public void TraverseMap(Room currentRoom)
     {
         _outputManager.Clear();
-        _currentRoom = _roomDao.GetEntrance();
-        UpdateCurrentRoom(_currentRoom);
+        _currentRoom = currentRoom;
         DisplayMap();
 
         _outputManager.WriteLine("\nPress direction keys to traverse map. Any other key returns to the menu.");
@@ -203,314 +188,7 @@ public class MapManager
             }
         }
 
-        _currentRoom = _roomDao.GetEntrance();
+        _currentRoom = currentRoom;
         _outputManager.Clear();
-    }
-    private Dictionary<(int x, int y), Room> GetRoomGrid(Room? rootRoom = null)
-    {
-        if (DirtyGrid)
-        {
-            var root = rootRoom ?? _roomDao.GetEntrance();
-            var visited = new HashSet<Room>();
-            _gridCache = [];
-            var queue = new Queue<RoomPosition>();
-
-            queue.Enqueue(new RoomPosition(root, 0, 0));
-
-            while (queue.Count > 0)
-            {
-                var current = queue.Dequeue();
-                if (!visited.Add(current.Room)) continue;
-
-                _gridCache[(current.X, current.Y)] = current.Room;
-
-                if (current.Room.North != null)
-                    queue.Enqueue(new RoomPosition(current.Room.North, current.X, current.Y - 1)); // Y-1 for north
-                if (current.Room.South != null)
-                    queue.Enqueue(new RoomPosition(current.Room.South, current.X, current.Y + 1)); // Y+1 for south
-                if (current.Room.East != null)
-                    queue.Enqueue(new RoomPosition(current.Room.East, current.X + 1, current.Y));
-                if (current.Room.West != null)
-                    queue.Enqueue(new RoomPosition(current.Room.West, current.X - 1, current.Y));
-            }
-        }
-
-        DirtyGrid = false;
-        return _gridCache;
-    }
-    private static (int x, int y)  FindRoomCoordinates(Room room, Dictionary<(int x, int y), Room> grid)
-    {
-        foreach (var kvp in grid)
-        {
-            if (kvp.Value == room)
-                return kvp.Key;
-        }
-        throw new InvalidOperationException("Room not found in grid.");
-    }   
-    public void CheckForDisconnectedRooms()
-    {
-        var list = new List<Room>();
-
-        var grid = GetRoomGrid();
-
-        foreach (var room in _roomDao.GetAllEditableRooms())
-        {
-            try
-            {
-                FindRoomCoordinates(room, grid);
-            }
-            catch (InvalidOperationException)
-            {
-                //set disconnected room connects to null
-                room.North = room.South = room.East = room.West = null;
-
-                list.Add(room);
-            }
-        }
-
-        _roomDao.UpdateAllRooms(list);
-        DirtyGrid = true;
-    }
-    private static int CountPathsToEntranceThroughRoom(Room startRoom, Room requiredRoom, Room entrance)
-    {
-        int pathCount = 0;
-
-        var queue = new Queue<Room>();
-        var visitedRooms = new HashSet<Room>();
-
-        // Start BFS from the startRoom
-        queue.Enqueue(startRoom);
-
-        // Keep track of the rooms that are visited as part of the current path
-        var roomParents = new Dictionary<Room, Room>();
-
-        while (queue.Count > 0)
-        {
-            var currentRoom = queue.Dequeue();
-
-            if (currentRoom == entrance)
-            {
-                // Check if the requiredRoom is part of the path by walking back from entrance
-                var pathContainsRequired = false;
-                var parent = currentRoom;
-
-                // Walk backwards through parent map to see if requiredRoom is part of the path
-                while (parent != null)
-                {
-                    if (parent == requiredRoom)
-                    {
-                        pathContainsRequired = true;
-                        break;
-                    }
-
-                    parent = roomParents.GetValueOrDefault(parent);
-                }
-
-                if (pathContainsRequired)
-                {
-                    pathCount++;
-                }
-                continue; // If reached entrance, no need to explore further
-            }
-
-            if (visitedRooms.Contains(currentRoom)) continue;
-
-            visitedRooms.Add(currentRoom);
-
-            // Enqueue neighbors (only unvisited rooms)
-            if (currentRoom.North != null && !visitedRooms.Contains(currentRoom.North))
-            {
-                roomParents[currentRoom.North] = currentRoom;
-                queue.Enqueue(currentRoom.North);
-            }
-            if (currentRoom.South != null && !visitedRooms.Contains(currentRoom.South))
-            {
-                roomParents[currentRoom.South] = currentRoom;
-                queue.Enqueue(currentRoom.South);
-            }
-            if (currentRoom.East != null && !visitedRooms.Contains(currentRoom.East))
-            {
-                roomParents[currentRoom.East] = currentRoom;
-                queue.Enqueue(currentRoom.East);
-            }
-            if (currentRoom.West != null && !visitedRooms.Contains(currentRoom.West))
-            {
-                roomParents[currentRoom.West] = currentRoom;
-                queue.Enqueue(currentRoom.West);
-            }
-        }
-
-        return pathCount;
-    }
-    public List<Room>? SinglePathThrough(Room requiredRoom)
-    {
-        var rooms = _roomDao.GetAllEditableRooms();
-        var entrance = _roomDao.GetEntrance();
-
-        var singlePathRooms = new ConcurrentBag<Room>();
-
-        Parallel.ForEach(rooms, room =>
-        {
-            int pathCount = CountPathsToEntranceThroughRoom(room, requiredRoom, entrance);
-            if (pathCount == 1)
-            {
-                singlePathRooms.Add(room);
-            }
-        });
-
-        return [.. singlePathRooms];
-    }
-    public Dictionary<string, string[]> GetAvailableDirections(Room? editingRoom = null)
-    {
-        var availableRooms = new Dictionary<string, string[]>();
-        var allRooms = _roomDao.GetAllRooms();
-        var singlePathRooms = editingRoom == null ? null : SinglePathThrough(editingRoom);
-
-        _outputManager.WriteLine();
-        foreach (Room room in allRooms)
-        {
-            if (room == editingRoom) continue;
-            if (editingRoom != null && singlePathRooms != null && singlePathRooms.Contains(room)) continue;
-
-            string? availableDirections = "";
-
-            if (room.North == null && !_roomDao.HasReverseConflict(room, "North")) availableDirections += "North ";
-            if (room.South == null && !_roomDao.HasReverseConflict(room, "South")) availableDirections += "South ";
-            if (room.East == null && !_roomDao.HasReverseConflict(room, "East")) availableDirections += "East ";
-            if (room.West == null && !_roomDao.HasReverseConflict(room, "West")) availableDirections += "West ";
-
-            if (string.IsNullOrEmpty(availableDirections)) continue;
-
-            availableDirections = RemoveLogicalConflicts(room, availableDirections);
-
-            if (availableDirections?.Length == 0 || string.IsNullOrEmpty(availableDirections)) continue;            
-
-            availableRooms.Add(room.Name, availableDirections.Trim().Split(" ", StringSplitOptions.RemoveEmptyEntries));
-        }
-
-        return availableRooms;
-    }
-    private string RemoveLogicalConflicts(Room baseRoom, string availableDirections)
-    {
-        string finalDirections = string.Empty;
-
-        var grid = GetRoomGrid();
-        try
-        {
-            var (x, y) = FindRoomCoordinates(baseRoom, grid);
-
-            var directions = availableDirections.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-            var validDirections = new List<string>();
-
-            foreach (var dir in directions)
-            {
-                var (dx, dy) = GetDirectionOffset(dir);
-
-                var targetCoords = (x + dx, y + dy);
-
-                if (!grid.ContainsKey(targetCoords))
-                {
-                    validDirections.Add(dir);
-                }
-            }
-
-            if (validDirections.Count > 0)
-            {
-                finalDirections = string.Join(" ", validDirections);
-            }
-        }
-        catch (InvalidOperationException)
-        {
-            finalDirections = string.Empty;
-        }
-
-        return finalDirections;
-    }
-    private static (int dx, int dy) GetDirectionOffset(string direction)
-    {
-        return direction switch
-        {
-            "North" => (0, -1),
-            "South" => (0, 1),
-            "East" => (1, 0),
-            "West" => (-1, 0),
-            _ => (0, 0)
-        };
-    }
-    public Dictionary<string, string> FindUnlinkedNeighbors()
-    {
-        Dictionary<string, string> unlinkedNeighbors = [];
-
-        var rooms = _roomDao.GetAllRooms();
-        var grid = GetRoomGrid();
-
-        foreach (var room in rooms)
-        {
-            try
-            {
-                var (x, y) = FindRoomCoordinates(room, grid);
-
-                string[] directions = ["North", "South", "East", "West"];
-
-                foreach (var direction in directions)
-                {
-                    var (dx, dy) = GetDirectionOffset(direction);
-
-                    // First, check if THIS room has a connection in that direction already
-                    var neighbor = GetNeighbor(room, direction);
-                    if (neighbor != null) continue; // already linked
-
-                    // Next, check if there is a room at the target location
-                    var targetCoords = (x + dx, y + dy);
-                    if (!grid.ContainsKey(targetCoords)) continue; // no room there
-
-                    var neighborRoom = grid[targetCoords];
-
-                    // Check if neighborRoom already links back toward this room
-                    var reverseDirection = GetReverseDirection(direction);
-                    var reverseNeighbor = GetNeighbor(neighborRoom, reverseDirection);
-                    if (reverseNeighbor != null) continue; // already linked
-
-                    // Configure key
-                    string key = $"{room.Name}-{direction}";
-
-                    // Check if the reverse is already in dictionary
-                    string reverseKey = $"{neighborRoom.Name}-{reverseDirection}";
-                    if (unlinkedNeighbors.ContainsKey(reverseKey)) continue;
-
-                    //Add unlinked neighbor to dictionary
-                    unlinkedNeighbors[key] = neighborRoom.Name;
-                }
-            }
-            catch (InvalidOperationException)
-            {
-                //room not on grid
-                continue;
-            }
-        }
-
-        return unlinkedNeighbors;
-    }
-    private static Room? GetNeighbor(Room room, string direction)
-    {
-        return direction switch
-        {
-            "North" => room.North,
-            "South" => room.South,
-            "East" => room.East,
-            "West" => room.West,
-            _ => null
-        };
-    }
-    private static string GetReverseDirection(string direction)
-    {
-        return direction switch
-        {
-            "North" => "South",
-            "South" => "North",
-            "East" => "West",
-            "West" => "East",
-            _ => ""
-        };
     }
 }

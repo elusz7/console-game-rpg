@@ -5,18 +5,11 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class ArchetypeManagement
+public class ArchetypeManagement(InputManager inputManager, OutputManager outputManager, ArchetypeDao archetypeDao)
 {
-    private readonly InputManager _inputManager;
-    private readonly OutputManager _outputManager;
-    private readonly ArchetypeDao _archetypeDao;
-
-    public ArchetypeManagement(InputManager inputManager, OutputManager outputManager, ArchetypeDao archetypeDao)
-    {
-        _inputManager = inputManager;
-        _outputManager = outputManager;
-        _archetypeDao = archetypeDao;
-    }
+    private readonly InputManager _inputManager = inputManager;
+    private readonly OutputManager _outputManager = outputManager;
+    private readonly ArchetypeDao _archetypeDao = archetypeDao;
 
     public void Menu()
     {

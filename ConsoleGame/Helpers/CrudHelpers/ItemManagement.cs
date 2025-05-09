@@ -4,18 +4,11 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class ItemManagement
+public class ItemManagement(InputManager inputManager, OutputManager outputManager, ItemDao itemDao)
 {
-    private readonly InputManager _inputManager;
-    private readonly OutputManager _outputManager;
-    private readonly ItemDao _itemDao;
-
-    public ItemManagement(InputManager inputManager, OutputManager outputManager, ItemDao itemDao)
-    {
-        _inputManager = inputManager;
-        _outputManager = outputManager;
-        _itemDao = itemDao;
-    }
+    private readonly InputManager _inputManager = inputManager;
+    private readonly OutputManager _outputManager = outputManager;
+    private readonly ItemDao _itemDao = itemDao;
 
     public void Menu()
     {

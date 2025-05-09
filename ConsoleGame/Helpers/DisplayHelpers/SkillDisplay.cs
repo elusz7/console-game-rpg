@@ -3,18 +3,11 @@ using ConsoleGameEntities.Models.Skills;
 
 namespace ConsoleGame.Helpers.DisplayHelpers;
 
-public class SkillDisplay
+public class SkillDisplay(InputManager inputManager, OutputManager outputManager, SkillDao skillDao)
 {
-    private readonly InputManager _inputManager;
-    private readonly OutputManager _outputManager;
-    private readonly SkillDao _skillDao;
-
-    public SkillDisplay(InputManager inputManager, OutputManager outputManager, SkillDao skillDao)
-    {
-        _inputManager = inputManager;
-        _outputManager = outputManager;
-        _skillDao = skillDao;
-    }
+    private readonly InputManager _inputManager = inputManager;
+    private readonly OutputManager _outputManager = outputManager;
+    private readonly SkillDao _skillDao = skillDao;
 
     public void Menu()
     {

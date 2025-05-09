@@ -4,18 +4,12 @@ using ConsoleGame.GameDao;
 
 namespace ConsoleGame.Helpers.DisplayHelpers;
 
-public class ArchetypeDisplay
+public class ArchetypeDisplay(InputManager inputManager, OutputManager outputManager, ArchetypeDao archetypeDao)
 {
-    private readonly InputManager _inputManager;
-    private readonly OutputManager _outputManager;
-    private readonly ArchetypeDao _archetypeDao;
+    private readonly InputManager _inputManager = inputManager;
+    private readonly OutputManager _outputManager = outputManager;
+    private readonly ArchetypeDao _archetypeDao = archetypeDao;
 
-    public ArchetypeDisplay(InputManager inputManager, OutputManager outputManager, ArchetypeDao archetypeDao)
-    {
-        _inputManager = inputManager;
-        _outputManager = outputManager;
-        _archetypeDao = archetypeDao;
-    }
     public void Menu()
     {
         _outputManager.Clear();

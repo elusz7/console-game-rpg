@@ -4,22 +4,13 @@ using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class PlayerManagement
+public class PlayerManagement(InputManager inputManager, OutputManager outputManager, PlayerDao playerDao, ArchetypeDao archetypeDao, InventoryManagement inventoryManagement)
 {
-    private readonly InputManager _inputManager;
-    private readonly OutputManager _outputManager;
-    private readonly PlayerDao _playerDao;
-    private readonly ArchetypeDao _archetypeDao;
-    private readonly InventoryManagement _inventoryManagement;
-
-    public PlayerManagement(InputManager inputManager, OutputManager outputManager, PlayerDao playerDao, ArchetypeDao archetypeDao, InventoryManagement inventoryManagement)
-    {
-        _inputManager = inputManager;
-        _outputManager = outputManager;
-        _playerDao = playerDao;
-        _archetypeDao = archetypeDao;
-        _inventoryManagement = inventoryManagement;
-    }
+    private readonly InputManager _inputManager = inputManager;
+    private readonly OutputManager _outputManager = outputManager;
+    private readonly PlayerDao _playerDao = playerDao;
+    private readonly ArchetypeDao _archetypeDao = archetypeDao;
+    private readonly InventoryManagement _inventoryManagement = inventoryManagement;
 
     public void Menu()
     {

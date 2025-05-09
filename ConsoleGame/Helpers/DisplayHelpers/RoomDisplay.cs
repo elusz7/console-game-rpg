@@ -4,18 +4,12 @@ using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Helpers.DisplayHelpers;
 
-public class RoomDisplay
+public class RoomDisplay(OutputManager outputManager, InputManager inputManager, RoomDao roomDao)
 {
-    private readonly OutputManager _outputManager;
-    private readonly InputManager _inputManager;
-    private readonly RoomDao _roomDao;
+    private readonly OutputManager _outputManager = outputManager;
+    private readonly InputManager _inputManager = inputManager;
+    private readonly RoomDao _roomDao = roomDao;
 
-    public RoomDisplay(OutputManager outputManager, InputManager inputManager, RoomDao roomDao)
-    {
-        _outputManager = outputManager;
-        _inputManager = inputManager;
-        _roomDao = roomDao;
-    }
     public void Menu()
     {
         _outputManager.Clear();
