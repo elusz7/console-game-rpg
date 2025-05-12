@@ -3,7 +3,7 @@ using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
-namespace ConsoleGame.Helpers.CrudHelpers;
+namespace ConsoleGame.Managers.CrudHelpers;
 
 public class ArchetypeManagement(InputManager inputManager, OutputManager outputManager, ArchetypeDao archetypeDao)
 {

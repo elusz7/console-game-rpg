@@ -4,7 +4,7 @@ using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
-namespace ConsoleGame.Helpers.CrudHelpers;
+namespace ConsoleGame.Managers.CrudHelpers;
 
 public class SkillManagement(InputManager inputManager, OutputManager outputManager, SkillDao skillDao, MonsterDao monsterDao, ArchetypeDao archetypeDao)
 {

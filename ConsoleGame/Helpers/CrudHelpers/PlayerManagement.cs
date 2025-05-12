@@ -2,7 +2,7 @@
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 
-namespace ConsoleGame.Helpers.CrudHelpers;
+namespace ConsoleGame.Managers.CrudHelpers;
 
 public class PlayerManagement(InputManager inputManager, OutputManager outputManager, PlayerDao playerDao, ArchetypeDao archetypeDao, InventoryManagement inventoryManagement)
 {

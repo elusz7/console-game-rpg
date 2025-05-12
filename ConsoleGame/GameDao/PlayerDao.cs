@@ -38,7 +38,7 @@ public class PlayerDao(GameContext context)
     }
     public List<Player> GetAllPlayers()
     {
-        return [.. _context.Players];
+            return [.. _context.Players];
     }
 
     public List<string> GetAllPlayerArchetypes()

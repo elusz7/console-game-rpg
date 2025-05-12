@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Items;
 
-namespace ConsoleGame.Helpers.DisplayHelpers;
+namespace ConsoleGame.Managers.DisplayHelpers;
 
 public class ItemDisplay(InputManager inputManager, OutputManager outputManager, ItemDao itemDao)
 {

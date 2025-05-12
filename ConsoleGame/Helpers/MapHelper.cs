@@ -8,7 +8,7 @@ using ConsoleGame.GameDao;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 
-namespace ConsoleGame.Helpers;
+namespace ConsoleGame.Managers;
 
 public static class MapHelper
 {

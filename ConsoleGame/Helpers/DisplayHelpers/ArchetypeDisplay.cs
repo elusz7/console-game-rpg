@@ -2,7 +2,7 @@
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGame.GameDao;
 
-namespace ConsoleGame.Helpers.DisplayHelpers;
+namespace ConsoleGame.Managers.DisplayHelpers;
 
 public class ArchetypeDisplay(InputManager inputManager, OutputManager outputManager, ArchetypeDao archetypeDao)
 {

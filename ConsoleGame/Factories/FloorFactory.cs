@@ -20,7 +20,8 @@ public class FloorFactory(MapFactory mapFactory, MonsterFactory monsterFactory, 
             Rooms = rooms,
             Monsters = monsters,
             Loot = loot,
-            NumberOfCursedItems = numberOfCursedItems
+            NumberOfCursedItems = numberOfCursedItems,
+            ItemFactory = _itemFactory,
         };
 
         floor.AssignCursesToItems();

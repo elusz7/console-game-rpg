@@ -1,5 +1,5 @@
 ﻿using ConsoleGame.GameDao;
-using ConsoleGame.Helpers;
+using ConsoleGame.Managers;
 using ConsoleGame.Services;
 using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Helpers;
@@ -8,10 +8,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NReco.Logging.File;
-using ConsoleGame.Helpers.DisplayHelpers;
-using ConsoleGame.Helpers.CrudHelpers;
+using ConsoleGame.Managers.DisplayHelpers;
+using ConsoleGame.Managers.CrudHelpers;
 using ConsoleGame.Menus;
 using ConsoleGame.Factories;
+using ConsoleGame.Helpers;
 
 namespace ConsoleGame;
 
@@ -91,6 +92,11 @@ public static class Startup
         services.AddTransient<MonsterFactory>();
         services.AddTransient<ItemFactory>();
         services.AddTransient<MapFactory>();
+
+        services.AddTransient<AdventureService>();
+        services.AddTransient<CombatHelper>();
+        services.AddTransient<MerchantHelper>();
+        services.AddTransient<EquipmentHelper>();
 
         services.AddSingleton<InputManager>();
         services.AddSingleton<OutputManager>();

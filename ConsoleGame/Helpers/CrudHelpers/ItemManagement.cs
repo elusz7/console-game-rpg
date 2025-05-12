@@ -2,7 +2,7 @@
 using ConsoleGameEntities.Models.Items;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
-namespace ConsoleGame.Helpers.CrudHelpers;
+namespace ConsoleGame.Managers.CrudHelpers;
 
 public class ItemManagement(InputManager inputManager, OutputManager outputManager, ItemDao itemDao)
 {

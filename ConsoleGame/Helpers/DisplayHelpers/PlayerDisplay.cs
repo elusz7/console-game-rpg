@@ -2,7 +2,7 @@
 using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Entities;
 
-namespace ConsoleGame.Helpers.DisplayHelpers;
+namespace ConsoleGame.Managers.DisplayHelpers;
 
 public class PlayerDisplay(InputManager inputManager, OutputManager outputManager, PlayerDao playerDao)
 {

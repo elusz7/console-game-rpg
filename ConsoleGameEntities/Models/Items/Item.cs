@@ -44,37 +44,18 @@ public class Item : IItem
         var price = (int)Math.Floor(Value * 0.5M);
 
         if (Inventory.Gold < price)
-            throw new ItemPurificationException($"{price - Inventory.Gold}");
+            throw new ItemPurificationException($"You are short by {price - Inventory.Gold} gold.");
 
         Inventory.Gold -= price;
         IsCursed = false;
     }
-    public virtual void Sell()
+    public virtual void Reforge()
     {
-        if (ItemEquipped)
-            throw new InvalidOperationException("Cannot sell an equipped item.");
-
-        if (Inventory != null)
-            Inventory.Gold += (int)Math.Floor(Value * 0.75M);
-
-        InventoryId = null;
-        Inventory = null;
+        throw new InvalidOperationException("Reforging this item is not allowed.");
     }
-    public virtual void Buy(IPlayer player) {
-        var price = (int)Math.Floor(Value * 1.25M);
-
-        if (player.Inventory.Gold < price)
-            throw new ItemPurchaseException($"{price - player.Inventory.Gold}");
-
-        try
-        {
-            player.Inventory.AddItem(this);
-        }
-        catch (InventoryException ex) {
-            throw new ItemPurchaseException(ex.Message);
-        }
-
-        player.Inventory.Gold -= price;
+    public virtual void Enchant()
+    {
+        throw new InvalidOperationException("Enchanting this item is not allowed.");
     }
     public virtual void Equip()
     {

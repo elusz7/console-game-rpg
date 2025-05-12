@@ -83,4 +83,11 @@ public class Inventory : IInventory
             .Where(i => i is not Consumable)
             .Sum(i => i.Weight);
     }
+
+    public bool ContainsConsumables()
+    {
+        return Items
+            .OfType<Consumable>()
+            .Any();
+    }
 }

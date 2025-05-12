@@ -1,4 +1,4 @@
-namespace ConsoleGame.Helpers;
+namespace ConsoleGame.Managers;
 
 public class OutputManager
 {

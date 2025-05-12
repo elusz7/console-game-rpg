@@ -3,7 +3,7 @@ using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
-namespace ConsoleGame.Helpers.CrudHelpers;
+namespace ConsoleGame.Managers.CrudHelpers;
 
 public class MonsterManagement(OutputManager outputManager, InputManager inputManager, MonsterDao monsterDao)
 {

@@ -3,7 +3,7 @@ using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace ConsoleGame.Helpers;
+namespace ConsoleGame.Managers;
 
 public class MapManager(OutputManager outputManager, InputManager inputManager)
 {

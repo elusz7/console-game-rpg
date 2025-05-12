@@ -2,8 +2,8 @@
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
-using Microsoft.Data.SqlClient.Server;
-namespace ConsoleGame.Helpers;
+
+namespace ConsoleGame.Managers;
 public class InputManager(OutputManager outputManager)
 {
     private readonly OutputManager _outputManager = outputManager;
@@ -263,7 +263,22 @@ public class InputManager(OutputManager outputManager)
             _outputManager.Clear();
         }
     }
+    public T? SelectFromList<T>(List<T> items, Func<T, string> displayTextSelector,
+            string prompt, Func<T, ConsoleColor>? colorSelector = null)
+    {
+        for (int i = 0; i < items.Count; i++)
+        {
+            var item = items[i];
+            var display = $"{i + 1}. {displayTextSelector(item)}";
+            var color = colorSelector?.Invoke(item) ?? ConsoleColor.White;
+            _outputManager.WriteLine(display, color);
+        }
 
+        string fullPrompt = $"{prompt} (-1 to cancel): ";
+        int choice = ReadInt(fullPrompt, items.Count, true);
+
+        return choice == -1 ? default : items[choice - 1];
+    }
     public bool LoopAgain(string action)
     {        
         string again = ReadString($"Would you like to {action} another? (y/n): ", ["y", "n"]).ToLower();

@@ -1,5 +1,6 @@
 ﻿using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGameEntities.Interfaces;
 
@@ -14,5 +15,7 @@ public interface IPlayer : ITargetable
     Inventory Inventory { get; set; }
     Archetype Archetype { get; set; }
     void Attack(ITargetable target);
+    void Equip(Item item);
+    void Unequip(Item item);
     void LevelUp();
 }

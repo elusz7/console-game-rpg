@@ -196,4 +196,37 @@ public class ItemFactory(ItemDao itemDao)
         return value;
     }
 
+    public List<Item> CreateMerchantItems(int level)
+    {
+        var merchantItems = new List<Item>();
+        var availableItems = _itemDao.GetItemsByMaxLevel(level).ToList();
+
+        var consumables = availableItems.OfType<Consumable>().ToList();
+        var weapons = availableItems.OfType<Weapon>().ToList();
+        var armors = availableItems.OfType<Armor>().ToList();
+
+        if (consumables.Count > 0)
+        {
+            var consumable = consumables[_rng.Next(consumables.Count)];
+            merchantItems.Add(CreateItem(consumable));
+        }
+
+        int weaponsToAdd = Math.Min(4, weapons.Count);
+        for (int i = 0; i < weaponsToAdd; i++)
+        {
+            var weapon = weapons[_rng.Next(weapons.Count)];
+            merchantItems.Add(CreateItem(weapon));
+            weapons.Remove(weapon);
+        }
+
+        int armorsToAdd = Math.Min(4, armors.Count);
+        for (int i = 0; i < armorsToAdd; i++)
+        {
+            var armor = armors[_rng.Next(armors.Count)];
+            merchantItems.Add(CreateItem(armor));
+            armors.Remove(armor);
+        }
+
+        return merchantItems;
+    }
 }

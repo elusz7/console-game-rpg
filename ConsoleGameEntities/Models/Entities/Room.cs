@@ -39,4 +39,14 @@ public class Room : IRoom
 
         return sb.ToString();
     }
+
+    public Dictionary<string, Room> GetConnections()
+    {
+        var connections = new Dictionary<string, Room>();
+        if (North != null) connections.Add("North", North);
+        if (South != null) connections.Add("South", South);
+        if (East != null) connections.Add("East", East);
+        if (West != null) connections.Add("West", West);
+        return connections;
+    }
 }

@@ -1,6 +1,6 @@
 ﻿using ConsoleGame.GameDao;
 
-namespace ConsoleGame.Helpers.DisplayHelpers;
+namespace ConsoleGame.Managers.DisplayHelpers;
 
 public class RoomDisplay(OutputManager outputManager, InputManager inputManager, MapManager mapManager, RoomDao roomDao)
 {

@@ -4,7 +4,7 @@ using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
-namespace ConsoleGame.Helpers;
+namespace ConsoleGame.Managers;
 
 public static class ColorfulToStringHelper
 {

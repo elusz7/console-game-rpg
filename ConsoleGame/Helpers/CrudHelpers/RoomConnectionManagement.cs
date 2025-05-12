@@ -2,7 +2,7 @@
 using ConsoleGameEntities.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace ConsoleGame.Helpers.CrudHelpers;
+namespace ConsoleGame.Managers.CrudHelpers;
 
 public class RoomConnectionManagement(InputManager inputManager, OutputManager outputManager, RoomDao roomDao)
 {

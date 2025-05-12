@@ -30,7 +30,7 @@ public class Player : IPlayer
     public int? RoomId { get; set; }
     public virtual Room? CurrentRoom { get; set; }
     [NotMapped]
-    public List<IItem> Equipment { get; set; } = new();
+    public List<Item> Equipment { get; set; } = new();
     [NotMapped]
     private readonly Dictionary<StatType, int> ActiveEffects = new()
     {
@@ -42,10 +42,7 @@ public class Player : IPlayer
     };
     public void Attack(ITargetable target)
     {
-        var weapon = EquippedWeapon();
-        
-        if (weapon == null)
-            throw new EquipmentException("You need to equip a weapon before attacking.");
+        var weapon = EquippedWeapon() ?? throw new EquipmentException("You need to equip a weapon before attacking.");
 
         var damage = Archetype.ArchetypeType == ArchetypeType.Martial ?
             GetStat(StatType.Attack) :
@@ -151,7 +148,7 @@ public class Player : IPlayer
             _ => throw new StatTypeException("Monster Get Stat")
         };
     }
-    public void Equip(IItem item)
+    public void Equip(Item item)
     {
         if (item.Inventory?.Player != this)
             throw new ItemNotFoundException("This item is not in your inventory.");
@@ -286,13 +283,13 @@ public class Player : IPlayer
             throw new TreasureException(ex.Message);
         }
     }
-    public void Unequip(IItem item)
+    public void Unequip(Item item)
     {
         Equipment.Remove(item);
         item.Unequip();
         AddActionItem($"You unequipped {item.Name}.");
     }
-    private void CheckArmorDurability(DamageType damageType)
+    private void CheckArmorDurability(DamageType? damageType)
     {
         //randomly select an armor piece to use durability
         var damagedArmor = damageType == DamageType.Martial ? 
@@ -341,5 +338,33 @@ public class Player : IPlayer
     public void AddActionItem(ISkill skill)
     {
         ActionItems.Add(DateTime.Now.Millisecond, $"You use {skill.Name}!");
+    }
+    public virtual void Sell(Item item)
+    {
+        if (item.IsEquipped())
+            throw new InvalidOperationException("Cannot sell an equipped item.");
+
+        if (Inventory != null)
+            Inventory.Gold += (int)Math.Floor(item.Value * 0.75M);
+
+        Inventory?.RemoveItem(item);
+    }
+    public virtual void Buy(Item item)
+    {
+        var price = (int)Math.Floor(item.Value * 1.25M);
+
+        if (Inventory.Gold < price)
+            throw new ItemPurchaseException($"You are short by {price - Inventory.Gold} gold.");
+
+        try
+        {
+            Inventory.AddItem(item);
+        }
+        catch (InventoryException ex)
+        {
+            throw new ItemPurchaseException(ex.Message);
+        }
+
+        Inventory.Gold -= price;
     }
 }

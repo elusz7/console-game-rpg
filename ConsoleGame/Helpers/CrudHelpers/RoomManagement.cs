@@ -1,7 +1,7 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Entities;
 
-namespace ConsoleGame.Helpers.CrudHelpers;
+namespace ConsoleGame.Managers.CrudHelpers;
 
 public class RoomManagement(InputManager inputManager, OutputManager outputManager, RoomDao roomDao)
 {

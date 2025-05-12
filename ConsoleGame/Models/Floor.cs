@@ -1,4 +1,5 @@
-﻿using ConsoleGameEntities.Models.Entities;
+﻿using ConsoleGame.Factories;
+using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Monsters;
 
@@ -7,11 +8,15 @@ namespace ConsoleGame.Models;
 public class Floor
 {
     private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+
+    public ItemFactory ItemFactory;
     public int Level { get; set; }
     public List<Monster> Monsters { get; set; } = [];
     public List<Room> Rooms { get; set; } = [];
     public int NumberOfCursedItems { get; set; }
     public List<Item> Loot { get; set; } = [];
+    public bool HasMetMerchant { get; set; } = false;
+    private List<Item> MerchantItems { get; set; } = [];
 
     public void AssignMonstersToRooms()
     {
@@ -34,7 +39,6 @@ public class Floor
             }
         }
     }
-
     public void AssignItemsToMonsters()
     {
         var availableMonsters = Monsters.Where(m => m.Treasure == null).OrderBy(_ => _rng.Next()).ToList();
@@ -51,7 +55,6 @@ public class Floor
             availableMonsters[i].Treasure = shuffledItems[i];
         }
     }
-
     public void AssignCursesToItems()
     {
         var availableItems = Loot
@@ -68,5 +71,35 @@ public class Floor
         {
             shuffledItems[i].IsCursed = true;
         }
+    }
+    public Room GetEntrance()
+    {
+        return Rooms.First(r => r.Name.Equals("Entrance"));
+    }
+    public string GetMerchantName()
+    {
+        if (HasMetMerchant)
+        {
+            return "Senmothis";
+        }
+        else
+        {
+            return "Mysterious Stranger";
+        }
+    }
+    public List<Item> GetMerchantItems()
+    {
+        return MerchantItems;
+    }
+    public void RemoveMerchantItem(Item item)
+    {
+        MerchantItems.Remove(item);
+    }
+    public void UpdateMerchantItems()
+    {
+        if (MerchantItems.Count == 0)
+        {
+            MerchantItems = ItemFactory.CreateMerchantItems(Level);
+        }        
     }
 }

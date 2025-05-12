@@ -1,22 +1,15 @@
-﻿using ConsoleGame.Helpers;
+﻿using ConsoleGame.Managers;
 using ConsoleGame.Menus;
 
 namespace ConsoleGame.Services;
 
-public class GameEngine
+public class GameEngine(StartMenu startMenu, AdminMenu adminMenu, InputManager inputManager, OutputManager outputManager, AdventureService adventureService)
 {
-    private readonly StartMenu _startMenu;
-    private readonly AdminMenu _adminMenu;
-    private readonly InputManager _inputManager;
-    private readonly OutputManager _outputManager;
-
-    public GameEngine(StartMenu startMenu, AdminMenu adminMenu, InputManager inputManager, OutputManager outputManager)
-    {
-        _startMenu = startMenu;
-        _adminMenu = adminMenu;
-        _inputManager = inputManager;
-        _outputManager = outputManager;
-    }
+    private readonly StartMenu _startMenu = startMenu;
+    private readonly AdminMenu _adminMenu = adminMenu;
+    private readonly InputManager _inputManager = inputManager;
+    private readonly OutputManager _outputManager = outputManager;
+    private readonly AdventureService _adventureService = adventureService;
 
     public void Run()
     {
@@ -45,7 +38,10 @@ public class GameEngine
                     _adminMenu.AdminMainMenu();
                     break;
                 case 2:
-                    _outputManager.WriteLine("Adventure mode is not implemented yet.", ConsoleColor.Red);
+                    _adventureService.SetUpAdventure();
+                    _outputManager.WriteLine("Press any key to begin your adventure!", ConsoleColor.Cyan);
+                    _inputManager.ReadKey();
+                    _adventureService.Adventure();
                     break;
                 case 3:
                     _outputManager.WriteLine("Campaign mode is not implemented yet.", ConsoleColor.Red);

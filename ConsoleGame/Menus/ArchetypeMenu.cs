@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ConsoleGame.Helpers;
-using ConsoleGame.Helpers.CrudHelpers;
-using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGame.Managers;
+using ConsoleGame.Managers.CrudHelpers;
+using ConsoleGame.Managers.DisplayHelpers;
 
 namespace ConsoleGame.Menus;
 

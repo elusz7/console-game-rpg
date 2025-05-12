@@ -7,7 +7,7 @@ using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Monsters;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
-namespace ConsoleGame.Helpers.DisplayHelpers;
+namespace ConsoleGame.Managers.DisplayHelpers;
 
 public class MonsterDisplay(OutputManager outputManager, InputManager inputManager, MonsterDao monsterDao)
 {

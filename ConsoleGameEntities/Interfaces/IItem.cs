@@ -22,11 +22,12 @@ public interface IItem
     Inventory? Inventory { get; set; }
     Monster? Monster { get; set; }
 
-    void Use();
     void Purify();
-    void Sell();
     void Equip();
     void Unequip();
+    void Use();
+    void Reforge();
+    void Enchant();
     bool IsEquipped();
     void RecoverDurability(int power);
 }

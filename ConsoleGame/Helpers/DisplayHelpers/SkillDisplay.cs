@@ -1,7 +1,7 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Skills;
 
-namespace ConsoleGame.Helpers.DisplayHelpers;
+namespace ConsoleGame.Managers.DisplayHelpers;
 
 public class SkillDisplay(InputManager inputManager, OutputManager outputManager, SkillDao skillDao)
 {
