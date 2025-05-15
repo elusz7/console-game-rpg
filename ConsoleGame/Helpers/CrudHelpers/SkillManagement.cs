@@ -162,7 +162,6 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
         var choice = _inputManager.ReadInt($"\n{prompt}: ", values.Count);
         return values[choice - 1];
     }
-
     private void EditSkill()
     {
         var skills = _skillDao.GetAllNonCoreSkills();

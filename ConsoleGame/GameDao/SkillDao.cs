@@ -34,7 +34,7 @@ public class SkillDao(GameContext context)
 
     public List<Skill> GetAllNonCoreSkills()
     {
-        return [.. _context.Skills.Where(s => s.Id > 214)];
+        return [.. _context.Skills.Where(s => s.Id > 212)];
     }
 
     public List<Archetype> GetArchetypes()
@@ -81,14 +81,14 @@ public class SkillDao(GameContext context)
     {
         return [.. _context.Skills
             .Where(s => s.ArchetypeId == null && s.MonsterId == null)
-            .Where(s => s.Id > 214)];
+            .Where(s => s.Id > 212)];
     }
 
     public List<Skill> GetAllAssignedNonCoreSkills()
     {
         return [.. _context.Skills
             .Where(s => s.ArchetypeId != null || s.MonsterId != null)
-            .Where(s => s.Id > 214)];
+            .Where(s => s.Id > 212)];
     }
     public List<Skill> GetUnassignedSkillsByMaxLevel(int level)
     {

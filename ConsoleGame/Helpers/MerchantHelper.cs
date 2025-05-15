@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Managers;
 using ConsoleGame.Models;
 using ConsoleGameEntities.Exceptions;
@@ -54,7 +55,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         }
 
         _outputManager.WriteLine("\n\"I also have some other services you might be interested in. Come back soon.\"");
-        _outputManager.WriteLine($"{_floor.GetMerchantName()} smiles and waves goodbye as you leave.\n", ConsoleColor.Cyan);
+        _outputManager.WriteLine($"\t{_floor.GetMerchantName()} smiles and waves goodbye as you leave.\n");
     }
     private void StandardMerchantMeeting()
     {
@@ -97,7 +98,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
                     SellItems();
                     break;
                 case MerchantOptions.Exit:
-                    _outputManager.WriteLine($"\nA pleasure as always, {_player.Name}\n", ConsoleColor.Cyan);
+                    _outputManager.WriteLine($"\nA pleasure as always, {_player.Name}\n");
                     return;
             }
         }
@@ -113,7 +114,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         }
 
         _outputManager.WriteLine();
-        var item = SelectItem("\n\tSelect an item to purchase", 1.25M, items);
+        var item = SelectItem("Select an item to purchase", 1.25M, items);
 
         if (item == null)
         {
@@ -144,7 +145,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         }
 
         _outputManager.WriteLine();
-        var item = SelectItem("\n\tSelect an item to sell", 0.75M, items);
+        var item = SelectItem("Select an item to sell", 0.75M, items);
        
         if (item == null)
         {
@@ -177,7 +178,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         }
 
         _outputManager.WriteLine();
-        var choice = SelectItem("\n\tSelect an item to purify", 0.5M, items);
+        var choice = SelectItem("Select an item to purify", 0.5M, items);
 
         if (choice == null)
         {
@@ -207,7 +208,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         }
 
         _outputManager.WriteLine();
-        var choice = SelectItem("\n\tSelect an item to reforge.", 0.33M, items);
+        var choice = SelectItem("Select an item to reforge.", 0.33M, items);
 
         if (choice == null)
         {
@@ -217,11 +218,11 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         {
             try
             {
-                _outputManager.WriteLine($"\nCURRENT STATS {GetItemStats(choice)} |", ConsoleColor.Cyan);
+                _outputManager.WriteLine($"\nCURRENT STATS {ColorfulToStringHelper.GetItemStats(choice)} |", ConsoleColor.Cyan);
 
                 choice.Reforge();
                 _outputManager.WriteLine($"\n{choice.Name} has been reforged!");
-                _outputManager.WriteLine($"NEW STATS {GetItemStats(choice)} |", ConsoleColor.Cyan);
+                _outputManager.WriteLine($"NEW STATS {ColorfulToStringHelper.GetItemStats(choice)} |", ConsoleColor.Cyan);
             }
             catch (ItemReforgeException ex)
             {
@@ -243,7 +244,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         }
 
         _outputManager.WriteLine();
-        var choice = SelectItem("\n\tSelect an item to enchant", 1.5M, items);
+        var choice = SelectItem("Select an item to enchant", 1.5M, items);
 
         if (choice == null)
         {
@@ -253,10 +254,10 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         {
             try
             {
-                _outputManager.WriteLine($"\nCURRENT STATS | LVL: {choice.RequiredLevel}{GetItemStats(choice)} |", ConsoleColor.Cyan);
+                _outputManager.WriteLine($"\nCURRENT STATS | LVL: {choice.RequiredLevel}{ColorfulToStringHelper.GetItemStats(choice)} |", ConsoleColor.Cyan);
                 choice.Enchant();
                 _outputManager.WriteLine($"\n{choice.Name} has been enchanted!", ConsoleColor.Green);
-                _outputManager.WriteLine($"NEW STATS | LVL: {choice.RequiredLevel}{GetItemStats(choice)} |", ConsoleColor.Cyan);
+                _outputManager.WriteLine($"NEW STATS | LVL: {choice.RequiredLevel}{ColorfulToStringHelper.GetItemStats(choice)} |", ConsoleColor.Cyan);
             }
             catch (ItemEnchantmentException ex)
             {
@@ -269,30 +270,10 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
     {
         return _inputManager.SelectFromList(
             items,
-            i => $"{i.Name} - {i.Value * valueMultiplier} [DUR: {i.Durability}{GetItemStats(i)}]",
+            i => ColorfulToStringHelper.ItemStatsString(i, valueMultiplier),
             prompt,
-            i => GetItemColor(i)
+            i => ColorfulToStringHelper.GetItemColor(i)
         );
-    }
-    private static string GetItemStats(Item item)
-    {
-        return item switch
-        {
-            Weapon weapon => $" | ATK: {weapon.AttackPower}",
-            Armor armor => $" | DEF: {armor.DefensePower} | RES: {armor.Resistance}",
-            Consumable consumable => $" | POW: {consumable.Power} | AFF: {consumable.ConsumableType}",
-            _ => ""
-        };
-    }
-    private static ConsoleColor GetItemColor(Item item)
-    {
-        return item switch
-        {
-            Weapon => ConsoleColor.Red,
-            Armor => ConsoleColor.Green,
-            Consumable => ConsoleColor.Blue,
-            _ => ConsoleColor.Yellow
-        };
     }
     private Dictionary<string, MerchantOptions> GetMenuOptions()
     {

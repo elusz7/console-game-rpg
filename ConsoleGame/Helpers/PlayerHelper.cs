@@ -1,4 +1,5 @@
 ﻿using ConsoleGame.GameDao;
+using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Managers;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
@@ -33,7 +34,7 @@ public class PlayerHelper(InputManager inputManager, OutputManager outputManager
             throw new InvalidOperationException("No characters available for adventuring.");
         }
 
-        var selection = SelectPlayer("\n\tSelect a character to play with:", availableCharacters);
+        var selection = SelectPlayer("Select a character to play with", availableCharacters);
 
         if (selection == null)
         {
@@ -53,19 +54,8 @@ public class PlayerHelper(InputManager inputManager, OutputManager outputManager
             players,
             p => $"{p.Name} [Level {p.Level} {p.Archetype.Name}]",
             prompt,
-            i => GetPlayerColor(i)
+            i => ColorfulToStringHelper.GetArchetypeColor(i.Archetype)
         );
-    }
-    private static ConsoleColor GetPlayerColor(Player player)
-    {
-        return player.Archetype.Name switch
-        {
-            "Warrior" => ConsoleColor.Red,
-            "Bruiser" => ConsoleColor.Magenta,
-            "Rogue" => ConsoleColor.Blue,
-            "Mage" => ConsoleColor.Green,
-            _ => ConsoleColor.Yellow
-        };
     }
     private static void LevelUpPlayer(Player player)
     {

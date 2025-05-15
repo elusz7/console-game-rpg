@@ -1,4 +1,5 @@
 ﻿using ConsoleGame.GameDao;
+using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGameEntities.Models.Items;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 

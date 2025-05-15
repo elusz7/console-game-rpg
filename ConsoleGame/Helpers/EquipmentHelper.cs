@@ -1,4 +1,5 @@
-﻿using ConsoleGame.Managers;
+﻿using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGame.Managers;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Entities;
@@ -55,7 +56,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
         _outputManager.WriteLine("\nCurrent Equipment: ");
         foreach (var item in equipment)
         {
-            _outputManager.WriteLine($"{item.Name}{GetArmorType(item)} [DUR: {item.Durability}{GetItemStats(item)}]", GetItemColor(item));
+            _outputManager.WriteLine(ColorfulToStringHelper.ItemStatsString(item), ColorfulToStringHelper.GetItemColor(item));
         }
     }
     private void UnequipItem(Player player)
@@ -67,7 +68,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
         }
 
         _outputManager.WriteLine();
-        var unequippedItem = SelectItem("Select an item to unequip: ", player.Equipment);
+        var unequippedItem = SelectItem("Select an item to unequip", player.Equipment);
         
         if (unequippedItem == null)
         {
@@ -93,7 +94,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
         }
 
         _outputManager.WriteLine();
-        var selectedItem = SelectItem("Select an item to equip: ", availableItems);
+        var selectedItem = SelectItem("Select an item to equip", availableItems);
 
         if (selectedItem == null)
         {
@@ -113,7 +114,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
             _outputManager.WriteLine();
         }
     }
-    private void UseConsumable(IPlayer player)
+    private void UseConsumable(Player player)
     {
         var consumables = player.Inventory.Items.Where(i => i is Consumable).ToList();
 
@@ -124,11 +125,12 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
         }
 
         _outputManager.WriteLine();
-        var item = SelectItem("Select a consumable to use:", consumables);
+        var item = SelectItem("Select a consumable to use", consumables);
 
         if (item == null)
         {
             _outputManager.WriteLine("\nConsumable selection cancelled.");
+            return;
         }
         else if (item is Consumable consumable)
         {
@@ -136,7 +138,14 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
             {
                 case ConsumableType.Durability:
                     _outputManager.WriteLine();
-                    var target = SelectItem("Select an item to increase durability", [.. player.Inventory.Items.Where(i => i is Armor || i is Weapon)]);
+                    var items = player.Inventory.Items.Where(i => i is Armor || i is Weapon).ToList();
+
+                    if (items.Count == 0)
+                    {
+                        _outputManager.WriteLine($"\nNo items available to use {consumable.Name} on.", ConsoleColor.Red);
+                    }
+
+                    var target = SelectItem("Select an item to increase durability", items);
 
                     if (target == null)
                     {
@@ -151,44 +160,19 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
                     break;
             }
         }
+        
+        OutputActionItems(player);
     }
     private Item? SelectItem(string prompt, List<Item> items)
     {
         return _inputManager.SelectFromList(
             items,
-            i => $"{i.Name}{GetArmorType(i)} [DUR: {i.Durability}{GetItemStats(i)}]",
+            i => ColorfulToStringHelper.ItemStatsString(i),
             prompt,
-            i => GetItemColor(i)
+            i => ColorfulToStringHelper.GetItemColor(i)
         );
     }
-    private static string GetItemStats(IItem item)
-    {
-        return item switch
-        {
-            Weapon weapon => $" | ATK: {weapon.AttackPower}",
-            Armor armor => $" | DEF: {armor.DefensePower} | RES: {armor.Resistance}",
-            Consumable consumable => $" | POW: {consumable.Power} | AFF: {consumable.ConsumableType}",
-            _ => ""
-        };
-    }
-    private static string GetArmorType(IItem item)
-    {
-        return item switch
-        {
-            Armor armor => $" ({armor.ArmorType})",
-            _ => ""
-        };
-    }
-    private static ConsoleColor GetItemColor(IItem item)
-    {
-        return item switch
-        {
-            Weapon => ConsoleColor.Red,
-            Armor => ConsoleColor.Green,
-            Consumable => ConsoleColor.Blue,
-            _ => ConsoleColor.Yellow
-        };
-    }
+    
     private void OutputActionItems(Player player)
     {
         // SortedList auto-orders by key and avoids Dictionary's duplicate key issue

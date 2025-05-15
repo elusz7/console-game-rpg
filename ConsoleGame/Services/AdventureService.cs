@@ -181,7 +181,7 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
         }
 
         _outputManager.WriteLine();
-        var selection = _inputManager.SelectFromList(monsters, m => m.Name, "\nSelect a monster to examine");
+        var selection = _inputManager.SelectFromList(monsters, m => m.Name, "Select a monster to examine");
 
         if (selection == null)
         {

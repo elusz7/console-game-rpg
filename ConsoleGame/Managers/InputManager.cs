@@ -2,6 +2,7 @@
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
+using ConsoleGame.Helpers.DisplayHelpers;
 
 namespace ConsoleGame.Managers;
 public class InputManager(OutputManager outputManager)
@@ -189,7 +190,7 @@ public class InputManager(OutputManager outputManager)
             _outputManager.Clear();
         }
     }
-    public T? PaginateNames<T>(List<T> list, Func<T, string> format, string? tType = null, string? purpose = null, bool allowSelection = false, bool clearScreen = true)
+    public T? PaginateWithFunction<T>(List<T> list, Func<T, string> format, string? tType = null, string? purpose = null, bool allowSelection = false, bool clearScreen = true)
     {
         const int pageSize = 9;
         int currentPage = 0;
@@ -274,7 +275,7 @@ public class InputManager(OutputManager outputManager)
             _outputManager.WriteLine(display, color);
         }
 
-        string fullPrompt = $"{prompt} (-1 to cancel): ";
+        string fullPrompt = $"\n\t{prompt} (-1 to cancel): ";
         int choice = ReadInt(fullPrompt, items.Count, true);
 
         return choice == -1 ? default : items[choice - 1];

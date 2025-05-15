@@ -3,8 +3,12 @@ using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
+using ConsoleGame.Managers;
+using ConsoleGameEntities.Interfaces;
+using ConsoleGameEntities.Exceptions;
+using System.Numerics;
 
-namespace ConsoleGame.Managers;
+namespace ConsoleGame.Helpers.DisplayHelpers;
 
 public static class ColorfulToStringHelper
 {
@@ -99,27 +103,105 @@ public static class ColorfulToStringHelper
         _output.Write($"\tHealth: {archetype.HealthBase}, Attack: {archetype.AttackBonus}, Magic: {archetype.MagicBonus}, Defense: {archetype.DefenseBonus}, Resistance: {archetype.ResistanceBonus}, Speed: {archetype.Speed}");
     }
 
-    private static ConsoleColor GetItemColor(Item item) => item switch
+    public static ConsoleColor GetItemColor(Item item) => item switch
     {
         Weapon => ConsoleColor.Red,
         Armor => ConsoleColor.Green,
-        Consumable => ConsoleColor.Yellow,
-        _ => ConsoleColor.White
-    };
-
-    private static ConsoleColor GetSkillColor(Skill skill) => skill.SkillType switch
-    {
-        "MartialSkill" => ConsoleColor.Red,
-        "MagicSkill" => ConsoleColor.Blue,
-        "SupportSkill" => ConsoleColor.Green,
-        "UltimateSkill" => ConsoleColor.Magenta,
+        Consumable => ConsoleColor.Blue,
         _ => ConsoleColor.Yellow
     };
 
-    private static ConsoleColor GetArchetypeColor(Archetype archetype) => archetype.ArchetypeType switch
+    public static ConsoleColor GetSkillColor(Skill skill) => skill.SkillCategory switch
+    {
+        SkillCategory.Basic => ConsoleColor.Red,
+        SkillCategory.Support => ConsoleColor.Blue,
+        SkillCategory.Ultimate => ConsoleColor.Green,
+        _ => ConsoleColor.Yellow
+    };
+
+    public static ConsoleColor GetArchetypeColor(Archetype archetype) => archetype.ArchetypeType switch
     {
         ArchetypeType.Martial => ConsoleColor.Red,
         ArchetypeType.Magical => ConsoleColor.Blue,
         _ => ConsoleColor.White
     };
+
+    public static string ItemStatsString(Item item, decimal? valueMultiplier = null)
+    {
+        if (valueMultiplier != null) 
+            return $"{item.Name}{GetArmorType(item)} - {item.Value * valueMultiplier:0.00} [DUR: {item.Durability}{GetItemStats(item)}]";
+
+        return $"{item.Name}{GetArmorType(item)} [DUR: {item.Durability}{GetItemStats(item)}]";
+    }
+    public static string SkillStatsString(Player player, Skill skill)
+    {
+        return $"{skill.Name} [power: {skill.Power}, cost: {skill.Cost}, cooldown: {skill.Cooldown}, {GetTargets(skill)}{GetSupportStat(skill)}]{WaitingStats(player, skill)}";
+    }
+    public static string GetItemStats(Item item)
+    {
+        return item switch
+        {
+            Weapon weapon => $" | ATK: {weapon.AttackPower}",
+            Armor armor => $" | DEF: {armor.DefensePower} | RES: {armor.Resistance}",
+            Consumable consumable => $" | POW: {consumable.Power} | AFF: {consumable.ConsumableType}",
+            _ => ""
+        };
+    }
+    private static string GetArmorType(Item item)
+    {
+        return item switch
+        {
+            Armor armor => $" ({armor.ArmorType})",
+            _ => ""
+        };
+    }
+    private static string GetTargets(Skill skill)
+    {
+        return skill.TargetType switch
+        {
+            TargetType.Self => "targets yourself",
+            TargetType.SingleEnemy => "targets a single enemy",
+            TargetType.AllEnemies => "targets all enemies in room",
+            _ => throw new InvalidTargetException("Invalid target option on skill")
+        };
+    }
+    private static string GetSupportStat(Skill skill)
+    {
+        if (skill is SupportSkill supportSkill)
+        {
+            return $", Affects {supportSkill.StatAffected}";
+        }
+
+        return "";
+    }
+    private static string SkillResourceNeeded(Player player, Skill skill)
+    {
+        int deficit = skill.Cost - player.Archetype.CurrentResource;
+
+        if (deficit > 0)
+        {
+            return $" {player.Archetype.ResourceName} NEEDED ({deficit})";
+        }
+
+        return "";
+    }
+    private static string SkillTurnsNeeded(Skill skill)
+    {
+        int turns = Math.Max(0, skill.Cooldown - skill.ElapsedTime);
+        return turns > 0 ? $"({turns} TURNS UNTIL READY)" : "";
+    }
+    public static string WaitingStats(Player player, Skill skill)
+    {
+        var parts = new List<string> ();
+
+        var resourceNeeded = SkillResourceNeeded(player, skill);
+        if (!string.IsNullOrWhiteSpace(resourceNeeded))
+            parts.Add(resourceNeeded);
+
+        var turnsNeeded = SkillTurnsNeeded(skill);
+        if (!string.IsNullOrWhiteSpace(turnsNeeded))
+            parts.Add(turnsNeeded);        
+
+        return parts.Count == 0 ? "" : string.Join(" ", parts);
+    }
 }

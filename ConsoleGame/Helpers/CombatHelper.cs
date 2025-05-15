@@ -1,4 +1,5 @@
-﻿using ConsoleGame.Managers;
+﻿using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGame.Managers;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
@@ -22,7 +23,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
 
     private bool tryEquipWeapon = true;
 
-    public void CombatRunner(IPlayer player, List<Monster> monsters)
+    public void CombatRunner(Player player, List<Monster> monsters)
     {
         tryEquipWeapon = true;
 
@@ -61,6 +62,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
                         if (monster.CurrentHealth > 0)
                         {
                             monster.Attack(player);
+                            _outputManager.WriteLine();
                             OutputActionItems(player, aliveMonsters);
                         }
                     }
@@ -93,7 +95,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
             _outputManager.WriteLine("You have died. Game over.", ConsoleColor.Red);
         }
     }
-    private void PlayerCombatTurn(IPlayer player, List<Monster> validTargets)
+    private void PlayerCombatTurn(Player player, List<Monster> validTargets)
     {
         _outputManager.WriteLine($"\nYour turn! You have {player.CurrentHealth} health and {player.Archetype.CurrentResource} {player.Archetype.ResourceName}.\n", ConsoleColor.Green);
         while (true)
@@ -134,7 +136,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
             }
         }
     }
-    private void OutputActionItems(IPlayer player, List<Monster> monsters)
+    private void OutputActionItems(Player player, List<Monster> monsters)
     {
         // SortedList auto-orders by key and avoids Dictionary's duplicate key issue
         var actions = new SortedList<long, string>();
@@ -168,7 +170,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
             monster.ClearActionItems();
         }
     }
-    private static void ElapseTime(IPlayer player, List<Monster> monsters)
+    private static void ElapseTime(Player player, List<Monster> monsters)
     {
         foreach (var monster in monsters)
         {
@@ -198,7 +200,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
             }
         }
     }
-    private bool Attack(IPlayer player, List<Monster> targets)
+    private bool Attack(Player player, List<Monster> targets)
     {
         _outputManager.WriteLine();
         var target = targets.Count == 1 ? targets[0]
@@ -221,29 +223,39 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
         }
         catch (EquipmentException)
         {
-            _outputManager.WriteLine("\nYou cannot attack with your bare hands!\n", ConsoleColor.Red);
+            _outputManager.WriteLine("You cannot attack with your bare hands!\n", ConsoleColor.Red);
 
             if (tryEquipWeapon)
                 EquipWeapon(player);
             return false;
         }
     }
-    private bool UseSkill(IPlayer player, List<Monster> targets)
+    private bool UseSkill(Player player, List<Monster> targets)
     {
-        var availableSkills = player.Archetype.Skills
+        var allSkills = player.Archetype.Skills
                 .Where(s => s.RequiredLevel <= player.Level)
-                .Where(s => s.Cost <= player.Archetype.CurrentResource)
-                .Where(s => !s.IsOnCooldown)
                 .ToList() ?? [];
 
-        if (availableSkills.Count == 0)
+        var usableSkills = allSkills
+                .Where(s => s.Cost <= player.Archetype.CurrentResource)
+                .Where(s => !s.IsOnCooldown)
+                .Where(s => s is not UltimateSkill).ToList();
+        usableSkills.AddRange(allSkills.Where(s => s is UltimateSkill ult && ult.IsReady));
+
+        var waitingSkills = allSkills
+                .Where(s => s.Cost > player.Archetype.CurrentResource || s.IsOnCooldown)
+                .Where(s => s.Cost <= player.Archetype.MaxResource)
+                .Where(s => s is not UltimateSkill).ToList();
+        waitingSkills.AddRange(allSkills.Where(s => s is UltimateSkill ult && !ult.IsReady));
+
+        if (usableSkills.Count == 0)
         {
             _outputManager.WriteLine("\nNo skills available to use currently.\n", ConsoleColor.Red);
             return false;
         }
 
         _outputManager.WriteLine();
-        var skill = SelectSkill(availableSkills);
+        var skill = SelectSkill(player, usableSkills, waitingSkills);
         _outputManager.WriteLine();
 
         if (skill == null)
@@ -279,6 +291,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
         }
         catch (MonsterDeathException)
         {
+            skill.Reset(); //if monster died, the skill was still used
             return true;
         }
         catch (Exception ex)
@@ -289,15 +302,17 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
 
         if(skill.SkillCategory == SkillCategory.Support)
         {
-            if (_inputManager.ReadString("You have used a support skill. You may make an attack if you wish (y/n): ", ["y", "n"]) == "y")
+            if (_inputManager.ReadString($"You may also make an attack if you wish (y/n): ", ["y", "n"]) == "y")
             {
                 Attack(player, targets);
+                return true;
             }
+            _outputManager.WriteLine();
         }
 
         return true;
     }
-    private bool UseConsumable(IPlayer player)
+    private bool UseConsumable(Player player)
     {
         var availableConsumables = player.Inventory.Items.OfType<Consumable>().ToList();
 
@@ -349,14 +364,23 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
             _ => ConsoleColor.DarkRed
         );
     }
-    private Skill? SelectSkill(List<Skill> skills)
+    private Skill? SelectSkill(Player player, List<Skill> usableSkills, List<Skill> waitingSkills)
     {
-        return _inputManager.SelectFromList(
-            skills,
-            s => $"{s.Name} [power: {s.Power}, cost: {s.Cost}, skillType: {s.SkillType}, targets: {s.TargetType}]",
-            "Select a skill",
-            s => ConsoleColor.Green
-        );
+        for (int i = 0; i < usableSkills.Count; i++)
+        {
+            _outputManager.WriteLine($"{i + 1}. {ColorfulToStringHelper.SkillStatsString(player, usableSkills[i])}", ColorfulToStringHelper.GetSkillColor(usableSkills[i]));
+        }
+        for (int k = 0; k < waitingSkills.Count; k++)
+        {
+            _outputManager.WriteLine($"---{ColorfulToStringHelper.SkillStatsString(player, waitingSkills[k])}", ConsoleColor.DarkRed);
+        }
+
+        int index = _inputManager.ReadInt("\n\tSelect a skill to use (-1 to cancel): ", usableSkills.Count, true) - 1;
+
+        if (index < 0)
+            return null;
+        
+        return usableSkills[index];
     }
     private Consumable? SelectConsumable(List<Consumable> consumables)
     {
@@ -385,15 +409,15 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
             _ => ""
         };
     }
-    private void EquipWeapon(IPlayer player)
+    private void EquipWeapon(Player player)
     {
         var availableWeapons = player.Inventory.Items
-                .Where(i => i.ItemType.Equals(ItemType.Weapon) && i.RequiredLevel <= player.Level && i.Durability > 0)
+                .Where(i => i is Weapon && i.RequiredLevel <= player.Level && i.Durability > 0)
                 .ToList();
 
         if (availableWeapons.Count == 0)
         {
-            _outputManager.WriteLine("\nYou have no weapons to equip.\n", ConsoleColor.Red);
+            _outputManager.WriteLine("You have no weapons to equip.\n", ConsoleColor.Red);
             tryEquipWeapon = false;
             return;
         }
@@ -417,5 +441,5 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
             _outputManager.WriteLine($"\n{ex.Message}\n", ConsoleColor.Red);
 
         }
-    }
+    }    
 }
