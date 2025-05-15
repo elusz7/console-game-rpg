@@ -5,11 +5,349 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Migrations
 {
-    public partial class SeedSkills2 : Migration
+    public partial class InitialSeedData : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql("DELETE FROM Skills");
+            migrationBuilder.Sql("SET IDENTITY_INSERT Rooms ON;");
+            migrationBuilder.InsertData(
+                table: "Rooms",
+                columns: new[] { "Id", "Name", "Description", "NorthId", "SouthId", "EastId", "WestId" },
+                values: new object[,]
+                {
+                {1, "Entrance", "Dust-choked air hangs heavy in this crumbling threshold where ivy creeps through fractured stone.", 50, null, 29, null},
+                {2, "Alchemy Lab", "Shattered glass and rusted vials litter the worktables of a forgotten alchemist’s sanctum.", 19, 7, null, null},
+                {3, "Archives", "Moldy scrolls and torn tomes lie scattered in sagging shelves, whispering secrets no one hears.", 26, 48, null, null},
+                {4, "Armorer’s Workshop", "Broken tools and half-finished helms gather dust where once the clang of metal rang.", 47, null, 50, null},
+                {5, "Armory", "Racks stand empty or rusted, the last weapons long looted or rotted into disrepair.", null, null, 21, null},
+                {6, "Observatory", "A cracked lens faces the heavens, its dome roof letting in rain and moonlight alike.", null, 28, null, 31},
+                {7, "Bakery", "Crumbling ovens and petrified loaves remain in this kitchen where warmth once thrived.", 2, 57, 46, null},
+                {8, "Ballroom", "A grand hall of cracked marble where shadows waltz to music only they can hear.", null, 46, 56, null},
+                {9, "Banner Hall", "Faded, tattered banners droop from beams above, the symbols of fallen houses barely legible.", 63, 37, 18, null},
+                {10, "Barracks", "Empty bunks and discarded armor echo with the ghostly silence of long-gone soldiers.", 11, null, 14, 45},
+                {11, "Bathhouse", "Mildewed tiles and stagnant water mark this once-luxurious retreat for nobility.", null, 10, null, 59},
+                {12, "Parapets", "Wind howls over broken stone, where sentinels once stood watch against unseen foes.", 44, null, null, null},
+                {13, "Forge", "All that's left of a once-blazing furnace are cold coals and the soot-stained anvil where master smiths once shaped weapons and armor.", 56, null, 20, null},
+                {14, "Blood Altar", "Dried stains mark the cracked stone of an altar no prayers have reached in ages.", null, 24, 27, 10},
+                {15, "Buttery", "Empty casks lie broken and rotted, their contents long spoiled or stolen.", null, null, 43, 21},
+                {16, "Chapel", "Pews are overturned and the altar shattered, yet a strange hush still clings to the air.", null, 54, 57, null},
+                {17, "Council Chamber", "Chairs are askew around a dust-covered table where silence reigns over forgotten councils.", null, 49, null, 58},
+                {18, "Counting House", "Ledger books lay open in moldy decay, their ink run into unreadable trails.", null, 33, null, 9},
+                {19, "Cursed Hall", "The air is colder here, and your footsteps echo too loudly, as if watched by unseen eyes.", null, 2, null, null},
+                {20, "Divination Room", "Cracked crystal balls and scattered cards suggest omens too dark to bear.", 60, 59, null, 13},
+                {21, "Dungeon", "Chains hang loosely from the damp, mossy walls of cells that remember every scream.", 52, 36, 15, 5},
+                {22, "Gallery of Heroes", "Portraits gaze blankly, their faces faded and cracked beneath centuries of dust.", 28, null, 30, null},
+                {23, "Garden Atrium", "Vines choke the statues and cracked fountains of a courtyard nature has reclaimed.", null, null, 39, null},
+                {24, "Gatehouse", "The portcullis hangs at a crooked angle, groaning in the wind like a warning.", 14, null, null, 62},
+                {25, "Great Hall", "Once a place of feasts, now an echoing ruin filled with shattered goblets and broken chairs.", 38, null, null, 43},
+                {26, "Guardroom", "Empty weapon racks and a stale odor linger where sentries once gathered.", null, 3, null, 64},
+                {27, "Hall of Mirrors", "Most mirrors are shattered, reflecting only fragments of those who dare pass through.", 29, null, 41, 14},
+                {28, "Hall of Tapestries", "Moths feast on decaying fabric, the heroic scenes now just silhouettes and dust.", 6, 22, null, null},
+                {29, "Kennels", "Cracked bones and rotting leashes remain in these empty cages.", null, 27, 53, 1},
+                {30, "Kitchen", "The hearth is cold, and overturned pots lie like silent witnesses to a hasty departure.", null, null, 40, 22},
+                {31, "Lady's Chamber", "Perfume bottles sit empty on a dust-coated vanity beneath a broken mirror.", null, null, 6, 54},
+                {32, "Larder", "Only cobwebs and gnawed bones remain in the rotted shelving of this dark pantry.", 34, 53, 63, null},
+                {33, "Laundry Room", "Tattered linens and rusted tubs tell of chores abandoned in haste.", 18, null, 42, 37},
+                {34, "Leyline Nexus", "A flicker of residual magic pulses in the cracked runes etched into the stone floor.", null, 32, null, 61},
+                {35, "Library", "Books decay on splintered shelves, their spines curling like old bark.", 46, null, 44, null},
+                {36, "Lord's Bedchamber", "A grand bed lies collapsed under moth-eaten sheets, its canopy torn by time.", 21, null, null, null},
+                {37, "Map Room", "Charts are scattered across the floor, faded and curling with age and neglect.", 9, null, 33, null},
+                {38, "Mirror Prison", "Each mirror hums faintly, the glass fogged as though breathing from within.", 42, 25, null, null},
+                {39, "Music Room", "A broken harp and shattered lute rest beneath a collapsed chandelier.", 45, 40, null, 23},
+                {40, "Nursery", "Dolls stare lifelessly from moldy cribs, their eyes cracked and smiles faded.", 39, null, null, 30},
+                {41, "Pantry", "Sacks long split open leave trails of dust and rodent droppings across the stone.", null, 52, null, 27},
+                {42, "Portal Room", "The runes around the archway flicker faintly, yearning for power that no longer flows.", null, 38, null, 33},
+                {43, "Runestone Chamber", "Stones lie dark and inert, their glyphs worn beyond recognition.", null, null, 25, 15},
+                {44, "Sanctum of Light", "The stained glass windows are shattered, their once-holy glow now dim and scattered.", null, 12, null, 35},
+                {45, "Scullery", "A rusted pump and piles of broken dishware mark this servant’s corner.", null, 39, 10, null},
+                {46, "Servants’ Quarters", "Straw mattresses rot atop rusted frames in these forgotten sleeping quarters.", 8, 35, null, 7},
+                {47, "Shadow Sanctum", "Even in daylight, this room remains dim, its corners alive with creeping dread.", null, 4, 49, 60},
+                {48, "Small, Rundown Shrine", "Time has cracked the idol, but offerings of withered flowers remain at its feet.", 3, 60, null, null},
+                {49, "Siege Workshop", "Catapult parts lie rusting beneath tarps, as if waiting for a war that never came.", 17, null, null, 47},
+                {50, "Solar", "Once a cozy retreat, this room is now a sunlit shell filled with dust motes and silence.", null, 1, null, 4},
+                {51, "Stables", "The scent of old hay lingers in empty stalls where hooves once thundered.", null, 56, null, null},
+                {52, "Storerooms", "Barrels and crates sit unopened, their contents long spoiled or pillaged.", 41, 21, null, null},
+                {53, "Temple of the Ancients", "Time has worn away the carvings, but a weight of reverence still clings to the stones.", 32, null, null, 29},
+                {54, "Amphitheater", "Crumbling steps surround a weed-choked stage where no voice has echoed in years.", 16, null, 31, null},
+                {55, "Torture Chamber", "Chains still hang from the walls, and a stained table sits center-stage in silence.", null, 61, null, null},
+                {56, "Treasury", "Broken lockboxes lie looted and overturned, their treasures long since stolen.", 51, 13, null, 8},
+                {57, "Vault", "The iron door is ajar, its interior picked clean or hiding one last secret.", 7, null, null, 16},
+                {58, "Vault of Secrets", "Whispering winds circle this sealed chamber, as if guarding truths better left buried.", null, null, 17, null},
+                {59, "War Room", "A strategy table lies overturned, figurines scattered like the bones of fallen kings.", 20, null, 11, null},
+                {60, "Watchtower", "From the shattered windows, the lands below look just as desolate.", 48, 20, 47, null},
+                {61, "Weather Room", "The air is still charged here, and strange wind patterns rustle parchments on the floor.", 55, null, 34, null},
+                {62, "Wizard's Tower", "Books float in midair or lie in ash heaps—residue of a spell gone horribly wrong.", null, null, 24, null},
+                {63, "Workshop", "Tools hang untouched on rusted hooks, each one a memory of the craftsman who left.", null, 9, null, 32},
+                {64, "Greenhouse", "Overgrowth has claimed every inch, broken glass letting in weeds and wildflowers alike.", null, null, 26, null}
+                });
+            migrationBuilder.Sql("SET IDENTITY_INSERT Rooms OFF;");
+
+            migrationBuilder.Sql("SET IDENTITY_INSERT Archetypes ON;");
+            migrationBuilder.InsertData(
+                table: "Archetypes",
+                columns: new[] { "Id", "Name", "Description", "ArchetypeType", "HealthBase", "AttackBonus", "AttackMultiplier", "MagicBonus", "MagicMultiplier", "DefenseBonus", "DefenseMultiplier", "Speed", "SpeedMultiplier", "ResourceName", "MaxResource", "ResourceMultiplier", "RecoveryRate", "RecoveryGrowth", "ResistanceBonus", "ResistanceMultiplier" },
+                values: new object[,]
+                {
+                  //   Id  Name       Description                                                                                      ArchetypeType         Health  AtkB  AtkM   MagB  MagM   DefB  DefM   Spd  SpdM   Resource    MaxRes  ResM   RecRate  RecGrow
+                    { 1,  "Warrior",  "The human equivalent of a Swiss Army knife—predictable, dependable, mildly threatening.",      0,  10,     3,    0.4M,  0,    0M,    2,    0.6M,  2,   0.2M,  "Stamina",      5,      0.3M,  2,        2 , 2, 0.3M},
+                    { 2,  "Bruiser","Muscle-first problem-solver. Brain sold separately.",                                          0,  12,     3,    0.6M,  0,    0M,    2,    0.2M,  1,   0.4M,  "Stamina",      4,      0.4M,  1,        2, 1, 0.2M },
+                    { 3,  "Rogue",    "Fast, sneaky, and slightly allergic to fair fights.",                                          0,   8,     2,    0.2M,  0,    0M,    3,    0.4M,  3,   0.6M,  "Stamina",       8,      0.5M,  1,        1, 3, 0.4M },
+                    { 4,  "Mage",     "Soft as a marshmallow, but throws lightning like Zeus with a grudge.",                        1,   6,     0,    0M,    3,    0.5M,  2,    0.2M,  3,   0.4M,  "Mana",       8,      0.5M,  1,        1, 3, 0.6M },
+                    { 5,  "Cleric",   "Can smite, heal, and guilt-trip—truly holy triple threat.",                                   1,   8,     0,    0M,    2,    0.3M,  3,    0.6M,  1,   0.2M,  "Mana",     5,      0.3M,  2,        2, 2, 0.5M }
+                });
+            migrationBuilder.Sql("SET IDENTITY_INSERT Archetypes OFF;");
+
+            migrationBuilder.Sql("DELETE FROM Monsters");
+
+            migrationBuilder.Sql("SET IDENTITY_INSERT Monsters ON;");
+            migrationBuilder.InsertData(
+            table: "Monsters",
+            columns: new[] { "Id", "Name", "Description", "Level", "MaxHealth", "ThreatLevel", "AggressionLevel", "DefensePower", "AttackPower", "DamageType", "Resistance", "MonsterType" },
+            values: new object[,]
+            {
+                // Level 1 - Low Threat
+                {1, "Goblin", "A small, quick creature with a mischievous streak and a crude blade.", 1, 6, 0, 7, 3, 7, 0, 2, "Monster"},
+                {2, "Zombie", "A slow-moving undead with an insatiable hunger for flesh.", 1, 12, 0, 3, 2, 5, 0, 3, "Monster"},
+                {3, "Skeleton", "A reanimated skeleton warrior wielding old weapons with eerie precision.", 1, 9, 0, 5, 4, 6, 0, 4, "Monster"},
+
+                // Level 1 - Medium Threat
+                {4, "Tunnel Spider", "A venomous spider that ambushes prey from the dark tunnels it calls home.", 1, 10, 1, 5, 4, 8, 0, 2, "Monster"},
+                {5, "Gnoll Scout", "A hyena-like humanoid that hunts in packs, using sharp weapons and speed.", 1, 8, 1, 6, 3, 9, 1, 3, "Monster"}, 
+
+                // Level 1 - High Threat
+                {6, "Dire Wolf", "A large, feral wolf with fangs sharp enough to tear armor apart.", 1, 14, 2, 8, 5, 10, 0, 3, "Monster"}, 
+
+                // Level 4 - Low Threat
+                {7, "Swamp Rat", "A giant rat that thrives in filth and swamps, surprisingly aggressive.", 4, 18, 0, 4, 5, 6, 0, 2, "Monster"},
+                {8, "Fire Beetle", "A beetle that glows with inner fire, sometimes igniting its foes.", 4, 15, 0, 5, 4, 6, 1, 4, "Monster"},
+                {9, "Ghoul", "An undead that paralyzes with its claws and feasts on the living.", 4, 16, 0, 3, 6, 6, 0, 3, "Monster"}, 
+
+                // Level 4 - Medium Threat
+                {10, "Banshee", "A wailing spirit that drains life and chills the soul with its voice.", 4, 22, 1, 6, 5, 9, 1, 4, "Monster"}, 
+
+                // Level 4 - High Threat
+                {11, "Hellhound", "A blazing canine from the underworld that burns with infernal fire.", 4, 28, 2, 7, 7, 12, 0, 6, "Monster"},
+
+                // Level 7 - Low Threat
+                {12, "Harpy", "A winged predator with a hypnotic song and sharp talons.", 7, 32, 0, 4, 6, 9, 1, 5, "Monster"},
+                {13, "Orc", "A brutal warrior driven by rage and brute strength.", 7, 28, 0, 5, 5, 10, 0, 3, "Monster"},
+                {14, "Animated Armor", "An enchanted suit of armor that patrols ancient ruins.", 7, 30, 0, 7, 8, 11, 1, 5, "Monster"}, 
+
+                // Level 7 - Medium Threat
+                {15, "Spectre", "An incorporeal ghost that saps life with every touch.", 7, 35, 1, 7, 6, 14, 1, 4, "Monster"},
+
+                // Level 7 - High Threat
+                {16, "Werewolf", "A savage beast cursed to transform under the moon and shred its prey.", 7, 45, 2, 8, 8, 16, 0, 6, "Monster"},
+
+                // Level 1 - Elite
+                {17, "Tiger", "A fearsome predator with unmatched agility and power.", 1, 20, 3, 10, 10, 13, 0, 5, "EliteMonster"},
+                {18, "Apprentice", "A novice spellcaster with surprising command over magic.", 1, 20, 3, 10, 5, 13, 1, 10, "EliteMonster"},
+                {19, "Kappa", "A trickster water spirit known for its martial skill and cunning.", 1, 20, 3, 10, 7, 13, 2, 7, "EliteMonster"},
+
+                // Level 4 - Elite
+                {20, "Sabretooth Tiger", "An ancient beast with long fangs and a thunderous roar.", 4, 35, 3, 14, 13, 17, 0, 8, "EliteMonster"},
+                {21, "Witch", "A cunning spellcaster with a deep knowledge of curses and illusions.", 4, 35, 3, 14, 8, 17, 1, 13, "EliteMonster"},
+                {22, "Tengu", "A mystical bird warrior that blends swordplay and magic.", 4, 35, 3, 14, 10, 17, 2, 10, "EliteMonster"},
+
+                // Level 7 - Elite
+                {23, "Weretiger", "A deadly shapeshifter with the strength of a beast and the mind of a hunter.", 7, 60, 3, 16, 25, 21, 0, 16, "EliteMonster"},
+                {24, "Coven Leader", "The head of a sinister coven, weaving powerful spells with deadly grace.", 7, 60, 3, 16, 16, 21, 1, 25, "EliteMonster"},
+                {25, "Yuki Onna", "A chilling spirit of winter, freezing her victims with a mere glance.", 7, 60, 3, 16, 20, 21, 2, 20, "EliteMonster"},
+
+                // Bosses
+                {26, "Shadowed Nogitsune", "A deceitful fox spirit cloaked in shadow and illusion.", 10, 100, 4, 22, 31, 27, 2, 31, "BossMonster" },
+                {27, "Ancient Lich", "A powerful undead sorcerer whose dark magic corrupts the air itself.", 10, 100, 4, 22, 28, 27, 1, 35, "BossMonster" },
+                {28, "Elder Vampire", "An ancient predator who thrives on blood and rules the night.", 10, 100, 4, 22, 35, 27, 0, 28, "BossMonster" }
+            });
+            migrationBuilder.Sql("SET IDENTITY_INSERT Monsters OFF;");
+
+            migrationBuilder.Sql("SET IDENTITY_INSERT Items ON;");
+            migrationBuilder.InsertData(
+            table: "Items",
+            columns: new[] { "Id", "Name", "Description", "Value", "Durability", "Weight", "RequiredLevel", "ItemType", "AttackPower", "DamageType", "DefensePower", "Resistance", "ArmorType", "Power", "ConsumableType" },
+            values: new object[,]
+            {
+                {1, "Sword", "A basic sword with a couple knicks in it", 5.94, 10, 3.62, 1, "Weapon", 5, 0, null, null, null, null, null},
+                {2, "Spear", "A basic spear that leaves splinters in your hands", 5.08, 10, 3.77, 1, "Weapon", 3, 0, null, null, null, null, null},
+                {3, "Axe", "A basic axe that's a little top heavy", 5.11, 10, 3.78, 1, "Weapon", 3, 0, null, null, null, null, null},
+                {4, "Bow", "A  basic bow with a fraying bowstring", 5.81, 10, 2.57, 1, "Weapon", 5, 0, null, null, null, null, null},
+                {5, "Rod", "A basic rod with a gem that's probably fake", 5.29, 10, 4.3, 1, "Weapon", 3, 1, null, null, null, null, null},
+                {6, "Scepter", "A basic scepter that doesn't even make you feel regal", 5.56, 10, 4.1, 1, "Weapon", 5, 1, null, null, null, null, null},
+                {7, "Staff", "A basic staff that looks more like a broom", 5.77, 10, 4.05, 1, "Weapon", 5, 1, null, null, null, null, null},
+                {8, "Wand", "A basic wand that's really just a stick from off the ground", 5.3, 10, 3.2, 1, "Weapon", 4, 1, null, null, null, null, null},
+                {9, "Falchion", " A single-edged chopping sword.", 15.83, 7, 5.83, 3, "Weapon", 10, 0, null, null, null, null, null},
+                {10, "Cutlass", "A curved blade ideal for close combat.", 16.91, 5, 6.19, 3, "Weapon", 12, 0, null, null, null, null, null},
+                {11, "Spatha", "A long, straight Roman sword.", 17.2, 6, 6.35, 3, "Weapon", 12, 0, null, null, null, null, null},
+                {12, "Javelin", "A light throwing spear, great for ranged attacks.", 15.41, 6, 5.99, 3, "Weapon", 10, 0, null, null, null, null, null},
+                {13, "Boar Spear", "A stout spear with a crossbar to stop charging foes.", 18.7, 9, 5.82, 3, "Weapon", 14, 0, null, null, null, null, null},
+                {14, "Leaf-Blade Spear", "A broad-headed spear, balanced for versatility.", 18.62, 8, 5.87, 3, "Weapon", 14, 0, null, null, null, null, null},
+                {15, "Hatchet", "A lightweight, one-handed axe useful for quick strikes.", 18.77, 8, 5.78, 3, "Weapon", 14, 0, null, null, null, null, null},
+                {16, "Woodcutter’s Axe", "Heavier than a hatchet, practical and robust.", 18.04, 9, 5.68, 3, "Weapon", 13, 0, null, null, null, null, null},
+                {17, "Blacksmith’s Hammer", "A sturdy, blunt weapon originally meant for forging.", 18.32, 9, 5.97, 3, "Weapon", 13, 0, null, null, null, null, null},
+                {18, "Shortbow", "Compact and fast, ideal for quick, close-range shots.", 18.75, 7, 6.02, 3, "Weapon", 14, 0, null, null, null, null, null},
+                {19, "Hunting Bow", "A simple wooden bow used for survival and tracking prey.", 17.87, 6, 6.17, 3, "Weapon", 13, 0, null, null, null, null, null},
+                {20, "Slingbow", "A primitive bow-sling hybrid for light, arcing shots.", 17.84, 7, 5.8, 3, "Weapon", 13, 0, null, null, null, null, null},
+                {21, "Willow Wand", "A slender wand crafted from willow, responsive to healing or water magic.", 16.72, 8, 6.15, 3, "Weapon", 11, 1, null, null, null, null, null},
+                {22, "Apprentice’s Rod", "A basic rod carved with beginner runes, used in training.", 17.96, 7, 5.62, 3, "Weapon", 13, 1, null, null, null, null, null},
+                {23, "Glimmering Scepter", "A polished silver scepter that faintly glows in moonlight.", 17.39, 8, 6.32, 3, "Weapon", 12, 1, null, null, null, null, null},
+                {24, "Driftwood Staff", "A crooked staff of sea-worn wood, favored by coastal mages.", 16.33, 5, 6.25, 3, "Weapon", 11, 1, null, null, null, null, null},
+                {25, "Sparkwand", "Flickers with small sparks; ideal for novice evocation magic.", 16.32, 5, 5.73, 3, "Weapon", 11, 1, null, null, null, null, null},
+                {26, "Longsword", "A balanced, versatile blade.", 39.71, 8, 8.81, 5, "Weapon", 22, 0, null, null, null, null, null},
+                {27, "Scimitar", "A curved, elegant slashing weapon.", 42.3, 6, 8.58, 5, "Weapon", 24, 0, null, null, null, null, null},
+                {28, "Gladius", "A short, powerful thrusting sword.", 45.94, 6, 8.8, 5, "Weapon", 27, 0, null, null, null, null, null},
+                {29, "Glaive", "A polearm with a sword-like blade for sweeping strikes.", 44.49, 6, 8.92, 5, "Weapon", 26, 0, null, null, null, null, null},
+                {30, "Trident", "A three-pronged spear used for both combat and ceremony.", 43.81, 9, 8.25, 5, "Weapon", 25, 0, null, null, null, null, null},
+                {31, "Pike", "A very long spear designed for reach and crowd control.", 45.97, 8, 8.35, 5, "Weapon", 27, 0, null, null, null, null, null},
+                {32, "Battleaxe", "A classic double-bladed axe designed for war.", 42.45, 9, 8.51, 5, "Weapon", 24, 0, null, null, null, null, null},
+                {33, "Warhammer", "Compact with a blunt head, ideal for breaking through armor.", 40.85, 7, 8.95, 5, "Weapon", 23, 0, null, null, null, null, null},
+                {34, "Bearded Axe", "A Norse-style axe with a hooked lower blade, great for hooking shields.", 40.67, 6, 7.58, 5, "Weapon", 23, 0, null, null, null, null, null},
+                {35, "Longbow", "Great range and power, requires strength and skill to use effectively.", 39.76, 8, 7.86, 5, "Weapon", 22, 0, null, null, null, null, null},
+                {36, "Recurve Bow", "Curved limbs for more power in a compact frame.", 39.83, 7, 8.28, 5, "Weapon", 22, 0, null, null, null, null, null},
+                {37, "Crossbow", "Easy to aim and shoot, trades speed for precision and power.", 39.59, 5, 7.69, 5, "Weapon", 22, 0, null, null, null, null, null},
+                {38, "Fireroot Wand", "Crafted from a tree struck by lightning; hums with residual heat.", 39.52, 6, 7.81, 5, "Weapon", 22, 1, null, null, null, null, null},
+                {39, "Engraved Rod", "Heavy rod inlaid with arcane script that pulses faintly with power.", 44.75, 9, 7.95, 5, "Weapon", 26, 1, null, null, null, null, null},
+                {40, "Sunmetal Scepter", "Forged from golden alloy, resonates with radiant energy.", 38.35, 5, 7.74, 5, "Weapon", 21, 1, null, null, null, null, null},
+                {41, "Spiritwood Staff", "Crafted from an ancient tree touched by fey spirits.", 38.47, 6, 7.74, 5, "Weapon", 21, 1, null, null, null, null, null},
+                {42, "Orb of Echoes", "A crystal orb set in a clawed base; amplifies voice and spell.", 39.71, 9, 8.94, 5, "Weapon", 22, 1, null, null, null, null, null},
+                {43, "Claymore", "A large, two-handed greatsword.", 86.39, 9, 11.74, 7, "Weapon", 40, 0, null, null, null, null, null},
+                {44, "Katana", "A finely crafted, razor-sharp sword.", 78.92, 6, 10.78, 7, "Weapon", 36, 0, null, null, null, null, null},
+                {45, "Tachi", "A longer, cavalry-style curved sword.", 91.44, 7, 10.68, 7, "Weapon", 43, 0, null, null, null, null, null},
+                {46, "Partisan", "A broad, winged spear designed to parry and thrust.", 87.93, 5, 11.14, 7, "Weapon", 41, 0, null, null, null, null, null},
+                {47, "Halberd", "A spear-axe hybrid with cutting, hooking, and stabbing potential.", 89.57, 5, 11.38, 7, "Weapon", 42, 0, null, null, null, null, null},
+                {48, "Yari", "A straight-bladed Japanese spear used for precise thrusts.", 87.98, 6, 10.75, 7, "Weapon", 41, 0, null, null, null, null, null},
+                {49, "Executioner’s Axe", "A massive, heavy axe with a wide blade for powerful cleaves.", 88.1, 9, 11.3, 7, "Weapon", 41, 0, null, null, null, null, null},
+                {50, "Maul", "A huge, sledge-like hammer used to smash enemies with sheer force.", 87.74, 5, 11.93, 7, "Weapon", 41, 0, null, null, null, null, null},
+                {51, "Spiked Mace", "Technically a hammer-type weapon, perfect for brutal, crushing blows.", 80.87, 7, 10.91, 7, "Weapon", 37, 0, null, null, null, null, null},
+                {52, "Composite Bow", "Made of layered materials, combining flexibility and power.", 79.22, 8, 11.38, 7, "Weapon", 36, 0, null, null, null, null, null},
+                {53, "Flatbow", "A wide-limbed bow known for stability and accuracy.", 82.5, 6, 11.46, 7, "Weapon", 38, 0, null, null, null, null, null},
+                {54, "Repeating Crossbow", "A rare, rapid-fire version with a loading mechanism.", 80.68, 6, 11.17, 7, "Weapon", 37, 0, null, null, null, null, null},
+                {55, "Runed Wand", "Carved with channeling glyphs for focused spellcasting.", 93.25, 6, 11.2, 7, "Weapon", 44, 1, null, null, null, null, null},
+                {56, "Voidstone Rod", "Made of obsidian-like stone; ideal for shadow or necrotic spells.", 79.07, 7, 11.11, 7, "Weapon", 36, 1, null, null, null, null, null},
+                {57, "Moonrise Scepter", "Emits a pale glow under moonlight, enhances illusion magic.", 91.45, 5, 11.77, 7, "Weapon", 43, 1, null, null, null, null, null},
+                {58, "Shaman’s Totem Staff", "Decorated with feathers and bones, connects to spirit realms.", 86.01, 5, 11.31, 7, "Weapon", 40, 1, null, null, null, null, null},
+                {59, "Orb of Resonance", "Amplifies divination and communication spells.", 79.02, 5, 11.55, 7, "Weapon", 36, 1, null, null, null, null, null},
+                {60, "Zweihander", "A massive, armor-breaking greatsword.", 150.51, 5, 14.54, 9, "Weapon", 58, 0, null, null, null, null, null},
+                {61, "Rapier", "A refined duelist’s weapon.", 148.08, 5, 15.63, 9, "Weapon", 57, 0, null, null, null, null, null},
+                {62, "Dao", "A curved sword with cultural and mystical roots.", 143.86, 6, 14.51, 9, "Weapon", 55, 0, null, null, null, null, null},
+                {63, "Lucerne Hammer", "A Swiss polearm combining a hammer, spike, and hook. Excellent against armor.", 146.05, 6, 15.67, 9, "Weapon", 56, 0, null, null, null, null, null},
+                {64, "Naginata", "A Japanese polearm with a curved blade, ideal for sweeping attacks and reach.", 152.82, 5, 15.6, 9, "Weapon", 59, 0, null, null, null, null, null},
+                {65, "Voulge", "A broad-bladed polearm similar to a cleaver, effective in both slashing and thrusting.", 144.04, 8, 15.51, 9, "Weapon", 55, 0, null, null, null, null, null},
+                {66, "Dane Axe", "A long-handled Viking axe, known for reach and deadly cuts.", 164.12, 8, 14.66, 9, "Weapon", 64, 0, null, null, null, null, null},
+                {67, "Bec de Corbin", "A polehammer with a spiked beak, perfect for armored foes.", 157.39, 5, 15.29, 9, "Weapon", 61, 0, null, null, null, null, null},
+                {68, "Labrys", "A ceremonial yet deadly double-headed axe from the Greek Amazons.", 162.14, 7, 14.85, 9, "Weapon", 63, 0, null, null, null, null, null},
+                {69, "Elven Warbow", "Elegant and magically enhanced for speed and precision.", 161.89, 5, 15.24, 9, "Weapon", 63, 0, null, null, null, null, null},
+                {70, "Stormpiercer", "A high-tension bow rumored to shoot with thunderous force.", 153.12, 7, 14.82, 9, "Weapon", 59, 1, null, null, null, null, null},
+                {71, "Runed Crossbow", "A finely crafted crossbow inscribed with runes for extra power.", 148.47, 6, 14.49, 9, "Weapon", 57, 1, null, null, null, null, null},
+                {72, "Wand of Stormcall", "Crackles with electricity; forged in a hurricane.", 148.6, 7, 14.76, 9, "Weapon", 57, 1, null, null, null, null, null},
+                {73, "Rod of the Depths", "Deep green and blue rod; forged in the oceanic abyss.", 143.76, 6, 15.39, 9, "Weapon", 55, 1, null, null, null, null, null},
+                {74, "Scepter of Authority", "Symbol of magical leadership, a true object of power.", 157.34, 7, 14.57, 9, "Weapon", 61, 1, null, null, null, null, null},
+                {75, "Celestial Staff", "Carved from starlight wood, aligns with radiant and astral magic.", 146.02, 6, 14.19, 9, "Weapon", 56, 1, null, null, null, null, null},
+                {76, "Orb of Chaos", "A swirling, shifting orb that draws out full magical ability.", 153.34, 9, 14.85, 9, "Weapon", 59, 1, null, null, null, null, null},
+                {77, "Bracers", "Simple leather bracers that offer limited defense for your forearms.", 5.51, 5, 5.1, 1, "Armor", null, null, 2, 1, 2, null, null},
+                {78, "Cloth Sleeves", "Light cloth sleeves, offering no real protection but easy to wear.", 5.47, 5, 5.43, 1, "Armor", null, null, 2, 1, 2, null, null},
+                {79, "Leather Armor", "Basic armor made of flexible leather. It won't stop a heavy blow, but it’s better than nothing.", 5.18, 5, 5.3, 1, "Armor", null, null, 2, 1, 1, null, null},
+                {80, "Padded Armor", "Thickly quilted fabric designed to absorb blows, but still leaves you vulnerable to piercing strikes.", 5.09, 5, 4.85, 1, "Armor", null, null, 1, 2, 1, null, null},
+                {81, "Cloth Hood", "A soft hood, more for warmth than protection, but it does help hide your face.", 5.02, 5, 5.38, 1, "Armor", null, null, 2, 1, 0, null, null},
+                {82, "Simple Helmet", "A basic helmet that covers your head, but offers little in the way of defense.", 5.35, 5, 5.39, 1, "Armor", null, null, 1, 2, 0, null, null},
+                {83, "Cloth Leggings", "Light fabric leggings, not much defense, but they won’t slow you down.", 5.52, 5, 4.51, 1, "Armor", null, null, 3, 0, 3, null, null},
+                {84, "Leather Pants", "Sturdy pants made from tanned leather, offering minimal protection but decent mobility.", 5.37, 5, 4.81, 1, "Armor", null, null, 0, 3, 3, null, null},
+                {85, "Chain Sleeves", "Armored sleeves made of interwoven metal rings, offering better protection for your arms.", 16.14, 6, 8.87, 3, "Armor", null, null, 0, 8, 2, null, null},
+                {86, "Studded Leather Bracers", "Leather bracers with metal studs, offering increased protection for your forearms.", 16.45, 8, 9.21, 3, "Armor", null, null, 2, 6, 2, null, null},
+                {87, "Chain Shirt", "A shirt of interwoven metal rings, offering good protection without too much weight.", 16.03, 5, 9.08, 3, "Armor", null, null, 2, 6, 1, null, null},
+                {88, "Studded Leather Armor", "Leather armor with small metal studs, providing better defense than standard leather.", 16.48, 6, 8.56, 3, "Armor", null, null, 0, 8, 1, null, null},
+                {89, "Iron Helmet", "A heavy helmet made of iron, offering solid protection against blunt force.", 16.16, 5, 8.53, 3, "Armor", null, null, 1, 7, 0, null, null},
+                {90, "Leather Cap", "A basic leather cap, not much for defense, but good for covering your head.", 16.35, 6, 9.31, 3, "Armor", null, null, 2, 6, 0, null, null},
+                {91, "Scale Mail", "Metal scales sewn onto fabric, providing solid defense with a bit of flexibility.", 16.15, 5, 9.49, 3, "Armor", null, null, 6, 2, 3, null, null},
+                {92, "Studded Leather Pants", "Leather pants reinforced with metal studs, offering more defense than regular leather.", 16.21, 4, 9.05, 3, "Armor", null, null, 5, 3, 3, null, null},
+                {93, "Full Plate Bracers", "Bracers made of solid metal, offering maximum protection for your forearms.", 42.04, 7, 12.07, 5, "Armor", null, null, 10, 8, 2, null, null},
+                {94, "Reinforced Leather Armguards", "Leather armguards reinforced with metal, offering a balance of flexibility and defense.", 42.21, 6, 12.4, 5, "Armor", null, null, 11, 7, 2, null, null},
+                {95, "Breastplate", "A sturdy metal chestplate that provides good protection without restricting movement too much.", 42.03, 8, 11.96, 5, "Armor", null, null, 11, 7, 1, null, null},
+                {96, "Half-Plate", "A suit of armor that covers the torso and shoulders with a mix of plate and chain, offering solid protection.", 41.99, 4, 12.13, 5, "Armor", null, null, 5, 13, 1, null, null},
+                {97, "Steel Helm", "A heavy, steel helmet that offers excellent protection for your head.", 41.53, 3, 12.17, 5, "Armor", null, null, 15, 3, 0, null, null},
+                {98, "Visored Helmet", "A helmet with a movable visor, offering good head protection with added versatility.", 42.5, 8, 11.91, 5, "Armor", null, null, 4, 14, 0, null, null},
+                {99, "Chainmail Pants", "A pair of pants made of interwoven metal rings, offering defense for your legs without too much weight.", 42.06, 8, 11.64, 5, "Armor", null, null, 4, 14, 3, null, null},
+                {100, "Plate Mail Greaves", "Heavy, full-leg armor made of solid metal, offering excellent protection for your legs.", 41.91, 6, 11.75, 5, "Armor", null, null, 5, 13, 3, null, null},
+                {101, "Full Plate Gauntlets", "Heavy, full-arm gauntlets made of plate metal, providing top-notch protection for your hands and wrists.", 92.8, 5, 15.45, 7, "Armor", null, null, 2, 31, 2, null, null},
+                {102, "Mithral Bracers", "Bracers made from mithral, offering excellent protection without the weight of regular metal.", 92.13, 3, 15.15, 7, "Armor", null, null, 22, 11, 2, null, null},
+                {103, "Dragonhide Armor", "Armor crafted from the hide of a dragon, offering both protection and a touch of the dragon’s magical resistance.", 92.74, 8, 15.29, 7, "Armor", null, null, 29, 4, 1, null, null},
+                {104, "Plate Armor", "Full-body armor made of solid metal plates, providing superior defense but limiting mobility.", 92.66, 8, 14.61, 7, "Armor", null, null, 0, 33, 1, null, null},
+                {105, "Dragonbone Crown", "A crown made from the bones of a dragon, offering a magical aura and protection for the wearer’s head.", 92.82, 5, 15.2, 7, "Armor", null, null, 22, 11, 0, null, null},
+                {106, "Full Helm", "A complete, solid helmet that covers the entire head, offering maximum protection.", 92.58, 7, 15.11, 7, "Armor", null, null, 3, 30, 0, null, null},
+                {107, "Mithral Leggings", "Leggings made from lightweight mithral, offering full protection without slowing you down.", 92.87, 8, 15.22, 7, "Armor", null, null, 28, 5, 3, null, null},
+                {108, "Plate Leggings", "Full-leg armor made of plate metal, offering solid protection for your legs.", 92.54, 3, 14.96, 7, "Armor", null, null, 2, 31, 3, null, null},
+                {109, "Celestial Bracers", "Bracers imbued with celestial magic, offering protection and a hint of divine grace.", 174.66, 7, 20.6, 9, "Armor", null, null, 46, 6, 2, null, null},
+                {110, "Enchanted Gauntlets", "Gauntlets imbued with magic that enhances your strength and offers protection to your hands.", 174.89, 8, 20.46, 9, "Armor", null, null, 5, 47, 2, null, null},
+                {111, "Adamantine Armor", "Armor made of the nearly indestructible metal, offering superior protection against physical damage.", 174.42, 4, 20.48, 9, "Armor", null, null, 16, 36, 1, null, null},
+                {112, "Celestial Armor", "Armor imbued with celestial magic, offering divine protection that shines with a faint light.", 174.76, 7, 20.22, 9, "Armor", null, null, 17, 35, 1, null, null},
+                {113, "Crown of the Storm", "A crown that crackles with storm energy, offering protection against lightning and thunder.", 174.78, 6, 20.17, 9, "Armor", null, null, 9, 43, 0, null, null},
+                {114, "Helm of the Ancients", "A helm with ancient runes, offering both physical protection and a link to long-forgotten powers.", 175.16, 7, 20.31, 9, "Armor", null, null, 29, 23, 0, null, null},
+                {115, "Adamantine Leggings", "Leggings made from adamantine, nearly impervious to damage, offering unrivaled protection for your legs.", 174.68, 3, 20.79, 9, "Armor", null, null, 4, 48, 3, null, null},
+                {116, "Dragonscale Plate Greaves", "Greaves made from the scales of a dragon, offering both protection and a connection to the dragon’s power.", 174.74, 7, 20.82, 9, "Armor", null, null, 41, 11, 3, null, null},
+                {117, "Cracked Amethyst Shard", "A broken piece of amethyst with a jagged edge and soft glow.", 3.06551292847877, 1, 2.22899055940975, 1, "Valuable", null, null, null, null, null, null, null},
+                {118, "Pewter Bracelet", "A dull grey bracelet with faint etchings of vines.", 3.67036329427932, 1, 2.13327787627753, 1, "Valuable", null, null, null, null, null, null, null},
+                {119, "Tiny Amber Chip", "A fingernail-sized shard of amber that glows faintly in sunlight.", 2.1248519642031, 1, 3.1529009465126, 1, "Valuable", null, null, null, null, null, null, null},
+                {120, "Copper Ring with a Glass Bead", "A simple ring with a cloudy red bead set in dented copper.", 3.87951635260104, 1, 4.00810918036997, 1, "Valuable", null, null, null, null, null, null, null},
+                {121, "Carved Wooden Brooch", "A small brooch shaped like a leaf, whittled with care.", 3.15512959621798, 1, 3.01902210588683, 1, "Valuable", null, null, null, null, null, null, null},
+                {122, "Polished River Stone Pendant", "A smooth stone on a leather cord, warm from being worn often.", 3.35783504299219, 1, 4.53532826222946, 1, "Valuable", null, null, null, null, null, null, null},
+                {123, "Simple Bone Necklace", "Animal bones strung together—crude, but oddly charming.", 2.60233182628305, 1, 2.61023880801669, 1, "Valuable", null, null, null, null, null, null, null},
+                {124, "Woven Hair Bracelet", "Intertwined strands of human and horsehair, braided tightly.", 3.86530423900227, 1, 4.28599683413546, 1, "Valuable", null, null, null, null, null, null, null},
+                {125, "Obsidian Fragment", "Razor-thin volcanic glass, sharp and mirror-dark.", 3.61919148869574, 1, 3.42353060215657, 1, "Valuable", null, null, null, null, null, null, null},
+                {126, "Shell and String Anklet", "Small seashells knotted onto a bit of twine—smells faintly of salt.", 3.45530457286672, 1, 4.00097683267941, 1, "Valuable", null, null, null, null, null, null, null},
+                {127, "Bronze Armlet with Leaf Etching", "A broad band engraved with curling vine patterns.", 13.9589011101968, 1, 2.78308490539612, 3, "Valuable", null, null, null, null, null, null, null},
+                {128, "Cut Quartz Crystal", "A clear crystal with many facets, catching light like fire.", 9.07523316787472, 1, 4.38177181597063, 3, "Valuable", null, null, null, null, null, null, null},
+                {129, "Jasper-inlaid Brooch", "A copper brooch with blood-red jasper set in the center.", 11.023770676969, 1, 4.6288005224292, 3, "Valuable", null, null, null, null, null, null, null},
+                {130, "Malachite Cameo", "A green and black stone carved with a woman’s profile.", 17.9274038972249, 1, 3.67361403654578, 3, "Valuable", null, null, null, null, null, null, null},
+                {131, "Coral Pendant in Silver Wire", "A pink coral sprig wrapped carefully in silver filigree.", 14.332169789573, 1, 4.17890522298, 3, "Valuable", null, null, null, null, null, null, null},
+                {132, "Silver Ring with Tiny Opal", "A tarnished silver band with a clouded opal inset.", 15.2130023538535, 1, 4.50065430587147, 3, "Valuable", null, null, null, null, null, null, null},
+                {133, "Miniature Portrait Locket", "A thumb-sized locket with a faded painting of a smiling child.", 7.06936495625821, 1, 4.78606436913272, 3, "Valuable", null, null, null, null, null, null, null},
+                {134, "Carved Ivory Comb", "An ornate comb made from old ivory, yellowed with age.", 16.9528693352578, 1, 3.90507342076157, 3, "Valuable", null, null, null, null, null, null, null},
+                {135, "Lapis Lazuli Beads", "Deep blue beads strung tightly together, flecked with gold.", 6.78724630753245, 1, 2.1470160057178, 3, "Valuable", null, null, null, null, null, null, null},
+                {136, "Agate Ring with Swirl Pattern", "The swirling lines in the agate resemble smoke in water.", 16.779805265052, 1, 4.78190793921787, 3, "Valuable", null, null, null, null, null, null, null},
+                {137, "Ornate Silver Tiara", "A crescent-shaped tiara, polished to a mirror shine.", 37.4816750666636, 1, 4.92311657846294, 5, "Valuable", null, null, null, null, null, null, null},
+                {138, "Gold Chain with Sapphire Chip", "A delicate chain with a bright blue stone like a droplet of sky.", 29.5754178283523, 1, 3.909788062097, 5, "Valuable", null, null, null, null, null, null, null},
+                {139, "Fire Opal Pendant", "A gem like living fire, set in a blackened iron pendant.", 39.5543273465016, 1, 4.59595573638993, 5, "Valuable", null, null, null, null, null, null, null},
+                {140, "Ruby-Capped Stickpin", "A gentleman’s pin with a deep red gem atop a gold needle.", 28.8605123360406, 1, 4.40926459178197, 5, "Valuable", null, null, null, null, null, null, null},
+                {141, "Enamel Pendant with Mythical Scene", "A painted pendant showing a dragon flying over a city.", 28.1922291317443, 1, 3.84498928302599, 5, "Valuable", null, null, null, null, null, null, null},
+                {142, "Platinum Cufflink Set", "A pair of etched cufflinks bearing a forgotten noble crest.", 19.1397555558888, 1, 4.45845998949809, 5, "Valuable", null, null, null, null, null, null, null},
+                {143, "Miniature Gold-Gilded Idol", "A palm-sized statue of a laughing deity, covered in flaking gold.", 36.1168082022695, 1, 4.62408031409073, 5, "Valuable", null, null, null, null, null, null, null},
+                {144, "Jeweled Hairpin with Amethyst", "A silver hairpin tipped with a cut amethyst shaped like a flame.", 25.4686795699078, 1, 3.59187156453521, 5, "Valuable", null, null, null, null, null, null, null},
+                {145, "Cloisonné Belt Buckle", "A wide buckle with tiny colored glass panels sealed in gold.", 27.818696156434, 1, 3.37549051492947, 5, "Valuable", null, null, null, null, null, null, null},
+                {146, "Serpentine Stone Ring", "This band of green stone feels oddly warm to the touch.", 24.6248254212239, 1, 4.32343929131319, 5, "Valuable", null, null, null, null, null, null, null},
+                {147, "Jeweled Circlet with Emerald Inlay", "A thin band of gold set with three flawless emeralds.", 59.7139572832619, 1, 3.82436296708041, 7, "Valuable", null, null, null, null, null, null, null},
+                {148, "Tourmaline Choker", "A tight band of black velvet adorned with purple tourmaline.", 61.2497048061158, 1, 4.50450834819834, 7, "Valuable", null, null, null, null, null, null, null},
+                {149, "Carved Obsidian Relic", "An idol with strange angles that glint sharply in dim light.", 36.9858023884819, 1, 4.79868193388725, 7, "Valuable", null, null, null, null, null, null, null},
+                {150, "Decorative Ivory Horn with Gem Studs", "Etched and gilded, it no longer sounds—but still stuns.", 44.3887780377918, 1, 3.56094685677882, 7, "Valuable", null, null, null, null, null, null, null},
+                {151, "Gold Bracelet with Elven Script", "Etched in curling script, it reads: “May you always return.”", 47.3202909634261, 1, 2.57205389365581, 7, "Valuable", null, null, null, null, null, null, null},
+                {152, "Gilded Mask with Peacock Feathers", "Meant for a masquerade, its jewels shimmer beneath the plumage.", 36.0671438416764, 1, 3.91180073582297, 7, "Valuable", null, null, null, null, null, null, null},
+                {153, "Mythril-Set Ring with Moonstone", "Pale blue moonstone set in a light, silvery metal band.", 59.475171983673, 1, 3.92776206532855, 7, "Valuable", null, null, null, null, null, null, null},
+                {154, "Necklace of Interwoven Silver and Onyx", "Silver chains wind through gleaming black stones like ivy.", 41.1089667759798, 1, 4.62468723400421, 7, "Valuable", null, null, null, null, null, null, null},
+                {155, "Star Sapphire Earring Pair", "When light hits them, tiny stars seem to swirl within.", 47.6072637285914, 1, 2.25849449197808, 7, "Valuable", null, null, null, null, null, null, null},
+                {156, "Brooch in the Shape of a Griffin", "Wings outstretched, its ruby eye stares fiercely.", 58.6619137679476, 1, 4.89447991981411, 7, "Valuable", null, null, null, null, null, null, null},
+                {157, "Sunfire Opal Set in Gold", "A brilliant opal burning with reds and oranges like flame.", 66.0988105055959, 1, 2.61127677761394, 9, "Valuable", null, null, null, null, null, null, null},
+                {158, "Mirror-polished Ruby Carving", "A deep red gem shaped into a rose, so smooth it reflects faces.", 57.0419189817323, 1, 3.80442724903559, 9, "Valuable", null, null, null, null, null, null, null},
+                {159, "Jeweled Medallion of a Forgotten Order", "A heavy disc showing a winged sun flanked by twin blades.", 68.5458554070879, 1, 4.2977032704449, 9, "Valuable", null, null, null, null, null, null, null},
+                {160, "Crownpiece of an Old Kingdom", "A regal crest, too valuable to wear, once worn by kings.", 87.1847097945565, 1, 3.43027132289101, 9, "Valuable", null, null, null, null, null, null, null},
+                {161, "Diamond-Studded Diadem", "A thin, radiant circlet glittering with small diamonds.", 89.0199485585406, 1, 2.63661663352413, 9, "Valuable", null, null, null, null, null, null, null},
+                {162, "Bloodstone Anklet with Ancient Markings", "Carved runes speak of an empire lost to time.", 77.5295992822188, 1, 2.59652704202488, 9, "Valuable", null, null, null, null, null, null, null},
+                {163, "Platinum Hair Comb with Dragon Motif", "Engraved with twin dragons chasing their tails.", 63.562478017973, 1, 4.00823002883629, 9, "Valuable", null, null, null, null, null, null, null},
+                {164, "Filigree Mask with Crystal Insets", "Fine silver mesh woven around gems that sparkle like stars.", 90.4707483298671, 1, 2.72509458681407, 9, "Valuable", null, null, null, null, null, null, null},
+                {165, "Royal Signet Ring", "Marked with a crown and lion—no power, but much prestige.", 85.0614055762023, 1, 3.39039300533675, 9, "Valuable", null, null, null, null, null, null, null},
+                {166, "Black Pearl Necklace", "Perfect round pearls, dark as midnight, strung on silk.", 82.0202225293756, 1, 3.99307367033586, 9, "Valuable", null, null, null, null, null, null, null},
+                {167, "Potion of Healing", "A small vial of red liquid", 15, 1, 1, 1, "Consumable", null, null, null, null, null, 5, 0},
+                {168, "Potion of Greater Healing", "A medium vial of red liquid", 40, 1, 2, 3, "Consumable", null, null, null, null, null, 15, 0},
+                {169, "Potion of Superior Healing", "A large vial of red liquid", 85, 1, 3, 5, "Consumable", null, null, null, null, null, 30, 0},
+                {170, "Potion of Supreme Healing", "A small vial of red liquid with a gold topper.", 145, 1, 4, 7, "Consumable", null, null, null, null, null, 50, 0},
+                {171, "Potion of Durability", "A small vial of blue liquid", 15, 1, 1, 1, "Consumable", null, null, null, null, null, 3, 1},
+                {172, "Potion of Greater Durability", "A medium vial of blue liquid", 35, 1, 2, 3, "Consumable", null, null, null, null, null, 6, 1},
+                {173, "Potion of Superior Durability", "A large vial of blue liquid", 55, 1, 3, 5, "Consumable", null, null, null, null, null, 9, 1},
+                {174, "Potion of Supreme Durability", "A small vial of blue liquid with a gold topper", 85, 1, 4, 7, "Consumable", null, null, null, null, null, 12, 1},
+                {175, "Potion of  Restoration", "A small vial of green liquid", 15, 1, 1, 1, "Consumable", null, null, null, null, null, 3, 2},
+                {176, "Potion of Greater Restoration", "A medium vial of green liquid", 35, 1, 2, 3, "Consumable", null, null, null, null, null, 6, 2},
+                {177, "Potion of Superior Restoration", "A large vial of green liquid", 55, 1, 3, 5, "Consumable", null, null, null, null, null, 9, 2},
+                {178, "Potion of Supreme Restoration", "A small vial of green liquid with a gold topper", 85, 1, 4, 7, "Consumable", null, null, null, null, null, 12, 2}
+            });
+            migrationBuilder.Sql("SET IDENTITY_INSERT Items OFF;");
+
             migrationBuilder.Sql("SET IDENTITY_INSERT Skills ON;");
             migrationBuilder.InsertData(
             table: "Skills",
@@ -233,6 +571,70 @@ namespace ConsoleGameEntities.Migrations
                 { 212, null, 28, "Siphon Vitality", "Siphon the vitality from a nearby enemy, reducing their strength while restoring your own health.", 7, 1, 14, 18, (int)TargetType.SingleEnemy, SkillType.SupportSkill.ToString(), (int)SkillCategory.Support, null, 5, (int)StatType.Health, (int)SupportEffectType.Reduce }
             });
             migrationBuilder.Sql("SET IDENTITY_INSERT Skills OFF");
+
+            migrationBuilder.Sql("SET IDENTITY_INSERT Players ON;");
+            migrationBuilder.InsertData(
+            table: "Players",
+            columns: new[]
+            {
+                "Id", "Name", "ArchetypeId", "Level", "MaxHealth"
+            },
+            values: new object[,]
+            {
+                { 1, "Aravien Sunblade", 1, 3, 85 },
+                { 2, "Nadira Valebright", 2, 5, 130 },
+                { 3, "Kaenji Stormleaf", 3, 7, 95 },
+                { 4, "Lusia Moonwhisper", 4, 1, 60 },
+                { 5, "Thabros Ironstride", 5, 6, 110 },
+                { 6, "Dymitros Frostvein", 1, 8, 140 },
+                { 7, "Meilin Starbloom", 2, 2, 70 },
+                { 8, "Karlos Flameborn", 3, 9, 125 },
+                { 9, "A'minah Windgrace", 4, 4, 80 },
+                { 10, "Bjornar Stoneheart", 5, 10, 150 },
+                { 11, "Soraiya Duskrender", 1,  4, 90 },
+                { 12, "Jalen of the Hollow Sky", 2, 6, 115 },
+                { 13, "Yutono Spiritblade", 3, 1, 55 },
+                { 14, "Anikaa Dawnsinger", 4, 7, 100 },
+                { 15, "Kwamar Tideborn", 5, 6, 135 },
+                { 16, "Rykos Emberquill", 1, 5, 105 },
+                { 17, "Helenya Greenseer", 2, 3, 78 },
+                { 18, "Omari Voidwalker", 3, 9, 145 },
+                { 19, "Zaniel Silvertide", 4, 5, 92 },
+                { 20, "Jovarien Flamevein", 5, 7, 125 }
+            });
+            migrationBuilder.Sql("SET IDENTITY_INSERT Players OFF;");
+
+            migrationBuilder.Sql("SET IDENTITY_INSERT Inventories ON;");
+            migrationBuilder.InsertData(
+            table: "Inventories",
+            columns: new[]
+            {
+                "Id", "PlayerId", "Gold", "Capacity"
+            },
+            values: new object[,]
+            {
+                { 1, 1, 120, 30.0m },
+                { 2, 2, 350, 50.0m },
+                { 3, 3, 780, 40.0m },
+                { 4, 4, 25, 20.0m },
+                { 5, 5, 540, 45.0m },
+                { 6, 6, 980, 55.0m },
+                { 7, 7, 60, 25.0m },
+                { 8, 8, 1020, 50.0m },
+                { 9, 9, 200, 35.0m },
+                { 10, 10, 1500, 60.0m },
+                { 11, 11, 280, 32.0m },
+                { 12, 12, 600, 42.0m },
+                { 13, 13, 40, 20.0m },
+                { 14, 14, 820, 45.0m },
+                { 15, 15, 610, 50.0m },
+                { 16, 16, 470, 40.0m },
+                { 17, 17, 180, 28.0m },
+                { 18, 18, 990, 55.0m },
+                { 19, 19, 360, 38.0m },
+                { 20, 20, 700, 50.0m }
+            });
+            migrationBuilder.Sql("SET IDENTITY_INSERT Inventories OFF;");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

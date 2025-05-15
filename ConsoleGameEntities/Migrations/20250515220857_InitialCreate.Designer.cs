@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleGameEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    [Migration("20250430002449_SeedResistance")]
-    partial class SeedResistance
+    [Migration("20250515220857_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,59 +23,6 @@ namespace ConsoleGameEntities.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
-
-            modelBuilder.Entity("ConsoleGameEntities.Models.Abilities.Skill", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<int?>("ArchetypeId")
-                        .IsRequired()
-                        .HasColumnType("int");
-
-                    b.Property<int>("Cooldown")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Cost")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ElapsedTime")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("MonsterId")
-                        .IsRequired()
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Power")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SkillType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TargetType")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ArchetypeId");
-
-                    b.HasIndex("MonsterId");
-
-                    b.ToTable("Skills");
-
-                    b.HasCheckConstraint("CK_Skill_OnlyOneOwner", "((\"ArchetypeId\" IS NOT NULL AND \"MonsterId\" IS NULL) OR (\"ArchetypeId\" IS NULL AND \"MonsterId\" IS NOT NULL))");
-                });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Entities.Archetype", b =>
                 {
@@ -186,9 +133,6 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("ArchetypeId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Experience")
-                        .HasColumnType("int");
-
                     b.Property<int>("Level")
                         .HasColumnType("int");
 
@@ -276,9 +220,15 @@ namespace ConsoleGameEntities.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("MonsterId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RequiredLevel")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("Value")
                         .HasColumnType("decimal(18,2)");
@@ -306,6 +256,23 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("AggressionLevel")
                         .HasColumnType("int");
 
+                    b.Property<int>("AttackPower")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DamageType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DefensePower")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Description");
+
+                    b.Property<int?>("ItemId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Level")
                         .HasColumnType("int");
 
@@ -320,10 +287,20 @@ namespace ConsoleGameEntities.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Resistance")
+                        .HasColumnType("int");
+
                     b.Property<int?>("RoomId")
                         .HasColumnType("int");
 
+                    b.Property<int>("ThreatLevel")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ItemId")
+                        .IsUnique()
+                        .HasFilter("[ItemId] IS NOT NULL");
 
                     b.HasIndex("RoomId");
 
@@ -332,9 +309,70 @@ namespace ConsoleGameEntities.Migrations
                     b.HasDiscriminator<string>("MonsterType").HasValue("Monster");
                 });
 
+            modelBuilder.Entity("ConsoleGameEntities.Models.Skills.Skill", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int?>("ArchetypeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Cooldown")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Cost")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DamageType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("MonsterId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Power")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RequiredLevel")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SkillCategory")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SkillType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TargetType")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArchetypeId");
+
+                    b.HasIndex("MonsterId");
+
+                    b.ToTable("Skills");
+
+                    b.HasDiscriminator<string>("SkillType").HasValue("Skill");
+                });
+
             modelBuilder.Entity("ConsoleGameEntities.Models.Items.Armor", b =>
                 {
                     b.HasBaseType("ConsoleGameEntities.Models.Items.Item");
+
+                    b.Property<int>("ArmorType")
+                        .HasColumnType("int");
 
                     b.Property<int>("DefensePower")
                         .HasColumnType("int");
@@ -345,6 +383,26 @@ namespace ConsoleGameEntities.Migrations
                     b.HasDiscriminator().HasValue("Armor");
                 });
 
+            modelBuilder.Entity("ConsoleGameEntities.Models.Items.Consumable", b =>
+                {
+                    b.HasBaseType("ConsoleGameEntities.Models.Items.Item");
+
+                    b.Property<int>("ConsumableType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Power")
+                        .HasColumnType("int");
+
+                    b.HasDiscriminator().HasValue("Consumable");
+                });
+
+            modelBuilder.Entity("ConsoleGameEntities.Models.Items.Valuable", b =>
+                {
+                    b.HasBaseType("ConsoleGameEntities.Models.Items.Item");
+
+                    b.HasDiscriminator().HasValue("Valuable");
+                });
+
             modelBuilder.Entity("ConsoleGameEntities.Models.Items.Weapon", b =>
                 {
                     b.HasBaseType("ConsoleGameEntities.Models.Items.Item");
@@ -352,36 +410,71 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("AttackPower")
                         .HasColumnType("int");
 
+                    b.Property<int>("DamageType")
+                        .HasColumnType("int");
+
                     b.HasDiscriminator().HasValue("Weapon");
                 });
 
-            modelBuilder.Entity("ConsoleGameEntities.Models.Monsters.Goblin", b =>
+            modelBuilder.Entity("ConsoleGameEntities.Models.Monsters.BossMonster", b =>
                 {
                     b.HasBaseType("ConsoleGameEntities.Models.Monsters.Monster");
 
-                    b.Property<int>("Sneakiness")
-                        .HasColumnType("int");
-
-                    b.HasDiscriminator().HasValue("Goblin");
+                    b.HasDiscriminator().HasValue("BossMonster");
                 });
 
-            modelBuilder.Entity("ConsoleGameEntities.Models.Abilities.Skill", b =>
+            modelBuilder.Entity("ConsoleGameEntities.Models.Monsters.EliteMonster", b =>
                 {
-                    b.HasOne("ConsoleGameEntities.Models.Entities.Archetype", "Archetype")
-                        .WithMany("Skills")
-                        .HasForeignKey("ArchetypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasBaseType("ConsoleGameEntities.Models.Monsters.Monster");
 
-                    b.HasOne("ConsoleGameEntities.Models.Monsters.Monster", "Monster")
-                        .WithMany("Skills")
-                        .HasForeignKey("MonsterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasDiscriminator().HasValue("EliteMonster");
+                });
 
-                    b.Navigation("Archetype");
+            modelBuilder.Entity("ConsoleGameEntities.Models.Skills.BossSkill", b =>
+                {
+                    b.HasBaseType("ConsoleGameEntities.Models.Skills.Skill");
 
-                    b.Navigation("Monster");
+                    b.Property<int>("Phase")
+                        .HasColumnType("int");
+
+                    b.HasDiscriminator().HasValue("BossSkill");
+                });
+
+            modelBuilder.Entity("ConsoleGameEntities.Models.Skills.MagicSkill", b =>
+                {
+                    b.HasBaseType("ConsoleGameEntities.Models.Skills.Skill");
+
+                    b.HasDiscriminator().HasValue("MagicSkill");
+                });
+
+            modelBuilder.Entity("ConsoleGameEntities.Models.Skills.MartialSkill", b =>
+                {
+                    b.HasBaseType("ConsoleGameEntities.Models.Skills.Skill");
+
+                    b.HasDiscriminator().HasValue("MartialSkill");
+                });
+
+            modelBuilder.Entity("ConsoleGameEntities.Models.Skills.SupportSkill", b =>
+                {
+                    b.HasBaseType("ConsoleGameEntities.Models.Skills.Skill");
+
+                    b.Property<int>("Duration")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StatAffected")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SupportEffect")
+                        .HasColumnType("int");
+
+                    b.HasDiscriminator().HasValue("SupportSkill");
+                });
+
+            modelBuilder.Entity("ConsoleGameEntities.Models.Skills.UltimateSkill", b =>
+                {
+                    b.HasBaseType("ConsoleGameEntities.Models.Skills.Skill");
+
+                    b.HasDiscriminator().HasValue("UltimateSkill");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Entities.Inventory", b =>
@@ -455,12 +548,34 @@ namespace ConsoleGameEntities.Migrations
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Monsters.Monster", b =>
                 {
+                    b.HasOne("ConsoleGameEntities.Models.Items.Item", "Treasure")
+                        .WithOne("Monster")
+                        .HasForeignKey("ConsoleGameEntities.Models.Monsters.Monster", "ItemId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("ConsoleGameEntities.Models.Entities.Room", "Room")
-                        .WithMany()
+                        .WithMany("Monsters")
                         .HasForeignKey("RoomId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Room");
+
+                    b.Navigation("Treasure");
+                });
+
+            modelBuilder.Entity("ConsoleGameEntities.Models.Skills.Skill", b =>
+                {
+                    b.HasOne("ConsoleGameEntities.Models.Entities.Archetype", "Archetype")
+                        .WithMany("Skills")
+                        .HasForeignKey("ArchetypeId");
+
+                    b.HasOne("ConsoleGameEntities.Models.Monsters.Monster", "Monster")
+                        .WithMany("Skills")
+                        .HasForeignKey("MonsterId");
+
+                    b.Navigation("Archetype");
+
+                    b.Navigation("Monster");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Entities.Archetype", b =>
@@ -477,6 +592,16 @@ namespace ConsoleGameEntities.Migrations
                 {
                     b.Navigation("Inventory")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ConsoleGameEntities.Models.Entities.Room", b =>
+                {
+                    b.Navigation("Monsters");
+                });
+
+            modelBuilder.Entity("ConsoleGameEntities.Models.Items.Item", b =>
+                {
+                    b.Navigation("Monster");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Monsters.Monster", b =>

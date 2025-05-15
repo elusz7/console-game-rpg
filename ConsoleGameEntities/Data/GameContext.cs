@@ -96,25 +96,25 @@ namespace ConsoleGameEntities.Data
                 .HasOne(r => r.North)
                 .WithMany()
                 .HasForeignKey(r => r.NorthId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Room>()
                 .HasOne(r => r.South)
                 .WithMany()
                 .HasForeignKey(r => r.SouthId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Room>()
                 .HasOne(r => r.East)
                 .WithMany()
                 .HasForeignKey(r => r.EastId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Room>()
                 .HasOne(r => r.West)
                 .WithMany()
                 .HasForeignKey(r => r.WestId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Configure relationships
 

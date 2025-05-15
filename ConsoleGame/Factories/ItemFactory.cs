@@ -1,4 +1,5 @@
-﻿using ConsoleGame.GameDao;
+﻿using System.Linq;
+using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Items;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
@@ -258,5 +259,31 @@ public class ItemFactory(ItemDao itemDao)
         }
 
         return merchantItems;
+    }
+
+    public List<Item> GetMerchantGifts(ArchetypeType type, int level)
+    {
+        var availableItems = _itemDao.GetItemsByMaxLevel(level).ToList();
+
+        var weapons = availableItems
+            .OfType<Weapon>()
+            .Where(w => w.DamageType.ToString() == type.ToString())
+            .ToList();
+
+        var armors = availableItems.OfType<Armor>().ToList();
+        var consumables = availableItems.OfType<Consumable>().ToList();
+
+        var gifts = new List<Item>();
+
+        if (weapons.Count > 0)
+            gifts.Add(CreateItem(weapons[_rng.Next(weapons.Count)]));
+
+        if (armors.Count > 0)
+            gifts.Add(CreateItem(armors[_rng.Next(armors.Count)]));
+
+        if (consumables.Count > 0)
+            gifts.Add(CreateItem(consumables[_rng.Next(consumables.Count)]));
+
+        return gifts;
     }
 }

@@ -119,7 +119,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
                     if (UseSkill(player, validTargets)) return;
                     break;
                 case ConsumableOption:
-                    if (UseConsumable(player)) return;
+                    if (UseConsumable(player, validTargets)) return;
                     break;
                 case ExitOption:
                     _outputManager.WriteLine("\nExiting combat now.\n");
@@ -313,7 +313,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
 
         return true;
     }
-    private bool UseConsumable(Player player)
+    private bool UseConsumable(Player player, List<Monster> validTargets)
     {
         var availableConsumables = player.Inventory.Items.Where(i => i is Consumable).ToList();
 
@@ -353,6 +353,12 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
 
                     consumable.UseOn(target);
                     break;
+            }
+
+            if (_inputManager.ReadString($"You may also make an attack if you wish (y/n): ", ["y", "n"]) == "y")
+            {
+                Attack(player, validTargets);
+                return true;
             }
         }
         else

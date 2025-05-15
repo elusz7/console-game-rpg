@@ -43,20 +43,37 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         _outputManager.WriteLine("\nYou approach the merchant and she greets you with a smile.");
         _floor.HasMetMerchant = true;
         _outputManager.WriteLine($"Hello, {_player.Name}. I am {_floor.GetMerchantName()}.");
-        var choice = _inputManager.ReadString("I have some items for sale. Would you like to see them (y/n)? ", ["y", "n"]).ToLower();
+        
+        
 
-        if (choice.Equals("y"))
-        {
-            BuyItems();
-        }
-        else
-        {
-            _outputManager.WriteLine("Okay, maybe next time.", ConsoleColor.Cyan);
-        }
+        Gift();
 
-        _outputManager.WriteLine("\n\"I also have some other services you might be interested in. Come back soon.\"");
-        _outputManager.WriteLine($"\t{_floor.GetMerchantName()} smiles and waves goodbye as you leave.\n");
+        _outputManager.WriteLine("\nI also have some other services you might be interested in. Come back soon.");
+        _outputManager.WriteLine($"{_floor.GetMerchantName()} smiles and waves goodbye as you leave.\n");
     }
+
+    private void Gift()
+    {
+        var items = _floor.GetMerchantGifts(_player.Archetype.ArchetypeType, _player.Level);
+        if (items.Count == 0)
+        {
+            return;
+        }
+
+        _outputManager.WriteLine("Take these items as a token of our new friendship.\n");
+
+        foreach(var item in items)
+        {
+            try
+            {
+                _player.Inventory.AddItem(item);
+                item.Inventory = _player.Inventory;
+                _outputManager.WriteLine($"{item.Name} has been gifted to you!", ConsoleColor.Green);
+            }
+            catch (InventoryException) { }
+        }
+    }
+
     private void StandardMerchantMeeting()
     {
         while (true)
