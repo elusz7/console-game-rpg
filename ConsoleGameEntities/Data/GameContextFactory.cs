@@ -13,7 +13,8 @@ namespace ConsoleGameEntities.Data
             var configuration = ConfigurationHelper.GetConfiguration();
 
             // Get connection string
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            //var connectionString = configuration.GetConnectionString("DefaultConnection");
+            var connectionString = configuration.GetConnectionString("ProductionConnection");
 
             // Build options
             var optionsBuilder = new DbContextOptionsBuilder<GameContext>();
