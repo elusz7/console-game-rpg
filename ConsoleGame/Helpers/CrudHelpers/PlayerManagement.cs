@@ -151,6 +151,7 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
                 }
 
                 player.ArchetypeId = archetype.Id;
+                player.Archetype = archetype;
                 } },
             { "Gold", () => player.Inventory.Gold = _inputManager.ReadInt("\nEnter new value for Gold: ") },
             { "Capacity", () => player.Inventory.Capacity = _inputManager.ReadDecimal("\nEnter new value for Capacity: ") }
