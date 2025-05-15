@@ -56,19 +56,12 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
                     }
 
                     ResetSupportSkills(aliveMonsters);
-
-                    try
+                    
+                    if (monster.CurrentHealth > 0)
                     {
-                        if (monster.CurrentHealth > 0)
-                        {
-                            monster.Attack(player);
-                            _outputManager.WriteLine();
-                            OutputActionItems(player, aliveMonsters);
-                        }
-                    }
-                    catch (PlayerDeathException)
-                    {
-                        return;
+                        monster.Attack(player);
+                        _outputManager.WriteLine();
+                        OutputActionItems(player, aliveMonsters);
                     }
                 }
 
@@ -93,8 +86,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
         catch (PlayerDeathException)
         {
             OutputActionItems(player, monsters);
-
-            _outputManager.WriteLine("\nYou have died. Game over.", ConsoleColor.Red);
+            _outputManager.Display();
         }
     }
     private void PlayerCombatTurn(Player player, List<Monster> validTargets)
@@ -116,7 +108,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
             foreach (var (index, label) in options)
                 _outputManager.WriteLine($"{index}. {label}");
 
-            int choice = _inputManager.ReadInt("Select an option: ", options.Count);
+            int choice = _inputManager.ReadInt("Select an option: ", 4);
 
             switch (choice)
             {
@@ -242,7 +234,8 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
                 .Where(s => s.Cost <= player.Archetype.CurrentResource)
                 .Where(s => !s.IsOnCooldown)
                 .Where(s => s is not UltimateSkill).ToList();
-        usableSkills.AddRange(allSkills.Where(s => s is UltimateSkill ult && ult.IsReady));
+        usableSkills.AddRange(allSkills.Where(s => s is UltimateSkill ult && ult.IsReady)
+            .Where(s => s.Cost <= player.Archetype.CurrentResource));
 
         var waitingSkills = allSkills
                 .Where(s => s.Cost > player.Archetype.CurrentResource || s.IsOnCooldown)

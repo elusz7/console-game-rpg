@@ -24,6 +24,8 @@ public class MonsterFactory(MonsterDao monsterDao, SkillDao skilldao)
     private readonly Dictionary<int, Dictionary<ThreatLevel, int>> _campaignMonsters = Enumerable.Range(1, 20)
         .ToDictionary(level => level, level => GenerateMonstersForLevel(level));
 
+    private static readonly Dictionary<string, int> NameCounts = [];
+
     public List<Monster> GenerateMonsters(int level, bool campaign)
     {
         var selectedMonsters = new List<Monster>();
@@ -69,6 +71,7 @@ public class MonsterFactory(MonsterDao monsterDao, SkillDao skilldao)
                 currentCount += (int)Math.Round(weight);
             }
         }
+        
         SetMonsterSkills(level, selectedMonsters);
 
         return selectedMonsters;
@@ -78,7 +81,7 @@ public class MonsterFactory(MonsterDao monsterDao, SkillDao skilldao)
     {
         var monster = new Monster
         {
-            Name = monsterBase.Name,
+            Name = GetMonsterName(monsterBase.Name),
             Level = monsterBase.Level,
             MaxHealth = monsterBase.MaxHealth,
             ThreatLevel = monsterBase.ThreatLevel,
@@ -101,7 +104,42 @@ public class MonsterFactory(MonsterDao monsterDao, SkillDao skilldao)
 
         return monster;
     }
-    public void SetMonsterSkills(int level, List<Monster> monsters)
+    private static string GetMonsterName(string baseName)
+    {
+        string[] romanNumerals = { "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X" };
+        string[] modifiers =
+        [
+            "Fierce",
+            "Arcane",
+            "Twisted",
+            "Burning",
+            "Rotting",
+            "Grizzled",
+            "Cackling",
+            "Frostbitten",
+            "Shadowed",
+            "Lucky",
+            "Silent",
+            "Enraged",
+            "Giggling",
+            "Eldritch",
+            "Cracked",
+            "Slippery",
+            "Vicious",
+            "Bloody",
+            "Ancient",
+            "Frantic"
+        ];
+
+        if (!NameCounts.ContainsKey(baseName))
+            NameCounts[baseName] = 0;
+
+        var newName = $"{baseName} {romanNumerals[NameCounts[baseName] % romanNumerals.Length]} the {modifiers[_rng.Next(modifiers.Length)]}";
+        NameCounts[baseName]++;
+
+        return newName;
+    }
+    private void SetMonsterSkills(int level, List<Monster> monsters)
     {
         var skills = _skillDao.GetUnassignedSkillsByMaxLevel(level);
 
@@ -117,6 +155,9 @@ public class MonsterFactory(MonsterDao monsterDao, SkillDao skilldao)
 
         foreach (var monster in monsters)
         {
+            if (monster is BossMonster)
+                continue;
+
             int attackSkillCount = monster.Level + (monster.Level / 2); //1 + half the level # of skills 
             int supportSkillCount = monster.Level / 2; //1 skill per 2 levels
 
@@ -133,7 +174,7 @@ public class MonsterFactory(MonsterDao monsterDao, SkillDao skilldao)
                     break;
                 }
                 var randomSkill = usableAttackSkills[_rng.Next(usableAttackSkills.Count)];
-                randomSkill.InitializeSkill();
+                randomSkill.InitializeSkill(monster.Level);
                 selectedSkills.Add(randomSkill);
                 usableAttackSkills.Remove(randomSkill);
             }
@@ -147,7 +188,7 @@ public class MonsterFactory(MonsterDao monsterDao, SkillDao skilldao)
                     break;
                 }
                 var randomSkill = usuableSupportSkills[_rng.Next(usuableSupportSkills.Count)];
-                randomSkill.InitializeSkill();
+                randomSkill.InitializeSkill(monster.Level);
                 selectedSkills.Add(randomSkill);
                 usuableSupportSkills.Remove(randomSkill);
             }
@@ -158,6 +199,7 @@ public class MonsterFactory(MonsterDao monsterDao, SkillDao skilldao)
                 if (usableUltimateSkills.Count > 0)
                 {
                     var randomSkill = usableUltimateSkills[_rng.Next(usableUltimateSkills.Count)];
+                    randomSkill.InitializeSkill(monster.Level);
                     selectedSkills.Add(randomSkill);
                 }
             }

@@ -38,14 +38,22 @@ public class GameEngine(StartMenu startMenu, AdminMenu adminMenu, InputManager i
                     _adminMenu.AdminMainMenu();
                     break;
                 case 2:
-                    _adventureService.SetUpAdventure();
-                    _outputManager.WriteLine("\nPress any key to begin your adventure!", ConsoleColor.Cyan);
-                    _outputManager.Display();
-                    _inputManager.ReadKey();
-                    _adventureService.Adventure();
+                    if (_adventureService.SetUpAdventure())
+                    {
+                        _outputManager.WriteLine("\nPress any key to begin your adventure!", ConsoleColor.Cyan);
+                        _outputManager.Display();
+                        _inputManager.ReadKey();
+                        _adventureService.Adventure();
+                    }
                     break;
                 case 3:
-                    _outputManager.WriteLine("Campaign mode is not implemented yet.", ConsoleColor.Red);
+                    if (_adventureService.SetUpCampaign())
+                    {
+                        _outputManager.WriteLine("\nPress any key to begin the campaign!", ConsoleColor.Cyan);
+                        _outputManager.Display();
+                        _inputManager.ReadKey();
+                        _adventureService.Adventure();
+                    }
                     break;
                 case 4:
                     _outputManager.WriteLine("Until next time, intrepid adventurer...", ConsoleColor.Red);

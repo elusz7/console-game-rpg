@@ -4,6 +4,7 @@ using ConsoleGame.Helpers;
 using ConsoleGame.Models;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Items;
 using static ConsoleGame.Helpers.AdventureEnums;
 using ConsoleGame.Managers;
 
@@ -21,131 +22,196 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
     private readonly EquipmentHelper _equipmentHelper = equipmentHelper;
     private readonly MerchantHelper _merchantHelper = merchantHelper;
     private readonly FloorFactory _floorFactory = floorFactory;
-    private readonly PlayerDao _playerDao = playerDao;
+    private bool IsCampaign;
+    private bool ContinueAdventure;
     private Player player;
     private Floor floor;
 
-    public void SetUpAdventure()
+    private bool SetUp(bool isCampaign)
     {
+        IsCampaign = isCampaign;
+
         _outputManager.Clear();
-        _outputManager.WriteLine("Welcome to the Adventure!\n", ConsoleColor.Yellow);
+        if (IsCampaign)
+            _outputManager.WriteLine("Welcome to the Campaign!\n", ConsoleColor.Magenta);
+        else
+            _outputManager.WriteLine("Welcome to the Adventure!\n", ConsoleColor.Yellow);
 
         _outputManager.Display();
 
         try
         {
-            player = _playerHelper.InitializePlayer(false) ?? throw new InvalidOperationException("No player selected.");
+            player = _playerHelper.InitializePlayer(IsCampaign) ?? throw new InvalidOperationException("No player selected.");
         }
         catch (InvalidOperationException ex)
         {
             _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
-            return;
+            return false;
         }
         
-        _outputManager.WriteLine($"\nYou are adventuring with {player.Name}!", ConsoleColor.Green);
+        if (IsCampaign)
+            _outputManager.WriteLine($"\nYou are starting a campaign with {player.Name}!", ConsoleColor.Green);
+        else
+            _outputManager.WriteLine($"\nYou are adventuring with {player.Name}!", ConsoleColor.Green);
+
         _outputManager.WriteLine("\nNow generating a map...", ConsoleColor.DarkBlue);
         _outputManager.Display();
 
-        floor = _floorFactory.CreateFloor(player.Level, false);
-        player.CurrentRoom = floor.GetEntrance();        
-    }
-    public void Adventure()
-    {
-        _outputManager.Write($"Now adventuring on Floor {floor.Level}.", ConsoleColor.Yellow);
-        while (true)
+        var map = 1;
+        if (!IsCampaign)
         {
-            //if no monsters are left alive on the floor, exit the game
-            if (!floor.Monsters.Any(m => m.CurrentHealth > 0))
-            {
-                _outputManager.WriteLine("You have cleared the floor of monsters. Congratulations!", ConsoleColor.Green);
-                _outputManager.WriteLine("Press any key to exit this adventure.", ConsoleColor.Cyan);
-                _outputManager.Display();
-                _inputManager.ReadKey();
-                _outputManager.Clear();
-                return;
-            }
-            _outputManager.Clear();
+            map = _inputManager.ReadInt("\n1. Use map from database\n2. Generate Random Map\n\tSelect an option: ", 2);
+        }
 
-            _outputManager.Write($"{floor.Monsters.Count} monsters remaining!\n|");
+        floor = _floorFactory.CreateFloor(player.Level, IsCampaign, map == 2);
+        player.CurrentRoom = floor.GetEntrance();
+
+        if (player.Level == 1)
+        {
             foreach (var monster in floor.Monsters)
             {
-                _outputManager.Write($" {monster.Room?.Name} |");
-            }
-            _outputManager.WriteLine("\n");
-            _outputManager.Display();
-
-            Move();
-            bool roomChanged = false;
-
-            while (!roomChanged)
-            {
-                if (!floor.Monsters.Any(m => m.CurrentHealth > 0))
-                {
-                    _outputManager.WriteLine("You have cleared the floor of monsters. Congratulations!", ConsoleColor.Green);
-                    _outputManager.WriteLine("Press any key to exit this adventure.", ConsoleColor.Cyan);
-                    _outputManager.Display();
-                    _inputManager.ReadKey();
-                    _outputManager.Clear();
-                    return;
-                }
-
-                var options = GetMenuOptions();
-
-                var index = 1;
-                foreach (var option in options)
-                {
-                    _outputManager.WriteLine($"{index}. {option.Key}", ConsoleColor.Yellow);
-                    index++;
-                }
-
-                var choice = options.ElementAt(_inputManager.ReadInt("\tSelect an option: ", options.Count) - 1);              
-
-                switch (choice.Value)
-                {
-                    case AdventureOptions.Attack:
-                        var monsters = player.CurrentRoom?.Monsters ?? [];
-
-                        _combatHelper.CombatRunner(player, monsters);
-                        break;
-                    case AdventureOptions.Examine:
-                        Examine();
-                        break;
-                    case AdventureOptions.Rest:
-                        Rest();
-                        break;
-                    case AdventureOptions.Merchant:
-                        _merchantHelper.Meeting(floor, player);
-                        break;
-                    case AdventureOptions.Move:
-                        var direction = choice.Key.Split(' ').Last();
-                        roomChanged = ChangeCurrentRoom(direction);
-                        break;
-                    case AdventureOptions.Equipment:
-                        _equipmentHelper.ManageEquipment(player);
-                        break;
-                    case AdventureOptions.Quit:
-                        bool quit = _inputManager.ConfirmAction("Quit Adventuring");
-                        if (quit)
-                        {
-                            _outputManager.WriteLine("\nThanks for playing!\n", ConsoleColor.Yellow);
-                            return;
-                        }
-                        break;
-                    default:
-                        break;
-                }
-
-                if (player.CurrentHealth <= 0)
-                {
-                    _outputManager.WriteLine("You have died! Adventure is now over.", ConsoleColor.Gray);
-                    _outputManager.WriteLine("Press any key to continue...", ConsoleColor.Gray);
-                    _outputManager.Display();
-                    _inputManager.ReadKey();
-                    _outputManager.Clear();
-                    return;
-                }
+                monster.AdjustStartingStat(player.Archetype);
             }
         }
+
+        return true;
+    }
+    public bool SetUpAdventure() => SetUp(false);
+    public bool SetUpCampaign() => SetUp(true);
+    public void Adventure()
+    {
+        ContinueAdventure = false;
+
+        while (!ContinueAdventure)
+        {
+            _outputManager.Write($"Now adventuring on Floor {floor.Level}.", ConsoleColor.Yellow);
+            _outputManager.Clear();
+
+            bool floorCompleted = false;
+
+            while (!floorCompleted)
+            {
+                if (CheckIfFloorCleared())
+                {
+                    break;
+                }
+
+                _outputManager.Clear();
+
+                Move();
+                bool roomChanged = false;
+
+                while (!roomChanged)
+                {
+                    if (CheckIfFloorCleared())
+                    {
+                        floorCompleted = true;
+                        break;
+                    }
+
+                    var options = GetMenuOptions();
+
+                    var index = 1;
+                    foreach (var option in options)
+                    {
+                        _outputManager.WriteLine($"{index}. {option.Key}", ConsoleColor.Yellow);
+                        index++;
+                    }
+
+                    var choice = options.ElementAt(_inputManager.ReadInt("\tSelect an option: ", options.Count) - 1);
+
+                    switch (choice.Value)
+                    {
+                        case AdventureOptions.Attack:
+                            var monsters = player.CurrentRoom?.Monsters ?? [];
+                            _combatHelper.CombatRunner(player, monsters);
+                            break;
+                        case AdventureOptions.Examine:
+                            Examine();
+                            break;
+                        case AdventureOptions.Rest:
+                            Rest();
+                            break;
+                        case AdventureOptions.Merchant:
+                            _merchantHelper.Meeting(floor, player);
+                            break;
+                        case AdventureOptions.Move:
+                            var direction = choice.Key.Split(' ').Last();
+                            roomChanged = ChangeCurrentRoom(direction);
+                            break;
+                        case AdventureOptions.Equipment:
+                            _equipmentHelper.ManageEquipment(player);
+                            break;
+                        case AdventureOptions.Quit:
+                            var prompt = IsCampaign ? "Quit Campaign" : "Quit Adventure";
+                            bool quit = _inputManager.ConfirmAction(prompt);
+                            if (quit)
+                            {
+                                _outputManager.WriteLine("\nThanks for playing!\n", ConsoleColor.Yellow);
+                                if (IsCampaign)
+                                    _playerHelper.SavePlayer(player);
+                                return;
+                            }
+                            break;
+                    }
+
+                    if (player.CurrentHealth <= 0)
+                    {
+                        _outputManager.WriteLine("\nYou have died! Adventure is now over.", ConsoleColor.Red);
+                        _outputManager.WriteLine("Press any key to continue...", ConsoleColor.Gray);
+                        _outputManager.Display();
+                        _playerHelper.SavePlayer(player);
+                        _inputManager.ReadKey();
+                        _outputManager.Clear();
+                        return;
+                    }
+                }
+            }
+
+            if (ContinueAdventure)
+            {
+                _outputManager.Write("Setting up next floor...", ConsoleColor.DarkGray);
+                _outputManager.Display();
+
+                SetUpNextFloor();
+
+                _outputManager.Write("Press any key to continue...", ConsoleColor.DarkCyan);
+                _outputManager.Display();
+                _inputManager.ReadKey();
+            }           
+        }
+
+        _playerHelper.SavePlayer(player);
+    }
+    private bool CheckIfFloorCleared()
+    {
+        if (!floor.Monsters.Any(m => m.CurrentHealth > 0))
+        {
+            _outputManager.WriteLine("You have cleared the floor of monsters. Congratulations!", ConsoleColor.Green);
+            player.Inventory.Gold += (player.Level * 10);
+
+            if (!IsCampaign)
+            {
+                var cont = _inputManager.ReadString("Would you like to continue adventuring onto the next floor (y/n): ", ["y", "n"]).ToLower();
+                if (cont.Equals("y"))
+                {
+                    ContinueAdventure = true;
+                    return true;
+                }
+                else
+                {
+                    ContinueAdventure = false;
+                }
+            }
+
+            _outputManager.Write("Press any key to continue!");
+            _outputManager.Display();
+            _inputManager.ReadKey();
+            _outputManager.Clear();
+            return true;
+        }
+
+        return false;
     }
     private void Move()
     {
@@ -250,7 +316,10 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
                 AddMenuOption(options, $"Go {direction.Key}", AdventureOptions.Move);
             }
         }
-        AddMenuOption(options, "Quit Adventuring", AdventureOptions.Quit);
+        if (IsCampaign)
+            AddMenuOption(options, "Quit Campaigning", AdventureOptions.Quit);
+        else
+            AddMenuOption(options, "Quit Adventuring", AdventureOptions.Quit);
 
         return options;
     }
@@ -295,5 +364,46 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
             player.CurrentRoom.Monsters.Remove(monster);
             floor.Monsters.Remove(monster);
         }
+    }
+    private void SetUpNextFloor()
+    {
+        player.LevelUp();
+        bool merchant = floor.HasMetMerchant;
+
+        var leftovers = floor.Monsters.Where(m => m.Treasure != null).ToList();
+        var automaticLoot = new List<Item>();
+        if (leftovers.Count > 0)
+        {
+            foreach (var monster in leftovers)
+            {
+                automaticLoot.Add(monster.Treasure);
+                monster.Treasure = null;
+            }
+        }
+
+        var loopList = automaticLoot.ToList();
+        foreach (var item in loopList)
+        {
+            try
+            {
+                player.Inventory.AddItem(item);
+            }
+            catch (InventoryException)
+            {
+                automaticLoot.Remove(item);
+            }
+        }
+
+        _outputManager.WriteLine($"\nAutomatically looted: {string.Join(", ", automaticLoot.Select(a => a.Name))}", ConsoleColor.DarkGreen);
+
+        var map = 1;
+        if (!IsCampaign)
+        {
+            map = _inputManager.ReadInt("\"1. Use map from database\\n2. Generate Random Map\n\tSelect an option: ", 2);
+        }
+
+        floor = _floorFactory.CreateFloor(player.Level, IsCampaign, map == 2);
+        floor.HasMetMerchant = merchant;
+        player.CurrentRoom = floor.GetEntrance();
     }
 }

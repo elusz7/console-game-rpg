@@ -34,9 +34,9 @@ public class Monster : IMonster
     public ThreatLevel ThreatLevel { get; set; }
     public int AggressionLevel { get; set; }
     [NotMapped]
-    public int DesiredHitsToKillPlayer { get; set; }
+    public int DesiredHitsToKillPlayer { get; set; } = 3;
     [NotMapped]
-    public int DesiredHitsToBeKilledByPlayer { get; set; }
+    public int DesiredHitsToBeKilledByPlayer { get; set; } = 4;
     private double DodgeChance { get; set; } = 0.01;
     public string MonsterType { get; set; }
     public virtual ICollection<Skill> Skills { get; set; } = new List<Skill>();
@@ -112,7 +112,6 @@ public class Monster : IMonster
             DodgeChance += 0.002;
         }
     }
-
     public virtual void TakeDamage(int damage, DamageType? damageType)
     {
         var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
@@ -144,7 +143,10 @@ public class Monster : IMonster
         CurrentHealth -= damageTaken;
 
         if (CurrentHealth <= 0)
+        {
+            AddActionItem($"{Name} is now dead.");
             throw new MonsterDeathException();
+        }
     }
     public void AdjustStartingStat(IArchetype archetype)
     {

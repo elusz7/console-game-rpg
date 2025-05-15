@@ -57,13 +57,13 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
         do
         {
             CreateSkill();
-        } while (_inputManager.ConfirmAction("create"));
+        } while (_inputManager.LoopAgain("create"));
     }
     private void CreateSkill()
     {
         _outputManager.WriteLine("=== Create Skill ===", ConsoleColor.Magenta);
 
-        var skillType = GetEnumChoice<SkillType>("Select the type of skill to create");
+        var skillType = _inputManager.GetEnumChoice<SkillType>("Select the type of skill to create");
 
         var numericValues = new Dictionary<string, int>
         {
@@ -120,7 +120,7 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
         {
             var target = skillType == SkillType.BossSkill
                 ? (int)TargetType.SingleEnemy
-                : (int)GetEnumChoice<TargetType>("Select the target of this skill");
+                : (int)_inputManager.GetEnumChoice<TargetType>("Select the target of this skill");
 
             if (target == (int)TargetType.Self && skillType != SkillType.SupportSkill)
             {
@@ -137,7 +137,7 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
     {
         while (true)
         {
-            StatType stat = GetEnumChoice<StatType>("Select the stat to affect");
+            StatType stat = _inputManager.GetEnumChoice<StatType>("Select the stat to affect");
 
             if (stat == StatType.Health && numericValues[SkillKeys.TARGET] != (int)TargetType.Self)
             {
@@ -149,18 +149,6 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
                 break;
             }
         }
-    }
-    private T GetEnumChoice<T>(string prompt) where T : Enum
-    {
-        var values = Enum.GetValues(typeof(T)).Cast<T>().ToList();
-
-        for (int i = 0; i < values.Count; i++)
-        {
-            _outputManager.WriteLine($"{i + 1}. {values[i]}");
-        }
-
-        var choice = _inputManager.ReadInt($"\n{prompt}: ", values.Count);
-        return values[choice - 1];
     }
     private void EditSkill()
     {
@@ -212,7 +200,7 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
             { "Description", () => skill.Description = _inputManager.ReadString("\nEnter new value for skill description: ") },
             { "Target Type", () =>
                 {
-                    var targetType = GetEnumChoice<TargetType>("Select the new target");
+                    var targetType = _inputManager.GetEnumChoice<TargetType>("Select the new target");
 
                     if (skill is SupportSkill supportSkill)
                     {
@@ -243,7 +231,7 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
                 {                    
                     if (skill is SupportSkill supportSkill)
                     {
-                        var statType = GetEnumChoice<StatType>("Select the new stat to affect");
+                        var statType = _inputManager.GetEnumChoice<StatType>("Select the new stat to affect");
 
                         if (statType == StatType.Health && skill.TargetType != TargetType.Self)
                         {

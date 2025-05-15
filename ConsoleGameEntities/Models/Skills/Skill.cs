@@ -30,12 +30,16 @@ public class Skill : ISkill
     public int? MonsterId { get; set; }
     public virtual Monster? Monster { get; set; }
 
-    public virtual void InitializeSkill()
+    public virtual void InitializeSkill(int level)
     {
-        if (this is not UltimateSkill)
-            ElapsedTime = Cooldown + 1;
+        if (this is UltimateSkill ult)
+        {
+            Reset();
+            ult.ScalePowerWithLevel(level);
+        }
         else
-            ElapsedTime = 0;
+            ElapsedTime = Cooldown + 1;
+        
     }
     public virtual void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {

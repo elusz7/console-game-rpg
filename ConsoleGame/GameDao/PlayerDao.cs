@@ -28,7 +28,7 @@ public class PlayerDao(GameContext context)
 
     public Player? GetPlayerByName(string name)
     {
-        return _context.Players.FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        return _context.Players.ToList().FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
     }
 
     public Player GetPlayer(Player player)
@@ -52,7 +52,6 @@ public class PlayerDao(GameContext context)
     {
             return [.. _context.Players];
     }
-
     public List<string> GetAllPlayerArchetypes()
     {
         return [.. _context.Players

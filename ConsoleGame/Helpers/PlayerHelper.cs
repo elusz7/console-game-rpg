@@ -1,4 +1,5 @@
-﻿using ConsoleGame.GameDao;
+﻿using System.Security.Cryptography.X509Certificates;
+using ConsoleGame.GameDao;
 using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Managers;
 using ConsoleGameEntities.Models.Entities;
@@ -6,25 +7,47 @@ using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Helpers;
 
-public class PlayerHelper(InputManager inputManager, OutputManager outputManager, PlayerDao playerDao)
+public class PlayerHelper(InputManager inputManager, OutputManager outputManager, PlayerDao playerDao, ArchetypeDao archetypeDao)
 {
     private readonly InputManager _inputManager = inputManager;
     private readonly OutputManager _outputManager = outputManager;
     private readonly PlayerDao _playerDao = playerDao;
+    private readonly ArchetypeDao _archetypeDao = archetypeDao;
 
     public Player? InitializePlayer(bool campaign)
     {
         if (campaign)
         {
-            //generate a new player
-            return default;
+            return CreateCharacter();
         }
         else
         {
             return SelectCharacter();
         }
     }
+    private Player? CreateCharacter()
+    {
+        var name = _inputManager.ReadString("What is the name of your character? ");
+        _outputManager.WriteLine();
 
+        var archetypes = _archetypeDao.GetAllArchetypes();
+
+        var archetype = _inputManager.SelectFromList(archetypes, a => a.Name, $"Select the archetype of {name}", a => ColorfulToStringHelper.GetArchetypeColor(a));
+
+        if (archetype == null)
+        {
+            return null;
+        }
+
+        var player = new Player();
+        player.Name = name;
+        player.ArchetypeId = archetype.Id;
+        player.Archetype = archetype;
+
+        player.Initialize();
+
+        return player;
+    }
     private Player? SelectCharacter()
     {
         var availableCharacters = _playerDao.GetAllPlayers();
@@ -67,10 +90,41 @@ public class PlayerHelper(InputManager inputManager, OutputManager outputManager
 
         foreach (var skill in player.Archetype.Skills)
         {
-            skill.InitializeSkill();
+            skill.InitializeSkill(player.Level);
         }
 
         player.CurrentHealth = player.MaxHealth;
         player.Archetype.CurrentResource = player.Archetype.MaxResource;
+    }
+
+    public void SavePlayer(Player player)
+    {
+        var dbPlayer = _playerDao.GetPlayerByName(player.Name);
+        
+        SellInventory(player);
+
+        if (dbPlayer == null)
+        {
+            _playerDao.AddPlayer(player);
+        }
+        else
+        {
+            _playerDao.UpdatePlayer(dbPlayer);
+        }
+    }
+
+    private static void SellInventory(Player player)
+    {
+        var equipment = player.Equipment.ToList();
+        foreach (var equippedItem in equipment)
+        {
+            player.Unequip(equippedItem);
+        }
+        
+        var inventory = player.Inventory.Items.ToList();
+        foreach (var item in inventory)
+        {
+            player.Sell(item);
+        }
     }
 }

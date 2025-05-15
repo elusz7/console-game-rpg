@@ -8,9 +8,9 @@ public class FloorFactory(MapFactory mapFactory, MonsterFactory monsterFactory, 
     private readonly MonsterFactory _monsterFactory = monsterFactory;
     private readonly ItemFactory _itemFactory = itemFactory;
 
-    public Floor CreateFloor(int level, bool campaign)
+    public Floor CreateFloor(int level, bool campaign, bool randomMap)
     {
-        var rooms = _mapFactory.GenerateMap(level, campaign);
+        var rooms = _mapFactory.GenerateMap(level, campaign, randomMap);
         var monsters = _monsterFactory.GenerateMonsters(level, campaign);
         var (loot, numberOfCursedItems) = _itemFactory.GenerateLoot(level, monsters.Count, campaign);
 

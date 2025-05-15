@@ -40,7 +40,7 @@ public class Weapon : Item
         RequiredLevel++;
 
         var newStats = _rng.Next(RequiredLevel, RequiredLevel * 2 + 1);
-        var baseNewStat = (int)Math.Floor(newStats * 0.33);
+        var baseNewStat = (int)Math.Max(1, Math.Floor(newStats * 0.33));
         var newAttackPower = _rng.Next(baseNewStat, newStats);
 
         AttackPower += newAttackPower;

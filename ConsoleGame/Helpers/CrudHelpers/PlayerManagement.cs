@@ -1,4 +1,5 @@
 ﻿using ConsoleGame.GameDao;
+using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 
@@ -57,17 +58,18 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
         _outputManager.WriteLine();
         string name = _inputManager.ReadString("Enter player name: ");
 
-        var archetypes = _archetypeDao.GetArchetypeNames();
+        var archetype = _inputManager.SelectFromList(
+                    _archetypeDao.GetAllArchetypes(),
+                    a => a.Name,
+                    "Select a new archetype",
+                    b => ColorfulToStringHelper.GetArchetypeColor(b)
+                );
 
-        var selectedArchetype = _inputManager.PaginateList(archetypes, "archetype", $"assign {name}", true, false);
-
-        if (selectedArchetype == null)
+        if (archetype == null)
         {
             _outputManager.WriteLine("\nNo archetype selected. Player creation cancelled.\n", ConsoleColor.Red);
             return;
         }
-        int archetypeId = _archetypeDao.GetArchetypeId(selectedArchetype);
-        _outputManager.WriteLine($"Archetype Assigned: {selectedArchetype}", ConsoleColor.Green);
 
         int health = _inputManager.ReadInt("Enter player's health: ");
 
@@ -80,9 +82,8 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
         Player newPlayer = new()
         {
             Name = name,
-            ArchetypeId = archetypeId,
+            ArchetypeId = archetype.Id,
             MaxHealth = health,
-            Experience = 0,
             Level = 1,
             Inventory = new Inventory
             {
@@ -117,8 +118,23 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
             { "Name", () => player.Name = _inputManager.ReadString("\nEnter new value for Name: ") },
             { "Health", () => player.MaxHealth = _inputManager.ReadInt("\nEnter new value for Health: ") },
             { "Level", () => player.Level = _inputManager.ReadInt("\nEnter new value for Level: ") },
-            { "Archetype", () => player.ArchetypeId = _archetypeDao.GetArchetypeId(_inputManager.PaginateList(_archetypeDao.GetArchetypeNames(), "archetype", $"assign to {player.Name}", true, false)) },
-            { "Experience", () => player.Experience = _inputManager.ReadInt("\nEnter new value for Experience: ") },
+            { "Archetype", () => {
+
+                var archetype = _inputManager.SelectFromList(
+                    _archetypeDao.GetAllArchetypes(),
+                    a => a.Name,
+                    "Select a new archetype",
+                    b => ColorfulToStringHelper.GetArchetypeColor(b)
+                );
+
+                if (archetype == null)
+                {
+                    _outputManager.WriteLine("\nArchetype not selected.\n", ConsoleColor.Red);
+                    return;
+                }
+
+                player.ArchetypeId = archetype.Id;
+                } },
             { "Gold", () => player.Inventory.Gold = _inputManager.ReadInt("\nEnter new value for Gold: ") },
             { "Capacity", () => player.Inventory.Capacity = _inputManager.ReadDecimal("\nEnter new value for Capacity: ") }
         };

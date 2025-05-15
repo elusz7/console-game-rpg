@@ -78,7 +78,7 @@ public class UltimateSkill : Skill
         }
     }
 
-    private void ScalePowerWithLevel(int level)
+    public void ScalePowerWithLevel(int level)
     {
         if (level != previousScaledLevel)
         {

@@ -27,7 +27,7 @@ public interface ISkill
     Archetype? Archetype { get; set; }
     Monster? Monster { get; set; }
 
-    void InitializeSkill();
+    void InitializeSkill(int level);
     void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null);
     void UpdateElapsedTime();
     void Reset();

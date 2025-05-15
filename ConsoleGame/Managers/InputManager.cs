@@ -290,4 +290,16 @@ public class InputManager(OutputManager outputManager)
         string confirm = ReadString($"\nPlease confirm {action} (y/n): ", ["y", "n"]).ToLower();
         return confirm == "y";
     }
+    public T GetEnumChoice<T>(string prompt) where T : Enum
+    {
+        var values = Enum.GetValues(typeof(T)).Cast<T>().ToList();
+
+        for (int i = 0; i < values.Count; i++)
+        {
+            _outputManager.WriteLine($"{i + 1}. {values[i]}");
+        }
+
+        var choice = ReadInt($"\n{prompt}: ", values.Count);
+        return values[choice - 1];
+    }
 }

@@ -8,16 +8,15 @@ public class MapFactory(RoomDao roomDao)
 {
     private readonly RoomDao _roomDao = roomDao;  
 
-    public List<Room> GenerateMap(int level, bool campaign)
+    public List<Room> GenerateMap(int level, bool campaign, bool randomMap)
     {
-        var allRooms = _roomDao.GetAllRooms();
-        var rooms = allRooms.ToList(); // Make a copy to mutate safely
+        var rooms = _roomDao.GetAllRooms().ToList();
         var entrance = rooms.First(r => r.Name.Equals("Entrance"));
 
-        if (campaign)
-        {
-            var totalRoomsAllowed = Math.Min(level * 3, rooms.Count) + 1;
-            
+        var totalRoomsAllowed = Math.Min(level * 3, rooms.Count) + 1;
+
+        if (campaign || randomMap)
+        {            
             rooms = MapHelper.CreateCampaignMap(totalRoomsAllowed, entrance, rooms);
         }
         else

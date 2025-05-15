@@ -1,5 +1,6 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Items;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Factories;
 
@@ -214,9 +215,35 @@ public class ItemFactory(ItemDao itemDao)
             merchantItems.Add(CreateItem(consumable));
         }
 
+        // Ensure at least one Martial and one Magical weapon
+        var martialWeapons = weapons.Where(w => w.DamageType == DamageType.Martial).ToList();
+        var magicalWeapons = weapons.Where(w => w.DamageType == DamageType.Magical).ToList();
+
         int weaponsToAdd = Math.Min(3, weapons.Count);
+
+        // Add one Martial weapon if available
+        if (martialWeapons.Count > 0)
+        {
+            var martial = martialWeapons[_rng.Next(martialWeapons.Count)];
+            merchantItems.Add(CreateItem(martial));
+            weapons.Remove(martial);
+            weaponsToAdd--;
+        }
+
+        // Add one Magical weapon if available
+        if (weaponsToAdd > 0 && magicalWeapons.Count > 0)
+        {
+            var magical = magicalWeapons[_rng.Next(magicalWeapons.Count)];
+            merchantItems.Add(CreateItem(magical));
+            weapons.Remove(magical);
+            weaponsToAdd--;
+        }
+
+        // Fill the rest with random weapons
         for (int i = 0; i < weaponsToAdd; i++)
         {
+            if (weapons.Count == 0) break;
+
             var weapon = weapons[_rng.Next(weapons.Count)];
             merchantItems.Add(CreateItem(weapon));
             weapons.Remove(weapon);

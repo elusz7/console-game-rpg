@@ -10,7 +10,6 @@ public interface IPlayer : ITargetable
     string Name { get; set; }
     int CurrentHealth { get; set; }
     int MaxHealth { get; set; }
-    int Experience { get; set; }
     int Level { get; set; }
     Inventory Inventory { get; set; }
     Archetype Archetype { get; set; }

@@ -6,6 +6,7 @@ using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using System.ComponentModel.DataAnnotations.Schema;
 using ConsoleGameEntities.Models.Items;
+using System.Numerics;
 
 namespace ConsoleGameEntities.Models.Entities;
 
@@ -16,7 +17,6 @@ public class Player : IPlayer
     [NotMapped]
 
     private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
-    public int Experience { get; set; }
     public int Level { get; set; }
     public int Id { get; set; }
     public string Name { get; set; }
@@ -118,9 +118,6 @@ public class Player : IPlayer
 
         builder.Append(", Health: ");
         builder.Append(MaxHealth);
-
-        builder.Append(", Experience: ");
-        builder.Append(Experience);
 
         builder.Append(", Capacity: ");
         builder.Append(Inventory?.Capacity.ToString() ?? "N/A");
@@ -374,7 +371,7 @@ public class Player : IPlayer
         {
             Inventory.AddItem(item);
             item.Inventory = Inventory;
-            item.InventoryId = Inventory.Id;
+            //item.InventoryId = Inventory.Id;
         }
         catch (InventoryException ex)
         {
@@ -382,5 +379,26 @@ public class Player : IPlayer
         }
 
         Inventory.Gold -= price;
+    }
+    public virtual void Initialize()
+    {
+        Level = 1;
+        MaxHealth = (int)Math.Round(Archetype.HealthBase * 1.5);
+
+        Inventory = new Inventory
+        {
+            Gold = _rng.Next(8, 18),
+            Capacity = (decimal)Math.Round((_rng.NextDouble() * 10 + 15), 2),
+            Items = new List<Item>(),
+            Player = this
+        };
+
+        foreach (var skill in Archetype.Skills)
+        {
+            skill.InitializeSkill(Level);
+        }
+
+        CurrentHealth = MaxHealth;
+        Archetype.CurrentResource = Archetype.MaxResource;
     }
 }

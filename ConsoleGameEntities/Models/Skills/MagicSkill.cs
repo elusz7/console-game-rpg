@@ -10,6 +10,8 @@ public class MagicSkill : Skill
 {
     public override void Activate(ITargetable? caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
+        bool monsterDeath = false;
+
         if (IsOnCooldown)
             throw new SkillCooldownException("This skill is still on cooldown.");
 
@@ -36,12 +38,20 @@ public class MagicSkill : Skill
                     break;
 
                 case TargetType.AllEnemies:
-                    foreach (var tar in multipleEnemies)
-                        tar.TakeDamage(Power, DamageType);
+                    foreach (var tar in multipleEnemies) {
+                        try
+                        {
+                            tar.TakeDamage(Power, DamageType);
+                        }
+                        catch (MonsterDeathException) { monsterDeath = true; }
+                    }
                     break;
             }
 
-            ElapsedTime = 0;
+            Reset();
+
+            if (monsterDeath)
+                throw new MonsterDeathException();
         }
         else if (caster is Monster monster)
         {
@@ -51,7 +61,8 @@ public class MagicSkill : Skill
             monster.AddActionItem(this);
 
             singleEnemy.TakeDamage(Power, DamageType);
-            ElapsedTime = 0;
+
+            Reset();
         }
     }
 }
