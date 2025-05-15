@@ -82,20 +82,26 @@ It supports searching, logging, and advanced features such as equipment tracking
 ### A+ Stretch Level (500/500 points)
 
 - **All C, B, and A Level Features**
-- **Stretch Feature:**  
+- **Stretch?? Feature:**  
   Players have an Archetype, which determines their damage type and skills (previously abilities).
+
   Monsters can have skills assigned to them as well. Monsters are split into different threat levels which determines how hard they are to fight, and they employ various strategies to attack the player.
+
   Skills are split into their different effects, damaging skills, support skills (buff/debuff), ultimate skills, and boss monsters have a special skill that scales with the phase they're in.
+
   Rooms are all established and connected in the database, but the user can manipulate the connections as they desire.
+
   Items have four types: Weapon, Armor, Valuable, and Consumable. A player can equip 1 Weapon of matching Archetype damage type and up to 4 pieces of armor, 1 per ArmorType. Consumables affects the player's
     archetype resource (stamina/mana), the player's health, and an item's durability. Valuables are items that can be found on monsters during combat. Other item types can be looted from monsters... but beware...
+
   All of these can be created, edited, and deleted through the administrator menu.
 
-  Adventuring - Select an established character and enter a floor generated based on the player's level. Once you clear the floor of monsters, you level up and move onto the next floor.
 
-  Campaign - Nearly identical set up to Adventure, but you start with a new player and advance from level 1. Monsters are pre-determined and include boss monsters.
+  #Adventuring# - Select an established character and enter a floor generated based on the player's level. Once you clear the floor of monsters, you level up and move onto the next floor.
 
-  Merchant - She is available in both adventuring and the campaign. She provides many services that can be helpful.
+  #Campaign# - Nearly identical set up to Adventure, but you start with a new player and advance from level 1. Monsters are pre-determined and include boss monsters.
+
+  #Merchant# - She is available in both adventuring and the campaign. She provides many services that can be helpful.
 
 ---
 
@@ -114,7 +120,7 @@ It supports searching, logging, and advanced features such as equipment tracking
 
 ## Final Comments
 
-(Include any final thoughts, lessons learned, or comments about the class/project here.)
+This was a lot of fun and a little frustrating. There's so many more things I want to implement. I liked being able to create functions that I could reuse and call through multiple different classes.
 
 ---
 
