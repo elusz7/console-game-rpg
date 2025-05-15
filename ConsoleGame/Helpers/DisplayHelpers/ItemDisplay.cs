@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Items;
+using ConsoleGame.Managers;
 
-namespace ConsoleGame.Managers.DisplayHelpers;
+namespace ConsoleGame.Helpers.DisplayHelpers;
 
 public class ItemDisplay(InputManager inputManager, OutputManager outputManager, ItemDao itemDao)
 {
@@ -57,10 +54,10 @@ public class ItemDisplay(InputManager inputManager, OutputManager outputManager,
         {
             case "Search":
                 var itemName = _inputManager.ReadString("\nEnter item name to find: ");
-                items = _itemDao.GetAllItems(itemName);
+                items = _itemDao.GetItemsByName(itemName);
                 break;
             case "Type":
-                var itemType = _inputManager.ReadString("\nWeapon, Armor, Valuable, or Consumable? ", ["weapon", "armor", "valuable", "consumable"]).ToLower();
+                var itemType = _inputManager.GetEnumChoice<ItemType>("Select a type to view");
                 items = _itemDao.GetItemsByType(itemType);
                 break;
             default:
@@ -74,6 +71,6 @@ public class ItemDisplay(InputManager inputManager, OutputManager outputManager,
             return;
         }
 
-        _inputManager.PaginateList(items);
+        _inputManager.Viewer(items, i => ColorfulToStringHelper.ItemToString(i), "", i => ColorfulToStringHelper.GetItemColor(i));
     }
 }

@@ -31,7 +31,11 @@ public class SkillDao(GameContext context)
     {
         return [.. _context.Skills];
     }
-
+    public List<Skill> GetSkillsByName(string name)
+    {
+        return [.. _context.Skills.ToList()
+            .Where(s => s.Name.Contains(name, StringComparison.OrdinalIgnoreCase))];
+    }
     public List<Skill> GetAllNonCoreSkills()
     {
         return [.. _context.Skills.Where(s => s.Id > 212)];

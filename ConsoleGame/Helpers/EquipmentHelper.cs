@@ -68,7 +68,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
         }
 
         _outputManager.WriteLine();
-        var unequippedItem = SelectItem("Select an item to unequip", player.Equipment);
+        var unequippedItem = _inputManager.SelectItem("Select an item to unequip", player.Equipment);
         
         if (unequippedItem == null)
         {
@@ -94,7 +94,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
         }
 
         _outputManager.WriteLine();
-        var selectedItem = SelectItem("Select an item to equip", availableItems);
+        var selectedItem = _inputManager.SelectItem("Select an item to equip", availableItems);
 
         if (selectedItem == null)
         {
@@ -125,7 +125,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
         }
 
         _outputManager.WriteLine();
-        var item = SelectItem("Select a consumable to use", consumables);
+        var item = _inputManager.SelectItem("Select a consumable to use", consumables);
 
         if (item == null)
         {
@@ -145,7 +145,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
                         _outputManager.WriteLine($"\nNo items available to use {consumable.Name} on.", ConsoleColor.Red);
                     }
 
-                    var target = SelectItem("Select an item to increase durability", items);
+                    var target = _inputManager.SelectItem("Select an item to increase durability", items);
 
                     if (target == null)
                     {
@@ -163,16 +163,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
         
         OutputActionItems(player);
     }
-    private Item? SelectItem(string prompt, List<Item> items)
-    {
-        return _inputManager.SelectFromList(
-            items,
-            i => ColorfulToStringHelper.ItemStatsString(i),
-            prompt,
-            i => ColorfulToStringHelper.GetItemColor(i)
-        );
-    }
-    
+        
     private void OutputActionItems(Player player)
     {
         // SortedList auto-orders by key and avoids Dictionary's duplicate key issue

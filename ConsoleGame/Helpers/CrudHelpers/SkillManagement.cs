@@ -1,5 +1,6 @@
 ﻿    using System.Reflection.PortableExecutable;
 using ConsoleGame.GameDao;
+using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
@@ -160,7 +161,12 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
             return;
         }
 
-        var skill = _inputManager.PaginateList(skills, "skill", "edit", true, false);
+        var skill =
+            _inputManager.Selector(
+                skills,
+                s => ColorfulToStringHelper.SkillToString(s),
+                "Select a skill to edit",
+                s => ColorfulToStringHelper.GetSkillColor(s));
 
         if (skill == null)
         {
@@ -226,31 +232,33 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
 
                         skill.TargetType = targetType;
                     }
-                }},
-            { "Support Stat Affected", () =>
-                {                    
-                    if (skill is SupportSkill supportSkill)
-                    {
-                        var statType = _inputManager.GetEnumChoice<StatType>("Select the new stat to affect");
-
-                        if (statType == StatType.Health && skill.TargetType != TargetType.Self)
-                        {
-                            _outputManager.WriteLine("Health is not a valid option for a support skill targeting enemies. Please select a different stat type.", ConsoleColor.Red);
-                            return;
-                        }
-                        supportSkill.StatAffected = statType;
-                    }
-                    else
-                        _outputManager.WriteLine("This skill is not a SupportSkill!", ConsoleColor.Red);
                 }}
         };
+
+        if (skill is SupportSkill)
+        {
+            propertyActions["Support Stat Affected"] = () =>
+            {
+                if (skill is SupportSkill supportSkill)
+                {
+                    var statType = _inputManager.GetEnumChoice<StatType>("Select the new stat to affect");
+
+                    if (statType == StatType.Health && skill.TargetType != TargetType.Self)
+                    {
+                        _outputManager.WriteLine("Health is not a valid option for a support skill targeting enemies. Please select a different stat type.", ConsoleColor.Red);
+                        return;
+                    }
+                    supportSkill.StatAffected = statType;
+                }
+            };
+        }
 
         while (true)
         {
             _outputManager.WriteLine($"\nEditing skill: {skill.Name}", ConsoleColor.Cyan);
             _outputManager.WriteLine($"{skill}\n", ConsoleColor.Green);
 
-            int option = DisplayEditMenu([.. propertyActions.Keys]);
+            int option = _inputManager.DisplayEditMenu([.. propertyActions.Keys]);
 
             if (option == propertyActions.Count + 1)
             {
@@ -263,16 +271,6 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
             propertyActions[selectedProperty].Invoke();
         }
     }
-    private int DisplayEditMenu(List<string> properties)
-    {
-        for (int i = 0; i < properties.Count; i++)
-        {
-            _outputManager.WriteLine($"{i + 1}. Change {properties[i]}");
-        }
-        _outputManager.WriteLine($"{properties.Count + 1}. Save and Exit", ConsoleColor.Red);
-
-        return _inputManager.ReadInt("\nWhat property would you like to edit? ", properties.Count + 1);
-    }
     private void AssignSkill()
     {
         do
@@ -284,19 +282,25 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
                 return;
             }
 
-            var skill = _inputManager.PaginateList(skills, "skill", "assign", true, false);
+            var skill = 
+                _inputManager.Selector(
+                    skills,
+                    s => ColorfulToStringHelper.SkillToString(s),
+                    "Select a skill to assign",
+                    s => ColorfulToStringHelper.GetSkillColor(s));
+
             if (skill == null)
             {
                 _outputManager.WriteLine("\nNo skill selected for assignment.\n", ConsoleColor.Red);
                 return;
             }
 
-            var assignment = _inputManager.ReadString("\nAssign skill to monster or archetype? (m/a): ", ["m", "a"]).ToLower();
+            var assignment = _inputManager.ReadString("\nAssign skill to monster or archetype (m/a)? ", ["m", "a"]).ToLower();
 
             object? target = assignment switch
             {
-                "m" => _inputManager.PaginateList(_monsterDao.GetAllMonsters(), "monster", "assign", true, false),
-                "a" => _inputManager.PaginateList(_archetypeDao.GetAllArchetypes(), "archetype", "assign", true, false),
+                "m" => _inputManager.Selector(_monsterDao.GetAllMonsters(), m => ColorfulToStringHelper.MonsterToString(m), $"Select which monster to assign {skill.Name}", m => ColorfulToStringHelper.GetMonsterColor(m)),
+                "a" => _inputManager.Selector(_archetypeDao.GetAllArchetypes(), a => ColorfulToStringHelper.ArchetypeToString(a), $"Select which archetype to assign {skill.Name}", a => ColorfulToStringHelper.GetArchetypeColor(a)),
                 _ => null
             };
 
@@ -363,7 +367,12 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
             return;
         }
 
-        var skill = _inputManager.PaginateList(skills, "skill", "unassign", true, false);
+        var skill = _inputManager.Selector(
+                skills,
+                s => ColorfulToStringHelper.SkillToString(s),
+                "Select a skill to unassign",
+                s => ColorfulToStringHelper.GetSkillColor(s));
+
         if (skill == null)
         {
             _outputManager.WriteLine("\nNo skill selected for unassignment.\n", ConsoleColor.Red);
@@ -392,7 +401,12 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
             _outputManager.WriteLine("No skills available for deletion.", ConsoleColor.Red);
             return;
         }
-        var skill = _inputManager.PaginateList(skills, "skill", "delete", true, false);
+        var skill = _inputManager.Selector(
+            skills,
+            s => ColorfulToStringHelper.SkillToString(s),
+            "Select a skill to delete",
+            s => ColorfulToStringHelper.GetSkillColor(s));
+
         if (skill == null)
         {
             _outputManager.WriteLine("\nNo skill selected for deletion.\n", ConsoleColor.Red);

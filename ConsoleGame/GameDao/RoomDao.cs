@@ -1,6 +1,7 @@
 ﻿using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Migrations;
 using ConsoleGameEntities.Models.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.GameDao;
 
@@ -39,7 +40,10 @@ public class RoomDao(GameContext context)
     {
         return _context.Rooms?.ToList() ?? [];
     }
-
+    public List<Room> GetAllRoomsNoTracking()
+    {
+        return _context.Rooms?.AsNoTracking().ToList() ?? [];
+    }
     public Room? FindRoomByName(string name)
     {
         return _context.Rooms?.ToList().FirstOrDefault(r => r.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
@@ -47,7 +51,7 @@ public class RoomDao(GameContext context)
 
     public bool RoomExists(string name)
     {
-        return _context.Rooms?.Any(r => r.Name.Equals(name, StringComparison.OrdinalIgnoreCase)) ?? false;
+        return _context.Rooms?.ToList().Any(r => r.Name.Equals(name, StringComparison.OrdinalIgnoreCase)) ?? false;
     }
 
     public Room GetEntrance()

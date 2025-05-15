@@ -4,54 +4,71 @@ using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGame.Managers;
-using ConsoleGameEntities.Interfaces;
+using System.Text;
 using ConsoleGameEntities.Exceptions;
 using System.Numerics;
+using System.Drawing;
 
 namespace ConsoleGame.Helpers.DisplayHelpers;
 
 public static class ColorfulToStringHelper
 {
-    public static void ColorItemString(Item item, OutputManager _output)
+    public static ConsoleColor GetItemColor(Item item) => item switch
     {
-        var color = GetItemColor(item);
-        _output.Write($"[{item.Name}] ", color);
-        _output.Write(": ");
-        _output.Write($"{item.Description}", ConsoleColor.Cyan);
-        _output.Write($"\n\tLevel: {item.RequiredLevel}, Value: {item.Value}, Durability: {item.Durability}, Weight: {item.Weight}");
+        Weapon => ConsoleColor.Red,
+        Armor => ConsoleColor.Green,
+        Consumable => ConsoleColor.Blue,
+        _ => ConsoleColor.Yellow
+    };
+    public static ConsoleColor GetSkillColor(Skill skill) => skill.SkillCategory switch
+    {
+        SkillCategory.Basic => ConsoleColor.Red,
+        SkillCategory.Support => ConsoleColor.Blue,
+        SkillCategory.Ultimate => ConsoleColor.Green,
+        _ => ConsoleColor.Yellow
+    };
+    public static ConsoleColor GetArchetypeColor(Archetype archetype) => archetype.ArchetypeType switch
+    {
+        ArchetypeType.Martial => ConsoleColor.Red,
+        ArchetypeType.Magical => ConsoleColor.Blue,
+        _ => ConsoleColor.White
+    };
+    public static ConsoleColor GetMonsterColor(Monster monster)
+    {
+        return monster.ThreatLevel switch { 
+            ThreatLevel.Low => ConsoleColor.Gray, 
+            ThreatLevel.Medium => ConsoleColor.Green, 
+            ThreatLevel.High => ConsoleColor.Blue, 
+            ThreatLevel.Elite => ConsoleColor.Yellow,
+            _ => ConsoleColor.Red };
+    }    
+    public static string ItemStatsString(Item item, decimal? valueMultiplier = null)
+    {
+        if (valueMultiplier != null) 
+            return $"{item.Name}{GetArmorType(item)} - {item.Value * valueMultiplier:0.00} [DUR: {item.Durability}{GetItemStats(item)}]";
 
-        switch (item)
-        {
-            case Weapon weapon:
-                _output.Write($"\n\tAttack Power: {weapon.AttackPower}, Damage Type: {weapon.DamageType}", ConsoleColor.Red);
-                break;
-            case Armor armor:
-                _output.Write($"\n\tDefense: {armor.DefensePower}, Resistance: {armor.Resistance}", ConsoleColor.Green);
-                break;
-            case Consumable consumable:
-                _output.Write($"\n\tPower: {consumable.Power}, Consumable Type: {consumable.ConsumableType}", ConsoleColor.Yellow);
-                break;
-        }
-
-        if (item.Inventory?.Player != null)
-        {
-            _output.Write($"\n\tHeld By: {item.Inventory.Player.Name}", ConsoleColor.Cyan);
-        }
-
-        _output.WriteLine();
+        return $"{item.Name}{GetArmorType(item)} [DUR: {item.Durability}{GetItemStats(item)}]";
     }
-
-    public static void ColorPlayerOutput(Player player, OutputManager _output)
+    public static string SkillStatsString(Player player, Skill skill)
     {
-        _output.Write($"[{player.Name}] ", ConsoleColor.Green);
-        _output.Write($"{player.Archetype.Name}, Level: {player.Level}, Health: {player.MaxHealth}, ");
-        _output.WriteLine($"Gold: {player.Inventory.Gold}, Carrying Weight: {player.Inventory.GetCarryingWeight()}/{player.Inventory.Capacity}");
+        return $"{skill.Name} [power: {skill.Power}, cost: {skill.Cost}, cooldown: {skill.Cooldown}, {GetTargets(skill)}{GetSupportStat(skill)}]{WaitingStats(player, skill)}";
     }
-
-    public static void ColorRoomOutput(Room room, OutputManager _output)
+    public static string ArchetypeToString(Archetype archetype)
     {
-        _output.Write($"[{room.Name}] ", ConsoleColor.DarkYellow);
-        _output.WriteLine($"{room.Description}");
+        return $"{archetype.Name} [Health: {archetype.HealthBase}, Attack: {archetype.AttackBonus}, Magic: {archetype.MagicBonus}, Defense: {archetype.DefenseBonus}, Resistance: {archetype.ResistanceBonus}, Speed: {archetype.Speed}]";
+    }
+    public static string SkillToString(Skill skill)
+    {
+        return $"{skill.Name} - {skill.Description}\n\t[level: {skill.RequiredLevel}, power: {skill.Power}, cost: {skill.Cost}, cooldown: {skill.Cooldown}, {GetTargets(skill)}{GetSupportStat(skill)}]";
+    }
+    public static string MonsterToString(Monster monster)
+    {
+        return $"{monster.Name} - {monster.Description}\n\t[threat level: {monster.ThreatLevel}, damage type: {monster.DamageType}, level: {monster.Level}, health: {monster.MaxHealth}]";
+    }
+    public static string RoomToString(Room room)
+    {
+        var sb = new StringBuilder();
+        sb.Append($"{room.Name} - {room.Description}");
 
         var directions = new List<string>();
 
@@ -64,79 +81,47 @@ public static class ColorfulToStringHelper
         if (room.West != null)
             directions.Add($"West: {room.West.Name}");
 
-        if (directions.Count > 0)
+        sb.Append($"\n\t{string.Join(", ", directions)}");
+
+        return sb.ToString();
+    }
+    public static string PlayerToString(Player player)
+    {
+        var sb = new StringBuilder();
+        sb.Append($"{player.Name} [Level {player.Level} {player.Archetype.Name}]");
+        sb.Append($"\n\t[Health: {player.MaxHealth}, Gold: {player.Inventory.Gold}, Carrying Weight: {player.Inventory.GetCarryingWeight()}/{player.Inventory.Capacity}]");
+
+        return sb.ToString();
+    }
+    public static string ItemToString(Item item)
+    {
+        var sb = new StringBuilder();
+        sb.Append($"[{item.Name}] : {item.Description}");
+        sb.Append($"\n\tLVL: {item.RequiredLevel}, VAL: {item.Value}, DUR: {item.Durability}, WGHT: {item.Weight}");
+
+        switch (item)
         {
-            _output.Write("\tConnections: ", ConsoleColor.DarkGreen);
-            _output.WriteLine(string.Join(", ", directions), ConsoleColor.DarkGreen);
+            case Weapon weapon:
+                sb.Append($"\n\tATK: {weapon.AttackPower}, DMG: {weapon.DamageType}");
+                break;
+            case Armor armor:
+                sb.Append($"\n\tDEF: {armor.DefensePower}, RES: {armor.Resistance}");
+                break;
+            case Consumable consumable:
+                sb.Append($"\n\tPWR: {consumable.Power}, TYPE: {consumable.ConsumableType}");
+                break;
         }
-    }
 
-    public static void ColorMonsterOutput(Monster monster, OutputManager _output)
-    {
-        _output.Write($"[{monster.Name}] ", ConsoleColor.DarkMagenta);
-        _output.WriteLine($"{monster.Description}");
-        _output.Write($"\t{monster.ThreatLevel} ", ConsoleColor.Red);
-        _output.Write($"{monster.DamageType}, ", ConsoleColor.Cyan);
-        _output.WriteLine($"Level: {monster.Level}, Health: {monster.MaxHealth}");
-    }
-
-    public static void ColorSkillOutput(Skill skill, OutputManager _output)
-    {
-        var color = GetSkillColor(skill);
-        _output.Write($"[{skill.Name}] ", color);
-        _output.Write($"{skill.Description}");
-        _output.Write($"\n\tLevel: {skill.RequiredLevel}, Power: {skill.Power}, Cost: {skill.Cost}, Cooldown: {skill.Cooldown}, Type: {skill.SkillType}");
-
-        if (skill is SupportSkill support)
+        if (item.Inventory?.Player != null)
         {
-            _output.Write($", {(SupportEffectType)support.SupportEffect}s {support.StatAffected}");
+            sb.Append($"\n\tHeld By: {item.Inventory.Player.Name}");
         }
 
-        _output.WriteLine();
+        return sb.ToString();
     }
 
-    public static void ColorArchetypeOutput(Archetype archetype, OutputManager _output)
-    {
-        var color = GetArchetypeColor(archetype);
-        _output.Write($"[{archetype.Name}] ", color);
-        _output.WriteLine($"{archetype.Description}");
-        _output.Write($"\tHealth: {archetype.HealthBase}, Attack: {archetype.AttackBonus}, Magic: {archetype.MagicBonus}, Defense: {archetype.DefenseBonus}, Resistance: {archetype.ResistanceBonus}, Speed: {archetype.Speed}");
-    }
 
-    public static ConsoleColor GetItemColor(Item item) => item switch
-    {
-        Weapon => ConsoleColor.Red,
-        Armor => ConsoleColor.Green,
-        Consumable => ConsoleColor.Blue,
-        _ => ConsoleColor.Yellow
-    };
 
-    public static ConsoleColor GetSkillColor(Skill skill) => skill.SkillCategory switch
-    {
-        SkillCategory.Basic => ConsoleColor.Red,
-        SkillCategory.Support => ConsoleColor.Blue,
-        SkillCategory.Ultimate => ConsoleColor.Green,
-        _ => ConsoleColor.Yellow
-    };
-
-    public static ConsoleColor GetArchetypeColor(Archetype archetype) => archetype.ArchetypeType switch
-    {
-        ArchetypeType.Martial => ConsoleColor.Red,
-        ArchetypeType.Magical => ConsoleColor.Blue,
-        _ => ConsoleColor.White
-    };
-
-    public static string ItemStatsString(Item item, decimal? valueMultiplier = null)
-    {
-        if (valueMultiplier != null) 
-            return $"{item.Name}{GetArmorType(item)} - {item.Value * valueMultiplier:0.00} [DUR: {item.Durability}{GetItemStats(item)}]";
-
-        return $"{item.Name}{GetArmorType(item)} [DUR: {item.Durability}{GetItemStats(item)}]";
-    }
-    public static string SkillStatsString(Player player, Skill skill)
-    {
-        return $"{skill.Name} [power: {skill.Power}, cost: {skill.Cost}, cooldown: {skill.Cooldown}, {GetTargets(skill)}{GetSupportStat(skill)}]{WaitingStats(player, skill)}";
-    }
     public static string GetItemStats(Item item)
     {
         return item switch

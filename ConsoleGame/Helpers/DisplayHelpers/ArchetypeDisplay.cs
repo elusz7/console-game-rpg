@@ -1,6 +1,7 @@
 ﻿using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGame.GameDao;
+using ConsoleGame.Helpers.DisplayHelpers;
 
 namespace ConsoleGame.Managers.DisplayHelpers;
 
@@ -44,9 +45,7 @@ public class ArchetypeDisplay(InputManager inputManager, OutputManager outputMan
         switch (criteria)
         {
             case "Type":
-                _outputManager.WriteLine("1. Martial Archetypes\n2. Magical Archetypes", ConsoleColor.Yellow);
-                var typeChoice = _inputManager.ReadInt("Choose Archetype Type: ", 2);
-                var archetypeType = typeChoice == 1 ? ArchetypeType.Martial : ArchetypeType.Magical;
+                var archetypeType = _inputManager.GetEnumChoice<ArchetypeType>("Select an archetype type to list:");
 
                 archetypes = _archetypeDao.GetArchetypesByType(archetypeType);
                 break;
@@ -61,6 +60,6 @@ public class ArchetypeDisplay(InputManager inputManager, OutputManager outputMan
             return;
         }
 
-        _inputManager.PaginateList(archetypes);
+        _inputManager.Viewer(archetypes, a => ColorfulToStringHelper.ArchetypeToString(a), "", a => ColorfulToStringHelper.GetArchetypeColor(a));
     }
 }

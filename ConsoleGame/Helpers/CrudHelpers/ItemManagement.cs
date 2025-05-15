@@ -1,9 +1,10 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGame.Managers;
 using ConsoleGameEntities.Models.Items;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
-namespace ConsoleGame.Managers.CrudHelpers;
+namespace ConsoleGame.Helpers.CrudHelpers;
 
 public class ItemManagement(InputManager inputManager, OutputManager outputManager, ItemDao itemDao)
 {
@@ -47,7 +48,7 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
         {
             _outputManager.WriteLine();
 
-            ItemType itemType = GetItemType();
+            ItemType itemType = _inputManager.GetEnumChoice<ItemType>("Select item type to create");
             Item item = CreateItem(itemType);
 
             _itemDao.AddItem(item);
@@ -56,19 +57,6 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
 
         } while (_inputManager.LoopAgain("add"));
         _outputManager.WriteLine();
-    }
-    private ItemType GetItemType()
-    {
-        _outputManager.WriteLine("\nSelect item type:");
-        var itemTypes = Enum.GetValues<ItemType>();
-        for (int i = 0; i < itemTypes.Length; i++)
-        {
-            _outputManager.WriteLine($"{i + 1}. {itemTypes[i]}");
-        }
-
-        int index = _inputManager.ReadInt("Enter the number corresponding to the item type: ", itemTypes.Length) - 1;
-
-        return itemTypes[index];
     }
     private Item CreateItem(ItemType itemType)
     {
@@ -90,7 +78,7 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
                 Weight = weight,
                 RequiredLevel = level,
                 AttackPower = _inputManager.ReadInt("Enter item attack power: "),
-                DamageType = (DamageType)(_inputManager.ReadInt("Enter item damage type (1: Martial, 2: Magical): ", 2) - 1)
+                DamageType = _inputManager.GetEnumChoice<DamageType>("Select item damage type")
             },
             ItemType.Armor => new Armor
             {
@@ -102,7 +90,7 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
                 RequiredLevel = level,
                 DefensePower = _inputManager.ReadInt("Enter item defense power: "),
                 Resistance = _inputManager.ReadInt("Enter item resistance: "),
-                ArmorType = (ArmorType)(_inputManager.ReadInt("Enter item armor type (1: Head, 2: Chest, 3: Arms, 4: Legs): ", 4) - 1)
+                ArmorType = _inputManager.GetEnumChoice<ArmorType>("Select item armor type")
             },
             ItemType.Valuable => new Valuable
             {
@@ -122,14 +110,14 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
                 Weight = weight,
                 RequiredLevel = level,
                 Power = _inputManager.ReadInt("Enter item power: "),
-                ConsumableType = (ConsumableType)(_inputManager.ReadInt("Enter item consumable type (1: Health, 2: Durability, 3: Resource): ", 3) - 1)
+                ConsumableType = _inputManager.GetEnumChoice<ConsumableType>("Select item consumable type")
             },
             _ => throw new ArgumentException("Invalid item type")
         };
     }
     private void EditItem()
     {
-        List<Item> items = _itemDao.GetAllNonCoreItems();
+        var items = _itemDao.GetAllNonCoreItems();
 
         if (items.Count == 0)
         {
@@ -137,7 +125,12 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
             return;
         }
 
-        Item? item = _inputManager.PaginateList(items, "item", "edit", true);
+        Item? item = 
+            _inputManager.Selector(
+                items,
+                i => ColorfulToStringHelper.ItemStatsString(i),
+                "Select item to edit",
+                ColorfulToStringHelper.GetItemColor);
 
         if (item == null)
         {
@@ -145,37 +138,49 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
             return;
         }
 
-        string[] validResponses = item switch
+        var propertyActions = new Dictionary<string, Action>
         {
-            Weapon => ["Name", "Description", "Value", "Durability", "Weight", "Attack power", "Damage type"],
-            Armor => ["Name", "Description", "Value", "Durability", "Weight", "Defense power", "Resistance"],
-            Valuable => ["Name", "Description", "Value", "Durability", "Weight"],
-            Consumable => ["Name", "Description", "Value", "Durability", "Weight", "Power"],
-            _ => throw new ArgumentException("Invalid item type")
+            { "Name", () => item.Name = _inputManager.ReadString("\nEnter new name: ") },
+            { "Description", () => item.Description = _inputManager.ReadString("\nEnter new description: ") },
+            { "Value", () => item.Value = _inputManager.ReadDecimal("\nEnter new value: ") },
+            { "Durability", () => item.Durability = _inputManager.ReadInt("\nEnter new durability: ") },
+            { "Weight", () => item.Weight = _inputManager.ReadDecimal("\nEnter new weight: ") }
         };
+
+        if (item is Armor a)
+        {
+            propertyActions["Armor type"] = () => a.ArmorType = _inputManager.GetEnumChoice<ArmorType>("Select new armor type");
+            propertyActions["Defense power"] = () => a.DefensePower = _inputManager.ReadInt("\nEnter new defense power: ");
+            propertyActions["Resistance"] = () => a.Resistance = _inputManager.ReadInt("\nEnter new resistance: ");
+        }
+
+        if (item is Weapon w)
+        {
+            propertyActions["Damage type"] = () => w.DamageType = _inputManager.GetEnumChoice<DamageType>("Select new damage type");
+            propertyActions["Attack power"] = () => w.AttackPower = _inputManager.ReadInt("\nEnter new attack power: ");
+        }
+
+        if (item is Consumable c)
+            propertyActions["power"] = () => c.Power = _inputManager.ReadInt("\nEnter new power: ");
 
         while (true)
         {
             _outputManager.Clear();
             _outputManager.WriteLine($"Editing item {item.Name}.", ConsoleColor.Cyan);
-            ColorfulToStringHelper.ColorItemString(item, _outputManager);
+            _outputManager.WriteLine(ColorfulToStringHelper.ItemToString(item), ColorfulToStringHelper.GetItemColor(item));
             _outputManager.WriteLine();
-            for (int i = 0; i < validResponses.Length; i++)
-            {
-                _outputManager.WriteLine($"{i + 1}. {validResponses[i]}");
-            }
-            _outputManager.WriteLine($"{validResponses.Length + 1}. Exit");
 
-            int index = _inputManager.ReadInt("\nSelect property to edit by number: ", validResponses.Length + 1) - 1;
+            int option = _inputManager.DisplayEditMenu([.. propertyActions.Keys]);
 
-            if (index == validResponses.Length)
+            if (option == propertyActions.Count + 1)
             {
                 _itemDao.UpdateItem(item);
-                _outputManager.WriteLine($"\nItem {item.Name} successfully updated.\n", ConsoleColor.Green);
+                _outputManager.WriteLine($"\nExiting. Any changes made have been successfully applied to {item.Name}\n", ConsoleColor.Green);
                 return;
             }
 
-            UpdateItemProperty(item, validResponses[index]);
+            string selectedProperty = propertyActions.Keys.ElementAt(option - 1);
+            propertyActions[selectedProperty].Invoke();
         }
     }
     private void DeleteItem()
@@ -190,7 +195,12 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
                 break;
             } 
 
-            Item? itemToDelete = _inputManager.PaginateList(items, "item", "delete", true);
+            Item? itemToDelete =
+                _inputManager.Selector(
+                    items,
+                    i => ColorfulToStringHelper.ItemStatsString(i),
+                    "Select item to delete",
+                    ColorfulToStringHelper.GetItemColor);
 
             if (itemToDelete == null)
             {
@@ -212,23 +222,5 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
 
         } while (_inputManager.LoopAgain("delete"));
         _outputManager.WriteLine();
-    }
-    private void UpdateItemProperty(Item item, string property)
-    {
-        Action updateAction = property switch
-        {
-            "Name" => () => item.Name = _inputManager.ReadString("\nEnter new name: "),
-            "Description" => () => item.Description = _inputManager.ReadString("\nEnter new description: "),
-            "Value" => () => item.Value = _inputManager.ReadDecimal("\nEnter new value: "),
-            "Durability" => () => item.Durability = _inputManager.ReadInt("\nEnter new durability: "),
-            "Weight" => () => item.Weight = _inputManager.ReadDecimal("\nEnter new weight: "),
-            "Attack power" => () => ((Weapon)item).AttackPower = _inputManager.ReadInt("\nEnter new attack power: "),
-            "Defense power" => () => ((Armor)item).DefensePower = _inputManager.ReadInt("\nEnter new defense power: "),
-            "Resistance" => () => ((Armor)item).Resistance = _inputManager.ReadInt("\nEnter new resistance: "),
-            "Damage type" => () => ((Weapon)item).DamageType = (DamageType)(_inputManager.ReadInt("\nEnter new damage type (1: Martial, 2: Magical): ", 2) - 1),
-            "Power" => () => ((Consumable)item).Power = _inputManager.ReadInt("\nEnter new power: "),
-            _ => throw new ArgumentException("Invalid property")
-        };
-        updateAction();
     }
 }

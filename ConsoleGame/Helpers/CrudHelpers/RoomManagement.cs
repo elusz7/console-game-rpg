@@ -1,4 +1,5 @@
 ﻿using ConsoleGame.GameDao;
+using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Managers.CrudHelpers;
@@ -10,11 +11,11 @@ public class RoomManagement(InputManager inputManager, OutputManager outputManag
     private readonly RoomDao _roomDao = roomDao;
 
     public void Menu()
-    {        
+    {
+        _outputManager.Clear();
+
         while (true)
         {
-            _outputManager.Clear();
-
             _outputManager.WriteLine("Room Management Menu", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. Add Room"
                 + "\n2. Edit Room Description"
@@ -42,39 +43,40 @@ public class RoomManagement(InputManager inputManager, OutputManager outputManag
     }
     private void AddRoom()
     {
-        Dictionary<string, string[]> availableRooms = MapHelper.GetAvailableDirections(_roomDao.GetAllRooms());
+        var availableRooms = MapHelper.GetAvailableDirections2(_roomDao.GetAllRooms());
 
         if (availableRooms.Count == 0)
         {
-            _outputManager.WriteLine("No available rooms to add onto. Please create a room first.", ConsoleColor.Red);
+            _outputManager.WriteLine("No available rooms to add onto. Please create a room first.\n", ConsoleColor.Red);
             return;
         }
 
-        for (int i = 0; i < availableRooms.Count; i++)
-        {
-            var entry = availableRooms.ElementAt(i);
-            _outputManager.WriteLine($"[{i + 1}] {entry.Key} ({string.Join(", ", entry.Value)})");
-        }
+        _outputManager.WriteLine("\n=== Adding New Room ===\n", ConsoleColor.Green);
 
-        int index = _inputManager.ReadInt("\tSelect a room to add onto by number: ", availableRooms.Count);
-
-        Room? roomToAddOnto = _roomDao.FindRoomByName(availableRooms.ElementAt(index - 1).Key);
+        var roomToAddOnto = _inputManager.Selector(
+            availableRooms.Keys.ToList(),
+            r => $"{r.Name} [{string.Join(", ", availableRooms[r])}]",
+            "Select the room you wish to add this room to",
+            colorSelector: r => ConsoleColor.White);
 
         if (roomToAddOnto == null)
         {
-            _outputManager.WriteLine("Invalid room selection. Please try again.", ConsoleColor.Red);
-            //if you're getting this error something went very wrong
+            _outputManager.WriteLine("\nRoom placement cancelled. Returning to menu.\n", ConsoleColor.Red);
             return;
         }
 
-        string[] directions = availableRooms[roomToAddOnto.Name];
+        var directions = availableRooms[roomToAddOnto];
 
-        string directionToAddOnto = directions[0];
+        _outputManager.WriteLine($"\nYou selected {roomToAddOnto.Name}. Available directions: {string.Join(", ", directions)}\n", ConsoleColor.Green);
 
-        if (directions.Length > 1)
+        var directionToAddOnto = directions.Count == 1
+            ? directions[0]
+            : _inputManager.Selector(directions, d => d, "Select the direction to add onto");
+
+        if (directionToAddOnto == null)
         {
-            _outputManager.WriteLine($"\nYou selected {roomToAddOnto.Name}. Available directions: {string.Join(", ", directions)}", ConsoleColor.Green);
-            directionToAddOnto = _inputManager.ReadString($"Enter direction to add room ({string.Join("/", directions)}): ", directions);
+            _outputManager.WriteLine("\nRoom placement cancelled. Returning to menu.\n", ConsoleColor.Red);
+            return;
         }
 
         _outputManager.WriteLine($"\nAdding new room to the {directionToAddOnto} of {roomToAddOnto.Name}", ConsoleColor.Green);
@@ -86,7 +88,8 @@ public class RoomManagement(InputManager inputManager, OutputManager outputManag
         _roomDao.AddRoom(newRoom);
         _roomDao.UpdateRoom(roomToAddOnto);
 
-        _outputManager.WriteLine($"\nRoom [{newRoom.Name}] succesfully created!\n", ConsoleColor.Green);
+        _outputManager.Clear();
+        _outputManager.WriteLine($"Room [{newRoom.Name}] succesfully created!\n", ConsoleColor.Green);
     }
     private Room CreateRoom()
     {
@@ -98,7 +101,7 @@ public class RoomManagement(InputManager inputManager, OutputManager outputManag
             name = _inputManager.ReadString("Enter name for the new room: ");
             if (_roomDao.RoomExists(name))
             {
-                _outputManager.WriteLine("Room name already exists. Please choose a different name.", ConsoleColor.Red);
+                _outputManager.WriteLine("\nRoom name already exists. Please choose a different name.\n", ConsoleColor.Red);
             }
             else break;
         }
@@ -108,13 +111,25 @@ public class RoomManagement(InputManager inputManager, OutputManager outputManag
     }
     private void EditRoomDescription()
     {
+        var rooms = _roomDao.GetAllEditableRooms();
+
+        if (rooms.Count == 0)
+        {
+            _outputManager.WriteLine("\nNo rooms available for editing.\n", ConsoleColor.Red);
+            return;
+        }
+
         _outputManager.Write("\nnote: Entrance cannot be edited", ConsoleColor.Yellow);
 
-        Room? roomToEdit = _inputManager.PaginateWithFunction(_roomDao.GetAllEditableRooms(), r => r.Name, "room", "edit description of", true);
+        var roomToEdit = 
+            _inputManager.Selector(
+                rooms,
+                r => ColorfulToStringHelper.RoomToString(r),
+                "Select the room you wish to edit");
 
         if (roomToEdit == null)
         {
-            _outputManager.WriteLine("Room editing cancelled.\n", ConsoleColor.Red);
+            _outputManager.WriteLine("\nRoom editing cancelled.\n", ConsoleColor.Red);
             return;
         }
 
@@ -124,28 +139,29 @@ public class RoomManagement(InputManager inputManager, OutputManager outputManag
         string confirm = _inputManager.ReadString($"\nPlease confirm new description of {roomToEdit.Name} (y/n): ", ["y", "n"]);
         if (confirm == "n")
         {
-            _outputManager.WriteLine($"Editing cancelled. Room [{roomToEdit.Name}] has not been edited.\n", ConsoleColor.Red);
+            _outputManager.WriteLine($"\nEditing cancelled. Room [{roomToEdit.Name}] has not been edited.\n", ConsoleColor.Red);
             return;
         }
 
         roomToEdit.Description = newDescription;
         _roomDao.UpdateRoom(roomToEdit);
 
+        _outputManager.Clear();
         _outputManager.WriteLine($"{roomToEdit.Name}'s description updated successfully!\n", ConsoleColor.Green);
     }
     private void DeleteRoom()
     {
-        _outputManager.WriteLine("\nnote: Entrance cannot be removed\n", ConsoleColor.Yellow);
-
         var rooms = _roomDao.GetAllDeletableRooms();
 
         if (rooms.Count == 0)
         {
-            _outputManager.WriteLine("No rooms available for deletion.\n", ConsoleColor.Red);
+            _outputManager.WriteLine("\nNo rooms available for deletion.\n", ConsoleColor.Red);
             return;
         }
-        
-        Room? roomToRemove = _inputManager.PaginateWithFunction(rooms, r => r.Name, "room", "remove", true);
+
+        _outputManager.WriteLine("\nnote: Entrance cannot be removed\n", ConsoleColor.Yellow);
+
+        var roomToRemove = _inputManager.Selector(rooms, r => r.Name, "Select the room you wish to delete");
 
         if (roomToRemove == null)
         {
@@ -155,20 +171,21 @@ public class RoomManagement(InputManager inputManager, OutputManager outputManag
 
         if (!_inputManager.ConfirmAction("deletion"))
         {
-            _outputManager.WriteLine($"Deletion cancelled. Room [{roomToRemove.Name}] has not been removed.\n", ConsoleColor.Red);
+            _outputManager.WriteLine($"\nDeletion cancelled. Room [{roomToRemove.Name}] has not been removed.\n", ConsoleColor.Red);
             return;
         }
 
         _roomDao.DeleteRoom(roomToRemove);
 
+        _outputManager.Clear();
+        _outputManager.WriteLine("\nRoom has been successfully deleted!\n", ConsoleColor.Green);
+
         var disconnectedRooms = MapHelper.CheckForDisconnectedRooms(_roomDao.GetAllRooms());
         if (disconnectedRooms.Count > 0)
         {
-            _outputManager.WriteLine($"\nWarning: The following rooms are now disconnected: {string.Join(", ", disconnectedRooms.Select(r => r.Name))}", ConsoleColor.Yellow);
-            _outputManager.WriteLine("Please check the map for any issues.", ConsoleColor.DarkYellow);
+            _outputManager.WriteLine($"Warning: The following rooms are now disconnected: {string.Join(", ", disconnectedRooms.Select(r => r.Name))}", ConsoleColor.Yellow);
+            _outputManager.WriteLine("Please check the map for any issues.\n", ConsoleColor.DarkYellow);
             _roomDao.UpdateAllRooms(disconnectedRooms);
-        }        
-
-        _outputManager.WriteLine("\nRoom has been successfully deleted!\n", ConsoleColor.Green);
+        }
     }
 }

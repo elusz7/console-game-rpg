@@ -23,7 +23,6 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
     private readonly MerchantHelper _merchantHelper = merchantHelper;
     private readonly FloorFactory _floorFactory = floorFactory;
     private bool IsCampaign;
-    private bool ContinueAdventure;
     private Player player;
     private Floor floor;
 
@@ -80,32 +79,29 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
     public bool SetUpCampaign() => SetUp(true);
     public void Adventure()
     {
-        ContinueAdventure = false;
-
-        while (!ContinueAdventure)
+        while (true)
         {
-            _outputManager.Write($"Now adventuring on Floor {floor.Level}.", ConsoleColor.Yellow);
             _outputManager.Clear();
+            _outputManager.Write($"Now adventuring on Floor {floor.Level}.\n\n", ConsoleColor.Yellow);            
 
             bool floorCompleted = false;
 
             while (!floorCompleted)
             {
-                if (CheckIfFloorCleared())
+                floorCompleted = CheckFloorCompletion();
+                if (floorCompleted)
                 {
                     break;
                 }
-
-                _outputManager.Clear();
 
                 Move();
                 bool roomChanged = false;
 
                 while (!roomChanged)
                 {
-                    if (CheckIfFloorCleared())
+                    floorCompleted = CheckFloorCompletion();
+                    if (floorCompleted)
                     {
-                        floorCompleted = true;
                         break;
                     }
 
@@ -138,6 +134,7 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
                         case AdventureOptions.Move:
                             var direction = choice.Key.Split(' ').Last();
                             roomChanged = ChangeCurrentRoom(direction);
+                            _outputManager.Clear();
                             break;
                         case AdventureOptions.Equipment:
                             _equipmentHelper.ManageEquipment(player);
@@ -167,42 +164,23 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
                     }
                 }
             }
+            
+            _outputManager.Write("Setting up next floor...", ConsoleColor.DarkGray);
+            _outputManager.Display();
 
-            if (ContinueAdventure)
-            {
-                _outputManager.Write("Setting up next floor...", ConsoleColor.DarkGray);
-                _outputManager.Display();
+            SetUpNextFloor();
 
-                SetUpNextFloor();
-
-                _outputManager.Write("Press any key to continue...", ConsoleColor.DarkCyan);
-                _outputManager.Display();
-                _inputManager.ReadKey();
-            }           
+            _outputManager.Write("Press any key to continue...", ConsoleColor.DarkCyan);
+            _outputManager.Display();
+            _inputManager.ReadKey();
         }
-
-        _playerHelper.SavePlayer(player);
     }
-    private bool CheckIfFloorCleared()
+    private bool CheckFloorCompletion()
     {
         if (!floor.Monsters.Any(m => m.CurrentHealth > 0))
         {
             _outputManager.WriteLine("You have cleared the floor of monsters. Congratulations!", ConsoleColor.Green);
             player.Inventory.Gold += (player.Level * 10);
-
-            if (!IsCampaign)
-            {
-                var cont = _inputManager.ReadString("Would you like to continue adventuring onto the next floor (y/n): ", ["y", "n"]).ToLower();
-                if (cont.Equals("y"))
-                {
-                    ContinueAdventure = true;
-                    return true;
-                }
-                else
-                {
-                    ContinueAdventure = false;
-                }
-            }
 
             _outputManager.Write("Press any key to continue!");
             _outputManager.Display();
@@ -210,7 +188,6 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
             _outputManager.Clear();
             return true;
         }
-
         return false;
     }
     private void Move()
@@ -247,7 +224,7 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
         }
 
         _outputManager.WriteLine();
-        var selection = _inputManager.SelectFromList(monsters, m => m.Name, "Select a monster to examine");
+        var selection = _inputManager.Selector(monsters, m => m.Name, "Select a monster to examine");
 
         if (selection == null)
         {
@@ -282,7 +259,7 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
         
         player.CurrentHealth = player.MaxHealth;
 
-        _outputManager.WriteLine("\nYou wake up feeling refreshed and ready to take on the world!\n", ConsoleColor.Green);
+        _outputManager.WriteLine("You wake up feeling refreshed and ready to take on the world!\n", ConsoleColor.Green);
     }
     private Dictionary<string, AdventureOptions> GetMenuOptions()
     {

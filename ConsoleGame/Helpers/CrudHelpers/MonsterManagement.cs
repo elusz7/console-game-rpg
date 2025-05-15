@@ -1,4 +1,5 @@
 ﻿using ConsoleGame.GameDao;
+using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
@@ -62,26 +63,16 @@ public class MonsterManagement(OutputManager outputManager, InputManager inputMa
 
             int speed = _inputManager.ReadInt("Enter monster speed: ");
 
-            var threatLevels = Enum.GetValues(typeof(ThreatLevel)).Cast<ThreatLevel>().ToList();
-            foreach (var threat in threatLevels)
-            {
-                _outputManager.WriteLine($"{(int)threat + 1}: {threat}");
-            }
-            int threatLevel = _inputManager.ReadInt("Select a Threat Level: ", threatLevels.Max(t => (int)t)) - 1;
+            ThreatLevel threatLevel = _inputManager.GetEnumChoice<ThreatLevel>("Select a Threat Level");
 
             string monsterType = threatLevel switch
             {
-                3 => "EliteMonster",
-                4 => "BossMonster",
+                ThreatLevel.Elite => "EliteMonster",
+                ThreatLevel.Boss => "BossMonster",
                 _ => "Monster"
             };
 
-            var damageTypes = Enum.GetValues(typeof(DamageType)).Cast<DamageType>().ToList();
-            foreach (var type in damageTypes)
-            {
-                _outputManager.WriteLine($"{(int)type + 1}: {type}");
-            }
-            int damage = _inputManager.ReadInt("Select a Damage Type: ", damageTypes.Max(d => (int)d)) - 1;
+            DamageType damageType = _inputManager.GetEnumChoice<DamageType>("Select a Damage Type");
 
             var monster = new Monster
             {
@@ -93,9 +84,9 @@ public class MonsterManagement(OutputManager outputManager, InputManager inputMa
                 DefensePower = defensePower,
                 Resistance = resistancePower,
                 AggressionLevel = speed,
-                ThreatLevel = (ThreatLevel)threatLevel,
+                ThreatLevel = threatLevel,
                 MonsterType = monsterType,
-                DamageType = (DamageType)damage
+                DamageType = damageType
             };
 
             _monsterDao.AddMonster(monster);
@@ -112,16 +103,18 @@ public class MonsterManagement(OutputManager outputManager, InputManager inputMa
             return;
         }
 
-        var monsterToEdit = _inputManager.PaginateList(monsters, "monster", "edit", true, false);
+        var monsterToEdit = 
+            _inputManager.Selector(
+                monsters,
+                m => ColorfulToStringHelper.MonsterToString(m),
+                "Select a monster to edit",
+                t => ColorfulToStringHelper.GetMonsterColor(t));
 
         if (monsterToEdit == null)
         {
             _outputManager.WriteLine("\nNo monster selected for editing.\n", ConsoleColor.Red);
             return;
         }
-
-        var threatLevels = Enum.GetValues(typeof(ThreatLevel)).Cast<ThreatLevel>().ToList();
-        var damageTypes = Enum.GetValues(typeof(DamageType)).Cast<DamageType>().ToList();
 
         var propertyActions = new Dictionary<string, Action>
         {
@@ -133,8 +126,7 @@ public class MonsterManagement(OutputManager outputManager, InputManager inputMa
             { "Resistance Power", () => monsterToEdit.Resistance = _inputManager.ReadInt("\nEnter new value for Resistance Power: ") },
             { "Speed", () => monsterToEdit.AggressionLevel = _inputManager.ReadInt("\nEnter new value for Speed: ") },
             { "Threat Level", () => {
-                    monsterToEdit.ThreatLevel =
-                        (ThreatLevel)_inputManager.ReadInt("\nEnter new value for Threat Level: ", threatLevels.Max(t => (int)t)) - 1;
+                    monsterToEdit.ThreatLevel = _inputManager.GetEnumChoice<ThreatLevel>("Select the new Threat Level");
                     monsterToEdit.MonsterType = monsterToEdit.ThreatLevel switch
                     {
                         ThreatLevel.Elite => "EliteMonster",
@@ -142,7 +134,7 @@ public class MonsterManagement(OutputManager outputManager, InputManager inputMa
                         _ => "Monster"
                     };
                 }},
-            { "Damage Type", () => monsterToEdit.DamageType = (DamageType)_inputManager.ReadInt("\nEnter new value for Damage Type: ", damageTypes.Max(d => (int)d)) - 1 },
+            { "Damage Type", () => monsterToEdit.DamageType = _inputManager.GetEnumChoice<DamageType>("Select the new DamageType") },
             { "Health", () => monsterToEdit.MaxHealth = _inputManager.ReadInt("\nEnter new value for Health: ") }
         };
 
@@ -151,7 +143,7 @@ public class MonsterManagement(OutputManager outputManager, InputManager inputMa
             _outputManager.Clear();
             _outputManager.WriteLine($"Editing Monster: {monsterToEdit.Name}", ConsoleColor.Cyan);
             _outputManager.WriteLine($"{monsterToEdit}\n", ConsoleColor.Green);
-            int option = DisplayEditMenu([.. propertyActions.Keys]);
+            int option = _inputManager.DisplayEditMenu([.. propertyActions.Keys]);
 
             if (option == propertyActions.Count + 1)
             {
@@ -172,7 +164,13 @@ public class MonsterManagement(OutputManager outputManager, InputManager inputMa
             _outputManager.WriteLine("\nNo monsters available to delete.\n", ConsoleColor.Red);
             return;
         }
-        var monsterToDelete = _inputManager.PaginateList(monsters, "monster", "delete", true, false);
+        var monsterToDelete =
+            _inputManager.Selector(
+                monsters,
+                m => ColorfulToStringHelper.MonsterToString(m),
+                "Select a monster to delete",
+                t => ColorfulToStringHelper.GetMonsterColor(t));
+
         if (monsterToDelete == null)
         {
             _outputManager.WriteLine("\nNo monster selected for deletion.\n", ConsoleColor.Red);
@@ -186,15 +184,5 @@ public class MonsterManagement(OutputManager outputManager, InputManager inputMa
         }
         _monsterDao.DeleteMonster(monsterToDelete);
         _outputManager.WriteLine($"\n{monsterToDelete.Name} has been deleted successfully.\n", ConsoleColor.Green);
-    }
-    private int DisplayEditMenu(List<string> properties)
-    {
-        for (int i = 0; i < properties.Count; i++)
-        {
-            _outputManager.WriteLine($"{i + 1}. Change {properties[i]}");
-        }
-        _outputManager.WriteLine($"{properties.Count + 1}. Exit", ConsoleColor.Red);
-
-        return _inputManager.ReadInt("\nWhat property would you like to edit? ", properties.Count + 1);
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ConsoleGame.GameDao;
+using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGameEntities.Models.Monsters;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
@@ -24,8 +25,10 @@ public class MonsterDisplay(OutputManager outputManager, InputManager inputManag
             _outputManager.WriteLine("1. List All Monsters"
                 + "\n2. List Monsters By Threat"
                 + "\n3. List Monsters By Damage Type"
-                + "\n4. Return to Monster Menu");
-            var input = _inputManager.ReadMenuKey(4);
+                + "\n4. Search For Monster By Name"
+                + "\n5. Return to Monster Menu");
+            
+            var input = _inputManager.ReadMenuKey(5);
             switch (input)
             {
                 case 1:
@@ -38,6 +41,9 @@ public class MonsterDisplay(OutputManager outputManager, InputManager inputManag
                     ListMonsters("Damage Type");
                     break;
                 case 4:
+                    ListMonsters("Search");
+                    break;
+                case 5:
                     _outputManager.Clear();
                     return;
             }
@@ -46,34 +52,25 @@ public class MonsterDisplay(OutputManager outputManager, InputManager inputManag
 
     private void ListMonsters(string? criteria = null)
     {
-        var monsters = new List<Monster>();
+        List<Monster> monsters;
 
         switch (criteria)
         {
             case "Threat Level":
-                string[] threatLevels = ["Low", "Medium", "High", "Elite", "Boss"];
-
-                for (int i = 0; i < threatLevels.Length; i++)
-                {
-                    _outputManager.WriteLine($"{i + 1} :  {threatLevels[i]}");
-                }
-
-                int levelChoice = _inputManager.ReadInt("Select a Threat Level: ", threatLevels.Length) - 1;
-
-                monsters = _monsterDao.GetMonstersByThreatLevel(levelChoice);
+                var level = _inputManager.GetEnumChoice<ThreatLevel>("Select a Threat Level: ");
+                monsters = _monsterDao.GetMonstersByThreatLevel(level);
                 break;
+
             case "Damage Type":
-                string[] damageTypes = ["Martial", "Magical", "Hybrid"];
-
-                for (int i = 0; i < damageTypes.Length; i++)
-                {
-                    _outputManager.WriteLine($"{i + 1}: {damageTypes[i]}");
-                }
-
-                int damageChoice = _inputManager.ReadInt("Select a Damage Type: ", damageTypes.Length) - 1;
-
-                monsters = _monsterDao.GetMonstersByDamageType(damageChoice);
+                var damage = _inputManager.GetEnumChoice<DamageType>("Select a Damage Type: ");
+                monsters = _monsterDao.GetMonstersByDamageType(damage);
                 break;
+
+            case "Search":
+                var name = _inputManager.ReadString("Enter monster name: ");
+                monsters = _monsterDao.GetMonstersByName(name);
+                break;
+
             default:
                 monsters = _monsterDao.GetAllMonsters();
                 break;
@@ -85,6 +82,6 @@ public class MonsterDisplay(OutputManager outputManager, InputManager inputManag
             return;
         }
 
-        _inputManager.PaginateList(monsters);
+        _inputManager.Viewer(monsters, m => ColorfulToStringHelper.MonsterToString(m), "", m => ColorfulToStringHelper.GetMonsterColor(m));
     }
 }

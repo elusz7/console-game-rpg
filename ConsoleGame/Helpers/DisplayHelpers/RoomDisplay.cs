@@ -1,4 +1,5 @@
 ﻿using ConsoleGame.GameDao;
+using ConsoleGame.Helpers.DisplayHelpers;
 
 namespace ConsoleGame.Managers.DisplayHelpers;
 
@@ -39,7 +40,7 @@ public class RoomDisplay(OutputManager outputManager, InputManager inputManager,
     {
         var rooms = _roomDao.GetAllRooms();
         
-        _inputManager.PaginateList(rooms);
+        _inputManager.Viewer(rooms, r => ColorfulToStringHelper.RoomToString(r), "");
 
         _outputManager.Clear();
     }

@@ -1,9 +1,11 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGame.Managers;
+using ConsoleGame.Managers.CrudHelpers;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 
-namespace ConsoleGame.Managers.CrudHelpers;
+namespace ConsoleGame.Helpers.CrudHelpers;
 
 public class PlayerManagement(InputManager inputManager, OutputManager outputManager, PlayerDao playerDao, ArchetypeDao archetypeDao, InventoryManagement inventoryManagement)
 {
@@ -58,10 +60,11 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
         _outputManager.WriteLine();
         string name = _inputManager.ReadString("Enter player name: ");
 
-        var archetype = _inputManager.SelectFromList(
+        _outputManager.WriteLine();
+        var archetype = _inputManager.Selector(
                     _archetypeDao.GetAllArchetypes(),
-                    a => a.Name,
-                    "Select a new archetype",
+                    a => ColorfulToStringHelper.ArchetypeToString(a),
+                    "Select archetype for new player",
                     b => ColorfulToStringHelper.GetArchetypeColor(b)
                 );
 
@@ -71,7 +74,7 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
             return;
         }
 
-        int health = _inputManager.ReadInt("Enter player's health: ");
+        int health = _inputManager.ReadInt("\nEnter player's health: ");
 
         int gold = _inputManager.ReadInt("Enter player's gold: ");
 
@@ -95,7 +98,7 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
 
         _playerDao.AddPlayer(newPlayer);
 
-        string assignItems = _inputManager.ReadString($"\nWould you like to assign {name} some starting items? (y/n) ", new[] {"y", "n"}).ToLower();
+        string assignItems = _inputManager.ReadString($"\nWould you like to assign {name} some starting items? (y/n) ", ["y", "n"]).ToLower();
         if (assignItems == "y")
             _inventoryManagement.Menu(newPlayer);
         else
@@ -105,11 +108,25 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
     }
     private void EditPlayer()
     {
-        Player player = SelectPlayer("Select the number of the player you'd like to edit: ");
+        var players = _playerDao.GetAllPlayers();
+
+        if (players.Count == 0)
+        {
+            _outputManager.WriteLine("\nNo players available for editing.\n", ConsoleColor.Red);
+            return;
+        }
+
+        _outputManager.WriteLine();
+        var player = _inputManager.Selector(
+            players,
+            p => ColorfulToStringHelper.PlayerToString(p),
+            "Select a player to edit",
+            b => ColorfulToStringHelper.GetArchetypeColor(b.Archetype)
+        );
 
         if (player == null)
         {
-            _outputManager.WriteLine("\nNo players available for editing.\n", ConsoleColor.Red);
+            _outputManager.WriteLine("No player selected for editing.\n", ConsoleColor.Red);
             return;
         }
 
@@ -120,7 +137,7 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
             { "Level", () => player.Level = _inputManager.ReadInt("\nEnter new value for Level: ") },
             { "Archetype", () => {
 
-                var archetype = _inputManager.SelectFromList(
+                var archetype = _inputManager.Selector(
                     _archetypeDao.GetAllArchetypes(),
                     a => a.Name,
                     "Select a new archetype",
@@ -142,9 +159,9 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
         while (true)
         {
             _outputManager.WriteLine($"\nEditing player: {player.Name}", ConsoleColor.Cyan);
-            _outputManager.WriteLine($"{player}\n", ConsoleColor.Green);
+            _outputManager.WriteLine($"{ColorfulToStringHelper.PlayerToString(player)}\n", ConsoleColor.Green);
 
-            int option = DisplayEditMenu(propertyActions.Keys.ToList());
+            int option = _inputManager.DisplayEditMenu([.. propertyActions.Keys]);
 
             if (option == propertyActions.Count + 1)
             {
@@ -157,27 +174,30 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
             propertyActions[selectedProperty].Invoke();
         }
     }
-    private int DisplayEditMenu(List<string> properties)
-    {
-        for (int i = 0; i < properties.Count; i++)
-        {
-            _outputManager.WriteLine($"{i + 1}. Change {properties[i]}");
-        }
-        _outputManager.WriteLine($"{properties.Count + 1}. Exit", ConsoleColor.Red);
-
-        return _inputManager.ReadInt("\nWhat property would you like to edit? ", properties.Count + 1);
-    }
-
     private void DeletePlayer()
     {
         do
         {
+            var players = _playerDao.GetAllPlayers();
+
+            if (players.Count == 0)
+            {
+                _outputManager.WriteLine("\nNo players available for deletion.\n", ConsoleColor.Red);
+                break;
+            }
+
             _outputManager.WriteLine();
-            Player playerToDelete = SelectPlayer("Select the number of the player you'd like to delete: ");
+            var playerToDelete = 
+                _inputManager.Selector(
+                    players,
+                    p => ColorfulToStringHelper.PlayerToString(p),
+                    "Select a player to delete",
+                    b => ColorfulToStringHelper.GetArchetypeColor(b.Archetype)
+                );
 
             if (playerToDelete == null)
             {
-                _outputManager.WriteLine("No players available to delete.", ConsoleColor.Red);
+                _outputManager.WriteLine("No player selected to delete.", ConsoleColor.Red);
                 break;
             }
 
@@ -192,22 +212,5 @@ public class PlayerManagement(InputManager inputManager, OutputManager outputMan
             _outputManager.WriteLine("\nCharacter has been deleted successfully!\n", ConsoleColor.Green);
         } while (_inputManager.LoopAgain("delete"));
         _outputManager.WriteLine();
-    }
-    private Player SelectPlayer(string prompt)
-    {
-        List<Player> players = _playerDao.GetAllPlayers();
-        Player selectedPlayer = null;
-
-        if (players.Count != 0)
-        {
-            for (int i = 0; i < players.Count; i++)
-            {
-                _outputManager.WriteLine($"{i + 1}. {players[i].Name}");
-            }
-
-            int index = _inputManager.ReadInt($"\t{prompt}", players.Count);
-            selectedPlayer = players[index - 1];
-        }
-        return selectedPlayer;
     }
 }

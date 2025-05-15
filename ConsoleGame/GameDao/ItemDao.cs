@@ -1,6 +1,7 @@
 ﻿using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Models.Items;
 using Microsoft.EntityFrameworkCore;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.GameDao;
 
@@ -27,9 +28,9 @@ public class ItemDao(GameContext context)
         _context.SaveChanges();
     }
 
-    public List<Item> GetAllItems(string name)
+    public List<Item> GetItemsByName(string name)
     {
-        var matchingItems = _context.Items?.Include(i => i.Inventory).ThenInclude(i => i.Player).ToList()
+        var matchingItems = _context.Items?.Include(i => i.Inventory).ThenInclude(i => i!.Player).ToList()
             .Where(i => i.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
             .ToList() ?? [];
 
@@ -43,7 +44,7 @@ public class ItemDao(GameContext context)
 
     public List<Item> GetAllItems()
     {
-        var items = _context.Items?.Include(i => i.Inventory).ThenInclude(i => i.Player).ToList() ?? [];
+        var items = _context.Items?.Include(i => i.Inventory).ThenInclude(i => i!.Player).ToList() ?? [];
         
         return SortOrder switch
         {
@@ -56,35 +57,43 @@ public class ItemDao(GameContext context)
     public List<Item> GetAllNonCoreItems()
     {
         if (_context.Items == null) throw new InvalidOperationException("Items collection is null.");
-        return [.. _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).Where(i => i.Id > 178)];
+        return [.. _context.Items.Include(i => i.Inventory).ThenInclude(i => i!.Player).Where(i => i.Id > 178)];
     }
 
-    public List<Item> GetItemsByType(string type)
+    public List<Item> GetItemsByType(ItemType type)
     {
-        if (_context.Items == null) throw new InvalidOperationException("Items collection is null.");
-        List<Item> items = type switch
+        if (_context.Items == null)
+            throw new InvalidOperationException("Items collection is null.");
+
+        IQueryable<Item> query = type switch
         {
-            "weapon" => [.. _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Weapon>()],
-            "armor" => [.. _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Armor>()],
-            "valuable" => [.. _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Valuable>()],
-            "consumable" => [.. _context.Items.Include(i => i.Inventory).ThenInclude(i => i.Player).OfType<Consumable>()],
-            _ => []
+            ItemType.Weapon => _context.Items.OfType<Weapon>(),
+            ItemType.Armor => _context.Items.OfType<Armor>(),
+            ItemType.Valuable => _context.Items.OfType<Valuable>(),
+            ItemType.Consumable => _context.Items.OfType<Consumable>(),
+            _ => Enumerable.Empty<Item>().AsQueryable()
         };
 
-        items = (type, SortOrder) switch
+        query = type switch
         {
-            ("weapon", "ASC") => [.. items.OrderBy(i => ((Weapon)i).AttackPower)],
-            ("weapon", "DESC") => [.. items.OrderByDescending(i => ((Weapon)i).AttackPower)],
-            ("armor", "ASC") => [.. items.OrderBy(i => ((Armor)i).DefensePower)],
-            ("armor", "DESC") => [.. items.OrderByDescending(i => ((Armor)i).DefensePower)],
-            ("valuable", "ASC") => [.. items.OrderBy(i => ((Valuable)i).Value)],
-            ("valuable", "DESC") => [.. items.OrderByDescending(i => ((Valuable)i).Value)],
-            ("consumable", "ASC") => [.. items.OrderBy(i => ((Consumable)i).Power)],
-            ("consumable", "DESC") => [.. items.OrderByDescending(i => ((Consumable)i).Power)],
-            _ => items
+            ItemType.Weapon => SortOrder == "ASC"
+                ? query.Cast<Weapon>().OrderBy(w => w.AttackPower)
+                : query.Cast<Weapon>().OrderByDescending(w => w.AttackPower),
+            ItemType.Armor => SortOrder == "ASC"
+                ? query.Cast<Armor>().OrderBy(a => a.DefensePower)
+                : query.Cast<Armor>().OrderByDescending(a => a.DefensePower),
+            ItemType.Valuable => SortOrder == "ASC"
+                ? query.Cast<Valuable>().OrderBy(v => v.Value)
+                : query.Cast<Valuable>().OrderByDescending(v => v.Value),
+            ItemType.Consumable => SortOrder == "ASC"
+                ? query.Cast<Consumable>().OrderBy(c => c.Power)
+                : query.Cast<Consumable>().OrderByDescending(c => c.Power),
+            _ => query
         };
 
-        return items;
+        return [.. query
+            .Include(i => i.Inventory)
+            .ThenInclude(inv => inv!.Player)];
     }
 
     public List<Item> GetItemsByMaxLevel(int level)

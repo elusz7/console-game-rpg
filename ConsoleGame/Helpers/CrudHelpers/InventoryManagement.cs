@@ -1,4 +1,5 @@
 ﻿using ConsoleGame.GameDao;
+using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 
@@ -28,7 +29,13 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
             _player = player;
         }
 
-            _outputManager.Clear();
+        if (_player == null)
+        {
+            _outputManager.WriteLine("No player available or selected. Returning to previous menu.", ConsoleColor.Red);
+            return;
+        }
+
+        _outputManager.Clear();
         while (true)
         {
             _outputManager.WriteLine($"=== {_player.Name}'s Inventory Management ===", ConsoleColor.Cyan);
@@ -61,7 +68,12 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
             return false;
         }
 
-        var player = _inputManager.PaginateList(players, "player", "manage inventory of", true, false);
+        var player = 
+            _inputManager.Selector(
+                players, 
+                p => ColorfulToStringHelper.PlayerToString(p), 
+                "Select a player to manage their inventory", 
+                q => ColorfulToStringHelper.GetArchetypeColor(q.Archetype));
 
         if (player == null)
         {
@@ -84,7 +96,13 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
                 _outputManager.WriteLine("\nNo equippable items available.\n");
                 break;
             }
-            Item? itemToAdd = _inputManager.PaginateList(equippableItems, "item", "add to inventory", true, false);
+            Item? itemToAdd =
+                _inputManager.Selector(
+                    equippableItems,
+                    i => ColorfulToStringHelper.ItemToString(i),
+                    "Select an item to add to inventory",
+                    j => ColorfulToStringHelper.GetItemColor(j)
+                    );
 
             if (itemToAdd == null)
             {
@@ -110,13 +128,20 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
     {
         do
         {
-            if (_player.Inventory.Items.Count == 0)
+            var inventory = _player.Inventory.Items.ToList();
+            if (inventory.Count == 0)
             {
                 _outputManager.WriteLine("\nNo items in inventory to remove.\n");
                 break;
             }
 
-            Item? itemToRemove = _inputManager.PaginateList(_player.Inventory.Items.ToList(), "item", "remove from inventory", true);
+            Item? itemToRemove =
+                _inputManager.Selector(
+                    inventory,
+                    i => ColorfulToStringHelper.ItemToString(i),
+                    "Select an item to remove from inventory",
+                    j => ColorfulToStringHelper.GetItemColor(j)
+                    );
 
             if (itemToRemove == null || !_inputManager.ConfirmAction("removal"))
             {

@@ -106,7 +106,7 @@ public class MonsterFactory(MonsterDao monsterDao, SkillDao skilldao)
     }
     private static string GetMonsterName(string baseName)
     {
-        string[] romanNumerals = { "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X" };
+        string[] romanNumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
         string[] modifiers =
         [
             "Fierce",
@@ -165,7 +165,7 @@ public class MonsterFactory(MonsterDao monsterDao, SkillDao skilldao)
             
             var usableAttackSkills = monster.DamageType == DamageType.Martial ?
                 martialSkills.Where(martialSkills => martialSkills.RequiredLevel <= monster.Level).ToList() :
-                magicSkills.Where(magicSkills => magicSkills.RequiredLevel <= monster.Level).ToList();
+                [.. magicSkills.Where(magicSkills => magicSkills.RequiredLevel <= monster.Level)];
 
             for (int i = 0; i < attackSkillCount; i++)
             {

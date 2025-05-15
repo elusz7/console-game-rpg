@@ -13,6 +13,8 @@ using ConsoleGame.Managers.CrudHelpers;
 using ConsoleGame.Menus;
 using ConsoleGame.Factories;
 using ConsoleGame.Helpers;
+using ConsoleGame.Helpers.CrudHelpers;
+using ConsoleGame.Helpers.DisplayHelpers;
 
 namespace ConsoleGame;
 

@@ -238,13 +238,19 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
             .Where(s => s.Cost <= player.Archetype.CurrentResource));
 
         var waitingSkills = allSkills
-                .Where(s => s.Cost > player.Archetype.CurrentResource || s.IsOnCooldown)
-                .Where(s => s.Cost <= player.Archetype.MaxResource)
-                .Where(s => s is not UltimateSkill).ToList();
+            .Where(s =>
+                (s.Cost > player.Archetype.CurrentResource || s.IsOnCooldown) &&
+                s.Cost <= player.Archetype.MaxResource &&
+                s is not UltimateSkill)
+            .ToList();
         waitingSkills.AddRange(allSkills.Where(s => s is UltimateSkill ult && !ult.IsReady));
 
         if (usableSkills.Count == 0)
         {
+            if (waitingSkills.Count != 0)
+            {
+                _inputManager.Viewer(waitingSkills, s => ColorfulToStringHelper.SkillStatsString(player, s), "", _ => ConsoleColor.DarkRed);
+            }
             _outputManager.WriteLine("\nNo skills available to use currently.\n", ConsoleColor.Red);
             return false;
         }
@@ -309,7 +315,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
     }
     private bool UseConsumable(Player player)
     {
-        var availableConsumables = player.Inventory.Items.OfType<Consumable>().ToList();
+        var availableConsumables = player.Inventory.Items.Where(i => i is Consumable).ToList();
 
         if (availableConsumables.Count == 0)
         {
@@ -318,41 +324,48 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
         }
 
         _outputManager.WriteLine();
-        var consumable = SelectConsumable(availableConsumables);
+        var item = _inputManager.SelectItem("Select a consumable to use", availableConsumables);
 
-        if (consumable == null)
+        if (item == null)
         {
             _outputManager.WriteLine("\nConsumable selection cancelled.\n");
             return false;
         }
-
-        switch (consumable.ConsumableType)
+        else if (item is Consumable consumable)
         {
-            case ConsumableType.Health:
-                consumable.UseOn(player);
-                break;
-            case ConsumableType.Resource:
-                consumable.UseOn(player);
-                break;
-            case ConsumableType.Durability:
-                _outputManager.WriteLine();
-                var target = SelectItem("Select an item to increase durability", player.Inventory.Items.Where(i => i.IsEquipped()).ToList());
+            switch (consumable.ConsumableType)
+            {
+                case ConsumableType.Health:
+                    consumable.UseOn(player);
+                    break;
+                case ConsumableType.Resource:
+                    consumable.UseOn(player);
+                    break;
+                case ConsumableType.Durability:
+                    _outputManager.WriteLine();
+                    var target = _inputManager.SelectItem("Select an item to increase durability", [.. player.Inventory.Items.Where(i => i.IsEquipped())]);
 
-                if (target == null)
-                {
-                    _outputManager.WriteLine("Item selection cancelled.");
-                    return false;
-                }
+                    if (target == null)
+                    {
+                        _outputManager.WriteLine("Item selection cancelled.");
+                        return false;
+                    }
 
-                consumable.UseOn(target);
-                break;
+                    consumable.UseOn(target);
+                    break;
+            }
+        }
+        else
+        {
+            _outputManager.WriteLine("\nInvalid consumable type selected.\n", ConsoleColor.Red);
+            return false;
         }
 
         return true;
     }
     private Monster? SelectTarget(List<Monster> validTargets, string purpose)
     {
-        return _inputManager.SelectFromList(
+        return _inputManager.Selector(
             validTargets, 
             m => m.Name, 
             $"Select a target to {purpose}",
@@ -377,33 +390,6 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
         
         return usableSkills[index];
     }
-    private Consumable? SelectConsumable(List<Consumable> consumables)
-    {
-        return _inputManager.SelectFromList(
-            consumables,
-            c => $"{c.Name} [power: {c.Power}, type: {c.ConsumableType}]",
-            "Select a consumable",
-            _ => ConsoleColor.Yellow
-        );
-    }
-    private Item? SelectItem(string prompt, List<Item> equipment)
-    {
-        return _inputManager.SelectFromList(
-            equipment,
-            i => $"{i.Name} [durability: {i.Durability}{GetItemStats(i)}]",
-            prompt,
-            _ => ConsoleColor.Blue
-        );
-    }
-    private static string GetItemStats(Item item)
-    {
-        return item switch
-        {
-            Weapon weapon => $", Attack: {weapon.AttackPower}",
-            Armor armor => $", Defense: {armor.DefensePower}, Resistance: {armor.Resistance}",
-            _ => ""
-        };
-    }
     private void EquipWeapon(Player player)
     {
         var availableWeapons = player.Inventory.Items
@@ -418,7 +404,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
         }
 
         _outputManager.WriteLine();
-        var weapon = SelectItem("Select a weapon to equip", availableWeapons);
+        var weapon = _inputManager.SelectItem("Select a weapon to equip", availableWeapons);
 
         if (weapon == null)
         {

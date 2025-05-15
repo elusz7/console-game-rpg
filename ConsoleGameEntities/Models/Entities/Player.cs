@@ -109,29 +109,6 @@ public class Player : IPlayer
             ActiveEffects[key] = 0;
         }
     }
-    public override string ToString()
-    {
-        var builder = new StringBuilder();
-
-        builder.Append("Name: ");
-        builder.Append(Name);
-
-        builder.Append(", Health: ");
-        builder.Append(MaxHealth);
-
-        builder.Append(", Capacity: ");
-        builder.Append(Inventory?.Capacity.ToString() ?? "N/A");
-
-        builder.Append(", Gold: ");
-        builder.Append(Inventory?.Gold.ToString() ?? "N/A");
-
-        builder.Append("\n\tInventory: ");
-        builder.Append(Inventory?.Items != null && Inventory.Items.Any()
-            ? string.Join(", ", Inventory.Items.Select(i => i.Name))
-            : "Inventory is empty currently.");
-
-        return builder.ToString();
-    }
     public int GetStat(StatType stat)
     {
         return stat switch

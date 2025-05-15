@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using ConsoleGame.GameDao;
+using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
@@ -48,7 +49,6 @@ public class ArchetypeManagement(InputManager inputManager, OutputManager output
             CreateArchetype();
         } while (_inputManager.LoopAgain("create"));
     }
-
     private void CreateArchetype()
     {
         _outputManager.WriteLine("1. Martial Archetypes\n2. Magical Archetypes", ConsoleColor.Yellow);
@@ -108,7 +108,6 @@ public class ArchetypeManagement(InputManager inputManager, OutputManager output
         _archetypeDao.AddArchetype(archetype);
         _outputManager.WriteLine($"Archetype '{archetype.Name}' created successfully!", ConsoleColor.Green);
     }
-
     private void EditArchetype()
     {
         var archetypes = _archetypeDao.GetAllNonCoreArchetypes();
@@ -119,7 +118,12 @@ public class ArchetypeManagement(InputManager inputManager, OutputManager output
             return;
         }
 
-        var archetype = _inputManager.PaginateList(archetypes, "Archetype", "Edit", true, false);
+        var archetype = _inputManager.Selector(
+            archetypes,
+            a => ColorfulToStringHelper.ArchetypeToString(a),
+            "Select an archetype to edit",
+            b => ColorfulToStringHelper.GetArchetypeColor(b)
+        );
 
         if (archetype == null)
         {
@@ -179,12 +183,12 @@ public class ArchetypeManagement(InputManager inputManager, OutputManager output
             _outputManager.WriteLine("Editing Archetype: " + archetype.Name, ConsoleColor.Cyan);
             _outputManager.WriteLine($"{archetype}", ConsoleColor.Green);
 
-            int option = DisplayEditMenu([.. propertyActions.Keys]);
+            int option = _inputManager.DisplayEditMenu([.. propertyActions.Keys]);
 
             if (option == propertyActions.Count + 1)
             {
                 _archetypeDao.UpdateArchetype(archetype);
-                _outputManager.WriteLine($"\nExiting. Any changes made have been successfully saved to {archetype.Name}\n", ConsoleColor.Green);
+                _outputManager.WriteLine($"\nExiting. Any changes made have been successfully applied to {archetype.Name}\n", ConsoleColor.Green);
                 return;
             }
 
@@ -202,7 +206,13 @@ public class ArchetypeManagement(InputManager inputManager, OutputManager output
             return;
         }
 
-        var archetypeToDelete = _inputManager.PaginateList(archetypes, "Archetype", "delete", true, false);
+        var archetypeToDelete =
+            _inputManager.Selector(
+                archetypes,
+                a => ColorfulToStringHelper.ArchetypeToString(a),
+                "Select an archetype to delete",
+                b => ColorfulToStringHelper.GetArchetypeColor(b)
+            );
 
         if (archetypeToDelete == null)
         {
@@ -238,16 +248,5 @@ public class ArchetypeManagement(InputManager inputManager, OutputManager output
             }
         } while (true);
         return statOrderArray;
-    }
-
-    private int DisplayEditMenu(List<string> properties)
-    {
-        for (int i = 0; i < properties.Count; i++)
-        {
-            _outputManager.WriteLine($"{i + 1}. Change {properties[i]}");
-        }
-        _outputManager.WriteLine($"{properties.Count + 1}. Exit", ConsoleColor.Red);
-
-        return _inputManager.ReadInt("\nWhat property would you like to edit? ", properties.Count + 1);
     }
 }

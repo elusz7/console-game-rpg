@@ -16,6 +16,8 @@ public class MartialSkill : Skill
         if (singleEnemy == null && (multipleEnemies == null || multipleEnemies.Count == 0))
             throw new InvalidTargetException("No suitable target(s) provided.");
 
+        var monsterDeath = false;
+
         if (caster is Player player)
         {
             if (player.Level < RequiredLevel)
@@ -37,11 +39,20 @@ public class MartialSkill : Skill
 
                 case TargetType.AllEnemies:
                     foreach (var tar in multipleEnemies)
-                        tar.TakeDamage(Power, DamageType);
+                    {
+                        try
+                        {
+                            tar.TakeDamage(Power, DamageType);
+                        }
+                        catch (MonsterDeathException) { monsterDeath = true; }
+                    }
+                        
                     break;
             }
 
-            ElapsedTime = 0;
+            Reset();
+            if (monsterDeath)
+                throw new MonsterDeathException();
         }
         else if (caster is Monster monster)
         {
@@ -51,7 +62,7 @@ public class MartialSkill : Skill
             monster.AddActionItem(this);
 
             singleEnemy.TakeDamage(Power, DamageType);
-            ElapsedTime = 0;
+            Reset();
         }
     }
 }

@@ -39,7 +39,15 @@ public class Room : IRoom
 
         return sb.ToString();
     }
-
+    public Room Clone()
+    {
+        return new Room
+        {
+            Id = this.Id,
+            Name = this.Name,
+            Description = this.Description
+        };
+    }
     public Dictionary<string, Room> GetConnections()
     {
         var connections = new Dictionary<string, Room>();

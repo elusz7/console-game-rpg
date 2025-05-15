@@ -1,4 +1,5 @@
 ﻿using ConsoleGame.GameDao;
+using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGameEntities.Models.Skills;
 
 namespace ConsoleGame.Managers.DisplayHelpers;
@@ -20,9 +21,10 @@ public class SkillDisplay(InputManager inputManager, OutputManager outputManager
                 + "\n3. List Skills By Archetype"
                 + "\n4. List Skills By Monster"
                 + "\n5. List Unassigned Skills"
-                + "\n6. Return to Skill Menu");
+                + "\n6. Search Skills By Name"
+                + "\n7. Return to Skill Menu");
             
-            var input = _inputManager.ReadMenuKey(6);
+            var input = _inputManager.ReadMenuKey(7);
             
             switch (input)
             {
@@ -42,6 +44,9 @@ public class SkillDisplay(InputManager inputManager, OutputManager outputManager
                     ListSkills("Unassigned");
                     break;
                 case 6:
+                    ListSkills("Search");
+                    break;
+                case 7:
                     _outputManager.Clear();
                     return;
             }
@@ -59,6 +64,7 @@ public class SkillDisplay(InputManager inputManager, OutputManager outputManager
             "Archetype" => SelectArchetype(),
             "Monster" => SelectMonster(),
             "Unassigned" => _skillDao.GetUnassignedSkills(),
+            "Search" => SelectName(),
             _ => _skillDao.GetAllSkills()
         };
 
@@ -68,7 +74,7 @@ public class SkillDisplay(InputManager inputManager, OutputManager outputManager
             return;
         }
 
-        _inputManager.PaginateList(skills);
+        _inputManager.Viewer(skills, s => ColorfulToStringHelper.SkillToString(s), "", s => ColorfulToStringHelper.GetSkillColor(s));
     }
 
     private List<Skill> SelectLevel()
@@ -76,6 +82,11 @@ public class SkillDisplay(InputManager inputManager, OutputManager outputManager
         var level = _inputManager.ReadInt("Enter the level of the skills you want to see: ");
 
         return _skillDao.GetSkillsByLevel(level);
+    }
+    private List<Skill> SelectName()
+    {
+        var name = _inputManager.ReadString("Enter the name of the skill you want to see: ");
+        return _skillDao.GetSkillsByName(name);
     }
 
     private List<Skill> SelectArchetype()
@@ -88,7 +99,7 @@ public class SkillDisplay(InputManager inputManager, OutputManager outputManager
             return [];
         }
 
-        var selectedArchetype = _inputManager.PaginateList(archetypes, "archetype", "skills to view", true, false);
+        var selectedArchetype = _inputManager.Selector(archetypes, a => ColorfulToStringHelper.ArchetypeToString(a), "Select an archetype to see their skills", a => ColorfulToStringHelper.GetArchetypeColor(a));
 
         if (selectedArchetype == null)
         {
@@ -109,7 +120,7 @@ public class SkillDisplay(InputManager inputManager, OutputManager outputManager
             return [];
         }
 
-        var selectedMonster = _inputManager.PaginateList(monsters, "monster", "skills to view", true, false);
+        var selectedMonster = _inputManager.Selector(monsters, a => ColorfulToStringHelper.MonsterToString(a), "Select a monster to see their skills", m => ColorfulToStringHelper.GetMonsterColor(m));
 
         if (selectedMonster == null)
         {

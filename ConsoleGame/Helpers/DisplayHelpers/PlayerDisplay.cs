@@ -1,8 +1,9 @@
 ﻿using System.Xml.Linq;
 using ConsoleGame.GameDao;
+using ConsoleGame.Managers;
 using ConsoleGameEntities.Models.Entities;
 
-namespace ConsoleGame.Managers.DisplayHelpers;
+namespace ConsoleGame.Helpers.DisplayHelpers;
 
 public class PlayerDisplay(InputManager inputManager, OutputManager outputManager, PlayerDao playerDao)
 {
@@ -63,7 +64,12 @@ public class PlayerDisplay(InputManager inputManager, OutputManager outputManage
                     return;
                 }
 
-                var archetype = _inputManager.PaginateList(archetypes, "archetype", "view players of", true);
+                _outputManager.WriteLine();
+                var archetype = _inputManager.Selector(
+                    archetypes, 
+                    a => ColorfulToStringHelper.ArchetypeToString(a), 
+                    "Select an Archetype", 
+                    a => ColorfulToStringHelper.GetArchetypeColor(a));
 
                 if (archetype == null)
                 {
@@ -88,6 +94,11 @@ public class PlayerDisplay(InputManager inputManager, OutputManager outputManage
             return;
         }
 
-        _inputManager.PaginateList(players, clearScreen: false);
+        _outputManager.WriteLine();
+        _inputManager.Viewer(
+            players, 
+            p => ColorfulToStringHelper.PlayerToString(p),
+            "",
+            p => ColorfulToStringHelper.GetArchetypeColor(p.Archetype));
     }
 }

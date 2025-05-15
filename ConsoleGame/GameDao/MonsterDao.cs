@@ -21,6 +21,12 @@ public class MonsterDao(GameContext context)
         return [.. _context.Monsters];
     }
 
+    public List<Monster> GetMonstersByName(string name)
+    {
+        if (_context.Monsters == null) throw new InvalidOperationException("Monsters DbSet is null.");
+        return [.. _context.Monsters.ToList().Where(m => m.Name.Contains(name, StringComparison.OrdinalIgnoreCase))];
+    }
+
     public void UpdateMonster(Monster monster)
     {
         if (_context.Monsters == null) throw new InvalidOperationException("Monsters DbSet is null.");
@@ -41,16 +47,16 @@ public class MonsterDao(GameContext context)
         return [.. _context.Monsters.Where(m => m.Id > 28)];
     }
 
-    public List<Monster> GetMonstersByThreatLevel(int threatLevel)
+    public List<Monster> GetMonstersByThreatLevel(ThreatLevel threatLevel)
     {
         if (_context.Monsters == null) throw new InvalidOperationException("Monsters DbSet is null.");
-        return [.. _context.Monsters.Where(m => (int)m.ThreatLevel == threatLevel)];
+        return [.. _context.Monsters.Where(m => m.ThreatLevel == threatLevel)];
     }
 
-    public List<Monster> GetMonstersByDamageType(int damageType)
+    public List<Monster> GetMonstersByDamageType(DamageType damageType)
     {
         if (_context.Monsters == null) throw new InvalidOperationException("Monsters DbSet is null.");
-        return [.. _context.Monsters.Where(m => (int)m.DamageType == damageType)];
+        return [.. _context.Monsters.Where(m => m.DamageType == damageType)];
     }
 
     public List<Monster> GetNonBossMonstersByMaxLevel(int level)

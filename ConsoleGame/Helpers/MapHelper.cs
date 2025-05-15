@@ -14,48 +14,75 @@ public static class MapHelper
 {
     private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
     private record RoomPosition(Room Room, int X, int Y);
-    
+
 
     public static List<Room> CreateCampaignMap(int totalRoomsAllowed, Room entrance, List<Room> availableRooms)
     {
-        foreach (var room in availableRooms)
-        {
-            UnlinkRoom(room);
-        }
-        availableRooms.Remove(entrance); // Remove entrance from available rooms
+        Shuffle(availableRooms);
+
+        availableRooms.Remove(entrance); 
 
         var connectedRooms = new List<Room> { entrance };
-        var frontier = new Queue<Room>();
-        frontier.Enqueue(entrance);
+        var frontier = new List<Room> { entrance };
 
         var placedGrid = GetRoomGrid(entrance); // Keeps track of used coordinates
 
-        while (connectedRooms.Count < totalRoomsAllowed && frontier.Count > 0 && availableRooms.Count > 0)
-        {
-            var current = frontier.Dequeue();
-            var availableDirections = GetAvailableDirectionsForRoom(current, connectedRooms);
+        // Track the index of the next room to pick from shuffled availableRooms
+        int nextRoomIndex = 0;
 
-            foreach (var direction in availableDirections.OrderBy(_ => _rng.Next()))
+        // To store coordinates of rooms for positioning
+        var roomCoordinates = new Dictionary<Room, (int x, int y)>
+        {
+            [entrance] = (0, 0)
+        };
+
+        while (connectedRooms.Count < totalRoomsAllowed && frontier.Count > 0 && nextRoomIndex < availableRooms.Count)
+        {
+            int frontierIndex = _rng.Next(frontier.Count);
+            var current = frontier[frontierIndex];
+            frontier.RemoveAt(frontierIndex);
+
+            var availableDirections = GetAvailableDirectionsForRoom(current, connectedRooms)
+                .OrderBy(_ => _rng.Next())
+                .ToList();
+
+            foreach (var direction in availableDirections)
             {
-                if (availableRooms.Count == 0 || connectedRooms.Count >= totalRoomsAllowed) break;
+                if (nextRoomIndex >= availableRooms.Count || connectedRooms.Count >= totalRoomsAllowed) break;
 
                 var (dx, dy) = GetDirectionOffset(direction);
-                var (x, y) = FindRoomCoordinates(current, placedGrid);
+                var (x, y) = roomCoordinates[current];
                 var newCoords = (x + dx, y + dy);
 
                 if (placedGrid.ContainsKey(newCoords)) continue;
 
-                var newRoom = availableRooms[_rng.Next(availableRooms.Count)];
-                availableRooms.Remove(newRoom);
+                var newRoom = availableRooms[nextRoomIndex];
+                nextRoomIndex++;
 
                 LinkRooms(current, newRoom, direction);
+
                 connectedRooms.Add(newRoom);
-                frontier.Enqueue(newRoom);
+                frontier.Add(newRoom);
                 placedGrid[newCoords] = newRoom;
+                roomCoordinates[newRoom] = newCoords;
             }
         }
 
         return connectedRooms;
+    }
+
+    // Fisher-Yates shuffle helper method
+    private static void Shuffle<T>(List<T> list)
+    {
+        int n = list.Count;
+        while (n > 1)
+        {
+            n--;
+            int k = _rng.Next(n + 1);
+            T value = list[k];
+            list[k] = list[n];
+            list[n] = value;
+        }
     }
     public static void UnlinkRoom(Room room)
     {
@@ -123,7 +150,10 @@ public static class MapHelper
     {
         var directions = new List<string>();
         var grid = GetRoomGrid(connectedRooms.First()); // assumes root is the entrance
-        var (x, y) = FindRoomCoordinates(room, grid);
+        try
+        {
+            var (x, y) = FindRoomCoordinates(room, grid);
+        
 
         foreach (var dir in new[] { "North", "South", "East", "West" })
         {
@@ -137,6 +167,8 @@ public static class MapHelper
                 directions.Add(dir);
             }
         }
+        }
+        catch (InvalidOperationException) { return []; }
 
         return directions;
     }
@@ -313,42 +345,6 @@ public static class MapHelper
 
         return pathCount;
     }
-    public static string RemoveLogicalConflicts(Room baseRoom, string availableDirections)
-    {
-        string finalDirections = string.Empty;
-
-        var grid = GetRoomGrid(baseRoom);
-        try
-        {
-            var (x, y) = FindRoomCoordinates(baseRoom, grid);
-
-            var directions = availableDirections.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-            var validDirections = new List<string>();
-
-            foreach (var dir in directions)
-            {
-                var (dx, dy) = GetDirectionOffset(dir);
-
-                var targetCoords = (x + dx, y + dy);
-
-                if (!grid.ContainsKey(targetCoords))
-                {
-                    validDirections.Add(dir);
-                }
-            }
-
-            if (validDirections.Count > 0)
-            {
-                finalDirections = string.Join(" ", validDirections);
-            }
-        }
-        catch (InvalidOperationException)
-        {
-            finalDirections = string.Empty;
-        }
-
-        return finalDirections;
-    }
     public static List<Room>? SinglePathThrough(Room requiredRoom, List<Room> rooms)
     {
         var entrance = rooms.Where(r => r.Id == 1).First();
@@ -365,10 +361,10 @@ public static class MapHelper
         });
 
         return [.. singlePathRooms];
-    }
-    public static Dictionary<string, string[]> GetAvailableDirections(List<Room> rooms, Room? editingRoom = null)
+    }    
+    public static Dictionary<Room, List<string>> GetAvailableDirections2(List<Room> rooms, Room? editingRoom = null)
     {
-        var availableRooms = new Dictionary<string, string[]>();
+        var availableRooms = new Dictionary<Room, List<string>>();
         var singlePathRooms = editingRoom == null ? [] : SinglePathThrough(editingRoom, rooms);
 
         foreach (Room room in rooms)
@@ -376,20 +372,11 @@ public static class MapHelper
             if (room == editingRoom) continue;
             if (editingRoom != null && singlePathRooms != null && singlePathRooms.Contains(room)) continue;
 
-            string? availableDirections = "";
+            var availableDirections = GetAvailableDirectionsForRoom(room, rooms);
 
-            if (room.North == null && !HasReverseConflict(room, "North", rooms)) availableDirections += "North ";
-            if (room.South == null && !HasReverseConflict(room, "South", rooms)) availableDirections += "South ";
-            if (room.East == null && !HasReverseConflict(room, "East", rooms)) availableDirections += "East ";
-            if (room.West == null && !HasReverseConflict(room, "West", rooms)) availableDirections += "West ";
+            if (availableDirections.Count == 0) continue;
 
-            if (string.IsNullOrEmpty(availableDirections)) continue;
-
-            availableDirections = RemoveLogicalConflicts(room, availableDirections);
-
-            if (availableDirections?.Length == 0 || string.IsNullOrEmpty(availableDirections)) continue;
-
-            availableRooms.Add(room.Name, availableDirections.Trim().Split(" ", StringSplitOptions.RemoveEmptyEntries));
+            availableRooms.Add(room, availableDirections);
         }
 
         return availableRooms;

@@ -89,115 +89,12 @@ public class InputManager(OutputManager outputManager)
         }
         while (true);
     }
-    public T? PaginateList<T>(List<T> list, string? tType = null, string? purpose = null, bool allowSelection = false, bool clearScreen = true)
-    {
-        const int pageSize = 6;
-        int currentPage = 0;
-        int totalPages = (int)Math.Ceiling(list.Count / (double)pageSize);
-
-        if (clearScreen) _outputManager.Clear();
-
-        while (true)
-        {
-            _outputManager.WriteLine("=== List ===", ConsoleColor.Cyan);
-
-            var pageItems = list.Skip(currentPage * pageSize).Take(pageSize).ToList();
-
-            for (int i = 0; i < pageItems.Count; i++)
-            {
-                _outputManager.Write($"[{i + 1}] ", ConsoleColor.DarkGray);
-
-                switch (pageItems[i])
-                {
-                    case Item item:
-                        ColorfulToStringHelper.ColorItemString(item, _outputManager);
-                        break;
-                    case Player player:
-                        ColorfulToStringHelper.ColorPlayerOutput(player, _outputManager);
-                        break;
-                    case Room room:
-                        ColorfulToStringHelper.ColorRoomOutput(room, _outputManager);
-                        break;
-                    case Monster monster:
-                        ColorfulToStringHelper.ColorMonsterOutput(monster, _outputManager);
-                        break;
-                    case Skill skill:
-                        ColorfulToStringHelper.ColorSkillOutput(skill, _outputManager);
-                        break;
-                    case Archetype archetype:
-                        ColorfulToStringHelper.ColorArchetypeOutput(archetype, _outputManager);
-                        break;
-                    default:
-                        _outputManager.WriteLine(pageItems[i]?.ToString() ?? "Unknown", ConsoleColor.Cyan);
-                        break;
-                }
-
-                _outputManager.WriteLine();
-            }
-
-            var pageInfo = $"{currentPage + 1} of {totalPages}";
-            if (totalPages > 1)
-            {
-                if (currentPage > 0) pageInfo = "<-- " + pageInfo;
-                if (currentPage < totalPages - 1) pageInfo += " -->";
-            }
-            _outputManager.WriteLine($"\n{pageInfo}", ConsoleColor.DarkGreen);
-
-            string prompt = "\n";
-            if (totalPages > 1)
-                prompt += "Use ←/→ arrows to navigate pages. ";
-            if (allowSelection)
-                prompt += $"Enter number (1-{pageItems.Count}) of {tType} to {purpose}. ";
-            prompt += "Press 'q' to quit.\n";
-
-            _outputManager.WriteLine(prompt);
-            _outputManager.Display();
-
-            while (true)
-            {
-                var key = ReadKey();
-
-                if ((key.Key == ConsoleKey.RightArrow || key.Key == ConsoleKey.DownArrow) && currentPage < totalPages - 1)
-                {
-                    currentPage++;
-                    break;
-                }
-                else if ((key.Key == ConsoleKey.LeftArrow || key.Key == ConsoleKey.UpArrow) && currentPage > 0)
-                {
-                    currentPage--;
-                    break;
-                }
-                else if (key.Key == ConsoleKey.Q)
-                {
-                    _outputManager.Clear();
-                    return default;
-                }
-                else if (allowSelection && char.IsDigit(key.KeyChar))
-                {
-                    int selection = int.Parse(key.KeyChar.ToString());
-                    if (selection > 0 && selection <= pageItems.Count)
-                    {
-                        return pageItems[selection - 1];
-                    }
-                }
-                else
-                {
-                    _outputManager.WriteLine("Invalid input. Please try again.", ConsoleColor.Red);
-                    _outputManager.Display();
-                }
-            }
-
-            _outputManager.Clear();
-        }
-    }
-    public T? PaginateWithFunction<T>(List<T> list, Func<T, string> format, string? tType = null, string? purpose = null, bool allowSelection = false, bool clearScreen = true)
+    private T? PaginateWithFunction<T>(List<T> list, Func<T, string> displayTextSelector, string prompt, Func<T, ConsoleColor>? colorSelector = null, bool allowSelection = false)
     {
         const int pageSize = 9;
         int currentPage = 0;
         int totalPages = (int)Math.Ceiling(list.Count / (double)pageSize);
 
-        if (clearScreen) _outputManager.Clear();
-
         while (true)
         {
             _outputManager.WriteLine("=== List ===", ConsoleColor.Cyan);
@@ -206,7 +103,10 @@ public class InputManager(OutputManager outputManager)
 
             for (int i = 0; i < pageItems.Count; i++)
             {
-                _outputManager.WriteLine($"[{i + 1}] {format(pageItems[i])}");
+                var item = pageItems[i];
+                var display = $"{i + 1}. {displayTextSelector(item)}";
+                var color = colorSelector?.Invoke(item) ?? ConsoleColor.White;
+                _outputManager.WriteLine(display, color);
             }
 
             var pageInfo = $"{currentPage + 1} of {totalPages}";
@@ -217,14 +117,14 @@ public class InputManager(OutputManager outputManager)
             }
             _outputManager.WriteLine($"\n{pageInfo}", ConsoleColor.DarkGreen);
 
-            string prompt = "\n";
+            string navigationPrompt = "\n";
             if (totalPages > 1)
-                prompt += "Use ← → arrows to navigate pages. ";
+                navigationPrompt += "Use <-- --> arrows to navigate pages. ";
             if (allowSelection)
-                prompt += $"Enter number (1-{pageItems.Count}) of {tType} to {purpose}. ";
-            prompt += "Press 'q' to quit.\n";
+                navigationPrompt += $"Enter number to {prompt}. ";
+            navigationPrompt += "Press 'q' to quit.\n";
 
-            _outputManager.WriteLine(prompt);
+            _outputManager.WriteLine(navigationPrompt);
             _outputManager.Display();
 
             while (true)
@@ -264,8 +164,7 @@ public class InputManager(OutputManager outputManager)
             _outputManager.Clear();
         }
     }
-    public T? SelectFromList<T>(List<T> items, Func<T, string> displayTextSelector,
-            string prompt, Func<T, ConsoleColor>? colorSelector = null)
+    private T? SelectFromList<T>(List<T> items, Func<T, string> displayTextSelector, string prompt, Func<T, ConsoleColor>? colorSelector = null, bool allowSelection = false)
     {
         for (int i = 0; i < items.Count; i++)
         {
@@ -274,14 +173,42 @@ public class InputManager(OutputManager outputManager)
             var color = colorSelector?.Invoke(item) ?? ConsoleColor.White;
             _outputManager.WriteLine(display, color);
         }
+        if (!allowSelection)
+        {
+            _outputManager.WriteLine();
+            return default;
+        }
 
         string fullPrompt = $"\n\t{prompt} (-1 to cancel): ";
         int choice = ReadInt(fullPrompt, items.Count, true);
 
         return choice == -1 ? default : items[choice - 1];
     }
+
+    public T? Selector<T>(List<T> items, Func<T, string> displayTextSelector, string prompt, Func<T, ConsoleColor>? colorSelector = null)
+     => items.Count < 13 ?
+            SelectFromList(items, displayTextSelector, prompt, colorSelector, true)
+            : PaginateWithFunction(items, displayTextSelector, prompt, colorSelector, true);
+
+    public T? Viewer<T>(List<T> items, Func<T, string> displayTextSelector, string prompt, Func<T, ConsoleColor>? colorSelector = null)
+    {
+        return items.Count < 13 ?
+            SelectFromList(items, displayTextSelector, prompt, colorSelector)
+            : PaginateWithFunction(items, displayTextSelector, prompt, colorSelector);
+    }
+
+    public Item? SelectItem(string prompt, List<Item> items, decimal? valueMultiplier = null)
+    {
+        return Selector(
+            items,
+            i => ColorfulToStringHelper.ItemStatsString(i, valueMultiplier),
+            prompt,
+            i => ColorfulToStringHelper.GetItemColor(i)
+        );
+    }
+
     public bool LoopAgain(string action)
-    {        
+    {
         string again = ReadString($"Would you like to {action} another? (y/n): ", ["y", "n"]).ToLower();
         return again == "y";
     }
@@ -301,5 +228,15 @@ public class InputManager(OutputManager outputManager)
 
         var choice = ReadInt($"\n{prompt}: ", values.Count);
         return values[choice - 1];
+    }
+    public int DisplayEditMenu(List<string> properties)
+    {
+        for (int i = 0; i < properties.Count; i++)
+        {
+            _outputManager.WriteLine($"{i + 1}. Change {properties[i]}");
+        }
+        _outputManager.WriteLine($"{properties.Count + 1}. Exit", ConsoleColor.Red);
+
+        return ReadInt("\nWhat property would you like to edit? ", properties.Count + 1);
     }
 }

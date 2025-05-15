@@ -114,7 +114,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         }
 
         _outputManager.WriteLine();
-        var item = SelectItem("Select an item to purchase", 1.25M, items);
+        var item = _inputManager.SelectItem("Select an item to purchase", items, 1.25M);
 
         if (item == null)
         {
@@ -145,7 +145,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         }
 
         _outputManager.WriteLine();
-        var item = SelectItem("Select an item to sell", 0.75M, items);
+        var item = _inputManager.SelectItem("Select an item to sell", items, 0.75M);
        
         if (item == null)
         {
@@ -178,7 +178,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         }
 
         _outputManager.WriteLine();
-        var choice = SelectItem("Select an item to purify", 0.5M, items);
+        var choice = _inputManager.SelectItem("Select an item to purify", items, 0.5M);
 
         if (choice == null)
         {
@@ -208,7 +208,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         }
 
         _outputManager.WriteLine();
-        var choice = SelectItem("Select an item to reforge.", 0.33M, items);
+        var choice = _inputManager.SelectItem("Select an item to reforge.", items, 0.33M);
 
         if (choice == null)
         {
@@ -244,7 +244,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         }
 
         _outputManager.WriteLine();
-        var choice = SelectItem("Select an item to enchant", 1.5M, items);
+        var choice = _inputManager.SelectItem("Select an item to enchant", items, 1.5M);
 
         if (choice == null)
         {
@@ -265,15 +265,6 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
                 _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
             }
         }
-    }
-    private Item? SelectItem(string prompt, decimal valueMultiplier, List<Item> items)
-    {
-        return _inputManager.SelectFromList(
-            items,
-            i => ColorfulToStringHelper.ItemStatsString(i, valueMultiplier),
-            prompt,
-            i => ColorfulToStringHelper.GetItemColor(i)
-        );
     }
     private Dictionary<string, MerchantOptions> GetMenuOptions()
     {

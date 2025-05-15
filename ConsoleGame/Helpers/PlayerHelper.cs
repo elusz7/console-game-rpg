@@ -32,17 +32,23 @@ public class PlayerHelper(InputManager inputManager, OutputManager outputManager
 
         var archetypes = _archetypeDao.GetAllArchetypes();
 
-        var archetype = _inputManager.SelectFromList(archetypes, a => a.Name, $"Select the archetype of {name}", a => ColorfulToStringHelper.GetArchetypeColor(a));
+        var archetype = _inputManager.Selector(
+            archetypes, 
+            a => ColorfulToStringHelper.ArchetypeToString(a), 
+            $"Select the archetype of {name}", 
+            a => ColorfulToStringHelper.GetArchetypeColor(a));
 
         if (archetype == null)
         {
             return null;
         }
 
-        var player = new Player();
-        player.Name = name;
-        player.ArchetypeId = archetype.Id;
-        player.Archetype = archetype;
+        var player = new Player
+        {
+            Name = name,
+            ArchetypeId = archetype.Id,
+            Archetype = archetype
+        };
 
         player.Initialize();
 
@@ -64,7 +70,7 @@ public class PlayerHelper(InputManager inputManager, OutputManager outputManager
             return null;
         }
 
-        var player = _playerDao.GetPlayer(selection);
+        var player = _playerDao.GetPlayerNoTracking(selection);
 
         LevelUpPlayer(player);
 
@@ -73,9 +79,9 @@ public class PlayerHelper(InputManager inputManager, OutputManager outputManager
 
     private Player? SelectPlayer(string prompt, List<Player> players)
     {
-        return _inputManager.SelectFromList(
+        return _inputManager.Selector(
             players,
-            p => $"{p.Name} [Level {p.Level} {p.Archetype.Name}]",
+            p => ColorfulToStringHelper.PlayerToString(p),
             prompt,
             i => ColorfulToStringHelper.GetArchetypeColor(i.Archetype)
         );
@@ -102,6 +108,8 @@ public class PlayerHelper(InputManager inputManager, OutputManager outputManager
         var dbPlayer = _playerDao.GetPlayerByName(player.Name);
         
         SellInventory(player);
+        player.RoomId = null;
+        player.CurrentRoom = null;
 
         if (dbPlayer == null)
         {
