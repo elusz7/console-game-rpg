@@ -86,13 +86,15 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
                 OutputActionItems(player, aliveMonsters);
             }
 
+            OutputActionItems(player, monsters);
             _outputManager.WriteLine("\nYou have defeated all the monsters in the room!", ConsoleColor.Green);
             _outputManager.WriteLine("You are now free to continue exploring.\n", ConsoleColor.Cyan);
         }
-        catch (PlayerDeathException ex)
+        catch (PlayerDeathException)
         {
-            _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
-            _outputManager.WriteLine("You have died. Game over.", ConsoleColor.Red);
+            OutputActionItems(player, monsters);
+
+            _outputManager.WriteLine("\nYou have died. Game over.", ConsoleColor.Red);
         }
     }
     private void PlayerCombatTurn(Player player, List<Monster> validTargets)

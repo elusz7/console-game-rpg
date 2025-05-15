@@ -81,7 +81,6 @@ public class MonsterFactory(MonsterDao monsterDao, SkillDao skilldao)
             Name = monsterBase.Name,
             Level = monsterBase.Level,
             MaxHealth = monsterBase.MaxHealth,
-            CurrentHealth = monsterBase.MaxHealth,
             ThreatLevel = monsterBase.ThreatLevel,
             AggressionLevel = monsterBase.AggressionLevel,
             DefensePower = monsterBase.DefensePower,
@@ -97,6 +96,8 @@ public class MonsterFactory(MonsterDao monsterDao, SkillDao skilldao)
         {
             monster.LevelUp(level);
         }
+
+        monster.CurrentHealth = monster.MaxHealth;
 
         return monster;
     }

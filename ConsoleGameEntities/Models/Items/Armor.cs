@@ -42,7 +42,7 @@ public class Armor : Item
         DefensePower = newDefensePower;
         Resistance = newResistance;
 
-        Value += (price * 0.33M);
+        Value += Math.Round(totalPower * RequiredLevel * 0.5M, 2);
 
         Inventory.Gold -= price;
     }

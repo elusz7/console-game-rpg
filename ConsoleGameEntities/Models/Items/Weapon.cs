@@ -45,7 +45,7 @@ public class Weapon : Item
 
         AttackPower += newAttackPower;
 
-        Value += (price * 0.33M);
+        Value += Math.Round(newAttackPower * RequiredLevel * 0.5M, 2);
 
         Inventory.Gold -= price;
     }
