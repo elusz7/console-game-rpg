@@ -122,6 +122,7 @@ namespace ConsoleGameEntities.Data
                 .HasDiscriminator<string>(i => i.SkillType)
                 .HasValue<MartialSkill>("MartialSkill")
                 .HasValue<MagicSkill>("MagicSkill")
+                //.HasValue<MagicSkill>("MagicalSkill") // instead of or in addition to "MagicSkill"
                 .HasValue<SupportSkill>("SupportSkill")
                 .HasValue<UltimateSkill>("UltimateSkill")
                 .HasValue<BossSkill>("BossSkill");

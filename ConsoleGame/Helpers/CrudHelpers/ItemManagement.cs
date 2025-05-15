@@ -89,7 +89,7 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
                 Weight = weight,
                 RequiredLevel = level,
                 AttackPower = _inputManager.ReadInt("Enter item attack power: "),
-                DamageType = (DamageType)(_inputManager.ReadInt("Enter item damage type (1: Physical, 2: Magical): ", 2) - 1)
+                DamageType = (DamageType)(_inputManager.ReadInt("Enter item damage type (1: Martial, 2: Magical): ", 2) - 1)
             },
             ItemType.Armor => new Armor
             {
@@ -224,7 +224,7 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
             "Attack power" => () => ((Weapon)item).AttackPower = _inputManager.ReadInt("\nEnter new attack power: "),
             "Defense power" => () => ((Armor)item).DefensePower = _inputManager.ReadInt("\nEnter new defense power: "),
             "Resistance" => () => ((Armor)item).Resistance = _inputManager.ReadInt("\nEnter new resistance: "),
-            "Damage type" => () => ((Weapon)item).DamageType = (DamageType)(_inputManager.ReadInt("\nEnter new damage type (1: Physical, 2: Magical): ", 2) - 1),
+            "Damage type" => () => ((Weapon)item).DamageType = (DamageType)(_inputManager.ReadInt("\nEnter new damage type (1: Martial, 2: Magical): ", 2) - 1),
             "Power" => () => ((Consumable)item).Power = _inputManager.ReadInt("\nEnter new power: "),
             _ => throw new ArgumentException("Invalid property")
         };

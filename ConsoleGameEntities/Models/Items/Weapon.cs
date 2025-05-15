@@ -45,6 +45,8 @@ public class Weapon : Item
 
         AttackPower += newAttackPower;
 
+        Value += (price * 0.33M);
+
         Inventory.Gold -= price;
     }
     public override string ToString()

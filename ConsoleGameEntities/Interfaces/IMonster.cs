@@ -25,10 +25,11 @@ public interface IMonster : ITargetable
     DamageType DamageType { get; set; }
     ThreatLevel ThreatLevel { get; set; }
 
-    ICollection<Skill>? Skills { get; set; }
+    ICollection<Skill> Skills { get; set; }
     Item? Treasure { get; set; }
     Room? Room { get; set; }
 
     void Attack(IPlayer target);
-    Item Loot();
+    Item? Loot();
+    void SetLoot(Item item);
 }

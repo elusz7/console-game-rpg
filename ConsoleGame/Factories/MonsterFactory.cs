@@ -1,13 +1,16 @@
 ﻿using ConsoleGame.GameDao;
+using ConsoleGame.Managers;
 using ConsoleGameEntities.Models.Monsters;
+using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Factories;
 
-public class MonsterFactory(MonsterDao monsterDao)
+public class MonsterFactory(MonsterDao monsterDao, SkillDao skilldao)
 {
     private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
     private readonly MonsterDao _monsterDao = monsterDao;
+    private readonly SkillDao _skillDao = skilldao;
 
     private static readonly Dictionary<ThreatLevel, double> _monsterThreatWeights = new()
         {
@@ -66,6 +69,7 @@ public class MonsterFactory(MonsterDao monsterDao)
                 currentCount += (int)Math.Round(weight);
             }
         }
+        SetMonsterSkills(level, selectedMonsters);
 
         return selectedMonsters;
     }
@@ -89,14 +93,77 @@ public class MonsterFactory(MonsterDao monsterDao)
             Strategy = Monster.GetStrategyFor((MonsterBehaviorType)_rng.Next(1, 6))
         };
 
-        if (monster.Level < (level / 3))
+        if (monster.Level < level)
         {
             monster.LevelUp(level);
         }
 
         return monster;
     }
+    public void SetMonsterSkills(int level, List<Monster> monsters)
+    {
+        var skills = _skillDao.GetUnassignedSkillsByMaxLevel(level);
 
+        if (skills.Count == 0)
+        {
+            return;
+        }
+
+        var martialSkills = skills.Where(s => s is MartialSkill).ToList();
+        var magicSkills = skills.Where(s => s is MagicSkill).ToList();
+        var supportSkills = skills.Where(s => s is SupportSkill).ToList();
+        var ultimateSkills = skills.Where(s => s is UltimateSkill).ToList();
+
+        foreach (var monster in monsters)
+        {
+            int attackSkillCount = monster.Level + (monster.Level / 2); //1 + half the level # of skills 
+            int supportSkillCount = monster.Level / 2; //1 skill per 2 levels
+
+            var selectedSkills = new List<Skill>();
+            
+            var usableAttackSkills = monster.DamageType == DamageType.Martial ?
+                martialSkills.Where(martialSkills => martialSkills.RequiredLevel <= monster.Level).ToList() :
+                magicSkills.Where(magicSkills => magicSkills.RequiredLevel <= monster.Level).ToList();
+
+            for (int i = 0; i < attackSkillCount; i++)
+            {
+                if (usableAttackSkills.Count == 0)
+                {
+                    break;
+                }
+                var randomSkill = usableAttackSkills[_rng.Next(usableAttackSkills.Count)];
+                randomSkill.InitializeSkill();
+                selectedSkills.Add(randomSkill);
+                usableAttackSkills.Remove(randomSkill);
+            }
+
+            var usuableSupportSkills = supportSkills.Where(s => s.RequiredLevel <= monster.Level).ToList();
+
+            for (int i = 0; i < supportSkillCount; i++)
+            {
+                if (usuableSupportSkills.Count == 0)
+                {
+                    break;
+                }
+                var randomSkill = usuableSupportSkills[_rng.Next(usuableSupportSkills.Count)];
+                randomSkill.InitializeSkill();
+                selectedSkills.Add(randomSkill);
+                usuableSupportSkills.Remove(randomSkill);
+            }
+
+            if (monster.ThreatLevel == ThreatLevel.Elite)
+            {
+                var usableUltimateSkills = ultimateSkills.Where(s => s.RequiredLevel <= monster.Level).ToList();
+                if (usableUltimateSkills.Count > 0)
+                {
+                    var randomSkill = usableUltimateSkills[_rng.Next(usableUltimateSkills.Count)];
+                    selectedSkills.Add(randomSkill);
+                }
+            }
+
+            monster.Skills = selectedSkills;
+        }
+    }
     private static Dictionary<ThreatLevel, int> GenerateMonstersForLevel(int level)
     {
         var result = new Dictionary<ThreatLevel, int>();

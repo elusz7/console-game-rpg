@@ -2,7 +2,7 @@
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Interfaces;
-using ConsoleGameEntities.Models.Monsters;
+using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using System.ComponentModel.DataAnnotations.Schema;
 using ConsoleGameEntities.Models.Items;
@@ -12,7 +12,7 @@ namespace ConsoleGameEntities.Models.Entities;
 public class Player : IPlayer
 {
     [NotMapped]
-    public Dictionary<int, string> ActionItems { get; } = new();
+    public Dictionary<long, string> ActionItems { get; } = new();
     [NotMapped]
 
     private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
@@ -263,25 +263,28 @@ public class Player : IPlayer
     }
     public void Loot(IMonster monster)
     {
+        
         if (monster.CurrentHealth >= 1)
         {
             throw new TreasureException($"You think it might be better to defeat {monster.Name} before trying to take its treasure.");
         }
 
+        Item loot = monster.Loot() ?? throw new TreasureException($"{monster.Name} has no treasure to loot.");
+        
         try
         {
-            var loot = monster.Loot();
-            if (loot != null)
-            {
-                Inventory.AddItem(loot);
-                AddActionItem($"You found {loot.Name} on {monster.Name}!");
-            }
-
+            Inventory.AddItem(loot);
+            
         }
-        catch (InventoryException ex)
+        catch (Exception ex)
         {
+            monster.SetLoot(loot); //return loot to monster
             throw new TreasureException(ex.Message);
         }
+
+        loot.Inventory = Inventory;
+        loot.InventoryId = Inventory.Id;
+        AddActionItem($"You found {loot.Name} on {monster.Name}!");
     }
     public void Unequip(Item item)
     {
@@ -331,13 +334,19 @@ public class Player : IPlayer
     {
         ActionItems.Clear();
     }
-    public void AddActionItem(string actionItem)
+    public void AddActionItem(string action)
     {
-        ActionItems.Add(DateTime.Now.Millisecond, actionItem);
+        long key = DateTime.Now.Ticks;
+        while (ActionItems.ContainsKey(key)) key++;
+
+        ActionItems.Add(key, action);
     }
-    public void AddActionItem(ISkill skill)
+    public void AddActionItem(Skill skill)
     {
-        ActionItems.Add(DateTime.Now.Millisecond, $"You use {skill.Name}!");
+        long key = DateTime.Now.Ticks;
+        while (ActionItems.ContainsKey(key)) key++;
+
+        ActionItems.Add(key, $"You use {skill.Name}!");
     }
     public virtual void Sell(Item item)
     {
@@ -345,7 +354,12 @@ public class Player : IPlayer
             throw new InvalidOperationException("Cannot sell an equipped item.");
 
         if (Inventory != null)
-            Inventory.Gold += (int)Math.Floor(item.Value * 0.75M);
+        {
+            if (item is Valuable)
+                Inventory.Gold += (int)item.Value;
+            else
+                Inventory.Gold += (int)Math.Floor(item.Value * 0.75M);
+        }
 
         Inventory?.RemoveItem(item);
     }
@@ -359,6 +373,8 @@ public class Player : IPlayer
         try
         {
             Inventory.AddItem(item);
+            item.Inventory = Inventory;
+            item.InventoryId = Inventory.Id;
         }
         catch (InventoryException ex)
         {

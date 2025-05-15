@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleGameEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    [Migration("20250506044849_SeedMonsterBasicSkills")]
-    partial class SeedMonsterBasicSkills
+    [Migration("20250514211608_SeedSkills2")]
+    partial class SeedSkills2
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -329,7 +329,7 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("Cost")
                         .HasColumnType("int");
 
-                    b.Property<int>("DamageType")
+                    b.Property<int?>("DamageType")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
@@ -447,7 +447,7 @@ namespace ConsoleGameEntities.Migrations
                 {
                     b.HasBaseType("ConsoleGameEntities.Models.Skills.Skill");
 
-                    b.HasDiscriminator().HasValue("MagicSkill");
+                    b.HasDiscriminator().HasValue("MagicalSkill");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Skills.MartialSkill", b =>
@@ -557,7 +557,7 @@ namespace ConsoleGameEntities.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("ConsoleGameEntities.Models.Entities.Room", "Room")
-                        .WithMany()
+                        .WithMany("Monsters")
                         .HasForeignKey("RoomId")
                         .OnDelete(DeleteBehavior.SetNull);
 
@@ -595,6 +595,11 @@ namespace ConsoleGameEntities.Migrations
                 {
                     b.Navigation("Inventory")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ConsoleGameEntities.Models.Entities.Room", b =>
+                {
+                    b.Navigation("Monsters");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Items.Item", b =>

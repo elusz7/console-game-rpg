@@ -8,9 +8,9 @@ public class BossSkill : Skill
 {
     public int Phase { get; set; }
 
-    public override void Activate(ITargetable caster, ITargetable? target = null, List<ITargetable>? targets = null)
+    public override void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
-        if (IsOnCooldown) throw new SkillCooldownException();
+        if (IsOnCooldown) throw new SkillCooldownException("This skill is still on cooldown.");
 
         double multiplier = Phase switch
         {
@@ -23,6 +23,6 @@ public class BossSkill : Skill
         caster.AddActionItem(this);
 
         int damage = (int)(Power * multiplier);
-        target?.TakeDamage(damage, DamageType);
+        singleEnemy?.TakeDamage(damage, DamageType);
     }
 }

@@ -18,7 +18,7 @@ public class SupportSkill : Skill
     [NotMapped]
     public Dictionary<ITargetable, int> TargetsAffected { get; set; } = new();
 
-    public override void Activate(ITargetable? caster, ITargetable? target = null, List<ITargetable>? targets = null)
+    public override void Activate(ITargetable? caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
         if (IsOnCooldown)
             throw new SkillCooldownException();
@@ -45,17 +45,17 @@ public class SupportSkill : Skill
             }
             else if (TargetType == TargetType.SingleEnemy)
             {
-                if (target == null)
+                if (singleEnemy == null)
                     throw new InvalidTargetException("Support");
 
-                ApplyEffect(target);
+                ApplyEffect(singleEnemy);
             }
             else if (TargetType == TargetType.AllEnemies)
             {
-                if (targets == null || targets.Count == 0)
+                if (multipleEnemies == null || multipleEnemies.Count == 0)
                     throw new InvalidTargetException("Support");
 
-                foreach (var tar in targets)
+                foreach (var tar in multipleEnemies)
                 {
                     try
                     {
@@ -76,11 +76,11 @@ public class SupportSkill : Skill
             }
             else if (TargetType == TargetType.SingleEnemy)
             {
-                if (target == null)
+                if (singleEnemy == null)
                     throw new InvalidTargetException("Support");
 
                 monster.AddActionItem(this);
-                ApplyEffect(target);
+                ApplyEffect(singleEnemy);
             }
 
             ElapsedTime = 0;
@@ -120,14 +120,16 @@ public class SupportSkill : Skill
         ElapsedTime = 0;
     }
 
-    private void ApplyEffect(ITargetable target)
+    public void ApplyEffect(ITargetable target)
     {
         if (TargetsAffected.ContainsKey(target))
             throw new InvalidTargetException("Cannot apply multiple effects to same target with same skill");
 
         int modifier = SupportEffect == (int)SupportEffectType.Boost ? Power : -Power;
         target.ModifyStat(StatAffected, modifier);
-        TargetsAffected[target] = Duration;
+
+        if (StatAffected != StatType.Health)
+            TargetsAffected[target] = Duration;
     }
 
     private void RevertEffect(ITargetable target)

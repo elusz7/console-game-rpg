@@ -8,35 +8,35 @@ namespace ConsoleGameEntities.Models.Skills;
 
 public class MartialSkill : Skill
 {
-    public override void Activate(ITargetable? caster, ITargetable? target = null, List<ITargetable>? targets = null)
+    public override void Activate(ITargetable? caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
         if (IsOnCooldown) 
             throw new SkillCooldownException();
 
-        if (target == null || targets == null || targets.Count == 0)
-            throw new InvalidTargetException("MartialSkill");
+        if (singleEnemy == null && (multipleEnemies == null || multipleEnemies.Count == 0))
+            throw new InvalidTargetException("No suitable target(s) provided.");
 
         if (caster is Player player)
         {
             if (player.Level < RequiredLevel)
-                throw new InvalidSkillLevelException();
+                throw new InvalidSkillLevelException("Your level is too low to use this skill.");
 
             try
             {
                 player.Archetype.UseResource(Cost);
             }
-            catch (InvalidOperationException) { throw new SkillResourceException(); }
+            catch (InvalidOperationException) { throw new SkillResourceException($"You don't have enough {player.Archetype.ResourceName}."); }
 
             player.AddActionItem(this);
 
             switch (TargetType)
             {
                 case TargetType.SingleEnemy:
-                        target.TakeDamage(Power, DamageType);
+                        singleEnemy.TakeDamage(Power, DamageType);
                     break;
 
                 case TargetType.AllEnemies:
-                    foreach (var tar in targets)
+                    foreach (var tar in multipleEnemies)
                         tar.TakeDamage(Power, DamageType);
                     break;
             }
@@ -46,11 +46,11 @@ public class MartialSkill : Skill
         else if (caster is Monster monster)
         {
             if (monster.Level < RequiredLevel)
-                throw new InvalidSkillLevelException();
+                throw new InvalidSkillLevelException("This monster's level is too low to use this skill.");
 
             monster.AddActionItem(this);
 
-            target.TakeDamage(Power, DamageType);
+            singleEnemy.TakeDamage(Power, DamageType);
             ElapsedTime = 0;
         }
     }

@@ -24,7 +24,7 @@ public class Armor : Item
         if (Inventory.Gold < price)
             throw new ItemReforgeException($"You are short by {price - Inventory.Gold} gold.");
 
-        double failureChance = Math.Min(0.02 * RequiredLevel, 0.6);
+        double failureChance = Math.Min(0.01 * RequiredLevel, 0.6);
         if (_rng.NextDouble() < failureChance)
         {
             Inventory.Gold -= price;
@@ -33,14 +33,16 @@ public class Armor : Item
 
         var totalPower = DefensePower + Resistance;
 
-        var newDefensePower = _rng.Next(0, totalPower + 1);
+        var newDefensePower = _rng.Next(totalPower);
         var newResistance = totalPower - newDefensePower;
 
         if (newDefensePower == DefensePower && newResistance == Resistance)
-            throw new ItemReforgeException("Reforge failed. No changes made.");
+            throw new ItemReforgeException("Reforge failed. No gold taken. No changes made.");
 
         DefensePower = newDefensePower;
         Resistance = newResistance;
+
+        Value += (price * 0.33M);
 
         Inventory.Gold -= price;
     }

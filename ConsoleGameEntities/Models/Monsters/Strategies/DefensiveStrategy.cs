@@ -45,6 +45,7 @@ public class DefensiveStrategy : DefaultStrategy
 
         // 4. As a fallback or follow up to healing/debuff, do a basic attack
         var decreasedDamage = (int)Math.Ceiling(monster.AttackPower * .8);
+        monster.AddActionItem($"{monster.Name} attacks for {decreasedDamage} damage!");
         target.TakeDamage(decreasedDamage, monster.DamageType);
     }
 }

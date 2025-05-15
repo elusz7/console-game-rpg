@@ -41,7 +41,7 @@ public class InputManager(OutputManager outputManager)
         while (
             !isInt ||
             (max.HasValue && result > max.Value) ||
-            (result < 0 && (!cancel || result != -1))
+            (result < 1 && (!cancel || result != -1))
         )
         {
             string error = cancel

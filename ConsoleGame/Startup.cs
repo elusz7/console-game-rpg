@@ -97,6 +97,7 @@ public static class Startup
         services.AddTransient<CombatHelper>();
         services.AddTransient<MerchantHelper>();
         services.AddTransient<EquipmentHelper>();
+        services.AddTransient<PlayerHelper>();
 
         services.AddSingleton<InputManager>();
         services.AddSingleton<OutputManager>();

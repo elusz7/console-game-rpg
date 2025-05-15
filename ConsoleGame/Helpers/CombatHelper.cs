@@ -18,6 +18,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
     private const int AttackOption = 1;
     private const int SkillOption = 2;
     private const int ConsumableOption = 3;
+    private const int ExitOption = 4;
 
     private bool tryEquipWeapon = true;
 
@@ -36,7 +37,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
                 if (aliveMonsters == null || aliveMonsters.Count == 0)
                     break;
 
-                bool playerTurn = false;
+                bool playerTurnTaken = false;
 
                 // Sort monsters by speed
                 aliveMonsters.Sort((m1, m2) => m2.GetStat(StatType.Speed).CompareTo(m1.GetStat(StatType.Speed)));
@@ -46,24 +47,31 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
                     var monster = aliveMonsters[i];
 
                     // Player attacks before first monster faster than monster
-                    if (player.GetStat(StatType.Speed) > monster.GetStat(StatType.Speed) && !playerTurn)
+                    if (player.GetStat(StatType.Speed) > monster.GetStat(StatType.Speed) && !playerTurnTaken)
                     {
                         PlayerCombatTurn(player, aliveMonsters);
                         OutputActionItems(player, aliveMonsters);
-                        playerTurn = true;
+                        playerTurnTaken = true;
                     }
 
                     ResetSupportSkills(aliveMonsters);
 
-                    if (monster.CurrentHealth > 0)
+                    try
                     {
-                        monster.Attack(player);
-                        OutputActionItems(player, aliveMonsters);
+                        if (monster.CurrentHealth > 0)
+                        {
+                            monster.Attack(player);
+                            OutputActionItems(player, aliveMonsters);
+                        }
+                    }
+                    catch (PlayerDeathException)
+                    {
+                        return;
                     }
                 }
 
                 // Player's turn if not already taken
-                if (!playerTurn)
+                if (!playerTurnTaken)
                 {
                     PlayerCombatTurn(player, [.. aliveMonsters.Where(m => m.CurrentHealth > 0)]);
                     OutputActionItems(player, aliveMonsters);
@@ -76,14 +84,8 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
                 OutputActionItems(player, aliveMonsters);
             }
 
-            // Reset player skills at end of combat
-            foreach (var skill in player.Archetype.Skills ?? [])
-            {
-                skill.Reset();
-            }
-
-            _outputManager.WriteLine("You have defeated all the monsters in the room!", ConsoleColor.Green);
-            _outputManager.WriteLine("You are now free to continue exploring.", ConsoleColor.Cyan);
+            _outputManager.WriteLine("\nYou have defeated all the monsters in the room!", ConsoleColor.Green);
+            _outputManager.WriteLine("You are now free to continue exploring.\n", ConsoleColor.Cyan);
         }
         catch (PlayerDeathException ex)
         {
@@ -93,7 +95,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
     }
     private void PlayerCombatTurn(IPlayer player, List<Monster> validTargets)
     {
-        _outputManager.WriteLine($"Your turn! You have {player.CurrentHealth} health and {player.Archetype.CurrentResource} {player.Archetype.ResourceName}.", ConsoleColor.Green);
+        _outputManager.WriteLine($"\nYour turn! You have {player.CurrentHealth} health and {player.Archetype.CurrentResource} {player.Archetype.ResourceName}.\n", ConsoleColor.Green);
         while (true)
         {
             var options = new List<(int, string)>
@@ -104,6 +106,8 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
 
             if (player.Inventory.ContainsConsumables())
                 options.Add((ConsumableOption, "Use Consumable"));
+
+            options.Add((ExitOption, "Exit Combat"));
 
             foreach (var (index, label) in options)
                 _outputManager.WriteLine($"{index}. {label}");
@@ -121,6 +125,9 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
                 case ConsumableOption:
                     if (UseConsumable(player)) return;
                     break;
+                case ExitOption:
+                    _outputManager.WriteLine("\nExiting combat now.\n");
+                    return;
                 default:
                     _outputManager.WriteLine("Invalid choice. Please try again.", ConsoleColor.Red);
                     break;
@@ -136,8 +143,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
         foreach (var kvp in player.ActionItems)
         {
             long key = kvp.Key;
-            while (actions.ContainsKey(key)) key++; // Avoid duplicate keys
-            actions.Add(key, kvp.Value);
+            while (!actions.TryAdd(key, kvp.Value)) key++;
         }
 
         // Add monster actions
@@ -146,8 +152,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
             foreach (var kvp in monster.ActionItems)
             {
                 long key = kvp.Key;
-                while (actions.ContainsKey(key)) key++; // Avoid duplicate keys
-                actions.Add(key, kvp.Value);
+                while (!actions.TryAdd(key, kvp.Value)) key++;
             }
         }
 
@@ -195,12 +200,13 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
     }
     private bool Attack(IPlayer player, List<Monster> targets)
     {
+        _outputManager.WriteLine();
         var target = targets.Count == 1 ? targets[0]
                     : SelectTarget(targets, "attack");
 
         if (target == null)
         {
-            _outputManager.WriteLine("Attacking cancelled.");
+            _outputManager.WriteLine("\nAttacking cancelled.\n");
             return false;
         }
 
@@ -209,9 +215,13 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
             player.Attack(target);
             return true;
         }
+        catch (MonsterDeathException)
+        {
+            return true;
+        }
         catch (EquipmentException)
         {
-            _outputManager.WriteLine("You cannot attack with your bare hands!", ConsoleColor.Red);
+            _outputManager.WriteLine("\nYou cannot attack with your bare hands!\n", ConsoleColor.Red);
 
             if (tryEquipWeapon)
                 EquipWeapon(player);
@@ -220,15 +230,25 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
     }
     private bool UseSkill(IPlayer player, List<Monster> targets)
     {
-        var skill = SelectSkill(player.Archetype.Skills?
+        var availableSkills = player.Archetype.Skills
                 .Where(s => s.RequiredLevel <= player.Level)
                 .Where(s => s.Cost <= player.Archetype.CurrentResource)
                 .Where(s => !s.IsOnCooldown)
-                .ToList() ?? []);
+                .ToList() ?? [];
+
+        if (availableSkills.Count == 0)
+        {
+            _outputManager.WriteLine("\nNo skills available to use currently.\n", ConsoleColor.Red);
+            return false;
+        }
+
+        _outputManager.WriteLine();
+        var skill = SelectSkill(availableSkills);
+        _outputManager.WriteLine();
 
         if (skill == null)
         {
-            _outputManager.WriteLine("Skill selection cancelled.");
+            _outputManager.WriteLine("Skill selection cancelled.\n");
             return false;
         }
 
@@ -245,17 +265,21 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
 
                     if (target == null)
                     {
-                        _outputManager.WriteLine("Skill use cancelled.");
+                        _outputManager.WriteLine("\nSkill use cancelled.\n");
                         return false;
                     }
 
-                    skill.Activate(player, target);
+                    skill.Activate(player, singleEnemy: target);
                     break;
                 case TargetType.AllEnemies:
                     List<ITargetable> enemyTargets = [.. targets.Cast<ITargetable>()];
-                    skill.Activate(player, targets: enemyTargets);
+                    skill.Activate(player, multipleEnemies: enemyTargets);
                     break;
             }
+        }
+        catch (MonsterDeathException)
+        {
+            return true;
         }
         catch (Exception ex)
         {
@@ -275,11 +299,20 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
     }
     private bool UseConsumable(IPlayer player)
     {
-        var consumable = SelectConsumable(player.Inventory.Items.OfType<Consumable>().ToList());
+        var availableConsumables = player.Inventory.Items.OfType<Consumable>().ToList();
+
+        if (availableConsumables.Count == 0)
+        {
+            _outputManager.WriteLine("\nNo consumables in your inventory.\n", ConsoleColor.Red);
+            return false;
+        }
+
+        _outputManager.WriteLine();
+        var consumable = SelectConsumable(availableConsumables);
 
         if (consumable == null)
         {
-            _outputManager.WriteLine("Consumable selection cancelled.");
+            _outputManager.WriteLine("\nConsumable selection cancelled.\n");
             return false;
         }
 
@@ -292,6 +325,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
                 consumable.UseOn(player);
                 break;
             case ConsumableType.Durability:
+                _outputManager.WriteLine();
                 var target = SelectItem("Select an item to increase durability", player.Inventory.Items.Where(i => i.IsEquipped()).ToList());
 
                 if (target == null)
@@ -359,27 +393,29 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
 
         if (availableWeapons.Count == 0)
         {
-            _outputManager.WriteLine("You have no weapons to equip.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nYou have no weapons to equip.\n", ConsoleColor.Red);
             tryEquipWeapon = false;
             return;
         }
 
+        _outputManager.WriteLine();
         var weapon = SelectItem("Select a weapon to equip", availableWeapons);
 
         if (weapon == null)
         {
-            _outputManager.WriteLine("No weapon selected.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nNo weapon selected.\n", ConsoleColor.Red);
             return;
         }
 
         try
         {
             player.Equip(weapon);
-            _outputManager.WriteLine($"You have equipped {weapon.Name}. Try attacking again.", ConsoleColor.Green);
+            _outputManager.WriteLine($"\nYou have equipped {weapon.Name}. Try attacking again.\n", ConsoleColor.Green);
         }
         catch (InvalidOperationException ex)
         {
-            _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
+            _outputManager.WriteLine($"\n{ex.Message}\n", ConsoleColor.Red);
+
         }
     }
 }

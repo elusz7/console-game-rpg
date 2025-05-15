@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Helpers;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
 
@@ -20,13 +22,18 @@ public class BerserkerStrategy : DefaultStrategy
 
         if (damageSkill != null)
         {
-            damageSkill.Activate(monster, target);
+            try
+            {
+                damageSkill.Activate(monster, target);
+                return;
+            }
+            catch (InvalidTargetException) { }
         }
-        else
-        {
-            int boostedDamage = (int)Math.Ceiling(monster.AttackPower * 1.5);
-            target.TakeDamage(boostedDamage, monster.DamageType);
-        }
+        
+        int boostedDamage = (int)Math.Ceiling(monster.AttackPower * 1.5);
+        monster.AddActionItem($"{monster.Name} attacks for {boostedDamage} damage!");
+        target.TakeDamage(boostedDamage, monster.DamageType);
+        
     }
 }
 

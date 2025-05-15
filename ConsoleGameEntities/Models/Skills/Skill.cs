@@ -17,7 +17,7 @@ public class Skill : ISkill
     public int Cost { get; set; }
     public int Power { get; set; }
     [NotMapped]
-    public int ElapsedTime { get; set; } // time since skill was last used
+    public int ElapsedTime { get; set; }
     public int Cooldown { get; set; }
     [NotMapped]
     public bool IsOnCooldown => ElapsedTime < Cooldown;
@@ -30,91 +30,108 @@ public class Skill : ISkill
     public int? MonsterId { get; set; }
     public virtual Monster? Monster { get; set; }
 
-    public virtual void Activate(ITargetable caster, ITargetable? target = null, List<ITargetable>? targets = null)
+    public virtual void InitializeSkill()
+    {
+        if (this is not UltimateSkill)
+            ElapsedTime = Cooldown + 1;
+        else
+            ElapsedTime = 0;
+    }
+    public virtual void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
         if (IsOnCooldown)
-            throw new SkillCooldownException();
+            throw new SkillCooldownException($"Skill '{Name}' is on cooldown!");
+
+        ValidateCasterLevel(caster);
+        ValidateTargets(caster, singleEnemy, multipleEnemies);
 
         if (caster is Player player)
         {
-            if (player.Level < RequiredLevel)
-                throw new InvalidSkillLevelException();
-
-            try
-            {
-                player.Archetype.UseResource(Cost);
-            }
-            catch (InvalidOperationException) { throw new SkillResourceException(); }
-
+            ConsumePlayerResources(player);
             player.AddActionItem(this);
-
-            switch (TargetType)
-            {
-                case TargetType.AllEnemies when SkillCategory == SkillCategory.Basic:
-                    if (targets == null || targets.Count == 0)
-                        throw new InvalidTargetException("Skill");
-
-                    foreach (var t in targets)
-                        t.TakeDamage(Power, DamageType);
-                    break;
-                case TargetType.AllEnemies when SkillCategory == SkillCategory.Support:
-                        if (targets == null || targets.Count == 0)
-                            throw new InvalidTargetException("Skill");
-
-                        foreach (var t in targets)
-                            t.ModifyStat(((SupportSkill)this).StatAffected, Power);
-                    break;
-                case TargetType.Self when SkillCategory == SkillCategory.Support:
-                    player.ModifyStat(((SupportSkill)this).StatAffected, Power);
-                    break;
-
-                case TargetType.SingleEnemy:
-                    if (target == null)
-                        throw new InvalidTargetException("Skill");
-
-                    if (this is SupportSkill supportSkill)
-                    {
-                        target.ModifyStat(supportSkill.StatAffected, Power);
-                    }
-                    else
-                    {
-                        target.TakeDamage(Power, DamageType);
-                    }
-                    break;
-            }
-
-            ElapsedTime = 0;
         }
         else if (caster is Monster monster)
         {
-            if (monster.Level < RequiredLevel)
-                throw new InvalidSkillLevelException();
-
             monster.AddActionItem(this);
+        }
 
+        ApplySkillEffect(caster, singleEnemy, multipleEnemies);
+
+        Reset();
+    }
+    private void ValidateCasterLevel(ITargetable caster)
+    {
+        if (caster is Player p)
+        {
+            if (p.Level < RequiredLevel)
+                throw new InvalidSkillLevelException($"{p.Name} does not meet the required level ({RequiredLevel}) for '{Name}'.");
+        }
+        else if (caster is Monster m)
+        {
+            if (m.Level < RequiredLevel)
+                throw new InvalidSkillLevelException($"{m.Name} does not meet the required level ({RequiredLevel}) for '{Name}'.");
+        }
+    }
+    private void ValidateTargets(ITargetable caster, ITargetable? singleEnemy, List<ITargetable>? multipleEnemies)
+    {
+        switch (TargetType)
+        {
+            case TargetType.SingleEnemy:
+                if (singleEnemy == null)
+                    throw new InvalidTargetException("Single enemy target not provided.");
+                break;
+            case TargetType.AllEnemies:
+                if (multipleEnemies == null || multipleEnemies.Count == 0)
+                    throw new InvalidTargetException("Multiple enemies not provided.");
+                break;
+            case TargetType.Self:
+                break;
+        }
+    }
+    private void ConsumePlayerResources(Player player)
+    {
+        if (player.Level < RequiredLevel)
+            throw new InvalidSkillLevelException("Your level is too low to use this skill!");
+
+        try
+        {
+            player.Archetype.UseResource(Cost);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new SkillResourceException(ex.Message);
+        }
+    }
+    private void ApplySkillEffect(ITargetable caster, ITargetable? singleEnemy, List<ITargetable>? multipleEnemies)
+    {
+        if (this is SupportSkill support)
+        {
             switch (TargetType)
             {
-                case TargetType.Self when SkillCategory == SkillCategory.Support:
-                    monster.ModifyStat(((SupportSkill)this).StatAffected, Power);
+                case TargetType.Self:
+                    support.ApplyEffect(caster);
                     break;
-
                 case TargetType.SingleEnemy:
-                    if (target == null)
-                        throw new InvalidTargetException("Skill");
-
-                    target.TakeDamage(Power, DamageType);
+                    support.ApplyEffect(singleEnemy);
                     break;
-
                 case TargetType.AllEnemies:
-                    if (targets == null || targets.Count == 0)
-                        throw new InvalidTargetException("Skill");
-
-                    foreach (var t in targets)
-                        t.TakeDamage(Power, DamageType);
+                    foreach (var target in multipleEnemies)
+                        support.ApplyEffect(target);
                     break;
             }
-
-            ElapsedTime = 0;
+        }
+        else
+        {
+            switch (TargetType)
+            {
+                case TargetType.SingleEnemy:
+                    singleEnemy.TakeDamage(Power, DamageType);
+                    break;
+                case TargetType.AllEnemies:
+                    foreach (var target in multipleEnemies)
+                        target.TakeDamage(Power, DamageType);
+                    break;
+            }
         }
     }
     public virtual void UpdateElapsedTime()

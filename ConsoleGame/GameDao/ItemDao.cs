@@ -89,6 +89,8 @@ public class ItemDao(GameContext context)
 
     public List<Item> GetItemsByMaxLevel(int level)
     {
-        return _context.Items?.Where(i => i.RequiredLevel <= level).ToList() ?? [];
+        return _context.Items?
+            .Where(i => i.RequiredLevel <= level)
+            .ToList() ?? [];
     }
 }

@@ -16,11 +16,12 @@ public class UltimateSkill : Skill
     private int BasePower = 0;
 
 
-    public override void Activate(ITargetable? caster, ITargetable? target = null, List<ITargetable>? targets = null)
+    public override void Activate(ITargetable? caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
         if (!IsReady) throw new SkillCooldownException();
 
-        if (target == null || targets == null || targets.Count == 0) throw new InvalidTargetException("Ultimate");
+        if (singleEnemy == null && (multipleEnemies == null || multipleEnemies.Count == 0))
+            throw new InvalidTargetException("No suitable target(s) provided.");
 
         if (caster is Player player)
         {
@@ -40,11 +41,11 @@ public class UltimateSkill : Skill
             switch (TargetType)
             {
                 case TargetType.SingleEnemy:
-                    target.TakeDamage(Power, DamageType);
+                    singleEnemy.TakeDamage(Power, DamageType);
                     break;
 
                 case TargetType.AllEnemies:
-                    foreach (var tar in targets)
+                    foreach (var tar in multipleEnemies)
                         tar.TakeDamage(Power, DamageType);
                     break;
             }
@@ -60,7 +61,7 @@ public class UltimateSkill : Skill
 
             monster.AddActionItem(this);
 
-            target.TakeDamage(Power, DamageType);
+            singleEnemy.TakeDamage(Power, DamageType);
             ElapsedTime = 0;
         }
     }

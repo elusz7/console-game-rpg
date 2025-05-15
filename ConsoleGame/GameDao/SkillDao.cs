@@ -90,4 +90,9 @@ public class SkillDao(GameContext context)
             .Where(s => s.ArchetypeId != null || s.MonsterId != null)
             .Where(s => s.Id > 214)];
     }
+    public List<Skill> GetUnassignedSkillsByMaxLevel(int level)
+    {
+        return [.. _context.Skills
+            .Where(s => s.RequiredLevel <= level && s.ArchetypeId == null && s.MonsterId == null)];
+    }
 }

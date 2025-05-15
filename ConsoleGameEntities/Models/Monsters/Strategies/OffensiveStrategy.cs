@@ -30,6 +30,7 @@ public class OffensiveStrategy : DefaultStrategy
         }
 
         var increasedDamage = (int)Math.Ceiling(monster.AttackPower * 1.2);
+        monster.AddActionItem($"{monster.Name} attacks for {increasedDamage} damage!");
         target.TakeDamage(increasedDamage, monster.DamageType);
     }
 }

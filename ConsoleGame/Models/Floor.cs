@@ -27,14 +27,16 @@ public class Floor
         {
             var randomRoomIndex = _rng.Next(0, availableRooms.Count);
             var room = availableRooms[randomRoomIndex];
+            
             monster.Room = room;
+            room.Monsters.Add(monster);
 
             usedRooms.Add(room);
             availableRooms.Remove(room);
 
             if (availableRooms.Count == 0)
             {
-                availableRooms = new List<Room>(usedRooms);
+                availableRooms = [.. usedRooms];
                 usedRooms.Clear();
             }
         }
@@ -58,7 +60,7 @@ public class Floor
     public void AssignCursesToItems()
     {
         var availableItems = Loot
-            .Where(i => i.ItemType.Equals("Weapon") || i.ItemType.Equals("Armor"))
+            .Where(i => i is Weapon || i is Armor)
             .Where(i => i.IsCursed == false).ToList();
 
         if (NumberOfCursedItems > availableItems.Count)
@@ -84,7 +86,7 @@ public class Floor
         }
         else
         {
-            return "Mysterious Stranger";
+            return "A Mysterious Stranger";
         }
     }
     public List<Item> GetMerchantItems()
@@ -97,9 +99,6 @@ public class Floor
     }
     public void UpdateMerchantItems()
     {
-        if (MerchantItems.Count == 0)
-        {
-            MerchantItems = ItemFactory.CreateMerchantItems(Level);
-        }        
+        MerchantItems = ItemFactory.CreateMerchantItems(Level);   
     }
 }

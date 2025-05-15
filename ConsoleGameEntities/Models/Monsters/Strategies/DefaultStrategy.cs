@@ -59,6 +59,7 @@ public class DefaultStrategy : IMonsterStrategy
             }
         }
 
+        monster.AddActionItem($"{monster.Name} attacks for {monster.AttackPower} damage!");
         target.TakeDamage(monster.AttackPower, monster.DamageType);
     }
 }

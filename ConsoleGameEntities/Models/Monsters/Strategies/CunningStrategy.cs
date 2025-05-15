@@ -86,6 +86,7 @@ public class CunningStrategy : DefaultStrategy
 
         // Step 4: Fallback - basic attack (slightly stronger?)
         var adjustedDamage = (int)Math.Ceiling(monster.AttackPower * 1.1); // 10% stronger basic hit
+        monster.AddActionItem($"{monster.Name} attacks for {adjustedDamage} damage!");
         target.TakeDamage(adjustedDamage, monster.DamageType);
     }
 }

@@ -21,6 +21,12 @@ public class Inventory : IInventory
             return;
         }
 
+        if (item is Valuable)
+        {
+            Items.Add(item);
+            return;
+        }
+
         decimal wiggleRoom = Capacity - GetCarryingWeight();
 
         if (Items.Contains(item))
@@ -80,7 +86,7 @@ public class Inventory : IInventory
     public decimal GetCarryingWeight()
     {
         return Items
-            .Where(i => i is not Consumable)
+            .Where(i => i is Weapon || i is Armor)
             .Sum(i => i.Weight);
     }
 

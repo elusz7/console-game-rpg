@@ -14,7 +14,7 @@ public class Monster : IMonster
 {    
     private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
     [NotMapped]
-    public Dictionary<int, string> ActionItems { get; } = new();
+    public Dictionary<long, string> ActionItems { get; } = new();
     public int Id { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
@@ -39,7 +39,7 @@ public class Monster : IMonster
     public int DesiredHitsToBeKilledByPlayer { get; set; }
     private double DodgeChance { get; set; } = 0.01;
     public string MonsterType { get; set; }
-    public virtual ICollection<Skill>? Skills { get; set; } = new List<Skill>();
+    public virtual ICollection<Skill> Skills { get; set; } = new List<Skill>();
     public int? RoomId { get; set; }
     public virtual Room? Room { get; set; }
     public int? ItemId { get; set; }
@@ -51,7 +51,7 @@ public class Monster : IMonster
     [NotMapped]
     public virtual IMonsterStrategy Strategy { get; set; }
     [NotMapped]
-    private Dictionary<DamageType, int> DamageRecord = new Dictionary<DamageType, int>
+    private Dictionary<DamageType, int> DamageRecord = new()
     {
         { DamageType.Martial, 0 },
         { DamageType.Magical, 0 }
@@ -90,7 +90,7 @@ public class Monster : IMonster
         for (int i = Level; i < newLevel; i++)
         {
             Level++;
-            List<double> variableIncrease = new List<double>() { 0.3, 0.4, 0.5, 0.6, 0.7 };
+            List<double> variableIncrease = new() { 0.3, 0.4, 0.5, 0.6, 0.7 };
 
             int index = _rng.Next(variableIncrease.Count);
             AttackPower += (int)(baseAttack * variableIncrease[index]);
@@ -229,17 +229,24 @@ public class Monster : IMonster
 
     public void AddActionItem(string action)
     {
-        ActionItems.Add(DateTime.Now.Millisecond, action);
+        long key = DateTime.Now.Ticks;
+        while (ActionItems.ContainsKey(key)) key++;
+
+        ActionItems.Add(key, action);
     }
-    public void AddActionItem(ISkill skill)
+    public void AddActionItem(Skill skill)
     {
-        ActionItems.Add(DateTime.Now.Millisecond, $"{Name} uses {skill.Name}!");
+        long key = DateTime.Now.Ticks;
+        while (ActionItems.ContainsKey(key)) key++;
+
+        ActionItems.Add(key, $"{Name} uses {skill.Name}!");
     }
 
-    public Item Loot()
+    public Item? Loot()
     {
         if (Treasure == null)
-            throw new InvalidOperationException($"{Name} has no treasure to loot.");
+            return null;
+
         Item loot = Treasure;
 
         loot.MonsterId = null; // Remove the item from the monster
@@ -248,5 +255,13 @@ public class Monster : IMonster
         Treasure = null; 
 
         return loot;
+    }
+
+    public void SetLoot(Item item)
+    {
+        item.MonsterId = Id;
+        item.Monster = this;
+        ItemId = item.Id;
+        Treasure = item;
     }
 }

@@ -37,6 +37,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
                     UseConsumable(player);
                     break;
                 case 4:
+                    _outputManager.WriteLine();
                     return; // Exit the equipment management
             }
         }
@@ -47,11 +48,11 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
 
         if (equipment.Count == 0)
         {
-            _outputManager.WriteLine("No items currently equipped.");
+            _outputManager.WriteLine("\nNo items currently equipped.", ConsoleColor.Red);
             return;
         }
 
-        _outputManager.WriteLine("Current Equipment: ");
+        _outputManager.WriteLine("\nCurrent Equipment: ");
         foreach (var item in equipment)
         {
             _outputManager.WriteLine($"{item.Name}{GetArmorType(item)} [DUR: {item.Durability}{GetItemStats(item)}]", GetItemColor(item));
@@ -59,10 +60,18 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
     }
     private void UnequipItem(Player player)
     {
+        if (player.Equipment.Count == 0)
+        {
+            _outputManager.WriteLine("\nNo items currently equipped.\n", ConsoleColor.Red);
+            return;
+        }
+
+        _outputManager.WriteLine();
         var unequippedItem = SelectItem("Select an item to unequip: ", player.Equipment);
+        
         if (unequippedItem == null)
         {
-            _outputManager.WriteLine("No item selected.");
+            _outputManager.WriteLine("\nNo item selected.\n");
         }
         else
         {
@@ -74,19 +83,21 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
     {
         var availableItems = player.Inventory.Items
             .Where(i => i is Weapon || i is Armor)
+            .Where(i => !i.IsEquipped())
             .ToList();
 
         if (availableItems.Count == 0)
         {
-            _outputManager.WriteLine("No items available for equipping.");
+            _outputManager.WriteLine("\nNo items available for equipping.\n", ConsoleColor.Red);
             return;
         }
 
+        _outputManager.WriteLine();
         var selectedItem = SelectItem("Select an item to equip: ", availableItems);
 
         if (selectedItem == null)
         {
-            _outputManager.WriteLine("No item selected.");
+            _outputManager.WriteLine("\nNo item selected.\n", ConsoleColor.Red);
             return;
         }
         
@@ -97,28 +108,39 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
         }
         catch (EquipmentException ex)
         {
-            _outputManager.WriteLine("An error occurred while equipping the item!", ConsoleColor.Red);
+            _outputManager.WriteLine("\nAn error occurred while equipping the item!", ConsoleColor.Red);
             _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
+            _outputManager.WriteLine();
         }
     }
     private void UseConsumable(IPlayer player)
     {
-        var item = SelectItem("Select a consumable to use:", [.. player.Inventory.Items.Where(i => i is Consumable)]);
+        var consumables = player.Inventory.Items.Where(i => i is Consumable).ToList();
+
+        if (consumables.Count == 0)
+        {
+            _outputManager.WriteLine("\nNo consumables available for use.");
+            return;
+        }
+
+        _outputManager.WriteLine();
+        var item = SelectItem("Select a consumable to use:", consumables);
 
         if (item == null)
         {
-            _outputManager.WriteLine("Consumable selection cancelled.");
+            _outputManager.WriteLine("\nConsumable selection cancelled.");
         }
         else if (item is Consumable consumable)
         {
             switch (consumable.ConsumableType)
             {
                 case ConsumableType.Durability:
+                    _outputManager.WriteLine();
                     var target = SelectItem("Select an item to increase durability", [.. player.Inventory.Items.Where(i => i is Armor || i is Weapon)]);
 
                     if (target == null)
                     {
-                        _outputManager.WriteLine("Item selection cancelled.");
+                        _outputManager.WriteLine("\nItem selection cancelled.");
                         return;
                     }
 
@@ -181,6 +203,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
         }
 
         // Output ordered actions
+        _outputManager.WriteLine();
         foreach (var action in actions)
         {
             _outputManager.WriteLine(action.Value, ConsoleColor.Cyan);

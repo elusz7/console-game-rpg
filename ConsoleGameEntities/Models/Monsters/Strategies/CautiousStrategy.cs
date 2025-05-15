@@ -44,6 +44,7 @@ public class CautiousStrategy : DefaultStrategy
         }
 
         var decreasedDamage = (int)Math.Ceiling(monster.AttackPower * .8);
+        monster.AddActionItem($"{monster.Name} attacks for {decreasedDamage} damage!");
         target.TakeDamage(decreasedDamage, monster.DamageType);
     }
 }

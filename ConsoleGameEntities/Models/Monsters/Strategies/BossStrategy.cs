@@ -11,7 +11,7 @@ namespace ConsoleGameEntities.Models.Monsters.Strategies;
 
 public class BossStrategy : DefaultStrategy
 {
-    private static Random _rng = new Random(Guid.NewGuid().GetHashCode());
+    private readonly static Random _rng = new Random(Guid.NewGuid().GetHashCode());
 
     public override void ExecuteAttack(IMonster monster, IPlayer target)
     {
@@ -37,6 +37,7 @@ public class BossStrategy : DefaultStrategy
             }
         }
 
+        monster.AddActionItem($"{monster.Name} attacks for {monster.AttackPower} damage!");
         target.TakeDamage(monster.AttackPower, monster.DamageType);
     }
 }

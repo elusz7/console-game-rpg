@@ -30,7 +30,7 @@ public interface IArchetype
     int RecoveryRate { get; set; }
     int RecoveryGrowth { get; set; }
 
-    ICollection<Skill>? Skills { get; set; }
+    ICollection<Skill> Skills { get; set; }
 
     void UseResource(int cost);
     void RecoverResource();

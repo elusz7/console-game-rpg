@@ -39,7 +39,8 @@ public class GameEngine(StartMenu startMenu, AdminMenu adminMenu, InputManager i
                     break;
                 case 2:
                     _adventureService.SetUpAdventure();
-                    _outputManager.WriteLine("Press any key to begin your adventure!", ConsoleColor.Cyan);
+                    _outputManager.WriteLine("\nPress any key to begin your adventure!", ConsoleColor.Cyan);
+                    _outputManager.Display();
                     _inputManager.ReadKey();
                     _adventureService.Adventure();
                     break;

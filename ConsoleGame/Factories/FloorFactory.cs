@@ -27,6 +27,7 @@ public class FloorFactory(MapFactory mapFactory, MonsterFactory monsterFactory, 
         floor.AssignCursesToItems();
         floor.AssignItemsToMonsters();
         floor.AssignMonstersToRooms();
+        floor.UpdateMerchantItems();
 
         return floor;
     }

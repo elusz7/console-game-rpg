@@ -1,7 +1,5 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Items;
-using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Factories;
 
@@ -13,16 +11,22 @@ public class ItemFactory(ItemDao itemDao)
     public (List<Item>, int) GenerateLoot(int level, int numMonsters, bool campaign)
     {
         var lootMaxValue = CalculateLootValue(level, numMonsters, campaign);
-        var availableItems = _itemDao.GetItemsByMaxLevel(level).ToList();
+
+        var availableItems = _itemDao.GetItemsByMaxLevel(level)
+            .Where(i => i.Value < (lootMaxValue / 2.0M)).ToList();
 
         var loot = GatherTribute(lootMaxValue, availableItems, numMonsters);
+        foreach (var item in loot)
+        {
+            var itemTrueValue = CalculateItemTrueValue(item);
+        }
 
         if (loot.Sum(i => i.Value) < lootMaxValue * 0.75M && loot.Count == numMonsters)
         {
             TryRemoveLowestValue(loot, [.. availableItems.OfType<Valuable>()], lootMaxValue);
         }
 
-        var numberOfCursedItems = ALittlePoisonNeverHurtNoOne(loot.Count, campaign);
+        var numberOfCursedItems = ALittlePoisonNeverHurtNoOne(loot.Count, campaign, loot);
 
         return (loot, numberOfCursedItems);
     }
@@ -67,7 +71,7 @@ public class ItemFactory(ItemDao itemDao)
                 Power = consumable.Power,
                 ConsumableType = consumable.ConsumableType
             },
-            _ => new Item
+            _ => new Valuable
             {
                 Name = itemBase.Name,
                 Value = itemBase.Value,
@@ -81,24 +85,21 @@ public class ItemFactory(ItemDao itemDao)
     }
     private static decimal CalculateLootValue(int level, int numMonsters, bool campaign)
     {
-        decimal baseValue;
+        decimal baseGold = 0.75M * level * level + 14.25M; 
 
-        if (level < 5)
-            baseValue = 2M * level + (numMonsters * 0.1M);
-        else if (level < 10)
-            baseValue = 2.5M * level + (numMonsters * 0.2M);
-        else
-            baseValue = 3M * level + (numMonsters * 0.3M);
+        decimal monsterBonus = numMonsters * (3M + (level * 0.3M)); // More monsters, more gold
 
-        // Add variance
-        decimal variance = (decimal)_rng.NextDouble() * 0.2M + 0.9M; // 90% to 110%
-        baseValue *= variance;
+        decimal total = baseGold + monsterBonus;
+
+        // Variance
+        decimal variance = (decimal)_rng.NextDouble() * 0.2M + 0.9M;
+        total *= variance;
 
         // Campaign bonus
         if (campaign)
-            baseValue *= 1.2M;
+            total *= 1.2M;
 
-        return Math.Max(baseValue, numMonsters); // Avoid zero or near-zero
+        return Math.Max(total, numMonsters); 
     }
     public static void TryRemoveLowestValue(List<Item> loot, List<Valuable> valuables, decimal lootMaxValue)
     {
@@ -178,11 +179,14 @@ public class ItemFactory(ItemDao itemDao)
         }
         return loot;
     }
-    public static int ALittlePoisonNeverHurtNoOne(int lootCount, bool campaign)
+    public static int ALittlePoisonNeverHurtNoOne(int lootCount, bool campaign, List<Item> loot)
     {
-        double curseChance = campaign ? 0.05 : 0.01;
+        var curseChance = campaign ? 0.05 : 0.01;
 
-        return Math.Max(1, (int)Math.Floor(lootCount * curseChance));
+        var estimatedCurseCount = Math.Max(1, (int)Math.Floor(lootCount * curseChance));
+        var eligibleItemCount = loot.Count(i => i is Armor || i is Weapon);
+
+        return Math.Min(estimatedCurseCount, eligibleItemCount);
     }
     private static decimal CalculateItemTrueValue(Item item)
     {
@@ -195,7 +199,6 @@ public class ItemFactory(ItemDao itemDao)
             value += (c.Power * 0.5M) + (c.Durability * 0.2M) + (c.RequiredLevel * 0.5M);
         return value;
     }
-
     public List<Item> CreateMerchantItems(int level)
     {
         var merchantItems = new List<Item>();
@@ -211,7 +214,7 @@ public class ItemFactory(ItemDao itemDao)
             merchantItems.Add(CreateItem(consumable));
         }
 
-        int weaponsToAdd = Math.Min(4, weapons.Count);
+        int weaponsToAdd = Math.Min(3, weapons.Count);
         for (int i = 0; i < weaponsToAdd; i++)
         {
             var weapon = weapons[_rng.Next(weapons.Count)];
@@ -219,7 +222,7 @@ public class ItemFactory(ItemDao itemDao)
             weapons.Remove(weapon);
         }
 
-        int armorsToAdd = Math.Min(4, armors.Count);
+        int armorsToAdd = Math.Min(3, armors.Count);
         for (int i = 0; i < armorsToAdd; i++)
         {
             var armor = armors[_rng.Next(armors.Count)];

@@ -10,6 +10,7 @@ public static class MonsterSkillHelper
     {
         return monster.Skills?
             .Where(s => s.RequiredLevel <= monster.Level && !s.IsOnCooldown)
+            .Where(s => s.TargetType != TargetType.AllEnemies)
             ?? Enumerable.Empty<Skill>();
     }
 
@@ -17,6 +18,7 @@ public static class MonsterSkillHelper
     {
         return monster.Skills?.OfType<SupportSkill>()
             .Where(s => s.RequiredLevel <= monster.Level && !s.IsOnCooldown)
+            .Where(s => s.TargetType != TargetType.AllEnemies)
             ?? Enumerable.Empty<SupportSkill>();
     }
 
@@ -24,6 +26,7 @@ public static class MonsterSkillHelper
     {
         return GetAvailableSkills(monster)?
             .Where(s => s.SkillCategory == SkillCategory.Basic)
+            .Where(s => s.TargetType != TargetType.AllEnemies)
             .OrderByDescending(s => s.Power)
             .FirstOrDefault();
     }
@@ -32,6 +35,7 @@ public static class MonsterSkillHelper
     {
         return GetAvailableSkills(monster)?
             .Where(s => s.SkillCategory == SkillCategory.Basic)
+            .Where(s => s.TargetType != TargetType.AllEnemies)
             .OrderByDescending(s => s.Power)
             .ToList() ?? new List<Skill>();
     }
@@ -75,13 +79,5 @@ public static class MonsterSkillHelper
     {
         return monster.Skills?.OfType<UltimateSkill>()
             .Where(s => s.IsReady).FirstOrDefault();
-    }
-    
-    public static List<T> FilterByType<T>(IMonster monster) where T : Skill
-    {
-        return monster.Skills?
-            .Where(s => s.RequiredLevel <= monster.Level && !s.IsOnCooldown)
-            .OfType<T>()
-            .ToList() ?? new List<T>();
     }
 }

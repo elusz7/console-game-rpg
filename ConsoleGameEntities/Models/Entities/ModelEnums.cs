@@ -15,8 +15,8 @@ public class ModelEnums
     public enum TargetType
     {
         Self = 0,            // Buffs, heals yourself
-        SingleEnemy = 1,     // Single-target attacks
-        AllEnemies = 2     // AoE attacks
+        SingleEnemy = 1,     // Single-target attacks, debuffs
+        AllEnemies = 2     // AoE attacks, mass debuff
     }
 
     public enum ArchetypeType
@@ -33,6 +33,29 @@ public class ModelEnums
         Defense = 3,
         Resistance = 4,
         Speed = 5
+    }
+
+    public static class SkillKeys
+    {
+        public const string CATEGORY = "SkillCategory";
+        public const string TARGET = "TargetType";
+        public const string POWER = "Power";
+        public const string LEVEL = "Level";
+        public const string COST = "Cost";
+        public const string COOLDOWN = "Cooldown";
+        public const string DAMAGE = "DamageType";
+        public const string STAT = "StatEffected";
+        public const string EFFECT = "SupportEffect";
+        public const string DURATION = "Duration";
+    }
+
+    public enum SkillType
+    {
+        MartialSkill = 0,
+        MagicSkill = 1,
+        SupportSkill = 2,
+        UltimateSkill = 3,
+        BossSkill = 4
     }
 
     public enum SupportEffectType

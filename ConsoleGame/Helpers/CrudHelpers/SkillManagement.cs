@@ -1,4 +1,6 @@
-﻿using ConsoleGame.GameDao;
+﻿    using System.Reflection.PortableExecutable;
+using ConsoleGame.GameDao;
+using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
@@ -50,7 +52,6 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
             }
         }
     }
-
     private void AddSkill()
     {
         do
@@ -58,158 +59,108 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
             CreateSkill();
         } while (_inputManager.ConfirmAction("create"));
     }
-
     private void CreateSkill()
     {
-        _outputManager.WriteLine("=== Create Skill ===", ConsoleColor.Cyan);
+        _outputManager.WriteLine("=== Create Skill ===", ConsoleColor.Magenta);
 
-        var skillTypes = new[] { "MartialSkill", "MagicSkill", "SupportSkill", "UltimateSkill", "BossSkill" };
-        var skillType = _inputManager.PaginateList(skillTypes.ToList(), "skill type", "create", true, false);
-        if (skillType == null)
+        var skillType = GetEnumChoice<SkillType>("Select the type of skill to create");
+
+        var numericValues = new Dictionary<string, int>
         {
-            _outputManager.WriteLine("No skill type selected. Returning to menu.", ConsoleColor.Red);
-            return;
+            [SkillKeys.CATEGORY] = skillType switch
+            {
+                SkillType.SupportSkill => (int)SkillCategory.Support,
+                SkillType.UltimateSkill or SkillType.BossSkill => (int)SkillCategory.Ultimate,
+                _ => (int)SkillCategory.Basic
+            },
+            [SkillKeys.DAMAGE] = skillType switch
+            {
+                SkillType.MartialSkill => (int)DamageType.Martial,
+                SkillType.MagicSkill => (int)DamageType.Magical,
+                SkillType.UltimateSkill or SkillType.BossSkill => (int)DamageType.Hybrid,
+                _ => -1
+            }
+        };
+
+        var name = _inputManager.ReadString("Enter skill name: ").Trim();
+        var description = _inputManager.ReadString("Enter skill description: ").Trim();
+
+        GetValidTargetType(skillType, numericValues);
+
+        var powerPrompt = numericValues[SkillKeys.CATEGORY] == (int)SkillCategory.Support
+            ? "\nEnter stat boost/reduction power: "
+            : "\nEnter skill damage: ";
+
+        numericValues[SkillKeys.POWER] = _inputManager.ReadInt(powerPrompt);
+
+        if (skillType == SkillType.SupportSkill)
+        {
+            GetValidSupportStat(numericValues);
+            numericValues[SkillKeys.EFFECT] = numericValues[SkillKeys.TARGET] == (int)TargetType.Self
+                ? (int)SupportEffectType.Boost
+                : (int)SupportEffectType.Reduce;
         }
 
-        var skillCategory = skillType switch
-        {
-            "Support Skill" => SkillCategory.Support,
-            "Ultimate Skill" => SkillCategory.Ultimate,
-            "Boss Skill" => SkillCategory.Ultimate,
-            _ => SkillCategory.Basic
-        };
+        SkillAdjustment(numericValues, powerPrompt);
 
-        DamageType? damageType = skillType switch
+        if (!_inputManager.ConfirmAction("creation"))
         {
-            "Martial Skill" => DamageType.Martial,
-            "Magic Skill" => DamageType.Magical,
-            "Ultimate Skill" => DamageType.Hybrid,
-            _ => null
-        };
+            _outputManager.WriteLine("\nSkill creation cancelled.\n", ConsoleColor.Red);
+            return;
+        }    
 
-        var name = _inputManager.ReadString("Enter skill name: ");
-        var description = _inputManager.ReadString("Enter skill description: ");
-        var level = _inputManager.ReadInt("Enter skill level: ", 10);
-        var cost = _inputManager.ReadInt("Enter skill resource (mana/stamina) cost: ");
-        var cooldown = _inputManager.ReadInt("Enter skill cooldown: ");
+        var newSkill = CreateSkillObject(skillType, name, description, numericValues);
+        _skillDao.AddSkill(newSkill);
 
-        var targetTypes = Enum.GetValues(typeof(TargetType)).Cast<TargetType>().ToList();
-        TargetType? targetType;
-        do
+        _outputManager.WriteLine($"Skill [{name}] added successfully!", ConsoleColor.Green);
+    }
+    private void GetValidTargetType(SkillType skillType, Dictionary<string, int> numericValues)
+    {
+        while (true)
         {
-            targetType = skillType.Equals("BossSkill") ? TargetType.SingleEnemy : _inputManager.PaginateList(targetTypes, "target type", "create", true, false);
-            if (targetType == null)
+            var target = skillType == SkillType.BossSkill
+                ? (int)TargetType.SingleEnemy
+                : (int)GetEnumChoice<TargetType>("Select the target of this skill");
+
+            if (target == (int)TargetType.Self && skillType != SkillType.SupportSkill)
             {
-                _outputManager.WriteLine("No target type selected. Returning to menu.", ConsoleColor.Red);
-                return;
-            }
-            else if (targetType == TargetType.Self && !skillType.Equals("SupportSkill"))
-            {
-                _outputManager.WriteLine("Self target type is only valid for Support Skills. Please select a different target type.", ConsoleColor.Red);
+                _outputManager.WriteLine("\nSelf target type is only valid for Support Skills. Please select a different target type.", ConsoleColor.Red);
             }
             else
             {
+                numericValues[SkillKeys.TARGET] = target;
                 break;
             }
-        } while (true);
-
-        var prompt = skillType == "SupportSkill" ? "Enter stat boost/reduction power: " : "Enter skill damage: ";
-        var power = _inputManager.ReadInt(prompt);
-
-        int duration;
-        StatType? statEffected;
-        SupportEffectType? supportEffect;
-
-        if (skillType == "SupportSkill")
-        {
-            duration = _inputManager.ReadInt("Enter skill duration: ");
-            var stats = Enum.GetValues(typeof(StatType)).Cast<StatType>().ToList();
-            do
-            {
-                statEffected = _inputManager.PaginateList(stats, "stat type", "create", true, false);
-
-                if (statEffected == null)
-                {
-                    _outputManager.WriteLine("No stat type selected. Returning to menu.", ConsoleColor.Red);
-                    return;
-                }
-                else if (statEffected == StatType.Health && targetType != TargetType.Self)
-                {
-                    _outputManager.WriteLine("Health is not a valid option for a support skill targeting enemies. Please select a different stat type.", ConsoleColor.Red);
-                }
-                else
-                {
-                    break;
-                }
-            } while (true);
-            supportEffect = targetType == TargetType.Self ? SupportEffectType.Boost : SupportEffectType.Reduce;
         }
-        else
+    }
+    private void GetValidSupportStat(Dictionary<string, int> numericValues)
+    {
+        while (true)
         {
-            duration = 0;
-            statEffected = 0;
-            supportEffect = 0;
+            StatType stat = GetEnumChoice<StatType>("Select the stat to affect");
+
+            if (stat == StatType.Health && numericValues[SkillKeys.TARGET] != (int)TargetType.Self)
+            {
+                _outputManager.WriteLine("\nHealth is not a valid option for a support skill targeting enemies. Please select a different stat type.", ConsoleColor.Red);
+            }
+            else
+            {
+                numericValues[SkillKeys.STAT] = (int)stat;
+                break;
+            }
+        }
+    }
+    private T GetEnumChoice<T>(string prompt) where T : Enum
+    {
+        var values = Enum.GetValues(typeof(T)).Cast<T>().ToList();
+
+        for (int i = 0; i < values.Count; i++)
+        {
+            _outputManager.WriteLine($"{i + 1}. {values[i]}");
         }
 
-        var skill = skillType switch
-        {
-            "SupportSkill" => new SupportSkill
-            {
-                Name = name,
-                SkillCategory = skillCategory,
-                SkillType = skillType,
-                Description = description,
-                RequiredLevel = level,
-                Cost = cost,
-                Cooldown = cooldown,
-                TargetType = (TargetType)targetType,
-                StatAffected = (StatType)statEffected,
-                SupportEffect = (int)supportEffect,
-                Duration = duration
-            },
-            "UltimateSkill" => new UltimateSkill
-            {
-                Name = name,
-                SkillCategory = skillCategory,
-                SkillType = skillType,
-                Description = description,
-                RequiredLevel = level,
-                Cost = cost,
-                Cooldown = cooldown,
-                TargetType = (TargetType)targetType,
-                DamageType = damageType,
-                Power = power
-            },
-            "BossSkill" => new BossSkill
-            {
-                Name = name,
-                SkillCategory = skillCategory,
-                SkillType = skillType,
-                Description = description,
-                RequiredLevel = level,
-                Cost = cost,
-                Cooldown = cooldown,
-                TargetType = (TargetType)targetType,
-                DamageType = damageType,
-                Power = power
-            },
-            _ => new Skill
-            {
-                Name = name,
-                SkillCategory = skillCategory,
-                SkillType = skillType,
-                Description = description,
-                RequiredLevel = level,
-                Cost = cost,
-                Cooldown = cooldown,
-                TargetType = (TargetType)targetType,
-                DamageType = damageType,
-                Power = power
-            },
-        };
-
-        _skillDao.AddSkill(skill);
-        _outputManager.WriteLine($"Skill [{name}] added successfully!", ConsoleColor.Green);
+        var choice = _inputManager.ReadInt($"\n{prompt}: ", values.Count);
+        return values[choice - 1];
     }
 
     private void EditSkill()
@@ -233,46 +184,78 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
         var propertyActions = new Dictionary<string, Action>
         {
             { "Name", () => skill.Name = _inputManager.ReadString("\nEnter new value for Name: ") },
-            { "Level", () => skill.RequiredLevel = _inputManager.ReadInt("\nEnter new value for required Level: ") },
-            { "Power", () => skill.Power = _inputManager.ReadInt("\nEnter new value for skill power: ") },
-            { "Cost", () => skill.Cost = _inputManager.ReadInt("\nEnter new value for skill cost: ") },
-            { "Cooldown", () => skill.Cooldown = _inputManager.ReadInt("\nEnter new value for skill cooldown: ") },
+            { "Power (Will Also Affect Level, Cost, Cooldown, and Duration) ", () => 
+                {
+                    var powerPrompt = skill.SkillCategory == SkillCategory.Support ? "\nEnter stat boost/reduction power: " : "\nEnter skill damage: ";
+                    var power = _inputManager.ReadInt(powerPrompt);
+
+                    StatType? statEffected = null;
+                    if (skill is SupportSkill support)
+                        statEffected = support.StatAffected;
+
+                    var adjustments = new Dictionary<string, int>();
+
+                    SkillAdjustment(adjustments, powerPrompt);
+
+                    adjustments.TryGetValue("power", out power);
+                    adjustments.TryGetValue("level", out var level);
+                    adjustments.TryGetValue("cost", out var cost);
+                    adjustments.TryGetValue("cooldown", out var cooldown);
+                    adjustments.TryGetValue("duration", out var duration);
+
+                    skill.Power = power;
+                    skill.RequiredLevel = level;
+                    skill.Cost = cost;
+                    skill.Cooldown = cooldown;
+                    if (skill is SupportSkill supportSkill)
+                        supportSkill.Duration = duration;
+                }},
             { "Description", () => skill.Description = _inputManager.ReadString("\nEnter new value for skill description: ") },
             { "Target Type", () =>
                 {
-                    var targetType = _inputManager.PaginateList(Enum.GetValues(typeof(TargetType)).Cast<TargetType>().ToList(), "target type", "edit", true, false);
-                    if (targetType == null)
+                    var targetType = GetEnumChoice<TargetType>("Select the new target");
+
+                    if (skill is SupportSkill supportSkill)
                     {
-                        _outputManager.WriteLine("No target type selected.", ConsoleColor.Red);
-                    }
-                    else if (targetType == TargetType.Self && skill.SkillType != "SupportSkill")
-                    {
-                        _outputManager.WriteLine("Self target type is only valid for Support Skills. Please select a different target type.", ConsoleColor.Red);
+                        if (targetType == TargetType.Self)
+                            supportSkill.SupportEffect = (int)SupportEffectType.Boost;
+                        else if (targetType != TargetType.Self && supportSkill.StatAffected == StatType.Health)
+                        {
+                            _outputManager.WriteLine("\nCannot target enemies with a support skill affected health!\n", ConsoleColor.Red);
+                            return;
+                        }
+                        else
+                            supportSkill.SupportEffect |= (int)SupportEffectType.Reduce;
+
+                        skill.TargetType = targetType;
                     }
                     else
                     {
+                        if (targetType == TargetType.Self)
+                        {
+                            _outputManager.WriteLine("\nCannot target yourself with damaging skills!\n", ConsoleColor.Red);
+                            return;
+                        }
+
                         skill.TargetType = targetType;
                     }
                 }},
             { "Support Stat Affected", () =>
-                {
-                    var statType = _inputManager.PaginateList(Enum.GetValues(typeof(StatType)).Cast<StatType>().ToList(), "stat type", "edit", true, false);
+                {                    
+                    if (skill is SupportSkill supportSkill)
+                    {
+                        var statType = GetEnumChoice<StatType>("Select the new stat to affect");
 
-                    if (statType == null)
-                    {
-                        _outputManager.WriteLine("No stat type selected.", ConsoleColor.Red);
-                    }
-                    else if (statType == StatType.Health && skill.TargetType != TargetType.Self)
-                    {
-                        _outputManager.WriteLine("Health is not a valid option for a support skill targeting enemies. Please select a different stat type.", ConsoleColor.Red);
+                        if (statType == StatType.Health && skill.TargetType != TargetType.Self)
+                        {
+                            _outputManager.WriteLine("Health is not a valid option for a support skill targeting enemies. Please select a different stat type.", ConsoleColor.Red);
+                            return;
+                        }
+                        supportSkill.StatAffected = statType;
                     }
                     else
-                    {
-                        ((SupportSkill)skill).StatAffected = statType;
-                    }
-
-                }},
-            { "Support Effect Type", () => ((SupportSkill)skill).SupportEffect = (int)_inputManager.PaginateList(Enum.GetValues(typeof(SupportEffectType)).Cast<SupportEffectType>().ToList(), "support effect", "edit", true, false) }
+                        _outputManager.WriteLine("This skill is not a SupportSkill!", ConsoleColor.Red);
+                }}
         };
 
         while (true)
@@ -280,7 +263,7 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
             _outputManager.WriteLine($"\nEditing skill: {skill.Name}", ConsoleColor.Cyan);
             _outputManager.WriteLine($"{skill}\n", ConsoleColor.Green);
 
-            int option = DisplayEditMenu(propertyActions.Keys.ToList());
+            int option = DisplayEditMenu([.. propertyActions.Keys]);
 
             if (option == propertyActions.Count + 1)
             {
@@ -299,7 +282,7 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
         {
             _outputManager.WriteLine($"{i + 1}. Change {properties[i]}");
         }
-        _outputManager.WriteLine($"{properties.Count + 1}. Exit", ConsoleColor.Red);
+        _outputManager.WriteLine($"{properties.Count + 1}. Save and Exit", ConsoleColor.Red);
 
         return _inputManager.ReadInt("\nWhat property would you like to edit? ", properties.Count + 1);
     }
@@ -310,10 +293,10 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
             var skills = _skillDao.GetUnassignedNonCoreSkills();
             if (skills.Count == 0)
             {
-                _outputManager.WriteLine("No skills available for assignment.", ConsoleColor.Red);
+                _outputManager.WriteLine("\nNo skills available for assignment.\n", ConsoleColor.Red);
                 return;
             }
-        
+
             var skill = _inputManager.PaginateList(skills, "skill", "assign", true, false);
             if (skill == null)
             {
@@ -321,13 +304,13 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
                 return;
             }
 
-            var assignment = _inputManager.ReadString("Assign skill to monster or archetype? (m/a): ", ["m", "a"]).ToLower();
+            var assignment = _inputManager.ReadString("\nAssign skill to monster or archetype? (m/a): ", ["m", "a"]).ToLower();
 
-            var target = assignment switch
+            object? target = assignment switch
             {
                 "m" => _inputManager.PaginateList(_monsterDao.GetAllMonsters(), "monster", "assign", true, false),
                 "a" => _inputManager.PaginateList(_archetypeDao.GetAllArchetypes(), "archetype", "assign", true, false),
-                _ => null as object
+                _ => null
             };
 
             if (target == null)
@@ -336,18 +319,52 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
                 return;
             }
 
-            if (target is Monster m)
+            if (target is Monster monster)
             {
-                skill.MonsterId = m.Id;
+                if (skill is BossSkill && monster is not BossMonster)
+                {
+                    _outputManager.WriteLine("\nYou cannot assign a boss-level skill to a non-boss monster.\n", ConsoleColor.Red);
+                    return;
+                }
+
+                if (skill is UltimateSkill && monster is not EliteMonster)
+                {
+                    _outputManager.WriteLine("\nYou cannot assign ultimate skills to a non-elite monster.\n", ConsoleColor.Red);
+                    return;
+                }
+
+                if (skill.TargetType == TargetType.AllEnemies)
+                {
+                    _outputManager.WriteLine("\nCannot assign a skill that affects multiple targets to a monster.\n", ConsoleColor.Red);
+                    return;
+                }
+
+                if ((skill.DamageType.Equals("Martial") && monster.DamageType.Equals("Magic")) ||
+                    (skill.DamageType.Equals("Magic") && monster.DamageType.Equals("Martial")))
+                {
+                    _outputManager.WriteLine($"\nYou cannot assign a {skill.DamageType} skill to a {monster.DamageType} monster.\n", ConsoleColor.Red);
+                    return;
+                }
+
+                skill.MonsterId = monster.Id;
                 _skillDao.UpdateSkill(skill);
+                _outputManager.WriteLine($"\n{skill.Name} successfully assigned to {monster.Name}!", ConsoleColor.Green);
             }
-            else if (target is Archetype a)
+            else if (target is Archetype archetype)
             {
-                skill.ArchetypeId = a.Id;
+                if ((skill.DamageType.Equals("Martial") && archetype.ArchetypeType.Equals("Magic")) ||
+                    (skill.DamageType.Equals("Magic") && archetype.ArchetypeType.Equals("Martial")))
+                {
+                    _outputManager.WriteLine($"\nYou cannot assign a {skill.DamageType} skill to a {archetype.ArchetypeType} archetype.\n", ConsoleColor.Red);
+                    return;
+                }
+
+                skill.ArchetypeId = archetype.Id;
                 _skillDao.UpdateSkill(skill);
+                _outputManager.WriteLine($"\n{skill.Name} successfully assigned to {archetype.Name}!", ConsoleColor.Green);
             }
 
-        } while(_inputManager.LoopAgain("assign"));
+        } while (_inputManager.LoopAgain("assign"));
     }
     private void UnassignSkill()
     {
@@ -355,7 +372,7 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
 
         if (skills.Count == 0)
         {
-            _outputManager.WriteLine("No skills available for unassignment.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nNo skills available for unassignment.\n", ConsoleColor.Red);
             return;
         }
 
@@ -368,7 +385,7 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
 
         if (!_inputManager.ConfirmAction($"unassignment"))
         {
-            _outputManager.WriteLine("Unassignment cancelled.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nUnassignment cancelled.\n", ConsoleColor.Red);
             return;
         }
 
@@ -397,7 +414,7 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
 
         if (skill.MonsterId != null || skill.ArchetypeId != null)
         {
-            var assigned = skill.MonsterId == null ? skill.Archetype.Name : skill.Monster.Name;
+            var assigned = skill.MonsterId == null ? skill.Archetype?.Name : skill.Monster?.Name;
             _outputManager.WriteLine($"warning: skill is currently assigned to {assigned}.", ConsoleColor.Red);
             return;
         }
@@ -409,5 +426,153 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
         }
         _skillDao.DeleteSkill(skill);
         _outputManager.WriteLine($"\n{skill.Name} has been deleted successfully.\n", ConsoleColor.Green);
+    }
+    private void SkillAdjustment(Dictionary<string, int> numericValues, string powerPrompt)
+    {
+        var power = numericValues[SkillKeys.POWER];
+
+        while (true)
+        {
+            switch ((SkillCategory)numericValues[SkillKeys.CATEGORY])
+            {
+                case SkillCategory.Support:
+                    ApplySupportScaling(numericValues, power);
+                    break;
+
+                case SkillCategory.Ultimate:
+                    ApplyUltimateScaling(numericValues, power);
+                    break;
+
+                default:
+                    ApplyDefaultScaling(numericValues, power);
+                    break;
+            }
+
+            var output = "\nBased on the provided power, these stats have been automatically generated:\n" +
+                         $"Required Level: {numericValues[SkillKeys.LEVEL]}, Resource Cost: {numericValues[SkillKeys.COST]}, Cooldown: {numericValues[SkillKeys.COOLDOWN]}";
+
+            output += numericValues.TryGetValue(SkillKeys.DURATION, out var duration)
+                ? $", Duration: {duration}"
+                : "";
+
+            output += "\n";
+            _outputManager.WriteLine(output, ConsoleColor.Magenta);
+
+            var confirm = _inputManager.ReadString("Would you like to adjust the power (y/n): ", ["y", "n"]).ToLower();
+            if (confirm == "n")
+            {
+                numericValues[SkillKeys.POWER] = power;
+                break;
+            }
+
+            power = _inputManager.ReadInt(powerPrompt);
+        }
+    }
+    private static void ApplySupportScaling(Dictionary<string, int> values, int power)
+    {
+        if ((StatType)values[SkillKeys.STAT] == StatType.Health)
+        {
+            values[SkillKeys.LEVEL] = Math.Max(1, power / 10); // 10 health = 1 level
+            values[SkillKeys.COST] = Math.Clamp((int)(power / 10.0 * 3), 2, 50); // 10 health = cost 3
+            values[SkillKeys.COOLDOWN] = Math.Clamp((int)(power / 10.0 * 4), 3, 60); // 10 health = cooldown 4
+            values.Remove(SkillKeys.DURATION); // No duration for healing
+        }
+        else
+        {
+            values[SkillKeys.LEVEL] = Math.Max(1, power / 2); // 2 power = 1 level
+            values[SkillKeys.COST] = Math.Clamp((int)(power / 3.0 * 2), 2, 50); // 3 power = cost 2
+            values[SkillKeys.COOLDOWN] = Math.Clamp((int)(power / 2.0), 3, 60); // 2 power = cooldown 1
+            values[SkillKeys.DURATION] = Math.Clamp((int)(values[SkillKeys.COOLDOWN] * 0.43), 1, values[SkillKeys.COOLDOWN] - 1); // duration ~43% of cooldown
+        }
+    }
+    private static void ApplyUltimateScaling(Dictionary<string, int> values, int power)
+    {
+        values[SkillKeys.LEVEL] = Math.Max(3, power / 15); // 15 power = level 1
+        values[SkillKeys.COST] = Math.Clamp((int)(power / 20.0), 10, 100); // 20 power = cost 1
+        values[SkillKeys.COOLDOWN] = Math.Clamp((int)(power / 15.0), 8, 80); // 15 power = cooldown 1
+        values.Remove(SkillKeys.DURATION); // No duration for ultimates
+    }
+    private static void ApplyDefaultScaling(Dictionary<string, int> values, int power)
+    {
+        values[SkillKeys.LEVEL] = Math.Max(1, power / 10); // 10 power = level 1
+        values[SkillKeys.COST] = Math.Clamp((int)(power / 8.0), 3, 50); // 8 power = cost 1
+        values[SkillKeys.COOLDOWN] = Math.Clamp((int)(power / 12.0), 3, 50); // 12 power = cooldown 1
+        values.Remove(SkillKeys.DURATION); // Default doesn't use duration
+    }
+    private static Skill CreateSkillObject(SkillType skillType, string name, string description, Dictionary<string, int> numericValues)
+    {
+        var skillCategory = (SkillCategory)numericValues[SkillKeys.CATEGORY];
+        var targetType = (TargetType)numericValues[SkillKeys.TARGET];        
+        var power = numericValues[SkillKeys.POWER];
+        var level = numericValues[SkillKeys.LEVEL];
+        var cost = numericValues[SkillKeys.COST];
+        var cooldown = numericValues[SkillKeys.COOLDOWN];
+
+        var damage = numericValues[SkillKeys.DAMAGE];
+        DamageType? damageType = damage == -1 ? null : (DamageType)damage;
+
+        StatType statEffected = StatType.Health;
+        if (numericValues.TryGetValue(SkillKeys.STAT, out var stat))
+            statEffected = (StatType)stat;
+
+        numericValues.TryGetValue(SkillKeys.EFFECT, out var supportEffect);
+        numericValues.TryGetValue(SkillKeys.DURATION, out var duration);
+
+        return skillType switch
+        {
+            SkillType.SupportSkill => new SupportSkill
+            {
+                Name = name,
+                SkillCategory = skillCategory,
+                SkillType = skillType.ToString(),
+                Description = description,
+                RequiredLevel = level,
+                Cost = cost,
+                Cooldown = cooldown,
+                TargetType = targetType,
+                StatAffected = statEffected,
+                SupportEffect = supportEffect,
+                Duration = duration
+            },
+            SkillType.UltimateSkill => new UltimateSkill
+            {
+                Name = name,
+                SkillCategory = skillCategory,
+                SkillType = skillType.ToString(),
+                Description = description,
+                RequiredLevel = level,
+                Cost = cost,
+                Cooldown = cooldown,
+                TargetType = targetType,
+                DamageType = damageType,
+                Power = power
+            },
+            SkillType.BossSkill => new BossSkill
+            {
+                Name = name,
+                SkillCategory = skillCategory,
+                SkillType = skillType.ToString(),
+                Description = description,
+                RequiredLevel = level,
+                Cost = cost,
+                Cooldown = cooldown,
+                TargetType = targetType,
+                DamageType = damageType,
+                Power = power
+            },
+            _ => new Skill
+            {
+                Name = name,
+                SkillCategory = skillCategory,
+                SkillType = skillType.ToString(),
+                Description = description,
+                RequiredLevel = level,
+                Cost = cost,
+                Cooldown = cooldown,
+                TargetType = targetType,
+                DamageType = damageType,
+                Power = power
+            },
+        };
     }
 }

@@ -17,7 +17,7 @@ public class Room : IRoom
     public virtual Room? West { get; set; }
     public int? EastId { get; set; }
     public virtual Room? East { get; set; }
-    public virtual List<Monster>? Monsters { get; set; } = new List<Monster>();
+    public virtual List<Monster> Monsters { get; set; } = new List<Monster>();
 
     public Room() { }
     public Room(string name, string description)

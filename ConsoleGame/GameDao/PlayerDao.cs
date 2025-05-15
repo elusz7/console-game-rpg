@@ -1,5 +1,6 @@
 ﻿using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Models.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.GameDao;
 
@@ -28,6 +29,17 @@ public class PlayerDao(GameContext context)
     public Player? GetPlayerByName(string name)
     {
         return _context.Players.FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+    }
+
+    public Player GetPlayer(Player player)
+    {
+        
+        return _context.Players
+            .Include(p => p.Inventory)
+            .ThenInclude(i => i.Items)
+            .Include(p => p.Archetype)
+            .ThenInclude(a => a.Skills)
+            .Where(p => p.Id == player.Id).First();
     }
 
     public List<Player> GetAllPlayers(string name)

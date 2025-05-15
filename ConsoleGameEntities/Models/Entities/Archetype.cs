@@ -21,7 +21,7 @@ public class Archetype : IArchetype
 
     public ArchetypeType ArchetypeType { get; set; } //martial or magic
 
-    public virtual ICollection<Skill>? Skills { get; set; } = new List<Skill>();
+    public virtual ICollection<Skill> Skills { get; set; } = new List<Skill>();
 
     public string ResourceName { get; set; }
     [NotMapped]
