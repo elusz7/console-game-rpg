@@ -129,6 +129,9 @@ TODO:
 - implement locked rooms
 - implement traps??
 - implement merchant repair option
+- implement monster types?? undead, animal, abomination?? why??
+- implement contracts - through merchant?? another NPC??
+- implement party play??
   
 ---
 
