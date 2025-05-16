@@ -122,17 +122,6 @@ It supports searching, logging, and advanced features such as equipment tracking
 
 This was a lot of fun and a little frustrating. There's so many more things I want to implement. I liked being able to create functions that I could reuse and call through multiple different classes.
 
-TODO:
-- implement elemental damage
-- implement status effects
-- implement weakness/strengths to different elements
-- implement consumable uses (use durability??)
-- implement locked rooms
-- implement traps??
-- implement merchant repair option
-- implement monster types?? undead, animal, abomination?? why??
-- implement contracts - through merchant?? another NPC??
-- implement party play??
   
 ---
 
