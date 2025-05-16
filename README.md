@@ -126,6 +126,7 @@ TODO:
 - implement elemental damage
 - implement status effects
 - implement weakness/strengths to different elements
+- implement consumable uses (use durability??)
 - implement locked rooms
 - implement traps??
 - implement merchant repair option
