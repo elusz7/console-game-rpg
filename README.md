@@ -122,6 +122,14 @@ It supports searching, logging, and advanced features such as equipment tracking
 
 This was a lot of fun and a little frustrating. There's so many more things I want to implement. I liked being able to create functions that I could reuse and call through multiple different classes.
 
+TODO:
+- implement elemental damage
+- implement status effects
+- implement weakness/strengths to different elements
+- implement locked rooms
+- implement traps??
+- implement merchant repair option
+  
 ---
 
 ## Submission
