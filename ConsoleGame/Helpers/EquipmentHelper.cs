@@ -1,10 +1,9 @@
 ﻿using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Managers;
-using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Interfaces;
-using ConsoleGameEntities.Models.Entities;
-using ConsoleGameEntities.Models.Items;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
+using ConsoleGameEntities.Main.Exceptions;
+using ConsoleGameEntities.Main.Models.Entities;
+using ConsoleGameEntities.Main.Models.Items;
+using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers;
 
@@ -80,17 +79,21 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
             OutputActionItems(player);
         }
     }
-    private void EquipItem(Player player)
+    public bool EquipItem(Player player, bool weaponsOnly = false)
     {
-        var availableItems = player.Inventory.Items
-            .Where(i => i is Weapon || i is Armor)
+        var availableItems = weaponsOnly ?
+            player.Inventory.Items
+            .Where(i => i is Weapon)
             .Where(i => !i.IsEquipped())
-            .ToList();
+            .ToList() :
+            [.. player.Inventory.Items
+                .Where(i => i is Weapon || i is Armor)
+                .Where(i => !i.IsEquipped())];
 
         if (availableItems.Count == 0)
         {
-            _outputManager.WriteLine("\nNo items available for equipping.\n", ConsoleColor.Red);
-            return;
+            _outputManager.WriteLine("\nNo items available for equipping.", ConsoleColor.Red);
+            return false;
         }
 
         _outputManager.WriteLine();
@@ -99,7 +102,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
         if (selectedItem == null)
         {
             _outputManager.WriteLine("\nNo item selected.\n", ConsoleColor.Red);
-            return;
+            return false;
         }
         
         try
@@ -112,16 +115,19 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
             _outputManager.WriteLine("\nAn error occurred while equipping the item!", ConsoleColor.Red);
             _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
             _outputManager.WriteLine();
+            return false;
         }
+
+        return true;
     }
-    private void UseConsumable(Player player)
+    public bool UseConsumable(Player player)
     {
         var consumables = player.Inventory.Items.Where(i => i is Consumable).ToList();
 
         if (consumables.Count == 0)
         {
-            _outputManager.WriteLine("\nNo consumables available for use.");
-            return;
+            _outputManager.WriteLine("\nNo consumables available for use.", ConsoleColor.Red);
+            return false;
         }
 
         _outputManager.WriteLine();
@@ -129,8 +135,8 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
 
         if (item == null)
         {
-            _outputManager.WriteLine("\nConsumable selection cancelled.");
-            return;
+            _outputManager.WriteLine("\nConsumable selection cancelled.", ConsoleColor.Red);
+            return false;
         }
         else if (item is Consumable consumable)
         {
@@ -150,7 +156,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
                     if (target == null)
                     {
                         _outputManager.WriteLine("\nItem selection cancelled.");
-                        return;
+                        return false;
                     }
 
                     consumable.UseOn(target);
@@ -162,6 +168,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
         }
         
         OutputActionItems(player);
+        return true;
     }
         
     private void OutputActionItems(Player player)

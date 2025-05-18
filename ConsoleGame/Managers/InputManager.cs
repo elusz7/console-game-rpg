@@ -1,14 +1,14 @@
-﻿using ConsoleGameEntities.Models.Items;
-using ConsoleGameEntities.Models.Entities;
-using ConsoleGameEntities.Models.Monsters;
-using ConsoleGameEntities.Models.Skills;
+﻿using ConsoleGameEntities.Main.Models.Items;
+using ConsoleGameEntities.Main.Models.Entities;
+using ConsoleGameEntities.Main.Models.Monsters;
+using ConsoleGameEntities.Main.Models.Skills;
 using ConsoleGame.Helpers.DisplayHelpers;
 
 namespace ConsoleGame.Managers;
 public class InputManager(OutputManager outputManager)
 {
     private readonly OutputManager _outputManager = outputManager;
-    public ConsoleKeyInfo ReadKey()
+    public static ConsoleKeyInfo ReadKey()
     {
         return Console.ReadKey(intercept: true);
     }
@@ -184,29 +184,36 @@ public class InputManager(OutputManager outputManager)
 
         return choice == -1 ? default : items[choice - 1];
     }
-
     public T? Selector<T>(List<T> items, Func<T, string> displayTextSelector, string prompt, Func<T, ConsoleColor>? colorSelector = null)
      => items.Count < 13 ?
             SelectFromList(items, displayTextSelector, prompt, colorSelector, true)
             : PaginateWithFunction(items, displayTextSelector, prompt, colorSelector, true);
-
     public T? Viewer<T>(List<T> items, Func<T, string> displayTextSelector, string prompt, Func<T, ConsoleColor>? colorSelector = null)
     {
         return items.Count < 13 ?
             SelectFromList(items, displayTextSelector, prompt, colorSelector)
             : PaginateWithFunction(items, displayTextSelector, prompt, colorSelector);
     }
-
-    public Item? SelectItem(string prompt, List<Item> items, decimal? valueMultiplier = null)
+    public Item? SelectItem(string prompt, List<Item> items, string? purpose = null)
     {
         return Selector(
             items,
-            i => ColorfulToStringHelper.ItemStatsString(i, valueMultiplier),
+            i => {
+                decimal? value = purpose switch
+                {
+                    "enchant" => i.GetEnchantmentPrice(),
+                    "reforge" => i.GetReforgePrice(),
+                    "purify" => i.GetPurificationPrice(),
+                    "buy" => i.GetBuyPrice(),
+                    "sell" => i.GetSellPrice(),
+                    _ => null
+                };
+                return ColorfulToStringHelper.ItemStatsString(i, value);
+            },
             prompt,
             i => ColorfulToStringHelper.GetItemColor(i)
         );
     }
-
     public bool LoopAgain(string action)
     {
         string again = ReadString($"Would you like to {action} another? (y/n): ", ["y", "n"]).ToLower();

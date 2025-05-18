@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using ConsoleGame.GameDao;
-using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Main.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.Managers;
@@ -112,7 +112,7 @@ public class MapManager(OutputManager outputManager, InputManager inputManager)
         while (true)
         {
 
-            ConsoleKeyInfo key = _inputManager.ReadKey();
+            ConsoleKeyInfo key = InputManager.ReadKey();
 
             if (key.Key == ConsoleKey.UpArrow)
             {

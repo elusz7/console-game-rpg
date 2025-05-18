@@ -2,8 +2,8 @@
 using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Managers;
 using ConsoleGame.Managers.CrudHelpers;
-using ConsoleGameEntities.Models.Entities;
-using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Main.Models.Entities;
+using ConsoleGameEntities.Main.Models.Items;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 

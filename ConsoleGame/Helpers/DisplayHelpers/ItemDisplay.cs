@@ -1,6 +1,6 @@
-﻿using static ConsoleGameEntities.Models.Entities.ModelEnums;
+﻿using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
 using ConsoleGame.GameDao;
-using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Main.Models.Items;
 using ConsoleGame.Managers;
 
 namespace ConsoleGame.Helpers.DisplayHelpers;

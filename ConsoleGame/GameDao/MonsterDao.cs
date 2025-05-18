@@ -1,6 +1,6 @@
-﻿using ConsoleGameEntities.Data;
-using ConsoleGameEntities.Models.Monsters;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
+﻿using ConsoleGameEntities.Main.Data;
+using ConsoleGameEntities.Main.Models.Monsters;
+using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.GameDao;
 

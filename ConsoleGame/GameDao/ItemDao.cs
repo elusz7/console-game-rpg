@@ -1,7 +1,7 @@
-﻿using ConsoleGameEntities.Data;
-using ConsoleGameEntities.Models.Items;
+﻿using ConsoleGameEntities.Main.Data;
+using ConsoleGameEntities.Main.Models.Items;
 using Microsoft.EntityFrameworkCore;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
+using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.GameDao;
 

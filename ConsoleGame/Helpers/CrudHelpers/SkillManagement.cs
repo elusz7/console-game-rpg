@@ -1,11 +1,11 @@
 ﻿    using System.Reflection.PortableExecutable;
 using ConsoleGame.GameDao;
 using ConsoleGame.Helpers.DisplayHelpers;
-using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Models.Entities;
-using ConsoleGameEntities.Models.Monsters;
-using ConsoleGameEntities.Models.Skills;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
+using ConsoleGameEntities.Main.Exceptions;
+using ConsoleGameEntities.Main.Models.Entities;
+using ConsoleGameEntities.Main.Models.Monsters;
+using ConsoleGameEntities.Main.Models.Skills;
+using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Managers.CrudHelpers;
 
