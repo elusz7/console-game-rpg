@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using ConsoleGame.GameDao;
-using ConsoleGameEntities.Models.Items;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
+using ConsoleGameEntities.Main.Models.Items;
+using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Factories;
 
@@ -32,58 +32,43 @@ public class ItemFactory(ItemDao itemDao)
 
         return (loot, numberOfCursedItems);
     }
-    public static Item CreateItem(Item itemBase)
+    private static Item CreateItem(Item itemBase)
     {
-        return itemBase switch
+        Item newItem = itemBase switch
         {
-            Weapon weapon => new Weapon
+            Weapon weapon => SetBaseProperties(new Weapon
             {
-                Name = weapon.Name,
-                Value = weapon.Value,
-                Description = weapon.Description,
-                Durability = weapon.Durability,
-                Weight = weapon.Weight,
-                RequiredLevel = weapon.RequiredLevel,
-                ItemType = weapon.ItemType,
-                AttackPower = weapon.AttackPower,
                 DamageType = weapon.DamageType
-            },
-            Armor armor => new Armor
+            }, weapon),
+
+            Armor armor => SetBaseProperties(new Armor
             {
-                Name = armor.Name,
-                Value = armor.Value,
-                Description = armor.Description,
-                Durability = armor.Durability,
-                Weight = armor.Weight,
-                RequiredLevel = armor.RequiredLevel,
-                ItemType = armor.ItemType,
-                DefensePower = armor.DefensePower,
-                Resistance = armor.Resistance,
                 ArmorType = armor.ArmorType
-            },
-            Consumable consumable => new Consumable
+            }, armor),
+
+            Consumable consumable => SetBaseProperties(new Consumable
             {
-                Name = consumable.Name,
-                Value = consumable.Value,
-                Description = consumable.Description,
-                Durability = consumable.Durability,
-                Weight = consumable.Weight,
-                RequiredLevel = consumable.RequiredLevel,
-                ItemType = consumable.ItemType,
-                Power = consumable.Power,
                 ConsumableType = consumable.ConsumableType
-            },
-            _ => new Valuable
-            {
-                Name = itemBase.Name,
-                Value = itemBase.Value,
-                Description = itemBase.Description,
-                Durability = itemBase.Durability,
-                Weight = itemBase.Weight,
-                RequiredLevel = itemBase.RequiredLevel,
-                ItemType = itemBase.ItemType
-            },
+            }, consumable),
+
+            Valuable valuable => SetBaseProperties(new Valuable(), valuable),
+
+            _ => throw new ArgumentException("Unknown item type", nameof(itemBase))
         };
+
+        newItem.CalculateStatsByLevel();
+        newItem.CalculateValue(true);
+
+        return newItem;
+    }
+    private static T SetBaseProperties<T>(T item, Item itemBase) where T : Item
+    {
+        item.Name = itemBase.Name;
+        item.Description = itemBase.Description;
+        item.Weight = itemBase.Weight;
+        item.RequiredLevel = itemBase.RequiredLevel;
+        item.ItemType = itemBase.ItemType;
+        return item;
     }
     private static decimal CalculateLootValue(int level, int numMonsters, bool campaign)
     {

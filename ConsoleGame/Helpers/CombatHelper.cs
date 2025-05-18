@@ -1,32 +1,28 @@
 ﻿using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Managers;
-using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Interfaces;
-using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Models.Entities;
-using ConsoleGameEntities.Models.Items;
-using ConsoleGameEntities.Models.Monsters;
-using ConsoleGameEntities.Models.Skills;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
+using ConsoleGameEntities.Main.Exceptions;
+using ConsoleGameEntities.Main.Interfaces.Attributes;
+using ConsoleGameEntities.Main.Models.Entities;
+using ConsoleGameEntities.Main.Models.Items;
+using ConsoleGameEntities.Main.Models.Monsters;
+using ConsoleGameEntities.Main.Models.Skills;
+using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers;
 
-public class CombatHelper(InputManager inputManager, OutputManager outputManager)
+public class CombatHelper(InputManager inputManager, OutputManager outputManager, EquipmentHelper equipmentHelper)
 {
     private readonly InputManager _inputManager = inputManager;
     private readonly OutputManager _outputManager = outputManager;
+    private readonly EquipmentHelper _equipmentHelper = equipmentHelper;
 
     private const int AttackOption = 1;
     private const int SkillOption = 2;
     private const int ConsumableOption = 3;
     private const int ExitOption = 4;
 
-    private bool tryEquipWeapon = true;
-
     public void CombatRunner(Player player, List<Monster> monsters)
     {
-        tryEquipWeapon = true;
-
         try
         {
             while (true)
@@ -199,6 +195,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
         _outputManager.WriteLine();
         var target = targets.Count == 1 ? targets[0]
                     : SelectTarget(targets, "attack");
+        _outputManager.WriteLine();
 
         if (target == null)
         {
@@ -219,8 +216,7 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
         {
             _outputManager.WriteLine("You cannot attack with your bare hands!\n", ConsoleColor.Red);
 
-            if (tryEquipWeapon)
-                EquipWeapon(player);
+            _equipmentHelper.EquipItem(player, true);
             return false;
         }
     }
@@ -303,7 +299,8 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
 
         if(skill.SkillCategory == SkillCategory.Support)
         {
-            if (_inputManager.ReadString($"You may also make an attack if you wish (y/n): ", ["y", "n"]) == "y")
+            bool wantsToAttack = _inputManager.ReadString("\nYou may also make an attack if you wish (y/n): ", ["y", "n"]) == "y";
+            if (wantsToAttack)
             {
                 Attack(player, targets);
                 return true;
@@ -315,59 +312,18 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
     }
     private bool UseConsumable(Player player, List<Monster> validTargets)
     {
-        var availableConsumables = player.Inventory.Items.Where(i => i is Consumable).ToList();
+        var used = _equipmentHelper.UseConsumable(player);
 
-        if (availableConsumables.Count == 0)
+        if (used)
         {
-            _outputManager.WriteLine("\nNo consumables in your inventory.\n", ConsoleColor.Red);
-            return false;
-        }
-
-        _outputManager.WriteLine();
-        var item = _inputManager.SelectItem("Select a consumable to use", availableConsumables);
-
-        if (item == null)
-        {
-            _outputManager.WriteLine("\nConsumable selection cancelled.\n");
-            return false;
-        }
-        else if (item is Consumable consumable)
-        {
-            switch (consumable.ConsumableType)
-            {
-                case ConsumableType.Health:
-                    consumable.UseOn(player);
-                    break;
-                case ConsumableType.Resource:
-                    consumable.UseOn(player);
-                    break;
-                case ConsumableType.Durability:
-                    _outputManager.WriteLine();
-                    var target = _inputManager.SelectItem("Select an item to increase durability", [.. player.Inventory.Items.Where(i => i.IsEquipped())]);
-
-                    if (target == null)
-                    {
-                        _outputManager.WriteLine("Item selection cancelled.");
-                        return false;
-                    }
-
-                    consumable.UseOn(target);
-                    break;
-            }
-
-            if (_inputManager.ReadString($"You may also make an attack if you wish (y/n): ", ["y", "n"]) == "y")
+            bool wantsToAttack = _inputManager.ReadString("\nYou may also make an attack if you wish (y/n): ", ["y", "n"]) == "y";
+            if (wantsToAttack)
             {
                 Attack(player, validTargets);
-                return true;
             }
         }
-        else
-        {
-            _outputManager.WriteLine("\nInvalid consumable type selected.\n", ConsoleColor.Red);
-            return false;
-        }
 
-        return true;
+        return used;
     }
     private Monster? SelectTarget(List<Monster> validTargets, string purpose)
     {
@@ -396,37 +352,4 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
         
         return usableSkills[index];
     }
-    private void EquipWeapon(Player player)
-    {
-        var availableWeapons = player.Inventory.Items
-                .Where(i => i is Weapon && i.RequiredLevel <= player.Level && i.Durability > 0)
-                .ToList();
-
-        if (availableWeapons.Count == 0)
-        {
-            _outputManager.WriteLine("You have no weapons to equip.\n", ConsoleColor.Red);
-            tryEquipWeapon = false;
-            return;
-        }
-
-        _outputManager.WriteLine();
-        var weapon = _inputManager.SelectItem("Select a weapon to equip", availableWeapons);
-
-        if (weapon == null)
-        {
-            _outputManager.WriteLine("\nNo weapon selected.\n", ConsoleColor.Red);
-            return;
-        }
-
-        try
-        {
-            player.Equip(weapon);
-            _outputManager.WriteLine($"\nYou have equipped {weapon.Name}. Try attacking again.\n", ConsoleColor.Green);
-        }
-        catch (InvalidOperationException ex)
-        {
-            _outputManager.WriteLine($"\n{ex.Message}\n", ConsoleColor.Red);
-
-        }
-    }    
 }

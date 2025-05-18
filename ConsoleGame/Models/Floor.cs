@@ -1,8 +1,8 @@
 ﻿using ConsoleGame.Factories;
-using ConsoleGameEntities.Models.Entities;
-using ConsoleGameEntities.Models.Items;
-using ConsoleGameEntities.Models.Monsters;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
+using ConsoleGameEntities.Main.Models.Entities;
+using ConsoleGameEntities.Main.Models.Items;
+using ConsoleGameEntities.Main.Models.Monsters;
+using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Models;
 

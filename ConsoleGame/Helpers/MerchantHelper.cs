@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Managers;
 using ConsoleGame.Models;
-using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Models.Entities;
-using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Main.Exceptions;
+using ConsoleGameEntities.Main.Models.Entities;
+using ConsoleGameEntities.Main.Models.Items;
 using static ConsoleGame.Helpers.AdventureEnums;
 
 namespace ConsoleGame.Helpers;
@@ -43,8 +43,6 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         _outputManager.WriteLine("\nYou approach the merchant and she greets you with a smile.");
         _floor.HasMetMerchant = true;
         _outputManager.WriteLine($"Hello, {_player.Name}. I am {_floor.GetMerchantName()}.");
-        
-        
 
         Gift();
 
@@ -67,7 +65,6 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
             try
             {
                 _player.Inventory.AddItem(item);
-                item.Inventory = _player.Inventory;
                 _outputManager.WriteLine($"{item.Name} has been gifted to you!", ConsoleColor.Green);
             }
             catch (InventoryException) { }
@@ -91,11 +88,11 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
             var index = 1;
             foreach (var option in options)
             {
-                _outputManager.WriteLine($"{index}. {option.Value}");
+                _outputManager.WriteLine($"{index}. {option.Value}", ConsoleColor.Yellow);
                 index++;
             }
 
-            var choice = options.ElementAt(_inputManager.ReadInt("Select an option: ", options.Count) - 1);
+            var choice = options.ElementAt(_inputManager.ReadInt("\tSelect an option: ", options.Count) - 1);
 
             switch (choice.Value)
             {
@@ -131,11 +128,11 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         }
 
         _outputManager.WriteLine();
-        var item = _inputManager.SelectItem("Select an item to purchase", items, 1.25M);
+        var item = _inputManager.SelectItem("Select an item to purchase", items, purpose: "buy");
 
         if (item == null)
         {
-            _outputManager.WriteLine("You didn't select an item.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nYou didn't select an item.", ConsoleColor.Red);
         }
         else
         {
@@ -162,7 +159,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         }
 
         _outputManager.WriteLine();
-        var item = _inputManager.SelectItem("Select an item to sell", items, 0.75M);
+        var item = _inputManager.SelectItem("Select an item to sell", items, purpose: "sell");
        
         if (item == null)
         {
@@ -195,7 +192,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         }
 
         _outputManager.WriteLine();
-        var choice = _inputManager.SelectItem("Select an item to purify", items, 0.5M);
+        var choice = _inputManager.SelectItem("Select an item to purify", items, purpose: "purify");
 
         if (choice == null)
         {
@@ -225,7 +222,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         }
 
         _outputManager.WriteLine();
-        var choice = _inputManager.SelectItem("Select an item to reforge.", items, 0.33M);
+        var choice = _inputManager.SelectItem("Select an item to reforge.", items, purpose: "reforge");
 
         if (choice == null)
         {
@@ -261,7 +258,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         }
 
         _outputManager.WriteLine();
-        var choice = _inputManager.SelectItem("Select an item to enchant", items, 1.5M);
+        var choice = _inputManager.SelectItem("Select an item to enchant", items, purpose: "enchant");
 
         if (choice == null)
         {

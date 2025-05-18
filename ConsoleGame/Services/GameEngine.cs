@@ -42,7 +42,7 @@ public class GameEngine(StartMenu startMenu, AdminMenu adminMenu, InputManager i
                     {
                         _outputManager.WriteLine("\nPress any key to begin your adventure!", ConsoleColor.Cyan);
                         _outputManager.Display();
-                        _inputManager.ReadKey();
+                        InputManager.ReadKey();
                         _adventureService.Adventure();
                     }
                     break;
@@ -51,7 +51,7 @@ public class GameEngine(StartMenu startMenu, AdminMenu adminMenu, InputManager i
                     {
                         _outputManager.WriteLine("\nPress any key to begin the campaign!", ConsoleColor.Cyan);
                         _outputManager.Display();
-                        _inputManager.ReadKey();
+                        InputManager.ReadKey();
                         _adventureService.Adventure();
                     }
                     break;

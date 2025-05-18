@@ -1,8 +1,8 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Managers;
-using ConsoleGameEntities.Models.Items;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
+using ConsoleGameEntities.Main.Models.Items;
+using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
@@ -49,7 +49,24 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
             _outputManager.WriteLine();
 
             ItemType itemType = _inputManager.GetEnumChoice<ItemType>("Select item type to create");
-            Item item = CreateItem(itemType);
+
+            var choice = _inputManager.ReadInt("\n1. Generate Stats Automatically By Level\n2. Manually Enter Stats\n3. Cancel\n\tChoose an option: ", 3);
+
+            Item item;
+            switch (choice)
+            {
+                case 1:
+                    item = CreateItemByLevel(itemType);
+                    break;
+                case 2:
+                    item = CreateItemByStats(itemType);
+                    break;
+                case 3:
+                    _outputManager.WriteLine($"\nItem Creation Cancelled.\n", ConsoleColor.Red);
+                    return;
+                default:
+                    return;
+            }
 
             _itemDao.AddItem(item);
 
@@ -58,62 +75,112 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
         } while (_inputManager.LoopAgain("add"));
         _outputManager.WriteLine();
     }
-    private Item CreateItem(ItemType itemType)
+    private Item CreateItemByLevel(ItemType itemType)
     {
         string name = _inputManager.ReadString("\nEnter item name: ");
         string description = _inputManager.ReadString("Enter item description: ");
-        decimal value = _inputManager.ReadDecimal("Enter item value: ");
         int durability = _inputManager.ReadInt("Enter item durability: ");
         decimal weight = _inputManager.ReadDecimal("Enter item weight: ");
         int level = _inputManager.ReadInt("Enter item required level: ");
 
-        return itemType switch
+        var item = itemType switch
         {
             ItemType.Weapon => new Weapon
             {
                 Name = name,
-                Value = value,
                 Description = description,
                 Durability = durability,
                 Weight = weight,
                 RequiredLevel = level,
-                AttackPower = _inputManager.ReadInt("Enter item attack power: "),
-                DamageType = _inputManager.GetEnumChoice<DamageType>("Select item damage type")
-            },
+                DamageType = _inputManager.GetEnumChoice<DamageType>("\nSelect item damage type")
+            } as Item,
             ItemType.Armor => new Armor
             {
                 Name = name,
-                Value = value,
                 Description = description,
                 Durability = durability,
                 Weight = weight,
                 RequiredLevel = level,
-                DefensePower = _inputManager.ReadInt("Enter item defense power: "),
-                Resistance = _inputManager.ReadInt("Enter item resistance: "),
-                ArmorType = _inputManager.GetEnumChoice<ArmorType>("Select item armor type")
-            },
+                ArmorType = _inputManager.GetEnumChoice<ArmorType>("\nSelect item armor type")
+            } as Item,
             ItemType.Valuable => new Valuable
             {
                 Name = name,
-                Value = value,
                 Description = description,
                 Durability = durability,
                 Weight = weight,
                 RequiredLevel = level
-            },
+            } as Item,
             ItemType.Consumable => new Consumable
             {
                 Name = name,
-                Value = value,
                 Description = description,
                 Durability = durability,
                 Weight = weight,
                 RequiredLevel = level,
-                Power = _inputManager.ReadInt("Enter item power: "),
-                ConsumableType = _inputManager.GetEnumChoice<ConsumableType>("Select item consumable type")
-            },
+                ConsumableType = _inputManager.GetEnumChoice<ConsumableType>("\nSelect item consumable type")
+            } as Item,
             _ => throw new ArgumentException("Invalid item type")
         };
+
+        item.CalculateStatsByLevel();
+        item.CalculateValue(true);
+        
+        _outputManager.WriteLine($"\nBased on the level provided, stats have been automatically generated.", ConsoleColor.Green);
+        _outputManager.WriteLine(ColorfulToStringHelper.ItemToString(item), ColorfulToStringHelper.GetItemColor(item));
+
+        return item;
+    }
+    private Item CreateItemByStats(ItemType itemType)
+    {
+        string name = _inputManager.ReadString("\nEnter item name: ");
+        string description = _inputManager.ReadString("Enter item description: ");
+        decimal weight = _inputManager.ReadDecimal("Enter item weight: ");
+
+        var item = itemType switch
+        {
+            ItemType.Weapon => new Weapon
+            {
+                Name = name,
+                Description = description,
+                Weight = weight,
+                AttackPower = _inputManager.ReadInt("Enter item attack power: "),
+                DamageType = _inputManager.GetEnumChoice<DamageType>("Select item damage type")
+            } as Item,
+            ItemType.Armor => new Armor
+            {
+                Name = name,
+                Description = description,
+                Weight = weight,
+                DefensePower = _inputManager.ReadInt("Enter item defense power: "),
+                Resistance = _inputManager.ReadInt("Enter item resistance: "),
+                ArmorType = _inputManager.GetEnumChoice<ArmorType>("Select item armor type")
+            } as Item,
+            ItemType.Valuable => new Valuable
+            {
+                Name = name,
+                Description = description,
+                Weight = weight,
+                Value = _inputManager.ReadDecimal("Enter item value: ")
+            } as Item,
+            ItemType.Consumable => new Consumable
+            {
+                Name = name,
+                Description = description,
+                Weight = weight,
+                Power = _inputManager.ReadInt("Enter item power: "),
+                ConsumableType = _inputManager.GetEnumChoice<ConsumableType>("Select item consumable type")
+            } as Item,
+            _ => throw new ArgumentException("Invalid item type")
+        };
+
+        item.CalculateValue(false);
+        item.CalculateLevelByStats();
+
+        _outputManager.WriteLine($"\nBased on the stats provided, a level has been automatically generated.", ConsoleColor.Green);
+        _outputManager.WriteLine(ColorfulToStringHelper.ItemToString(item), ColorfulToStringHelper.GetItemColor(item));
+
+        return item;
     }
     private void EditItem()
     {
@@ -142,6 +209,7 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
         {
             { "Name", () => item.Name = _inputManager.ReadString("\nEnter new name: ") },
             { "Description", () => item.Description = _inputManager.ReadString("\nEnter new description: ") },
+            { "Level", () => item.RequiredLevel = _inputManager.ReadInt("\nEnter new level: ") },
             { "Value", () => item.Value = _inputManager.ReadDecimal("\nEnter new value: ") },
             { "Durability", () => item.Durability = _inputManager.ReadInt("\nEnter new durability: ") },
             { "Weight", () => item.Weight = _inputManager.ReadDecimal("\nEnter new weight: ") }

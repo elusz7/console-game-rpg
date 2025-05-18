@@ -2,9 +2,9 @@
 using ConsoleGame.GameDao;
 using ConsoleGame.Helpers;
 using ConsoleGame.Models;
-using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Models.Entities;
-using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Main.Exceptions;
+using ConsoleGameEntities.Main.Models.Entities;
+using ConsoleGameEntities.Main.Models.Items;
 using static ConsoleGame.Helpers.AdventureEnums;
 using ConsoleGame.Managers;
 
@@ -158,7 +158,7 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
                         _outputManager.WriteLine("Press any key to continue...", ConsoleColor.Gray);
                         _outputManager.Display();
                         _playerHelper.SavePlayer(player);
-                        _inputManager.ReadKey();
+                        InputManager.ReadKey();
                         _outputManager.Clear();
                         return;
                     }
@@ -172,7 +172,7 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
 
             _outputManager.Write("Press any key to continue...", ConsoleColor.DarkCyan);
             _outputManager.Display();
-            _inputManager.ReadKey();
+            InputManager.ReadKey();
         }
     }
     private bool CheckFloorCompletion()
@@ -180,11 +180,10 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
         if (!floor.Monsters.Any(m => m.CurrentHealth > 0))
         {
             _outputManager.WriteLine("You have cleared the floor of monsters. Congratulations!", ConsoleColor.Green);
-            player.Inventory.Gold += (player.Level * 10);
 
             _outputManager.Write("Press any key to continue!");
             _outputManager.Display();
-            _inputManager.ReadKey();
+            InputManager.ReadKey();
             _outputManager.Clear();
             return true;
         }
@@ -358,20 +357,22 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
             }
         }
 
-        var loopList = automaticLoot.ToList();
-        foreach (var item in loopList)
+        if (automaticLoot.Count > 0)
         {
-            try
+            var loopList = automaticLoot.ToList();
+            foreach (var item in loopList)
             {
-                player.Inventory.AddItem(item);
+                try
+                {
+                    player.Inventory.AddItem(item);
+                }
+                catch (InventoryException)
+                {
+                    automaticLoot.Remove(item);
+                }
             }
-            catch (InventoryException)
-            {
-                automaticLoot.Remove(item);
-            }
+            _outputManager.WriteLine($"\n\nAutomatically looted: {string.Join(", ", automaticLoot.Select(a => a.Name))}\n", ConsoleColor.DarkGreen);
         }
-
-        _outputManager.WriteLine($"\nAutomatically looted: {string.Join(", ", automaticLoot.Select(a => a.Name))}", ConsoleColor.DarkGreen);
 
         var map = 1;
         if (!IsCampaign)

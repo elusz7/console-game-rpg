@@ -1,11 +1,11 @@
-﻿using ConsoleGameEntities.Models.Items;
-using ConsoleGameEntities.Models.Entities;
-using ConsoleGameEntities.Models.Monsters;
-using ConsoleGameEntities.Models.Skills;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
+﻿using ConsoleGameEntities.Main.Models.Items;
+using ConsoleGameEntities.Main.Models.Entities;
+using ConsoleGameEntities.Main.Models.Monsters;
+using ConsoleGameEntities.Main.Models.Skills;
+using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
 using ConsoleGame.Managers;
 using System.Text;
-using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Main.Exceptions;
 using System.Numerics;
 using System.Drawing;
 
@@ -42,10 +42,10 @@ public static class ColorfulToStringHelper
             ThreatLevel.Elite => ConsoleColor.Yellow,
             _ => ConsoleColor.Red };
     }    
-    public static string ItemStatsString(Item item, decimal? valueMultiplier = null)
+    public static string ItemStatsString(Item item, decimal? value = null)
     {
-        if (valueMultiplier != null) 
-            return $"{item.Name}{GetArmorType(item)} - {item.Value * valueMultiplier:0.00} [DUR: {item.Durability}{GetItemStats(item)}]";
+        if (value != null) 
+            return $"{item.Name}{GetArmorType(item)} - {value:0.00} [DUR: {item.Durability}{GetItemStats(item)}]";
 
         return $"{item.Name}{GetArmorType(item)} [DUR: {item.Durability}{GetItemStats(item)}]";
     }

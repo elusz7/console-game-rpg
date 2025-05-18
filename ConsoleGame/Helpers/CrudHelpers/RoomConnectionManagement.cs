@@ -1,5 +1,5 @@
 ﻿using ConsoleGame.GameDao;
-using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Main.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.Managers.CrudHelpers;

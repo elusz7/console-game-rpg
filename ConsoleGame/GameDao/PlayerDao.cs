@@ -1,5 +1,5 @@
-﻿using ConsoleGameEntities.Data;
-using ConsoleGameEntities.Models.Entities;
+﻿using ConsoleGameEntities.Main.Data;
+using ConsoleGameEntities.Main.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.GameDao;

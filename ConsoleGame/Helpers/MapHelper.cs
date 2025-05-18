@@ -5,8 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ConsoleGame.GameDao;
-using ConsoleGameEntities.Interfaces;
-using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Main.Interfaces;
+using ConsoleGameEntities.Main.Models.Entities;
 
 namespace ConsoleGame.Managers;
 
