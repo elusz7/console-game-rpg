@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using ConsoleGame.GameDao;
-using ConsoleGameEntities.Main.Models.Items;
-using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
+using ConsoleGameEntities.Models.Items;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Factories;
 
@@ -57,7 +57,7 @@ public class ItemFactory(ItemDao itemDao)
         };
 
         newItem.CalculateStatsByLevel();
-        newItem.CalculateValue(true);
+        newItem.CalculateValue();
 
         return newItem;
     }

@@ -1,8 +1,8 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGame.Managers;
 using ConsoleGame.Services;
-using ConsoleGameEntities.Main.Data;
-using ConsoleGameEntities.Main.Helpers;
+using ConsoleGameEntities.Data;
+using ConsoleGameEntities.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

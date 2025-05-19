@@ -2,9 +2,9 @@
 using ConsoleGame.GameDao;
 using ConsoleGame.Helpers;
 using ConsoleGame.Models;
-using ConsoleGameEntities.Main.Exceptions;
-using ConsoleGameEntities.Main.Models.Entities;
-using ConsoleGameEntities.Main.Models.Items;
+using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Items;
 using static ConsoleGame.Helpers.AdventureEnums;
 using ConsoleGame.Managers;
 

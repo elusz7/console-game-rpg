@@ -2,8 +2,8 @@
 using ConsoleGame.GameDao;
 using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Managers;
-using ConsoleGameEntities.Main.Models.Entities;
-using ConsoleGameEntities.Main.Models.Items;
+using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Helpers;
 
@@ -123,7 +123,7 @@ public class PlayerHelper(InputManager inputManager, OutputManager outputManager
 
     private static void SellInventory(Player player)
     {
-        var equipment = player.Equipment.ToList();
+        var equipment = player.Equipment.OfType<Item>().ToList();
         foreach (var equippedItem in equipment)
         {
             player.Unequip(equippedItem);

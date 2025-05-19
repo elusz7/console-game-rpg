@@ -2,7 +2,7 @@
 using ConsoleGame.Managers;
 using ConsoleGame.Managers.CrudHelpers;
 using ConsoleGame.Managers.DisplayHelpers;
-using ConsoleGameEntities.Main.Data;
+using ConsoleGameEntities.Data;
 
 namespace ConsoleGame.Menus;
 

@@ -1,5 +1,5 @@
-﻿using ConsoleGameEntities.Main.Models.Entities;
-using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
+﻿using ConsoleGameEntities.Models.Entities;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGame.GameDao;
 using ConsoleGame.Helpers.DisplayHelpers;
 

@@ -1,6 +1,6 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGame.Helpers.DisplayHelpers;
-using ConsoleGameEntities.Main.Models.Entities;
+using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Managers.CrudHelpers;
 

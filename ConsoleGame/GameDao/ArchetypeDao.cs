@@ -1,6 +1,6 @@
-﻿using ConsoleGameEntities.Main.Data;
-using ConsoleGameEntities.Main.Models.Entities;
-using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
+﻿using ConsoleGameEntities.Data;
+using ConsoleGameEntities.Models.Entities;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.GameDao;
 

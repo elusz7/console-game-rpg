@@ -1,6 +1,6 @@
-﻿using ConsoleGameEntities.Main.Data;
-using ConsoleGameEntities.Main.Migrations;
-using ConsoleGameEntities.Main.Models.Entities;
+﻿using ConsoleGameEntities.Data;
+using ConsoleGameEntities.Migrations;
+using ConsoleGameEntities.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.GameDao;

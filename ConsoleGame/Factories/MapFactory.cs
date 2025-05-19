@@ -1,6 +1,6 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGame.Managers;
-using ConsoleGameEntities.Main.Models.Entities;
+using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Factories;
 

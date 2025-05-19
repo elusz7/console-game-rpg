@@ -1,7 +1,7 @@
 ﻿using System.Xml.Linq;
 using ConsoleGame.GameDao;
 using ConsoleGame.Managers;
-using ConsoleGameEntities.Main.Models.Entities;
+using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Helpers.DisplayHelpers;
 
