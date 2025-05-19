@@ -1,7 +1,7 @@
 ﻿using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
-namespace ConsoleGameTests.ConsoleGameEntities.Models;
+namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities;
 
 [TestClass]
 public class ArchetypeTests

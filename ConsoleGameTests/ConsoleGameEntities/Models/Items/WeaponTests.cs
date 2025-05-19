@@ -8,7 +8,7 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Items;
 [TestClass]
 public class WeaponTests
 {
-    private Weapon CreateWeapon(decimal value = 100, int requiredLevel = 1, int attackPower = 10, int durability = 10)
+    private static Weapon CreateWeapon(decimal value = 100, int requiredLevel = 1, int attackPower = 10, int durability = 10)
     {
         return new Weapon
         {

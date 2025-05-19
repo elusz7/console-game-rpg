@@ -103,7 +103,7 @@ public class Inventory : IInventory
     }
     public void Buy(Item item)
     {
-        var price = item.GetBuyPrice();
+        var price = (int)Math.Round(item.GetBuyPrice());
 
         if (Gold < price)
             throw new ItemPurchaseException($"You are short by {price - Gold} gold.");
@@ -117,6 +117,6 @@ public class Inventory : IInventory
             throw new ItemPurchaseException(ex.Message);
         }
 
-        Gold -= (int)Math.Round(price);
+        Gold -= price;
     }
 }

@@ -11,19 +11,19 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
 
     private bool Cursed { get; set; }
     private bool Equipped { get; set; }
-    public int AttackPower { get; set; }
-    public DamageType DamageType { get; set; }
+    public virtual int AttackPower { get; set; }
+    public virtual DamageType DamageType { get; set; }
 
-    public decimal GetPurificationPrice() => Value * 0.5M;
-    public decimal GetEnchantmentPrice() => Value * 1.5M;
-    public void Curse() => Cursed = true;
-    public void TargetCursed() => Cursed = false;
-    public bool IsCursed() => Cursed;
-    public void Equip() => Equipped = true;
-    public void Unequip() => Equipped = false;
-    public bool IsEquipped() => Equipped;
+    public virtual decimal GetPurificationPrice() => Value * 0.5M;
+    public virtual decimal GetEnchantmentPrice() => Value * 1.5M;
+    public virtual void Curse() => Cursed = true;
+    public virtual void TargetCursed() => Cursed = false;
+    public virtual bool IsCursed() => Cursed;
+    public virtual void Equip() => Equipped = true;
+    public virtual void Unequip() => Equipped = false;
+    public virtual bool IsEquipped() => Equipped;
 
-    public void Enchant()
+    public virtual void Enchant()
     {
         if (Inventory == null)
             throw new ItemEnchantmentException("Item is not in an inventory.");
@@ -52,7 +52,7 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
 
         Inventory.Gold -= price;
     }  
-    public void Purify()
+    public virtual void Purify()
     {
         if (!Cursed)
             throw new ItemPurificationException("Item is not cursed.");

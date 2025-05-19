@@ -26,19 +26,6 @@ public class Room : IRoom
         Description = description;
     }
 
-    public override string ToString()
-    {
-        var sb = new StringBuilder();
-
-        sb.Append($"{Name}: {Description}");
-
-        if (North != null) sb.Append($"\n\tNorth: {North.Name}");
-        if (South != null) sb.Append($"\n\tSouth: {South.Name}");
-        if (East != null) sb.Append($"\n\tEast: {East.Name}");
-        if (West != null) sb.Append($"\n\tWest: {West.Name}");
-
-        return sb.ToString();
-    }
     public Room Clone()
     {
         return new Room

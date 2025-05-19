@@ -264,12 +264,12 @@ public class Player : IPlayer
     }
     public void Unequip(Item item)
     {
-        if (item is IEquippable equippableItem)
+        if (item is IEquippable equippableItem && Equipment.Contains(equippableItem))
         {
             Equipment.Remove(equippableItem);
             equippableItem.Unequip();
             AddActionItem($"You unequipped {item.Name}.");
-        }        
+        }
     }
     private void CheckArmorDurability(DamageType? damageType)
     {
