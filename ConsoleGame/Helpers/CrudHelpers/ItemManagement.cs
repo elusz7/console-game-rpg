@@ -1,8 +1,8 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Managers;
-using ConsoleGameEntities.Main.Models.Items;
-using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
+using ConsoleGameEntities.Models.Items;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
@@ -124,7 +124,7 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
         };
 
         item.CalculateStatsByLevel();
-        item.CalculateValue(true);
+        item.CalculateValue();
         
         _outputManager.WriteLine($"\nBased on the level provided, stats have been automatically generated.", ConsoleColor.Green);
         _outputManager.WriteLine(ColorfulToStringHelper.ItemToString(item), ColorfulToStringHelper.GetItemColor(item));
@@ -174,7 +174,9 @@ public class ItemManagement(InputManager inputManager, OutputManager outputManag
             _ => throw new ArgumentException("Invalid item type")
         };
 
-        item.CalculateValue(false);
+        if (item is not Valuable)
+            item.CalculateValue();
+
         item.CalculateLevelByStats();
 
         _outputManager.WriteLine($"\nBased on the stats provided, a level has been automatically generated.", ConsoleColor.Green);

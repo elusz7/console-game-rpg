@@ -5,14 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ConsoleGame.GameDao;
-using ConsoleGameEntities.Main.Interfaces;
-using ConsoleGameEntities.Main.Models.Entities;
+using ConsoleGameEntities.Interfaces;
+using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Managers;
 
 public static class MapHelper
 {
-    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+    private static readonly Random _rng = Random.Shared;
     private record RoomPosition(Room Room, int X, int Y);
 
 

@@ -1,7 +1,7 @@
-﻿using ConsoleGameEntities.Main.Data;
-using ConsoleGameEntities.Main.Models.Entities;
-using ConsoleGameEntities.Main.Models.Monsters;
-using ConsoleGameEntities.Main.Models.Skills;
+﻿using ConsoleGameEntities.Data;
+using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Monsters;
+using ConsoleGameEntities.Models.Skills;
 
 namespace ConsoleGame.GameDao;
 

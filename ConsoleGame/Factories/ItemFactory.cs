@@ -1,13 +1,13 @@
 ﻿using System.Linq;
 using ConsoleGame.GameDao;
-using ConsoleGameEntities.Main.Models.Items;
-using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
+using ConsoleGameEntities.Models.Items;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Factories;
 
 public class ItemFactory(ItemDao itemDao)
 {
-    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+    private static readonly Random _rng = Random.Shared;
     private readonly ItemDao _itemDao = itemDao;
 
     public (List<Item>, int) GenerateLoot(int level, int numMonsters, bool campaign)
@@ -57,7 +57,7 @@ public class ItemFactory(ItemDao itemDao)
         };
 
         newItem.CalculateStatsByLevel();
-        newItem.CalculateValue(true);
+        newItem.CalculateValue();
 
         return newItem;
     }

@@ -8,9 +8,10 @@ using System.Threading.Tasks;
 using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Managers;
 using ConsoleGame.Models;
-using ConsoleGameEntities.Main.Exceptions;
-using ConsoleGameEntities.Main.Models.Entities;
-using ConsoleGameEntities.Main.Models.Items;
+using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Interfaces.ItemAttributes;
+using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Items;
 using static ConsoleGame.Helpers.AdventureEnums;
 
 namespace ConsoleGame.Helpers;
@@ -182,7 +183,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
     private void PurifyItems()
     {
         var items = _player.Inventory.Items
-            .Where(i => i.IsCursed)
+            .Where(i => i is ICursable c && c.IsCursed())
             .ToList();
 
         if (items.Count == 0)
@@ -198,11 +199,11 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         {
             _outputManager.WriteLine("\nYou didn't select an item.", ConsoleColor.Red);
         }
-        else
+        else if (choice is ICursable cursed)
         {
             try
             {
-                choice.Purify();
+                cursed.Purify();
                 _outputManager.WriteLine($"\n{choice.Name} has been purified!", ConsoleColor.Green);
             }
             catch (ItemPurificationException ex)
@@ -214,7 +215,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
     }
     private void ReforgeArmor()
     {
-        var items = _player.Inventory.Items.Where(i => i is Armor).ToList();
+        var items = _player.Inventory.Items.Where(i => i is IReforgable).ToList();
         if (items.Count == 0)
         {
             _outputManager.WriteLine("\nYou have no armor to reforge.", ConsoleColor.Red);
@@ -228,13 +229,13 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         {
             _outputManager.WriteLine("\nYou didn't select an item.", ConsoleColor.Red);
         }
-        else
+        else if (choice is IReforgable reforged)
         {
             try
             {
                 _outputManager.WriteLine($"\nCURRENT STATS {ColorfulToStringHelper.GetItemStats(choice)} |", ConsoleColor.Cyan);
 
-                choice.Reforge();
+                reforged.Reforge();
                 _outputManager.WriteLine($"\n{choice.Name} has been reforged!");
                 _outputManager.WriteLine($"NEW STATS {ColorfulToStringHelper.GetItemStats(choice)} |", ConsoleColor.Cyan);
             }
@@ -248,7 +249,7 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
     private void EnchantItems()
     {
         var items = _player.Inventory.Items
-            .Where(i => (i is Armor || i is Weapon) && i.RequiredLevel < _player.Level)
+            .Where(i => i is IEnchantable && i.RequiredLevel < _player.Level)
             .ToList();
 
         if (items.Count == 0)
@@ -264,12 +265,12 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         {
             _outputManager.WriteLine("\nYou didn't select an item.", ConsoleColor.Red);
         }
-        else
+        else if (choice is IEnchantable enchanter)
         {
             try
             {
                 _outputManager.WriteLine($"\nCURRENT STATS | LVL: {choice.RequiredLevel}{ColorfulToStringHelper.GetItemStats(choice)} |", ConsoleColor.Cyan);
-                choice.Enchant();
+                enchanter.Enchant();
                 _outputManager.WriteLine($"\n{choice.Name} has been enchanted!", ConsoleColor.Green);
                 _outputManager.WriteLine($"NEW STATS | LVL: {choice.RequiredLevel}{ColorfulToStringHelper.GetItemStats(choice)} |", ConsoleColor.Cyan);
             }
@@ -287,20 +288,18 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         AddMenuOption(options, "Buy Item", MerchantOptions.Buy);
         AddMenuOption(options, "Sell Item", MerchantOptions.Sell);
 
-        if (_player.Inventory.Items.Where(i => i.IsCursed).Any())
+        if (_player.Inventory.Items.Where(i => i is ICursable c && c.IsCursed()).Any())
         {
             AddMenuOption(options, "Purify Item", MerchantOptions.Purify);
         }
 
-        if (_player.Inventory.Items.OfType<Armor>().Any())
+        if (_player.Inventory.Items.OfType<IReforgable>().Any())
         {
             AddMenuOption(options, "Reforge Armor", MerchantOptions.Reforge);
         }
 
         //add option to raise weapon/armor level if player has lower level items
-        if (_player.Inventory.Items
-            .Where(i => (i is Weapon || i is Armor)
-            && i.RequiredLevel < _player.Level).Any())
+        if (_player.Inventory.Items.Where(i => i is IEnchantable && i.RequiredLevel < _player.Level).Any())
         {
             AddMenuOption(options, "Enchant Item", MerchantOptions.Enchant);
         }

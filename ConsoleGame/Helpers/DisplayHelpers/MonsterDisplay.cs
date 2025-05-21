@@ -5,8 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using ConsoleGame.GameDao;
 using ConsoleGame.Helpers.DisplayHelpers;
-using ConsoleGameEntities.Main.Models.Monsters;
-using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
+using ConsoleGameEntities.Models.Monsters;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Managers.DisplayHelpers;
 

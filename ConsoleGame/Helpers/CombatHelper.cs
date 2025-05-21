@@ -1,12 +1,12 @@
 ﻿using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Managers;
-using ConsoleGameEntities.Main.Exceptions;
-using ConsoleGameEntities.Main.Interfaces.Attributes;
-using ConsoleGameEntities.Main.Models.Entities;
-using ConsoleGameEntities.Main.Models.Items;
-using ConsoleGameEntities.Main.Models.Monsters;
-using ConsoleGameEntities.Main.Models.Skills;
-using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
+using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Models.Monsters;
+using ConsoleGameEntities.Models.Skills;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers;
 
@@ -320,9 +320,11 @@ public class CombatHelper(InputManager inputManager, OutputManager outputManager
             if (wantsToAttack)
             {
                 Attack(player, validTargets);
+                return used;
             }
         }
 
+        _outputManager.WriteLine();
         return used;
     }
     private Monster? SelectTarget(List<Monster> validTargets, string purpose)

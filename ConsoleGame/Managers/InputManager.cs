@@ -1,8 +1,9 @@
-﻿using ConsoleGameEntities.Main.Models.Items;
-using ConsoleGameEntities.Main.Models.Entities;
-using ConsoleGameEntities.Main.Models.Monsters;
-using ConsoleGameEntities.Main.Models.Skills;
+﻿using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Monsters;
+using ConsoleGameEntities.Models.Skills;
 using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGameEntities.Interfaces.ItemAttributes;
 
 namespace ConsoleGame.Managers;
 public class InputManager(OutputManager outputManager)
@@ -198,16 +199,18 @@ public class InputManager(OutputManager outputManager)
     {
         return Selector(
             items,
-            i => {
+            i =>
+            {
                 decimal? value = purpose switch
                 {
-                    "enchant" => i.GetEnchantmentPrice(),
-                    "reforge" => i.GetReforgePrice(),
-                    "purify" => i.GetPurificationPrice(),
+                    "enchant" => i is IEnchantable e ? e.GetEnchantmentPrice() : null,
+                    "reforge" => i is IReforgable r ? r.GetReforgePrice() : null,
+                    "purify" => i is ICursable c ? c.GetPurificationPrice() : null,
                     "buy" => i.GetBuyPrice(),
                     "sell" => i.GetSellPrice(),
                     _ => null
                 };
+
                 return ColorfulToStringHelper.ItemStatsString(i, value);
             },
             prompt,

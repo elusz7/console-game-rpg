@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
-using ConsoleGameEntities.Main.Data;
-using ConsoleGameEntities.Main.Models.Entities;
-using ConsoleGameEntities.Main.Models.Items;
+using ConsoleGameEntities.Data;
+using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Items;
 using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.GameDao;

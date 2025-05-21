@@ -1,9 +1,10 @@
 ﻿using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Managers;
-using ConsoleGameEntities.Main.Exceptions;
-using ConsoleGameEntities.Main.Models.Entities;
-using ConsoleGameEntities.Main.Models.Items;
-using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
+using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Interfaces.ItemAttributes;
+using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Items;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers;
 
@@ -53,7 +54,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
         }
 
         _outputManager.WriteLine("\nCurrent Equipment: ");
-        foreach (var item in equipment)
+        foreach (Item item in equipment)
         {
             _outputManager.WriteLine(ColorfulToStringHelper.ItemStatsString(item), ColorfulToStringHelper.GetItemColor(item));
         }
@@ -67,11 +68,15 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
         }
 
         _outputManager.WriteLine();
-        var unequippedItem = _inputManager.SelectItem("Select an item to unequip", player.Equipment);
+        var equippedItems = player.Equipment
+            .OfType<Item>() //cast equipment to items
+            .ToList();
+
+        var unequippedItem = _inputManager.SelectItem("Select an item to unequip", equippedItems);
         
         if (unequippedItem == null)
         {
-            _outputManager.WriteLine("\nNo item selected.\n");
+            _outputManager.WriteLine("\nNo item selected.\n", ConsoleColor.Red);
         }
         else
         {
@@ -83,12 +88,10 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
     {
         var availableItems = weaponsOnly ?
             player.Inventory.Items
-            .Where(i => i is Weapon)
-            .Where(i => !i.IsEquipped())
+            .Where(i => i is Weapon w && !w.IsEquipped())
             .ToList() :
             [.. player.Inventory.Items
-                .Where(i => i is Weapon || i is Armor)
-                .Where(i => !i.IsEquipped())];
+                .Where(i => i is IEquippable e && !e.IsEquipped())];
 
         if (availableItems.Count == 0)
         {

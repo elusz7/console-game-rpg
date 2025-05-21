@@ -2,9 +2,9 @@
 using ConsoleGame.GameDao;
 using ConsoleGame.Helpers;
 using ConsoleGame.Models;
-using ConsoleGameEntities.Main.Exceptions;
-using ConsoleGameEntities.Main.Models.Entities;
-using ConsoleGameEntities.Main.Models.Items;
+using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Items;
 using static ConsoleGame.Helpers.AdventureEnums;
 using ConsoleGame.Managers;
 
@@ -12,7 +12,7 @@ namespace ConsoleGame.Services;
 
 public class AdventureService(OutputManager outputManager, InputManager inputManager, PlayerHelper playerHelper, 
     MapManager mapManager, CombatHelper combatHelper, MerchantHelper merchantHelper, 
-    EquipmentHelper equipmentHelper, FloorFactory floorFactory, PlayerDao playerDao)
+    EquipmentHelper equipmentHelper, FloorFactory floorFactory)
 {
     private readonly OutputManager _outputManager = outputManager;
     private readonly InputManager _inputManager = inputManager;
@@ -64,14 +64,6 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
 
         floor = _floorFactory.CreateFloor(player.Level, IsCampaign, map == 2);
         player.CurrentRoom = floor.GetEntrance();
-
-        if (player.Level == 1)
-        {
-            foreach (var monster in floor.Monsters)
-            {
-                monster.AdjustStartingStat(player.Archetype);
-            }
-        }
 
         return true;
     }
@@ -320,11 +312,13 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
     private Room GetRoom(string direction)
     {
         var connections = player.CurrentRoom?.GetConnections();
-        if (connections == null || !connections.ContainsKey(direction))
+
+        if (connections == null || !connections.TryGetValue(direction, out var room))
         {
             throw new InvalidOperationException($"No room found in direction: {direction}");
         }
-        return connections[direction];
+
+        return room!;
     }
     private void CleanUpDeadMonsters()
     {
@@ -337,7 +331,7 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
 
         foreach (var monster in deadMonsters)
         {
-            player.CurrentRoom.Monsters.Remove(monster);
+            player.CurrentRoom!.Monsters.Remove(monster);
             floor.Monsters.Remove(monster);
         }
     }
@@ -352,7 +346,7 @@ public class AdventureService(OutputManager outputManager, InputManager inputMan
         {
             foreach (var monster in leftovers)
             {
-                automaticLoot.Add(monster.Treasure);
+                automaticLoot.Add(monster.Treasure!);
                 monster.Treasure = null;
             }
         }

@@ -1,6 +1,6 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGame.Helpers.DisplayHelpers;
-using ConsoleGameEntities.Main.Models.Skills;
+using ConsoleGameEntities.Models.Skills;
 
 namespace ConsoleGame.Managers.DisplayHelpers;
 

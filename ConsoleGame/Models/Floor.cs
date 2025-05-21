@@ -1,14 +1,15 @@
 ﻿using ConsoleGame.Factories;
-using ConsoleGameEntities.Main.Models.Entities;
-using ConsoleGameEntities.Main.Models.Items;
-using ConsoleGameEntities.Main.Models.Monsters;
-using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
+using ConsoleGameEntities.Interfaces.ItemAttributes;
+using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Models.Monsters;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Models;
 
 public class Floor
 {
-    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+    private static readonly Random _rng = Random.Shared;
 
     public ItemFactory ItemFactory;
     public int Level { get; set; }
@@ -60,9 +61,7 @@ public class Floor
     }
     public void AssignCursesToItems()
     {
-        var availableItems = Loot
-            .Where(i => i is Weapon || i is Armor)
-            .Where(i => i.IsCursed == false).ToList();
+        var availableItems = Loot.OfType<ICursable>().ToList();
 
         if (NumberOfCursedItems > availableItems.Count)
         {
@@ -72,7 +71,7 @@ public class Floor
         var shuffledItems = availableItems.OrderBy(_ => _rng.Next()).ToList();
         for (int i = 0; i < NumberOfCursedItems; i++)
         {
-            shuffledItems[i].IsCursed = true;
+            shuffledItems[i].Curse();
         }
     }
     public Room GetEntrance()

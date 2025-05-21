@@ -1,11 +1,11 @@
-﻿using ConsoleGameEntities.Main.Models.Items;
-using ConsoleGameEntities.Main.Models.Entities;
-using ConsoleGameEntities.Main.Models.Monsters;
-using ConsoleGameEntities.Main.Models.Skills;
-using static ConsoleGameEntities.Main.Models.Entities.ModelEnums;
+﻿using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Monsters;
+using ConsoleGameEntities.Models.Skills;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGame.Managers;
 using System.Text;
-using ConsoleGameEntities.Main.Exceptions;
+using ConsoleGameEntities.Exceptions;
 using System.Numerics;
 using System.Drawing;
 

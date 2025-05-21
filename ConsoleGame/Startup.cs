@@ -1,8 +1,8 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGame.Managers;
 using ConsoleGame.Services;
-using ConsoleGameEntities.Main.Data;
-using ConsoleGameEntities.Main.Helpers;
+using ConsoleGameEntities.Data;
+using ConsoleGameEntities.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +15,7 @@ using ConsoleGame.Factories;
 using ConsoleGame.Helpers;
 using ConsoleGame.Helpers.CrudHelpers;
 using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGameEntities.Models.Monsters.Strategies;
 
 namespace ConsoleGame;
 
@@ -46,6 +47,12 @@ public static class Startup
 
         // Register DbContext with dependency injection
         var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+        if (connectionString == null)
+        {
+            throw new ArgumentException("Connection string can't be empty!");
+        }
+
         services.AddDbContext<GameContext>(options =>
         {
             ConfigurationHelper.ConfigureDbContextOptions(options, connectionString);
@@ -103,5 +110,6 @@ public static class Startup
 
         services.AddSingleton<InputManager>();
         services.AddSingleton<OutputManager>();
+        services.AddSingleton<MonsterSkillSelector>();
     }
 }
