@@ -5,24 +5,17 @@ using System.Text;
 using System.Threading.Tasks;
 using ConsoleGameEntities.Helpers;
 using ConsoleGameEntities.Interfaces;
+using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Monsters.Strategies;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters;
 
 public class EliteMonster : Monster
 {
-    public override void Attack(IPlayer target)
+    public EliteMonster() { }
+    public EliteMonster(IMonsterSkillSelector skillSelector, MonsterBehaviorType behavior)
     {
-        var ultimate = MonsterSkillHelper.GetUltimate(this);
-        if (ultimate != null)
-        {
-            ultimate.Activate(this, target);
-            return;
-        }
-        Strategy.ExecuteAttack(this, target);
-    }
-
-    public override string ToString()
-    {
-        return base.ToString();
+        Strategy = new EliteStrategy(skillSelector, behavior);
     }
 }

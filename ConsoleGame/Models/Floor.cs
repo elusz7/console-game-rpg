@@ -9,7 +9,7 @@ namespace ConsoleGame.Models;
 
 public class Floor
 {
-    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+    private static readonly Random _rng = Random.Shared;
 
     public ItemFactory ItemFactory;
     public int Level { get; set; }

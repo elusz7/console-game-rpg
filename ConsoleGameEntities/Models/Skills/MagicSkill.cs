@@ -18,51 +18,66 @@ public class MagicSkill : Skill
         if (singleEnemy == null && (multipleEnemies == null || multipleEnemies.Count == 0))
             throw new InvalidTargetException("No suitable target(s) provided.");
 
-        if (caster is Player player)
+        switch (caster)
         {
-            if (player.Level < RequiredLevel)
-                throw new InvalidSkillLevelException("You are too low a level to use this skill.");
+            case Player player:
+                if (player.Level < RequiredLevel)
+                    throw new InvalidSkillLevelException("You are too low a level to use this skill.");
 
-            try
-            {
-                player.Archetype.UseResource(Cost);
-            }
-            catch (InvalidOperationException) { throw new SkillResourceException($"Not enough {player.Archetype.ResourceName} available to use this skill."); }
+                try
+                {
+                    player.Archetype.UseResource(Cost);
+                }
+                catch (InvalidOperationException)
+                {
+                    throw new SkillResourceException($"Not enough {player.Archetype.ResourceName} available to use this skill.");
+                }
 
-            player.AddActionItem(this);
+                player.AddActionItem(this);
 
-            switch (TargetType)
-            {
-                case TargetType.SingleEnemy:
-                        singleEnemy.TakeDamage(Power, DamageType);
-                    break;
+                switch (TargetType)
+                {
+                    case TargetType.SingleEnemy:
+                        singleEnemy!.TakeDamage(Power, DamageType);
+                        break;
 
-                case TargetType.AllEnemies:
-                    foreach (var tar in multipleEnemies) {
-                        try
+                    case TargetType.AllEnemies:
+                        foreach (var tar in multipleEnemies!)
                         {
-                            tar.TakeDamage(Power, DamageType);
+                            try
+                            {
+                                tar.TakeDamage(Power, DamageType);
+                            }
+                            catch (MonsterDeathException)
+                            {
+                                monsterDeath = true;
+                            }
                         }
-                        catch (MonsterDeathException) { monsterDeath = true; }
-                    }
-                    break;
-            }
+                        break;
+                }
 
-            Reset();
+                Reset();
 
-            if (monsterDeath)
-                throw new MonsterDeathException();
-        }
-        else if (caster is Monster monster)
-        {
-            if (monster.Level < RequiredLevel)
-                throw new InvalidSkillLevelException("The monster's level is too low to use this skill");
+                if (monsterDeath)
+                    throw new MonsterDeathException();
 
-            monster.AddActionItem(this);
+                break;
 
-            singleEnemy.TakeDamage(Power, DamageType);
+            case Monster monster:
+                if (monster.Level < RequiredLevel)
+                    throw new InvalidSkillLevelException("The monster's level is too low to use this skill.");
 
-            Reset();
+                if (singleEnemy == null)
+                    throw new InvalidTargetException("Monster skill requires a single enemy target.");
+
+                monster.AddActionItem(this);
+                singleEnemy.TakeDamage(Power, DamageType);
+
+                Reset();
+                break;
+
+            default:
+                throw new InvalidOperationException("Invalid caster type.");
         }
     }
 }

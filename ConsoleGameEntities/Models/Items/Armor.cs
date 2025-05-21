@@ -8,7 +8,7 @@ namespace ConsoleGameEntities.Models.Items;
 
 public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
 {
-    private readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+    private readonly Random _rng = Random.Shared;
 
     private bool Cursed { get; set; }
     private bool Equipped { get; set;  }

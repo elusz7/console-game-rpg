@@ -10,21 +10,21 @@ namespace ConsoleGameEntities.Models.Monsters;
 
 public class BossMonster : Monster
 {
-    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+    private static readonly Random _rng = Random.Shared;
 
     private int CurrentPhase = 1;
     private const int MaxPhases = 3;
-    private readonly int BaseHealth;
-    private readonly int BaseAttack;
+    private int BaseHealth = 0;
+    private int BaseAttack = 0;
     private double DodgeChance { get; set; } = 0.01;
 
     [NotMapped]
-    public override IMonsterStrategy Strategy { get; set; } = new BossStrategy();    
+    public override IMonsterStrategy Strategy { get; set; }
 
-    public BossMonster()
+    public BossMonster() { }
+    public BossMonster(IMonsterSkillSelector skillSelector)
     {
-        BaseHealth = MaxHealth;
-        BaseAttack = AttackPower;
+        Strategy = new BossStrategy(skillSelector);
     }
     public override void Attack(IPlayer target)
     {
@@ -33,13 +33,19 @@ public class BossMonster : Monster
 
     private void CheckPhaseChange()
     {
+        if (BaseHealth == 0)
+            BaseHealth = MaxHealth;
+
+        if (BaseAttack == 0)
+            BaseAttack = AttackPower;
+
         CurrentPhase++;
         if (CurrentPhase > MaxPhases)
             throw new MonsterDeathException();
 
-        AddActionItem($"The boss has entered phase {CurrentPhase}!");
+        AddActionItem($"Boss [{Name}] has entered phase {CurrentPhase}!");
 
-        foreach (var skill in Skills?.OfType<BossSkill>() ?? new List<BossSkill>())
+        foreach (var skill in Skills.OfType<BossSkill>())
             skill.Phase = CurrentPhase;
 
         double scale = Math.Pow(0.75, CurrentPhase - 1);
@@ -59,7 +65,6 @@ public class BossMonster : Monster
             Resistance += 2;
         }
     }
-
     public override void TakeDamage(int damage, DamageType? damageType)
     {
         var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
@@ -85,9 +90,10 @@ public class BossMonster : Monster
         if (CurrentHealth <= 0)
             CheckPhaseChange();
     }
-    public override string ToString()
+    public override void SetLevel(int newLevel)
     {
-        return base.ToString();
+        CurrentPhase = 1;
+        base.SetLevel(newLevel);
     }
 }
 

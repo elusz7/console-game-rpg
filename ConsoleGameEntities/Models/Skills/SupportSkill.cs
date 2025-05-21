@@ -18,7 +18,7 @@ public class SupportSkill : Skill
     [NotMapped]
     public Dictionary<ITargetable, int> TargetsAffected { get; set; } = new();
 
-    public override void Activate(ITargetable? caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
+    public override void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
         if (IsOnCooldown)
             throw new SkillCooldownException();

@@ -6,7 +6,7 @@ namespace ConsoleGameEntities.Models.Items;
 
 public class Consumable : Item
 {
-    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+    private static readonly Random _rng = Random.Shared;
     public int Power { get; set; }
     public ConsumableType ConsumableType { get; set; }
     public override void Use()

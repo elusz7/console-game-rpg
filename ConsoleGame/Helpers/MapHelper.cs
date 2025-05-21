@@ -12,7 +12,7 @@ namespace ConsoleGame.Managers;
 
 public static class MapHelper
 {
-    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+    private static readonly Random _rng = Random.Shared;
     private record RoomPosition(Room Room, int X, int Y);
 
 

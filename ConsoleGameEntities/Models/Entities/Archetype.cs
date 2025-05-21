@@ -8,7 +8,7 @@ namespace ConsoleGameEntities.Models.Entities;
 
 public class Archetype : IArchetype
 {
-    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+    private static readonly Random _rng = Random.Shared;
 
     public int Id { get; set; }
     public string Name { get; set; }
@@ -37,7 +37,7 @@ public class Archetype : IArchetype
     public decimal ResourceMultiplier { get; set; }
     public int RecoveryGrowth { get; set; }
 
-    public void UseResource(int cost)
+    public virtual void UseResource(int cost)
     {
         if (CurrentResource >= cost)
         {
@@ -48,7 +48,7 @@ public class Archetype : IArchetype
             throw new InvalidOperationException("Not enough resource.");
         }
     }
-    public void RecoverResource()
+    public virtual void RecoverResource()
     {
         CurrentResource = Math.Min(CurrentResource + RecoveryRate, MaxResource);
     }

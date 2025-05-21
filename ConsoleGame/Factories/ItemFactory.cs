@@ -7,7 +7,7 @@ namespace ConsoleGame.Factories;
 
 public class ItemFactory(ItemDao itemDao)
 {
-    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+    private static readonly Random _rng = Random.Shared;
     private readonly ItemDao _itemDao = itemDao;
 
     public (List<Item>, int) GenerateLoot(int level, int numMonsters, bool campaign)

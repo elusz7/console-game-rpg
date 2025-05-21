@@ -5,7 +5,7 @@ using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Managers.CrudHelpers;
 
-public class InventoryManagement(InputManager inputManager, OutputManager outputManager, ItemDao itemDao, InventoryDao inventoryDao)
+public class InventoryManagement(InputManager inputManager, OutputManager outputManager, InventoryDao inventoryDao)
 {
     private readonly InputManager _inputManager = inputManager;
     private readonly OutputManager _outputManager = outputManager;
@@ -84,12 +84,12 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
         return true;
     }
     private void AddItemToInventory()
-    {
+    {       
         do
         {
-            var equippableItems = _inventoryDao.GetEquippableItems(_player);
+            var equippableItems = _inventoryDao.GetEquippableItems(_player!);
 
-            _outputManager.WriteLine($"\nCapacity: {_player.Inventory.GetCarryingWeight()} / {_player.Inventory.Capacity}");
+            _outputManager.WriteLine($"\nCapacity: {_player!.Inventory.GetCarryingWeight()} / {_player.Inventory.Capacity}");
 
             if (equippableItems.Count == 0)
             {
@@ -128,7 +128,7 @@ public class InventoryManagement(InputManager inputManager, OutputManager output
     {
         do
         {
-            var inventory = _player.Inventory.Items.ToList();
+            var inventory = _player!.Inventory.Items.ToList();
             if (inventory.Count == 0)
             {
                 _outputManager.WriteLine("\nNo items in inventory to remove.\n");

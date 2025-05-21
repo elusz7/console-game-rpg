@@ -7,7 +7,7 @@ namespace ConsoleGameEntities.Models.Items;
 
 public class Weapon : Item, IEquippable, IEnchantable, ICursable
 {
-    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+    private static readonly Random _rng = Random.Shared;
 
     private bool Cursed { get; set; }
     private bool Equipped { get; set; }

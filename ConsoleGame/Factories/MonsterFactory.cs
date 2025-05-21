@@ -1,16 +1,17 @@
 ﻿using ConsoleGame.GameDao;
-using ConsoleGame.Managers;
 using ConsoleGameEntities.Models.Monsters;
+using ConsoleGameEntities.Models.Monsters.Strategies;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Factories;
 
-public class MonsterFactory(MonsterDao monsterDao, SkillDao skilldao)
+public class MonsterFactory(MonsterDao monsterDao, SkillDao skilldao, MonsterSkillSelector skillSelector)
 {
-    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+    private static readonly Random _rng = Random.Shared;
     private readonly MonsterDao _monsterDao = monsterDao;
     private readonly SkillDao _skillDao = skilldao;
+    private readonly MonsterSkillSelector _skillSelector = skillSelector;
 
     private static readonly Dictionary<ThreatLevel, double> _monsterThreatWeights = new()
         {
@@ -77,30 +78,50 @@ public class MonsterFactory(MonsterDao monsterDao, SkillDao skilldao)
         return selectedMonsters;
     }
 
-    public static Monster CreateMonster(Monster monsterBase, int level)
+    public Monster CreateMonster(Monster monsterBase, int level)
     {
-        var monster = new Monster
-        {
-            Name = GetMonsterName(monsterBase.Name),
-            Level = monsterBase.Level,
-            MaxHealth = monsterBase.MaxHealth,
-            ThreatLevel = monsterBase.ThreatLevel,
-            AggressionLevel = monsterBase.AggressionLevel,
-            DefensePower = monsterBase.DefensePower,
-            AttackPower = monsterBase.AttackPower,
-            DamageType = monsterBase.DamageType,
-            Resistance = monsterBase.Resistance,
-            MonsterType = monsterBase.MonsterType,
-            Description = monsterBase.Description,
-            Strategy = Monster.GetStrategyFor((MonsterBehaviorType)_rng.Next(1, 6))
-        };
+        Monster monster;
 
-        if (monster.Level < level)
+        if (monsterBase is BossMonster)
         {
-            monster.LevelUp(level);
+            monster = new BossMonster(_skillSelector)
+            {
+                Name = GetMonsterName(monsterBase.Name),
+                Level = monsterBase.Level,
+                ThreatLevel = monsterBase.ThreatLevel,
+                MonsterType = monsterBase.MonsterType,
+                Description = monsterBase.Description,
+                Skills = monsterBase.Skills
+            };
+        }
+        else if (monsterBase is EliteMonster)
+        {
+            monster = new EliteMonster(_skillSelector, (MonsterBehaviorType)_rng.Next(1, 6))
+            {
+                Name = GetMonsterName(monsterBase.Name),
+                Level = monsterBase.Level,
+                ThreatLevel = monsterBase.ThreatLevel,
+                MonsterType = monsterBase.MonsterType,
+                Description = monsterBase.Description,
+                Strategy = Monster.GetStrategyFor((MonsterBehaviorType)_rng.Next(1, 6), _skillSelector),
+                Skills = monsterBase.Skills
+            };
+        }
+        else
+        {
+            monster = new Monster
+            {
+                Name = GetMonsterName(monsterBase.Name),
+                Level = monsterBase.Level,
+                ThreatLevel = monsterBase.ThreatLevel,
+                MonsterType = monsterBase.MonsterType,
+                Description = monsterBase.Description,
+                Strategy = Monster.GetStrategyFor((MonsterBehaviorType)_rng.Next(1, 6), _skillSelector),
+                Skills = monsterBase.Skills
+            };
         }
 
-        monster.CurrentHealth = monster.MaxHealth;
+        monster.SetLevel(level);
 
         return monster;
     }
@@ -152,59 +173,86 @@ public class MonsterFactory(MonsterDao monsterDao, SkillDao skilldao)
         var magicSkills = skills.Where(s => s is MagicSkill).ToList();
         var supportSkills = skills.Where(s => s is SupportSkill).ToList();
         var ultimateSkills = skills.Where(s => s is UltimateSkill).ToList();
+        var bossSkills = skills.Where(s => s is BossSkill).ToList();
 
         foreach (var monster in monsters)
         {
-            if (monster is BossMonster)
-                continue;
+            var selectedSkills = new List<Skill>();
+
+            var currentAttackSkillCount = monster.Skills.Count(s => s is MartialSkill || s is MagicSkill);
+            var currentSupportSkillCount = monster.Skills.Count(s => s is SupportSkill);
+            var currentUltimateSkillCount = monster.Skills.Count(s => s is UltimateSkill);
+            var currentBossSkillCount = monster.Skills.Count(s => s is BossSkill);
 
             int attackSkillCount = monster.Level + (monster.Level / 2); //1 + half the level # of skills 
             int supportSkillCount = monster.Level / 2; //1 skill per 2 levels
+            int attackSkillDeficit = attackSkillCount - currentAttackSkillCount;
+            int supportSkillDeficit = supportSkillCount - currentSupportSkillCount;
 
-            var selectedSkills = new List<Skill>();
-            
-            var usableAttackSkills = monster.DamageType == DamageType.Martial ?
-                martialSkills.Where(martialSkills => martialSkills.RequiredLevel <= monster.Level).ToList() :
-                [.. magicSkills.Where(magicSkills => magicSkills.RequiredLevel <= monster.Level)];
-
-            for (int i = 0; i < attackSkillCount; i++)
+            if (monster is BossMonster)
             {
-                if (usableAttackSkills.Count == 0)
+                var bossSkillCount = 3;
+
+                var deficitBossSkillCount = bossSkillCount - currentBossSkillCount;
+
+                if (deficitBossSkillCount < 1)
+                    continue;
+
+                var usableBossSkills = bossSkills.Where(s => s.RequiredLevel <= monster.Level).ToList();
+
+                for (int i = 0; i < deficitBossSkillCount && usableBossSkills.Count > 0; i++)
                 {
-                    break;
+                    var randomSkill = usableBossSkills[_rng.Next(usableBossSkills.Count)];
+                    randomSkill.InitializeSkill(monster.Level);
+                    selectedSkills.Add(randomSkill);
+                    bossSkills.Remove(randomSkill);
                 }
-                var randomSkill = usableAttackSkills[_rng.Next(usableAttackSkills.Count)];
-                randomSkill.InitializeSkill(monster.Level);
-                selectedSkills.Add(randomSkill);
-                usableAttackSkills.Remove(randomSkill);
             }
 
-            var usuableSupportSkills = supportSkills.Where(s => s.RequiredLevel <= monster.Level).ToList();
-
-            for (int i = 0; i < supportSkillCount; i++)
+            if (monster is EliteMonster)
             {
-                if (usuableSupportSkills.Count == 0)
+                if (currentUltimateSkillCount > 1)
                 {
-                    break;
+                    continue;
                 }
-                var randomSkill = usuableSupportSkills[_rng.Next(usuableSupportSkills.Count)];
-                randomSkill.InitializeSkill(monster.Level);
-                selectedSkills.Add(randomSkill);
-                usuableSupportSkills.Remove(randomSkill);
-            }
-
-            if (monster.ThreatLevel == ThreatLevel.Elite)
-            {
                 var usableUltimateSkills = ultimateSkills.Where(s => s.RequiredLevel <= monster.Level).ToList();
                 if (usableUltimateSkills.Count > 0)
                 {
                     var randomSkill = usableUltimateSkills[_rng.Next(usableUltimateSkills.Count)];
                     randomSkill.InitializeSkill(monster.Level);
                     selectedSkills.Add(randomSkill);
+                }                
+            }           
+
+            if (attackSkillDeficit > 0)
+            {
+                var usableAttackSkills = monster.DamageType == DamageType.Martial ?
+                    martialSkills.Where(martialSkills => martialSkills.RequiredLevel <= monster.Level).ToList() :
+                    [.. magicSkills.Where(magicSkills => magicSkills.RequiredLevel <= monster.Level)];
+
+                for (int i = 0; i < attackSkillDeficit && usableAttackSkills.Count > 0; i++)
+                {
+                    var randomSkill = usableAttackSkills[_rng.Next(usableAttackSkills.Count)];
+                    randomSkill.InitializeSkill(monster.Level);
+                    selectedSkills.Add(randomSkill);
+                    usableAttackSkills.Remove(randomSkill);
                 }
             }
 
-            monster.Skills = selectedSkills;
+            if (supportSkillDeficit > 0)
+            {
+                var usuableSupportSkills = supportSkills.Where(s => s.RequiredLevel <= monster.Level).ToList();
+
+                for (int i = 0; i < supportSkillDeficit && usuableSupportSkills.Count > 0; i++)
+                {
+                    var randomSkill = usuableSupportSkills[_rng.Next(usuableSupportSkills.Count)];
+                    randomSkill.InitializeSkill(monster.Level);
+                    selectedSkills.Add(randomSkill);
+                    usuableSupportSkills.Remove(randomSkill);
+                }
+            }           
+
+            monster.Skills.AddRange(selectedSkills);
         }
     }
     private static Dictionary<ThreatLevel, int> GenerateMonstersForLevel(int level)

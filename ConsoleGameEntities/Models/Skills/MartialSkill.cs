@@ -8,7 +8,7 @@ namespace ConsoleGameEntities.Models.Skills;
 
 public class MartialSkill : Skill
 {
-    public override void Activate(ITargetable? caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
+    public override void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
         if (IsOnCooldown) 
             throw new SkillCooldownException();

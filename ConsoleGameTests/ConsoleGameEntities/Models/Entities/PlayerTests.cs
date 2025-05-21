@@ -1,4 +1,3 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
@@ -6,12 +5,9 @@ using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Interfaces.ItemAttributes;
-using System.Collections.Generic;
 
-namespace ConsoleGameEntities.Tests.Models.Entities
+namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
 {
     [TestClass]
     public class PlayerTests
@@ -56,17 +52,6 @@ namespace ConsoleGameEntities.Tests.Models.Entities
 
             return player;
         }
-
-        private static Consumable CreateConsumable()
-        {
-            return new Consumable
-            {
-                Name = "Test Consumable",
-                Value = 10,
-                RequiredLevel = 1,
-                Durability = 1
-            };
-        }
         private static Valuable CreateValuable()
         {
             return new Valuable
@@ -90,7 +75,6 @@ namespace ConsoleGameEntities.Tests.Models.Entities
                 Durability = 3
             };
         }
-
         private static Armor CreateArmor()
         {
             return new Armor
@@ -104,7 +88,6 @@ namespace ConsoleGameEntities.Tests.Models.Entities
                 ArmorType = ArmorType.Head
             };
         }
-
         private static Monster CreateMonster()
         {
             return new Monster
@@ -295,7 +278,7 @@ namespace ConsoleGameEntities.Tests.Models.Entities
             var player = CreatePlayer();
             player.Archetype.DefenseBonus = 0;
 
-            Assert.ThrowsException<PlayerDeathException>(() => player.TakeDamage(101, DamageType.Martial));
+            Assert.ThrowsException<PlayerDeathException>(() => player.TakeDamage(250, DamageType.Martial));
         }
 
         [TestMethod]

@@ -4,7 +4,7 @@ using ConsoleGame.Managers;
 
 namespace ConsoleGame.Menus;
 
-public class PlayerMenu(InputManager inputManager, OutputManager outputManager, InventoryMenu inventoryManager, PlayerDisplay playerDisplayMenu, PlayerManagement playerManagementMenu)
+public class PlayerMenu(InputManager inputManager, OutputManager outputManager, PlayerDisplay playerDisplayMenu, PlayerManagement playerManagementMenu)
 {
     private readonly InputManager _inputManager = inputManager;
     private readonly OutputManager _outputManager = outputManager;
@@ -22,7 +22,7 @@ public class PlayerMenu(InputManager inputManager, OutputManager outputManager, 
                 + "\n3. Return to Admin Menu");
             
             var choice = _inputManager.ReadMenuKey(3);
-
+            
             switch (choice)
             {
                 case 1:

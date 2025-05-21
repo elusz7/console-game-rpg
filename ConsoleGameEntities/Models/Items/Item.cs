@@ -10,7 +10,7 @@ namespace ConsoleGameEntities.Models.Items;
 
 public class Item : IItem
 {
-    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+    private static readonly Random _rng = Random.Shared;
     public int Id { get; set; }
     public string Name { get; set; }
     public decimal Value { get; set; }

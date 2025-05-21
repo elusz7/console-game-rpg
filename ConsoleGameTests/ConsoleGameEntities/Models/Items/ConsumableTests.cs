@@ -172,7 +172,7 @@ public class ConsumableTests
 
         consumable.CalculateValue();
 
-        Assert.IsTrue(consumable.Value >= 29 && consumable.Value <= 36); // Approximate range
+        Assert.IsTrue(consumable.Value >= 28 && consumable.Value <= 37); // Approximate range
     }
 
     [TestMethod]

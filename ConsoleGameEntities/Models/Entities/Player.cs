@@ -17,7 +17,7 @@ public class Player : IPlayer
     public Dictionary<long, string> ActionItems { get; } = new();
     [NotMapped]
 
-    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+    private static readonly Random _rng = Random.Shared;
     public int Level { get; set; }
     public int Id { get; set; }
     public string Name { get; set; }
@@ -54,7 +54,7 @@ public class Player : IPlayer
         
         CheckWeaponDurability();
     }
-    public void TakeDamage(int damage, DamageType? damageType)
+    public virtual void TakeDamage(int damage, DamageType? damageType)
     {
         var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
         bool dodged = _rng.Next(0, 100) < chance;

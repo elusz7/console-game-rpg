@@ -15,8 +15,12 @@ public class UltimateSkill : Skill
     public bool IsReady => ElapsedTime >= Cooldown;
     private int previousScaledLevel = 0;
 
-
-    public override void Activate(ITargetable? caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
+    public override void InitializeSkill(int level)
+    {
+        Reset();
+        ScalePowerWithLevel(level);
+    }
+    public override void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
         if (!IsReady) throw new SkillCooldownException();
 
@@ -77,7 +81,6 @@ public class UltimateSkill : Skill
             throw new MonsterDeathException();
         }
     }
-
     public void ScalePowerWithLevel(int level)
     {
         if (level != previousScaledLevel)

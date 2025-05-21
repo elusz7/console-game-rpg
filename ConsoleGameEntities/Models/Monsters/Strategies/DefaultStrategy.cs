@@ -1,15 +1,18 @@
-﻿using System.Linq;
-using System.Threading;
-using ConsoleGameEntities.Helpers;
-using ConsoleGameEntities.Interfaces;
+﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Models.Skills;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
 
 public class DefaultStrategy : IMonsterStrategy
 {
+    private readonly IMonsterSkillSelector _skillSelector;
+
+    public DefaultStrategy() { }
+    public DefaultStrategy(IMonsterSkillSelector skillSelector)
+    {
+        _skillSelector = skillSelector;
+    }
+
     /*
      * DefaultMonsterStrategy
      * heal if at less than a 1/3 health, buff if between 1/2 health and maximum, else debuff
@@ -17,48 +20,55 @@ public class DefaultStrategy : IMonsterStrategy
     */
     public virtual void ExecuteAttack(IMonster monster, IPlayer target)
     {
-        bool usedSupportSkill = false;
+        if (_skillSelector == null) throw new InvalidOperationException("Skill selector is null!");
 
-        if (monster.CurrentHealth < monster.MaxHealth / 3)
+        var healthLost = monster.MaxHealth - monster.CurrentHealth;
+        var healingThreshold = monster.MaxHealth * 0.33;
+        var buffThreshold = monster.MaxHealth * 0.5;
+
+        if (monster.CurrentHealth < healingThreshold)
         {
-            var healingSkill = MonsterSkillHelper.GetHealingSkill(monster);
+            var healingSkill = _skillSelector.GetHealingSkill(monster, healthLost);
             if (healingSkill != null)
             {
                 healingSkill.Activate(monster);
-                usedSupportSkill = true;
+                MakeAttack(monster, target);
+                return;
             }
         }
-        else if (monster.CurrentHealth < monster.MaxHealth
-                && monster.CurrentHealth > monster.MaxHealth / 2)
+        else if (monster.CurrentHealth > buffThreshold)
         {
-            var buffSkill = MonsterSkillHelper.GetBuffSkill(monster);
+            var buffSkill = _skillSelector.GetBuffSkill(monster);
             if (buffSkill != null)
             {
                 buffSkill.Activate(monster);
-                usedSupportSkill = true;
+                MakeAttack(monster, target);
+                return;
             }
         }
-        else if (monster.CurrentHealth > monster.MaxHealth / 4)
+        else
         {
-            var debuffSkill = MonsterSkillHelper.GetDebuffSkill(monster);
+            var debuffSkill = _skillSelector.GetDebuffSkill(monster);
             if (debuffSkill != null)
             {
                 debuffSkill.Activate(monster, target);
-                usedSupportSkill = true;
-            }
-        }
-
-        if (!usedSupportSkill)
-        {
-            var damageSkill = MonsterSkillHelper.GetHighestDamageSkill(monster);
-
-            if (damageSkill != null)
-            {
-                damageSkill.Activate(monster, target);
+                MakeAttack(monster, target);
                 return;
             }
         }
 
+        var damageSkill = _skillSelector.GetHighestDamageSkill(monster);
+        if (damageSkill != null)
+        {
+            damageSkill.Activate(monster, target);
+            return;
+        }
+
+        MakeAttack(monster, target);
+    }
+
+    private static void MakeAttack(IMonster monster, IPlayer target)
+    {
         monster.AddActionItem($"{monster.Name} attacks for {monster.AttackPower} damage!");
         target.TakeDamage(monster.AttackPower, monster.DamageType);
     }

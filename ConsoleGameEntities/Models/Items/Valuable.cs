@@ -5,7 +5,7 @@ namespace ConsoleGameEntities.Models.Items;
 
 public class Valuable : Item
 {
-    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+    private static readonly Random _rng = Random.Shared;
 
     public override void Use() => throw new InvalidOperationException("A valuable cannot be used."); //A valuable cannot be used
     public override void RecoverDurability(int power) => throw new InvalidOperationException("A valuable's durability cannot be recovered");

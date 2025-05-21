@@ -1,16 +1,25 @@
 ﻿using ConsoleGameEntities.Exceptions;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Interfaces.Attributes;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConsoleGameEntities.Models.Skills;
 
 public class BossSkill : Skill
 {
+    [NotMapped]
     public int Phase { get; set; }
+    [NotMapped]
+    public bool IsReady => ElapsedTime >= Cooldown;
 
+    public override void InitializeSkill(int level)
+    {
+        Phase = 1;
+        Reset();
+    }
     public override void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
-        if (IsOnCooldown) throw new SkillCooldownException("This skill is still on cooldown.");
+        if (!IsReady) throw new SkillCooldownException("This skill is still on cooldown.");
 
         double multiplier = Phase switch
         {

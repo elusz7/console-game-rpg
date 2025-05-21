@@ -12,7 +12,7 @@ using System.Text;
 namespace ConsoleGameEntities.Models.Monsters;
 public class Monster : IMonster
 {    
-    private static readonly Random _rng = new(Guid.NewGuid().GetHashCode());
+    private static readonly Random _rng = Random.Shared;
     [NotMapped]
     public Dictionary<long, string> ActionItems { get; } = new();
     public int Id { get; set; }
@@ -33,13 +33,9 @@ public class Monster : IMonster
     public int MaxHealth { get; set; }
     public ThreatLevel ThreatLevel { get; set; }
     public int AggressionLevel { get; set; }
-    [NotMapped]
-    public int DesiredHitsToKillPlayer { get; set; } = 3;
-    [NotMapped]
-    public int DesiredHitsToBeKilledByPlayer { get; set; } = 4;
     private double DodgeChance { get; set; } = 0.01;
     public string MonsterType { get; set; }
-    public virtual ICollection<Skill> Skills { get; set; } = new List<Skill>();
+    public virtual List<Skill> Skills { get; set; } = new List<Skill>();
     public int? RoomId { get; set; }
     public virtual Room? Room { get; set; }
     public int? ItemId { get; set; }
@@ -56,62 +52,82 @@ public class Monster : IMonster
         { DamageType.Martial, 0 },
         { DamageType.Magical, 0 }
     };
-    [NotMapped]
-    public bool MoreMartialDamageTaken => DamageRecord[DamageType.Martial] > DamageRecord[DamageType.Magical];
+    public virtual bool MoreMartialDamageTaken() => DamageRecord[DamageType.Martial] > DamageRecord[DamageType.Magical];
 
     public virtual void Attack(IPlayer target)
     {
         Strategy.ExecuteAttack(this, target);
     }
-    public static IMonsterStrategy GetStrategyFor(MonsterBehaviorType behavior)
+    public static IMonsterStrategy GetStrategyFor(MonsterBehaviorType behavior, IMonsterSkillSelector skillSelector)
     {
         return behavior switch
         {
-            MonsterBehaviorType.Berserker => new BerserkerStrategy(),
-            MonsterBehaviorType.Cautious => new CautiousStrategy(),
-            MonsterBehaviorType.Defensive => new DefensiveStrategy(),
-            MonsterBehaviorType.Offensive => new OffensiveStrategy(),
-            MonsterBehaviorType.Cunning => new CunningStrategy(),
-            _ => new DefaultStrategy()
+            MonsterBehaviorType.Berserker => new BerserkerStrategy(skillSelector),
+            MonsterBehaviorType.Cautious => new CautiousStrategy(skillSelector),
+            MonsterBehaviorType.Defensive => new DefensiveStrategy(skillSelector),
+            MonsterBehaviorType.Offensive => new OffensiveStrategy(skillSelector),
+            MonsterBehaviorType.Cunning => new CunningStrategy(skillSelector),
+            _ => new DefaultStrategy(skillSelector)
         };
     }
-    public virtual void LevelUp(int newLevel)
+    public virtual void SetLevel(int newLevel)
     {
-        if (newLevel <= Level) return;
+        Level = newLevel;
+        DodgeChance = 0.002 * newLevel;
 
-        ClearActionItems();
+        int attackMin, attackMax;
+        int defenseMin, defenseMax;
+        int resistMin, resistMax;
+        int healthMin, healthMax;
+        int speedMin, speedMax;
 
-        double baseAttack = AttackPower;
-        double baseDefense = DefensePower;
-        double baseResistance = Resistance;
-        double baseAggression = AggressionLevel;
-        double baseHealth = MaxHealth;
-
-        for (int i = Level; i < newLevel; i++)
+        switch (ThreatLevel)
         {
-            Level++;
-            List<double> variableIncrease = new() { 0.3, 0.4, 0.5, 0.6, 0.7 };
-
-            int index = _rng.Next(variableIncrease.Count);
-            AttackPower += (int)(baseAttack * variableIncrease[index]);
-            variableIncrease.RemoveAt(index);
-
-            index = _rng.Next(variableIncrease.Count);
-            DefensePower += (int)(baseDefense * variableIncrease[index]);
-            variableIncrease.RemoveAt(index);
-
-            index = _rng.Next(variableIncrease.Count);
-            Resistance += (int)(baseResistance * variableIncrease[index]);
-            variableIncrease.RemoveAt(index);
-
-            index = _rng.Next(variableIncrease.Count);
-            AggressionLevel += (int)(baseAggression * variableIncrease[index]);
-            variableIncrease.RemoveAt(index);
-
-            MaxHealth += (int)(baseHealth * variableIncrease[0]);
-            DodgeChance += 0.002;
+            case ThreatLevel.Medium:
+                attackMin = newLevel * 3; attackMax = newLevel * 6;
+                defenseMin = newLevel * 2; defenseMax = newLevel * 4;
+                resistMin = newLevel * 2; resistMax = newLevel * 4;
+                healthMin = newLevel * 8; healthMax = newLevel * 12;
+                speedMin = 2; speedMax = 4;
+                break;
+            case ThreatLevel.High:
+                attackMin = newLevel * 5; attackMax = newLevel * 8;
+                defenseMin = newLevel * 3; defenseMax = newLevel * 6;
+                resistMin = newLevel * 3; resistMax = newLevel * 6;
+                healthMin = newLevel * 12; healthMax = newLevel * 18;
+                speedMin = 3; speedMax = 6;
+                break;
+            case ThreatLevel.Elite:
+                attackMin = newLevel * 6; attackMax = newLevel * 10;
+                defenseMin = newLevel * 4; defenseMax = newLevel * 7;
+                resistMin = newLevel * 4; resistMax = newLevel * 7;
+                healthMin = newLevel * 18; healthMax = newLevel * 25;
+                speedMin = 4; speedMax = 7;
+                break;
+            case ThreatLevel.Boss:
+                attackMin = newLevel * 8; attackMax = newLevel * 12;
+                defenseMin = newLevel * 5; defenseMax = newLevel * 9;
+                resistMin = newLevel * 5; resistMax = newLevel * 9;
+                healthMin = newLevel * 25; healthMax = newLevel * 35;
+                speedMin = 5; speedMax = 9;
+                break;
+            default:
+                attackMin = newLevel * 2; attackMax = newLevel * 4;
+                defenseMin = newLevel * 1; defenseMax = newLevel * 2;
+                resistMin = newLevel * 1; resistMax = newLevel * 2;
+                healthMin = newLevel * 5; healthMax = newLevel * 8;
+                speedMin = 1; speedMax = 3;
+                break;
         }
+
+        AttackPower = _rng.Next(attackMin, attackMax + 1);
+        DefensePower = _rng.Next(defenseMin, defenseMax + 1);
+        Resistance = _rng.Next(resistMin, resistMax + 1);
+        AggressionLevel = _rng.Next(speedMin, speedMax + 1);
+        MaxHealth = _rng.Next(healthMin, healthMax + 1);
+        CurrentHealth = MaxHealth;
     }
+
     public virtual void TakeDamage(int damage, DamageType? damageType)
     {
         var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
@@ -147,33 +163,6 @@ public class Monster : IMonster
             AddActionItem($"{Name} is now dead.");
             throw new MonsterDeathException();
         }
-    }
-    public void AdjustStartingStat(IArchetype archetype)
-    {
-        // Defensive power doubles here to represent armor mitigation
-        int effectivePlayerDefense = archetype.DefenseBonus * 2;
-
-        // Desired damage per hit = target health / desired number of hits
-        int desiredDamage = (int)Math.Floor((archetype.HealthBase * 1.5) / DesiredHitsToKillPlayer);
-
-        // Compute current monster damage
-        int currentDamage = Math.Max(GetStat(StatType.Attack) - effectivePlayerDefense, 1);
-
-        // Adjust attack stat so damage matches desired value
-        int requiredAttack = desiredDamage + effectivePlayerDefense;
-
-        int attackAdjustment = requiredAttack - currentDamage;
-
-        // Apply the change as a temporary effect
-        ActiveEffects[StatType.Attack] = attackAdjustment;
-
-        // Assume archetype base attack and defense of monster cancel out somewhat
-        int playerAverageDamage = (int)Math.Floor(((archetype.ArchetypeType == ArchetypeType.Martial ? archetype.AttackBonus : archetype.MagicBonus) * 1.5)) - this.DefensePower;
-        playerAverageDamage = Math.Max(playerAverageDamage, 1); // ensure damage isn't 0 or negative
-
-        int desiredMonsterHealth = playerAverageDamage * DesiredHitsToBeKilledByPlayer;
-        MaxHealth = desiredMonsterHealth;
-        CurrentHealth = MaxHealth;
     }
     public virtual void Heal(int regainedHealth)
     {
@@ -212,16 +201,6 @@ public class Monster : IMonster
         }
         else
             throw new StatTypeException("Invalid stat to modify");
-    }
-
-    public override string ToString()
-    {
-        var sb = new StringBuilder();
-        sb.Append($"({MonsterType}) {Name} : {Description}");
-        sb.Append($"\n\tLevel: {Level}, Health: {MaxHealth}, DamageType: {DamageType}, ThreatLevel: {ThreatLevel}");
-        sb.Append($"\n\tAttack: {AttackPower}, Defense: {DefensePower}, Resistance: {Resistance}, Speed: {AggressionLevel}");
-
-        return sb.ToString();
     }
 
     public void ClearActionItems()

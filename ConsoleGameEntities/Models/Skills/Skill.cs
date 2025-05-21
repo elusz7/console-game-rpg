@@ -32,14 +32,7 @@ public class Skill : ISkill
 
     public virtual void InitializeSkill(int level)
     {
-        if (this is UltimateSkill ult)
-        {
-            Reset();
-            ult.ScalePowerWithLevel(level);
-        }
-        else
-            ElapsedTime = Cooldown + 1;
-        
+        ElapsedTime = Cooldown + 1;        
     }
     public virtual void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
