@@ -1,6 +1,7 @@
 ﻿using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
+using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Interfaces;
@@ -21,7 +22,6 @@ public interface ISkill
     
     TargetType TargetType { get; set; }
     SkillCategory SkillCategory { get; set; }
-    DamageType? DamageType { get; set; }
 
     //relationship info
     Archetype? Archetype { get; set; }
@@ -31,4 +31,5 @@ public interface ISkill
     void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null);
     void UpdateElapsedTime();
     void Reset();
+    Skill Clone();
 }

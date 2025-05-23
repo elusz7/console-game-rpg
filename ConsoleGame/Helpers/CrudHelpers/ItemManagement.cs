@@ -1,16 +1,16 @@
-﻿using ConsoleGame.GameDao;
+﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers.DisplayHelpers;
-using ConsoleGame.Managers;
+using ConsoleGame.Managers.Interfaces;
 using ConsoleGameEntities.Models.Items;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class ItemManagement(InputManager inputManager, OutputManager outputManager, ItemDao itemDao)
+public class ItemManagement(IInputManager inputManager, IOutputManager outputManager, IItemDao itemDao)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
-    private readonly ItemDao _itemDao = itemDao;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
+    private readonly IItemDao _itemDao = itemDao;
 
     public void Menu()
     {

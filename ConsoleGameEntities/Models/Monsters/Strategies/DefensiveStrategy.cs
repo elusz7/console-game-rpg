@@ -1,5 +1,6 @@
 ﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
 
@@ -49,7 +50,7 @@ public class DefensiveStrategy : DefaultStrategy
 
     private static void MakeAttack(IMonster monster, IPlayer target)
     {
-        var decreasedDamage = (int)Math.Round(monster.AttackPower * .8);
+        var decreasedDamage = (int)Math.Round(monster.GetStat(StatType.Attack) * .8);
         monster.AddActionItem($"{monster.Name} attacks for {decreasedDamage} damage!");
         target.TakeDamage(decreasedDamage, monster.DamageType);
     }

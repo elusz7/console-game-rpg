@@ -1,4 +1,4 @@
-﻿using ConsoleGame.Factories;
+﻿using ConsoleGame.Factories.Interfaces;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
@@ -11,7 +11,7 @@ public class Floor
 {
     private static readonly Random _rng = Random.Shared;
 
-    public ItemFactory ItemFactory;
+    public IItemFactory ItemFactory;
     public int Level { get; set; }
     public List<Monster> Monsters { get; set; } = [];
     public List<Room> Rooms { get; set; } = [];

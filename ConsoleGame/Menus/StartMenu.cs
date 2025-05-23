@@ -1,11 +1,11 @@
-﻿using ConsoleGame.Managers;
+﻿using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame.Menus;
 
-public class StartMenu(OutputManager outputManager, InputManager inputManager)
+public class StartMenu(IOutputManager outputManager, IInputManager inputManager)
 {
-    private readonly OutputManager _outputManager = outputManager;
-    private readonly InputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
+    private readonly IInputManager _inputManager = inputManager;
 
     public bool ShowStartMenu()
     {

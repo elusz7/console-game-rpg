@@ -8,14 +8,17 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NReco.Logging.File;
-using ConsoleGame.Managers.DisplayHelpers;
-using ConsoleGame.Managers.CrudHelpers;
+using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Menus;
 using ConsoleGame.Factories;
 using ConsoleGame.Helpers;
 using ConsoleGame.Helpers.CrudHelpers;
-using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGameEntities.Models.Monsters.Strategies;
+using ConsoleGame.GameDao.Interfaces;
+using ConsoleGame.Helpers.Interfaces;
+using ConsoleGame.Factories.Interfaces;
+using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame;
 
@@ -58,13 +61,13 @@ public static class Startup
             ConfigurationHelper.ConfigureDbContextOptions(options, connectionString);
         });
 
-        services.AddScoped<RoomDao>();
-        services.AddScoped<PlayerDao>();
-        services.AddScoped<ItemDao>();
-        services.AddScoped<InventoryDao>();
-        services.AddScoped<ArchetypeDao>();
-        services.AddScoped<MonsterDao>();
-        services.AddScoped<SkillDao>();
+        services.AddScoped<IRoomDao, RoomDao>();
+        services.AddScoped<IPlayerDao, PlayerDao>();
+        services.AddScoped<IItemDao, ItemDao>();
+        services.AddScoped<IInventoryDao, InventoryDao>();
+        services.AddScoped<IArchetypeDao, ArchetypeDao>();
+        services.AddScoped<IMonsterDao, MonsterDao>();
+        services.AddScoped<ISkillDao, SkillDao>();
 
         services.AddTransient<GameEngine>();
         services.AddTransient<StartMenu>();
@@ -81,7 +84,8 @@ public static class Startup
 
         services.AddTransient<RoomMenu>();
         services.AddTransient<RoomDisplay>();
-        services.AddTransient<MapManager>();
+        services.AddTransient<IMapManager, MapManager>();
+        services.AddTransient<IMapHelper, MapHelper>();
         services.AddTransient<RoomManagement>();
         services.AddTransient<RoomConnectionManagement>();
 
@@ -97,10 +101,10 @@ public static class Startup
         services.AddTransient<ArchetypeDisplay>();
         services.AddTransient<ArchetypeManagement>();
 
-        services.AddTransient<FloorFactory>();
-        services.AddTransient<MonsterFactory>();
-        services.AddTransient<ItemFactory>();
-        services.AddTransient<MapFactory>();
+        services.AddTransient<IFloorFactory, FloorFactory>();
+        services.AddTransient<IMonsterFactory, MonsterFactory>();
+        services.AddTransient<IItemFactory, ItemFactory>();
+        services.AddTransient<IMapFactory, MapFactory>();
 
         services.AddTransient<AdventureService>();
         services.AddTransient<CombatHelper>();
@@ -108,8 +112,8 @@ public static class Startup
         services.AddTransient<EquipmentHelper>();
         services.AddTransient<PlayerHelper>();
 
-        services.AddSingleton<InputManager>();
-        services.AddSingleton<OutputManager>();
-        services.AddSingleton<MonsterSkillSelector>();
+        services.AddSingleton<IInputManager, InputManager>();
+        services.AddSingleton<IOutputManager, OutputManager>();
+        services.AddSingleton<IMonsterSkillSelector, MonsterSkillSelector>();
     }
 }

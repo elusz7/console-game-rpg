@@ -1,22 +1,16 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleGame.GameDao;
-using ConsoleGameEntities.Interfaces;
+﻿using System.Collections.Concurrent;
+using ConsoleGame.Helpers.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Managers;
 
-public static class MapHelper
+public class MapHelper : IMapHelper
 {
     private static readonly Random _rng = Random.Shared;
     private record RoomPosition(Room Room, int X, int Y);
 
 
-    public static List<Room> CreateCampaignMap(int totalRoomsAllowed, Room entrance, List<Room> availableRooms)
+    public List<Room> CreateCampaignMap(int totalRoomsAllowed, Room entrance, List<Room> availableRooms)
     {
         Shuffle(availableRooms);
 
@@ -68,6 +62,8 @@ public static class MapHelper
             }
         }
 
+        ConnectNeighbors(connectedRooms);
+
         return connectedRooms;
     }
 
@@ -84,7 +80,7 @@ public static class MapHelper
             list[n] = value;
         }
     }
-    public static void UnlinkRoom(Room room)
+    public void UnlinkRoom(Room room)
     {
         foreach (var (neighbor, reverseSetter) in new (Room? neighbor, Action<Room?> reverseSetter)[]
         {
@@ -102,7 +98,7 @@ public static class MapHelper
 
         room.North = room.South = room.East = room.West = null;
     }
-    public static void UnlinkDirection(Room from, Room to, string direction)
+    public void UnlinkDirection(Room from, Room to, string direction)
     {
         switch (direction)
         {
@@ -124,7 +120,7 @@ public static class MapHelper
                 break;
         }
     }
-    public static void LinkRooms(Room from, Room to, string direction)
+    public void LinkRooms(Room from, Room to, string direction)
     {
         switch (direction)
         {
@@ -146,7 +142,7 @@ public static class MapHelper
                 break;
         }
     }
-    public static List<string> GetAvailableDirectionsForRoom(Room room, List<Room> connectedRooms)
+    public List<string> GetAvailableDirectionsForRoom(Room room, List<Room> connectedRooms)
     {
         var directions = new List<string>();
         var grid = GetRoomGrid(connectedRooms.First()); // assumes root is the entrance
@@ -172,7 +168,7 @@ public static class MapHelper
 
         return directions;
     }
-    public static Dictionary<(int x, int y), Room> GetRoomGrid(Room rootRoom)
+    public Dictionary<(int x, int y), Room> GetRoomGrid(Room rootRoom)
     {
         Dictionary<(int x, int y), Room> _gridCache = [];
         var root = rootRoom;
@@ -201,16 +197,16 @@ public static class MapHelper
 
         return _gridCache;
     }
-    public static (int x, int y) FindRoomCoordinates(Room room, Dictionary<(int x, int y), Room> grid)
+    public (int x, int y) FindRoomCoordinates(Room room, Dictionary<(int x, int y), Room> grid)
     {
         foreach (var kvp in grid)
         {
-            if (kvp.Value == room)
+            if (kvp.Value.Id == room.Id)
                 return kvp.Key;
         }
         throw new InvalidOperationException("Room not found in grid.");
     }
-    public static (int dx, int dy) GetDirectionOffset(string direction)
+    public (int dx, int dy) GetDirectionOffset(string direction)
     {
         return direction switch
         {
@@ -221,7 +217,7 @@ public static class MapHelper
             _ => (0, 0)
         };
     }
-    public static bool HasReverseConflict(Room baseRoom, string direction, List<Room> rooms)
+    public bool HasReverseConflict(Room baseRoom, string direction, List<Room> rooms)
     {
         return rooms.Any(r => direction switch
         {
@@ -232,7 +228,7 @@ public static class MapHelper
             _ => false
         });
     }
-    public static List<Room> FindUnconnectedRooms(Room rootRoom, List<Room> rooms)
+    public List<Room> FindUnconnectedRooms(Room rootRoom, List<Room> rooms)
     {
         var list = new List<Room>();
 
@@ -246,13 +242,15 @@ public static class MapHelper
             }
             catch (InvalidOperationException)
             {
+                Console.WriteLine($"Unconnected: {room.Name}");
                 list.Add(room);
             }
         }
 
+
         return list;
     }
-    public static Room? GetNeighbor(Room room, string direction)
+    public Room? GetNeighbor(Room room, string direction)
     {
         return direction switch
         {
@@ -263,7 +261,7 @@ public static class MapHelper
             _ => null
         };
     }
-    public static string GetReverseDirection(string direction)
+    public string GetReverseDirection(string direction)
     {
         return direction switch
         {
@@ -274,7 +272,7 @@ public static class MapHelper
             _ => ""
         };
     }
-    public static int CountPathsToEntranceThroughRoom(Room startRoom, Room requiredRoom, Room entrance)
+    public int CountPathsToEntranceThroughRoom(Room startRoom, Room requiredRoom, Room entrance)
     {
         int pathCount = 0;
 
@@ -345,7 +343,7 @@ public static class MapHelper
 
         return pathCount;
     }
-    public static List<Room>? SinglePathThrough(Room requiredRoom, List<Room> rooms)
+    public List<Room>? SinglePathThrough(Room requiredRoom, List<Room> rooms)
     {
         var entrance = rooms.Where(r => r.Id == 1).First();
 
@@ -362,7 +360,7 @@ public static class MapHelper
 
         return [.. singlePathRooms];
     }    
-    public static Dictionary<Room, List<string>> GetAvailableDirections2(List<Room> rooms, Room? editingRoom = null)
+    public Dictionary<Room, List<string>> GetAvailableDirections2(List<Room> rooms, Room? editingRoom = null)
     {
         var availableRooms = new Dictionary<Room, List<string>>();
         var singlePathRooms = editingRoom == null ? [] : SinglePathThrough(editingRoom, rooms);
@@ -381,11 +379,11 @@ public static class MapHelper
 
         return availableRooms;
     }
-    public static Dictionary<string, string> FindUnlinkedNeighbors(List<Room> rooms)
+    public Dictionary<string, string> FindUnlinkedNeighbors(List<Room> rooms)
     {
         Dictionary<string, string> unlinkedNeighbors = [];
 
-        var grid = GetRoomGrid(rooms.Where(r => r.Id == 1).First());
+        var grid = GetRoomGrid(rooms.Where(r => r.Name.Equals("Entrance")).First());
 
         foreach (var room in rooms)
         {
@@ -434,7 +432,7 @@ public static class MapHelper
 
         return unlinkedNeighbors;
     }
-    public static List<Room> CheckForDisconnectedRooms(List<Room> rooms)
+    public List<Room> CheckForDisconnectedRooms(List<Room> rooms)
     {
         var disconnectedRooms = new List<Room>();
 
@@ -457,4 +455,40 @@ public static class MapHelper
 
         return disconnectedRooms;
     }
+    public (string name, string direction) ParseKey(string key)
+    {
+        var parts = key.Split("-");
+        return (parts[0], parts[1]);
+    }
+
+    private void ConnectNeighbors(List<Room> rooms)
+    {
+        var unlinkedNeighbors = FindUnlinkedNeighbors(rooms);
+
+        if (unlinkedNeighbors.Count == 0) return;
+
+        //determine how many to connect out of how many available
+        //connect 1 in every 3?
+        int neighborCount = unlinkedNeighbors.Values
+            .Select(v => v.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length)
+            .Sum();
+
+        var ratio = 3.0;
+        var rawCount = neighborCount / ratio;
+        var connectionCount = Math.Max(1, (int)Math.Round(rawCount + Random.Shared.NextDouble() - 0.5));
+
+        for (int i = 0; i < connectionCount && unlinkedNeighbors.Count > 0; i++)
+        {
+            var randomElement = unlinkedNeighbors.ElementAt(_rng.Next(unlinkedNeighbors.Count));
+            var (roomName1, direction) = ParseKey(randomElement.Key);
+            var roomName2 = randomElement.Value;
+
+            var room1 = rooms.Where(r => r.Name.Equals(roomName1)).First();
+            var room2 = rooms.Where(r => r.Name.Equals(roomName2)).First();
+
+            LinkRooms(room1, room2, direction);
+            unlinkedNeighbors.Remove(randomElement.Key);
+        }
+    }
+
 }

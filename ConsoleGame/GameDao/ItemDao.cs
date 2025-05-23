@@ -1,11 +1,12 @@
-﻿using ConsoleGameEntities.Data;
+﻿using ConsoleGame.GameDao.Interfaces;
+using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Models.Items;
 using Microsoft.EntityFrameworkCore;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.GameDao;
 
-public class ItemDao(GameContext context)
+public class ItemDao(GameContext context) : IItemDao
 {
     private readonly GameContext _context = context;
     public string SortOrder { get; set; } = "ASC"; // Default sort order

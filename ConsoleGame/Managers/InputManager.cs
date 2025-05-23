@@ -1,15 +1,14 @@
 ﻿using ConsoleGameEntities.Models.Items;
-using ConsoleGameEntities.Models.Entities;
-using ConsoleGameEntities.Models.Monsters;
-using ConsoleGameEntities.Models.Skills;
 using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
+using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame.Managers;
-public class InputManager(OutputManager outputManager)
+public class InputManager(IOutputManager outputManager) : IInputManager
 {
-    private readonly OutputManager _outputManager = outputManager;
-    public static ConsoleKeyInfo ReadKey()
+    private readonly IOutputManager _outputManager = outputManager;
+
+    public ConsoleKeyInfo ReadKey()
     {
         return Console.ReadKey(intercept: true);
     }
@@ -125,7 +124,7 @@ public class InputManager(OutputManager outputManager)
                 navigationPrompt += $"Enter number to {prompt}. ";
             navigationPrompt += "Press 'q' to quit.\n";
 
-            _outputManager.WriteLine(navigationPrompt);
+            _outputManager.Write(navigationPrompt);
             _outputManager.Display();
 
             while (true)

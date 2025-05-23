@@ -1,5 +1,6 @@
 ﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
 
@@ -69,8 +70,8 @@ public class DefaultStrategy : IMonsterStrategy
 
     private static void MakeAttack(IMonster monster, IPlayer target)
     {
-        monster.AddActionItem($"{monster.Name} attacks for {monster.AttackPower} damage!");
-        target.TakeDamage(monster.AttackPower, monster.DamageType);
+        monster.AddActionItem($"{monster.Name} attacks for {monster.GetStat(StatType.Attack)} damage!");
+        target.TakeDamage(monster.GetStat(StatType.Attack), monster.DamageType);
     }
 }
 

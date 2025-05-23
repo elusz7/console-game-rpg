@@ -1,15 +1,14 @@
-﻿using ConsoleGame.GameDao;
-using ConsoleGame.Managers;
-using ConsoleGame.Managers.CrudHelpers;
-using ConsoleGame.Managers.DisplayHelpers;
+﻿using ConsoleGame.Helpers.CrudHelpers;
+using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame.Menus;
 
-public class RoomMenu(InputManager inputManager, OutputManager outputManager, RoomDisplay roomDisplay, 
+public class RoomMenu(IInputManager inputManager, IOutputManager outputManager, RoomDisplay roomDisplay, 
     RoomManagement roomManagement, RoomConnectionManagement roomConnectionManagement)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
     private readonly RoomDisplay _roomDisplay = roomDisplay;
     private readonly RoomManagement _roomManagement = roomManagement;
     private readonly RoomConnectionManagement _roomConnectionManagement = roomConnectionManagement;

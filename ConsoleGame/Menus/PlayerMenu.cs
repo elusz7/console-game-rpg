@@ -1,13 +1,13 @@
 ﻿using ConsoleGame.Helpers.CrudHelpers;
 using ConsoleGame.Helpers.DisplayHelpers;
-using ConsoleGame.Managers;
+using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame.Menus;
 
-public class PlayerMenu(InputManager inputManager, OutputManager outputManager, PlayerDisplay playerDisplayMenu, PlayerManagement playerManagementMenu)
+public class PlayerMenu(IInputManager inputManager, IOutputManager outputManager, PlayerDisplay playerDisplayMenu, PlayerManagement playerManagementMenu)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
     private readonly PlayerDisplay _playerDisplayMenu = playerDisplayMenu;
     private readonly PlayerManagement _playerManagementMenu = playerManagementMenu;
 

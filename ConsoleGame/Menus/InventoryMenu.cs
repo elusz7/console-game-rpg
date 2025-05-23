@@ -1,14 +1,13 @@
 ﻿using ConsoleGame.Helpers.CrudHelpers;
 using ConsoleGame.Helpers.DisplayHelpers;
-using ConsoleGame.Managers;
-using ConsoleGame.Managers.CrudHelpers;
+using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame.Menus;
 
-public class InventoryMenu(InputManager inputManager, OutputManager outputManager, ItemDisplay itemDisplay, ItemManagement itemManagement, InventoryManagement inventoryManagement)
+public class InventoryMenu(IInputManager inputManager, IOutputManager outputManager, ItemDisplay itemDisplay, ItemManagement itemManagement, InventoryManagement inventoryManagement)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
     private readonly ItemDisplay _itemDisplay = itemDisplay;
     private readonly ItemManagement _itemManagement = itemManagement;
     private readonly InventoryManagement _inventoryManagement = inventoryManagement;

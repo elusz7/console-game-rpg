@@ -54,25 +54,28 @@ public class Archetype : IArchetype
     }
     public virtual void RecoverResource(int recoveryPower)
     {
-        if (CurrentResource + recoveryPower > MaxResource)
-            CurrentResource = MaxResource;
-        else
-            CurrentResource += recoveryPower;
+        var recoverableAmount = MaxResource - CurrentResource;
+        var recoveredResource = Math.Min(recoveryPower, recoverableAmount);
+
+        CurrentResource += recoveredResource;
     }
     public virtual int LevelUp(int newLevel)
     {
         if (ArchetypeType == ArchetypeType.Martial)
             AttackBonus += (int)Math.Floor(newLevel * AttackMultiplier);
-        if (ArchetypeType == ArchetypeType.Magical)
+        else if (ArchetypeType == ArchetypeType.Magical)
             MagicBonus += (int)Math.Floor(newLevel * MagicMultiplier);
+
         DefenseBonus += (int)Math.Floor(newLevel * DefenseMultiplier);
         ResistanceBonus += (int)Math.Floor(newLevel * ResistanceMultiplier);
         Speed += (int)Math.Floor(newLevel * SpeedMultiplier);
 
         MaxResource += (int)Math.Floor(newLevel * ResourceMultiplier);
         CurrentResource = MaxResource;
-        RecoveryRate += RecoveryGrowth;
 
-        return _rng.Next(2, HealthBase + 1);
+        RecoveryRate += RecoveryGrowth;
+        RecoveryRate = Math.Min((int)Math.Floor(MaxResource / 3.0), RecoveryRate); // cap to 1/3 of MaxResource
+
+        return _rng.Next(2, HealthBase + 1); // random health increase
     }
 }

@@ -109,6 +109,8 @@ public class SupportSkill : Skill
 
         foreach (var target in expiredTargets)
             TargetsAffected.Remove(target);
+
+        ElapsedTime++;
     }
 
     public override void Reset()
@@ -137,5 +139,23 @@ public class SupportSkill : Skill
         target.AddActionItem($"{Name} effect expired");
         int modifier = SupportEffect == (int)SupportEffectType.Boost ? -Power : Power;
         target.ModifyStat(StatAffected, modifier);
+    }
+
+    public override Skill Clone()
+    {
+        return new SupportSkill
+        {
+            Name = this.Name,
+            Description = this.Description,
+            RequiredLevel = this.RequiredLevel,
+            Cost = this.Cost,
+            Power = this.Power,
+            Cooldown = this.Cooldown,
+            TargetType = this.TargetType,
+            SkillCategory = this.SkillCategory,
+            Duration = this.Duration,
+            StatAffected = this.StatAffected,
+            SupportEffect = this.SupportEffect
+        };
     }
 }

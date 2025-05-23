@@ -2,6 +2,7 @@
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Monsters.Strategies;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
 
@@ -49,7 +50,7 @@ public class OffensiveStrategy : DefaultStrategy
 
     private static void MakeAttack(IMonster monster, IPlayer target)
     {
-        var increasedDamage = (int)Math.Ceiling(monster.AttackPower * 1.2);
+        var increasedDamage = (int)Math.Ceiling(monster.GetStat(StatType.Attack) * 1.2);
         monster.AddActionItem($"{monster.Name} attacks for {increasedDamage} damage!");
         target.TakeDamage(increasedDamage, monster.DamageType);
     }

@@ -1,16 +1,14 @@
-﻿using ConsoleGame.GameDao;
-using ConsoleGame.Managers;
-using ConsoleGame.Managers.CrudHelpers;
-using ConsoleGame.Managers.DisplayHelpers;
+﻿using ConsoleGame.Managers.Interfaces;
+using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGameEntities.Data;
+using ConsoleGame.Helpers.CrudHelpers;
 
 namespace ConsoleGame.Menus;
 
-public class MonsterMenu(GameContext context, InputManager inputManager, OutputManager outputManager, MonsterDisplay monsterDisplay, MonsterManagement monsterManagement)
+public class MonsterMenu(IInputManager inputManager, IOutputManager outputManager, MonsterDisplay monsterDisplay, MonsterManagement monsterManagement)
 {
-    private readonly GameContext _context = context;
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
     private readonly MonsterDisplay _monsterDisplay = monsterDisplay;
     private readonly MonsterManagement _monsterManagement = monsterManagement;
 

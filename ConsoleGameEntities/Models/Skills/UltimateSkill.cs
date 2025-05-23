@@ -4,19 +4,21 @@ using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Exceptions;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.Extensions.Logging;
 
 namespace ConsoleGameEntities.Models.Skills;
 
-public class UltimateSkill : Skill
+public class UltimateSkill : DamageSkill
 {
     // "Cooldown" here means the charge-up time before the ultimate can be used again.
     // ElapsedTime must meet or exceed Cooldown.
     [NotMapped]
     public bool IsReady => ElapsedTime >= Cooldown;
-    private int previousScaledLevel = 0;
+    private int previousScaledLevel;
 
     public override void InitializeSkill(int level)
     {
+        previousScaledLevel = RequiredLevel;
         Reset();
         ScalePowerWithLevel(level);
     }
@@ -85,11 +87,27 @@ public class UltimateSkill : Skill
     {
         if (level != previousScaledLevel)
         {
-            Power = Power * (int)(1 + (Math.Pow((level - 3), 1.2) / 5));
+            var levelScale = Math.Max(1, level - 3);
+            Power = Power * (int)(1 + (Math.Pow((levelScale), 1.2) / 5));
 
             Cooldown += level % 2;
 
             previousScaledLevel = level;
         }
+    }
+    public override Skill Clone()
+    {
+        return new UltimateSkill
+        {
+            Name = this.Name,
+            Description = this.Description,
+            RequiredLevel = this.RequiredLevel,
+            Cost = this.Cost,
+            Power = this.Power,
+            Cooldown = this.Cooldown,
+            TargetType = this.TargetType,
+            SkillCategory = this.SkillCategory,
+            DamageType = this.DamageType
+        };
     }
 }

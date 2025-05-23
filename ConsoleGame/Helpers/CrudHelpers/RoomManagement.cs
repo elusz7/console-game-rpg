@@ -1,14 +1,18 @@
-﻿using ConsoleGame.GameDao;
+﻿using ConsoleGame.Managers.Interfaces;
+using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGame.Helpers.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 
-namespace ConsoleGame.Managers.CrudHelpers;
+namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class RoomManagement(InputManager inputManager, OutputManager outputManager, RoomDao roomDao)
+public class RoomManagement(IInputManager inputManager, IOutputManager outputManager, 
+            IRoomDao roomDao, IMapHelper mapHelper)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
-    private readonly RoomDao _roomDao = roomDao;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
+    private readonly IRoomDao _roomDao = roomDao;
+    private readonly IMapHelper _mapHelper = mapHelper;
 
     public void Menu()
     {
@@ -43,7 +47,7 @@ public class RoomManagement(InputManager inputManager, OutputManager outputManag
     }
     private void AddRoom()
     {
-        var availableRooms = MapHelper.GetAvailableDirections2(_roomDao.GetAllRooms());
+        var availableRooms = _mapHelper.GetAvailableDirections2(_roomDao.GetAllRooms());
 
         if (availableRooms.Count == 0)
         {
@@ -83,7 +87,7 @@ public class RoomManagement(InputManager inputManager, OutputManager outputManag
 
         Room newRoom = CreateRoom();
 
-        MapHelper.LinkRooms(roomToAddOnto, newRoom, directionToAddOnto);
+        _mapHelper.LinkRooms(roomToAddOnto, newRoom, directionToAddOnto);
 
         _roomDao.AddRoom(newRoom);
         _roomDao.UpdateRoom(roomToAddOnto);
@@ -180,7 +184,7 @@ public class RoomManagement(InputManager inputManager, OutputManager outputManag
         _outputManager.Clear();
         _outputManager.WriteLine("\nRoom has been successfully deleted!\n", ConsoleColor.Green);
 
-        var disconnectedRooms = MapHelper.CheckForDisconnectedRooms(_roomDao.GetAllRooms());
+        var disconnectedRooms = _mapHelper.CheckForDisconnectedRooms(_roomDao.GetAllRooms());
         if (disconnectedRooms.Count > 0)
         {
             _outputManager.WriteLine($"Warning: The following rooms are now disconnected: {string.Join(", ", disconnectedRooms.Select(r => r.Name))}", ConsoleColor.Yellow);

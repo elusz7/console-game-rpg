@@ -1,12 +1,12 @@
-﻿using System.Linq.Expressions;
+﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGameEntities.Data;
+using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
-using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.GameDao;
 
-public class InventoryDao(GameContext context)
+public class InventoryDao(GameContext context) : IInventoryDao
 {
     private readonly GameContext _context = context;
 

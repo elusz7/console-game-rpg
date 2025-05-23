@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ConsoleGame.Helpers;
+﻿namespace ConsoleGame.Helpers;
 
 public class AdventureEnums
 {
@@ -27,5 +21,13 @@ public class AdventureEnums
         Reforge = 3, //reroll armor defense/resistance power
         Purify = 4, //remove curse from item
         Exit = 5,
+    }
+
+    public enum CombatOptions
+    {
+        Attack = 0,
+        UseSkill = 1,
+        UseConsumable = 2,
+        SkipTurn = 3
     }
 }

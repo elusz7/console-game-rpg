@@ -1,11 +1,11 @@
-﻿using ConsoleGameEntities.Data;
-using ConsoleGameEntities.Migrations;
+﻿using ConsoleGame.GameDao.Interfaces;
+using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.GameDao;
 
-public class RoomDao(GameContext context)
+public class RoomDao(GameContext context) : IRoomDao
 {
     private readonly GameContext _context = context;
 
@@ -38,11 +38,9 @@ public class RoomDao(GameContext context)
 
     public List<Room> GetAllRooms()
     {
-        return _context.Rooms?.ToList() ?? [];
-    }
-    public List<Room> GetAllRoomsNoTracking()
-    {
-        return _context.Rooms?.AsNoTracking().ToList() ?? [];
+        return _context.Rooms?
+            .Include(r => r.Monsters)
+            .ToList() ?? [];
     }
     public Room? FindRoomByName(string name)
     {

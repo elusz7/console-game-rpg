@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleGame.Managers;
-using ConsoleGame.Managers.CrudHelpers;
-using ConsoleGame.Managers.DisplayHelpers;
+﻿using ConsoleGame.Helpers.CrudHelpers;
+using ConsoleGame.Managers.Interfaces;
+using ConsoleGame.Helpers.DisplayHelpers;
 
 namespace ConsoleGame.Menus;
 
-public class SkillMenu(InputManager inputManager, OutputManager outputManager, SkillDisplay skillDisplay, SkillManagement skillManagement)
+public class SkillMenu(IInputManager inputManager, IOutputManager outputManager, SkillDisplay skillDisplay, SkillManagement skillManagement)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
     private readonly SkillDisplay _skillDisplay = skillDisplay;
     private readonly SkillManagement _skillManagement = skillManagement;
 

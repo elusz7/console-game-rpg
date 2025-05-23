@@ -1,16 +1,16 @@
-﻿using System.Runtime.InteropServices;
-using ConsoleGame.GameDao;
+﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGame.Managers.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
-namespace ConsoleGame.Managers.CrudHelpers;
+namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class ArchetypeManagement(InputManager inputManager, OutputManager outputManager, ArchetypeDao archetypeDao)
+public class ArchetypeManagement(IInputManager inputManager, IOutputManager outputManager, IArchetypeDao archetypeDao)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
-    private readonly ArchetypeDao _archetypeDao = archetypeDao;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
+    private readonly IArchetypeDao _archetypeDao = archetypeDao;
 
     public void Menu()
     {

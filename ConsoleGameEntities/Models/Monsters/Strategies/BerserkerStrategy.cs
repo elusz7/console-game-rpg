@@ -33,7 +33,7 @@ public class BerserkerStrategy : DefaultStrategy
             return;
         }
         
-        int boostedDamage = (int)Math.Ceiling(monster.AttackPower * 1.5);
+        int boostedDamage = (int)Math.Ceiling(monster.GetStat(StatType.Attack) * 1.5);
         monster.AddActionItem($"{monster.Name} attacks for {boostedDamage} damage!");
         target.TakeDamage(boostedDamage, monster.DamageType);
         

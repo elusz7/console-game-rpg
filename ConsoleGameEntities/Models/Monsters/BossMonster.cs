@@ -41,9 +41,7 @@ public class BossMonster : Monster
 
         CurrentPhase++;
         if (CurrentPhase > MaxPhases)
-            throw new MonsterDeathException();
-
-        AddActionItem($"Boss [{Name}] has entered phase {CurrentPhase}!");
+            throw new MonsterDeathException();        
 
         foreach (var skill in Skills.OfType<BossSkill>())
             skill.Phase = CurrentPhase;
@@ -64,6 +62,7 @@ public class BossMonster : Monster
             DefensePower += 1;
             Resistance += 2;
         }
+        AddActionItem($"Boss [{Name}] has entered phase {CurrentPhase}!");
     }
     public override void TakeDamage(int damage, DamageType? damageType)
     {

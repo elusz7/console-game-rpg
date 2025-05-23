@@ -35,6 +35,25 @@ public class Room : IRoom
             Description = this.Description
         };
     }
+
+    public Room DeepClone()
+    {
+        return new Room
+        {
+            Id = this.Id,
+            Name = this.Name,
+            Description = this.Description,
+            NorthId = this.NorthId,
+            North = this.North,
+            SouthId = this.SouthId,
+            South = this.South,
+            WestId = this.WestId,
+            West = this.West,
+            EastId = this.EastId,
+            East = this.East
+        };
+    }
+
     public Dictionary<string, Room> GetConnections()
     {
         var connections = new Dictionary<string, Room>();

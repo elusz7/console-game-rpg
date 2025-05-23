@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConsoleGameEntities.Models.Skills;
 
-public class BossSkill : Skill
+public class BossSkill : DamageSkill
 {
     [NotMapped]
     public int Phase { get; set; }
@@ -33,5 +33,21 @@ public class BossSkill : Skill
 
         int damage = (int)(Power * multiplier);
         singleEnemy?.TakeDamage(damage, DamageType);
+    }
+
+    public override Skill Clone()
+    {
+        return new BossSkill
+        {
+            Name = this.Name,
+            Description = this.Description,
+            RequiredLevel = this.RequiredLevel,
+            Cost = this.Cost,
+            Power = this.Power,
+            Cooldown = this.Cooldown,
+            TargetType = this.TargetType,
+            SkillCategory = this.SkillCategory,
+            DamageType = this.DamageType
+        };
     }
 }

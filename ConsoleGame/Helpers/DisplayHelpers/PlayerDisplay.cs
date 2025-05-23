@@ -1,15 +1,14 @@
-﻿using System.Xml.Linq;
-using ConsoleGame.GameDao;
-using ConsoleGame.Managers;
+﻿using ConsoleGame.GameDao.Interfaces;
+using ConsoleGame.Managers.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Helpers.DisplayHelpers;
 
-public class PlayerDisplay(InputManager inputManager, OutputManager outputManager, PlayerDao playerDao)
+public class PlayerDisplay(IInputManager inputManager, IOutputManager outputManager, IPlayerDao playerDao)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
-    private readonly PlayerDao _playerDao = playerDao;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
+    private readonly IPlayerDao _playerDao = playerDao;
     public void Menu()
     {
         _outputManager.Clear();

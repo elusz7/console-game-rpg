@@ -1,10 +1,11 @@
-﻿using ConsoleGameEntities.Data;
+﻿using ConsoleGame.GameDao.Interfaces;
+using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.GameDao;
 
-public class PlayerDao(GameContext context)
+public class PlayerDao(GameContext context) : IPlayerDao
 {
     private readonly GameContext _context = context;
 
@@ -33,14 +34,73 @@ public class PlayerDao(GameContext context)
 
     public Player GetPlayerNoTracking(Player player)
     {
-        return _context.Players!.AsNoTracking()
+        var loadedPlayer = _context.Players!
             .Include(p => p.Inventory)
-            .ThenInclude(i => i.Items)
+                .ThenInclude(i => i.Items)
             .Include(p => p.Archetype)
-            .ThenInclude(a => a.Skills)
+                .ThenInclude(a => a.Skills)
             .Include(p => p.CurrentRoom)
-            .Where(p => p.Id == player.Id).First();
+                .ThenInclude(r => r.Monsters)
+            .First(p => p.Id == player.Id);
+
+        // Detach the root entity and all its related entities
+        //DetachEntityGraph(loadedPlayer);
+
+        return loadedPlayer;
     }
+
+    private void DetachEntityGraph(object entity)
+    {
+        var visited = new HashSet<object>();
+        var stack = new Stack<object>();
+        stack.Push(entity);
+
+        while (stack.Count > 0)
+        {
+            var current = stack.Pop();
+            if (current == null || visited.Contains(current))
+                continue;
+
+            visited.Add(current);
+
+            try
+            {
+                _context.Entry(current).State = EntityState.Detached;
+            }
+            catch (InvalidOperationException)
+            {
+                // Not an entity, just skip
+            }
+
+            var properties = current.GetType().GetProperties()
+                .Where(p =>
+                    p.GetMethod != null &&
+                    !p.PropertyType.IsPrimitive &&
+                    p.PropertyType != typeof(string) &&
+                    p.PropertyType != typeof(DateTime) &&
+                    !p.PropertyType.IsEnum &&
+                    !typeof(IDictionary<long, string>).IsAssignableFrom(p.PropertyType));
+
+            foreach (var prop in properties)
+            {
+                var value = prop.GetValue(current);
+
+                if (value is IEnumerable<object> collection && !(value is string))
+                {
+                    foreach (var item in collection)
+                    {
+                        if (item != null && !visited.Contains(item))
+                            stack.Push(item);
+                    }
+                }
+                else if (value != null && !visited.Contains(value))
+                {
+                    stack.Push(value);
+                }
+            }
+        }
+    }
+
 
     public List<Player> GetAllPlayers(string name)
     {

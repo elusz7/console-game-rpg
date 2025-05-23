@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleGame.Managers;
-using ConsoleGame.Managers.CrudHelpers;
-using ConsoleGame.Managers.DisplayHelpers;
+﻿using ConsoleGame.Managers.Interfaces;
+using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGame.Helpers.CrudHelpers;
 
 namespace ConsoleGame.Menus;
 
-public class ArchetypeMenu(InputManager inputManager, OutputManager outputManager, ArchetypeDisplay archetypeDisplay, ArchetypeManagement archetypeManagement)
+public class ArchetypeMenu(IInputManager inputManager, IOutputManager outputManager, ArchetypeDisplay archetypeDisplay, ArchetypeManagement archetypeManagement)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
     private readonly ArchetypeDisplay _archetypeDisplay = archetypeDisplay;
     private readonly ArchetypeManagement _archetypeManagement = archetypeManagement;
 

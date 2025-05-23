@@ -6,7 +6,7 @@ using ConsoleGameEntities.Exceptions;
 
 namespace ConsoleGameEntities.Models.Skills;
 
-public class MartialSkill : Skill
+public class MartialSkill : DamageSkill
 {
     public override void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
@@ -64,5 +64,20 @@ public class MartialSkill : Skill
             singleEnemy.TakeDamage(Power, DamageType);
             Reset();
         }
+    }
+    public override Skill Clone()
+    {
+        return new MartialSkill
+        {
+            Name = this.Name,
+            Description = this.Description,
+            RequiredLevel = this.RequiredLevel,
+            Cost = this.Cost,
+            Power = this.Power,
+            Cooldown = this.Cooldown,
+            TargetType = this.TargetType,
+            SkillCategory = this.SkillCategory,
+            DamageType = this.DamageType
+        };
     }
 }

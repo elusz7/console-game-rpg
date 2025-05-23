@@ -1,15 +1,15 @@
 ﻿using static ConsoleGameEntities.Models.Entities.ModelEnums;
-using ConsoleGame.GameDao;
 using ConsoleGameEntities.Models.Items;
-using ConsoleGame.Managers;
+using ConsoleGame.Managers.Interfaces;
+using ConsoleGame.GameDao.Interfaces;
 
 namespace ConsoleGame.Helpers.DisplayHelpers;
 
-public class ItemDisplay(InputManager inputManager, OutputManager outputManager, ItemDao itemDao)
+public class ItemDisplay(IInputManager inputManager, IOutputManager outputManager, IItemDao itemDao)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
-    private readonly ItemDao _itemDao = itemDao;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
+    private readonly IItemDao _itemDao = itemDao;
 
     public void Menu()
     {

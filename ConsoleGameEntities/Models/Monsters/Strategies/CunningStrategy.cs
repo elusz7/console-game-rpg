@@ -79,7 +79,7 @@ public class CunningStrategy : DefaultStrategy
 
     private static void MakeAttack(IMonster monster, IPlayer target)
     {
-        var adjustedDamage = (int)Math.Ceiling(monster.AttackPower * 1.1); // 10% stronger basic hit
+        var adjustedDamage = (int)Math.Ceiling(monster.GetStat(StatType.Attack) * 1.1); // 10% stronger basic hit
         monster.AddActionItem($"{monster.Name} attacks for {adjustedDamage} damage!");
         target.TakeDamage(adjustedDamage, monster.DamageType);
     }

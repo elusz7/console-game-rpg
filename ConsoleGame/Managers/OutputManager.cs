@@ -1,11 +1,13 @@
+using ConsoleGame.Managers.Interfaces;
+
 namespace ConsoleGame.Managers;
 
-public class OutputManager
+public class OutputManager : IOutputManager
 {
     private readonly List<(string message, ConsoleColor color)> _outputBuffer; // A list of messages with associated colors
     public OutputManager()
     {
-        _outputBuffer = new List<(string message, ConsoleColor color)>();
+        _outputBuffer = [];
     }
     public void Clear()
     {

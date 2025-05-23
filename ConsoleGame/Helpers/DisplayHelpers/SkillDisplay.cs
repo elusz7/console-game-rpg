@@ -1,14 +1,14 @@
-﻿using ConsoleGame.GameDao;
-using ConsoleGame.Helpers.DisplayHelpers;
+﻿using ConsoleGame.GameDao.Interfaces;
+using ConsoleGame.Managers.Interfaces;
 using ConsoleGameEntities.Models.Skills;
 
-namespace ConsoleGame.Managers.DisplayHelpers;
+namespace ConsoleGame.Helpers.DisplayHelpers;
 
-public class SkillDisplay(InputManager inputManager, OutputManager outputManager, SkillDao skillDao)
+public class SkillDisplay(IInputManager inputManager, IOutputManager outputManager, ISkillDao skillDao)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
-    private readonly SkillDao _skillDao = skillDao;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
+    private readonly ISkillDao _skillDao = skillDao;
 
     public void Menu()
     {

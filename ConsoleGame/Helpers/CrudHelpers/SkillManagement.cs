@@ -1,21 +1,21 @@
-﻿    using System.Reflection.PortableExecutable;
-using ConsoleGame.GameDao;
+﻿using ConsoleGame.Managers.Interfaces;
+using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers.DisplayHelpers;
-using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
-namespace ConsoleGame.Managers.CrudHelpers;
+namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class SkillManagement(InputManager inputManager, OutputManager outputManager, SkillDao skillDao, MonsterDao monsterDao, ArchetypeDao archetypeDao)
+public class SkillManagement(IInputManager inputManager, IOutputManager outputManager, 
+    ISkillDao skillDao, IMonsterDao monsterDao, IArchetypeDao archetypeDao)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
-    private readonly SkillDao _skillDao = skillDao;
-    private readonly MonsterDao _monsterDao = monsterDao;
-    private readonly ArchetypeDao _archetypeDao = archetypeDao;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
+    private readonly ISkillDao _skillDao = skillDao;
+    private readonly IMonsterDao _monsterDao = monsterDao;
+    private readonly IArchetypeDao _archetypeDao = archetypeDao;
 
     public void Menu()
     {
@@ -330,10 +330,11 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
                     return;
                 }
 
-                if ((skill.DamageType.Equals("Martial") && monster.DamageType.Equals("Magic")) ||
-                    (skill.DamageType.Equals("Magic") && monster.DamageType.Equals("Martial")))
+                if (skill is DamageSkill damageSkill &&
+                    ((damageSkill.DamageType == DamageType.Martial && monster.DamageType == DamageType.Magical) ||
+                     (damageSkill.DamageType == DamageType.Magical && monster.DamageType == DamageType.Martial)))
                 {
-                    _outputManager.WriteLine($"\nYou cannot assign a {skill.DamageType} skill to a {monster.DamageType} monster.\n", ConsoleColor.Red);
+                    _outputManager.WriteLine($"\nYou cannot assign a {damageSkill.DamageType} skill to a {monster.DamageType} monster.\n", ConsoleColor.Red);
                     return;
                 }
 
@@ -341,12 +342,12 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
                 _skillDao.UpdateSkill(skill);
                 _outputManager.WriteLine($"\n{skill.Name} successfully assigned to {monster.Name}!", ConsoleColor.Green);
             }
-            else if (target is Archetype archetype)
+            else if (target is Archetype archetype && skill is DamageSkill damageSkill)
             {
-                if ((skill.DamageType.Equals("Martial") && archetype.ArchetypeType.Equals("Magic")) ||
-                    (skill.DamageType.Equals("Magic") && archetype.ArchetypeType.Equals("Martial")))
+                if ((damageSkill.DamageType.Equals("Martial") && archetype.ArchetypeType.Equals("Magic")) ||
+                    (damageSkill.DamageType.Equals("Magic") && archetype.ArchetypeType.Equals("Martial")))
                 {
-                    _outputManager.WriteLine($"\nYou cannot assign a {skill.DamageType} skill to a {archetype.ArchetypeType} archetype.\n", ConsoleColor.Red);
+                    _outputManager.WriteLine($"\nYou cannot assign a {damageSkill.DamageType} skill to a {archetype.ArchetypeType} archetype.\n", ConsoleColor.Red);
                     return;
                 }
 
@@ -510,7 +511,6 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
         var cooldown = numericValues[SkillKeys.COOLDOWN];
 
         var damage = numericValues[SkillKeys.DAMAGE];
-        DamageType? damageType = damage == -1 ? null : (DamageType)damage;
 
         StatType statEffected = StatType.Health;
         if (numericValues.TryGetValue(SkillKeys.STAT, out var stat))
@@ -545,7 +545,7 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
                 Cost = cost,
                 Cooldown = cooldown,
                 TargetType = targetType,
-                DamageType = damageType,
+                DamageType = (DamageType)damage,
                 Power = power
             },
             SkillType.BossSkill => new BossSkill
@@ -558,7 +558,33 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
                 Cost = cost,
                 Cooldown = cooldown,
                 TargetType = targetType,
-                DamageType = damageType,
+                DamageType = (DamageType)damage,
+                Power = power
+            },
+            SkillType.MartialSkill => new MartialSkill
+            {
+                Name = name,
+                SkillCategory = skillCategory,
+                SkillType = skillType.ToString(),
+                Description = description,
+                RequiredLevel = level,
+                Cost = cost,
+                Cooldown = cooldown,
+                TargetType = targetType,
+                DamageType = (DamageType)damage,
+                Power = power
+            },
+            SkillType.MagicSkill => new MagicSkill
+            {
+                Name = name,
+                SkillCategory = skillCategory,
+                SkillType = skillType.ToString(),
+                Description = description,
+                RequiredLevel = level,
+                Cost = cost,
+                Cooldown = cooldown,
+                TargetType = targetType,
+                DamageType = (DamageType)damage,
                 Power = power
             },
             _ => new Skill
@@ -571,9 +597,8 @@ public class SkillManagement(InputManager inputManager, OutputManager outputMana
                 Cost = cost,
                 Cooldown = cooldown,
                 TargetType = targetType,
-                DamageType = damageType,
                 Power = power
-            },
+            }
         };
     }
 }

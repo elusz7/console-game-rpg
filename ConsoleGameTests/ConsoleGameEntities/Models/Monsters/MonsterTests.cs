@@ -244,6 +244,7 @@ public class MonsterTests
     public void ModifyStat_OtherStat_ModifiesActiveEffect()
     {
         var monster = CreateMonster();
+        monster.CurrentHealth = 50;
         monster.AggressionLevel = 0;
 
         monster.ModifyStat(StatType.Speed, 5);
@@ -263,6 +264,7 @@ public class MonsterTests
     public void ClearActionItems_RemovesAll()
     {
         var monster = CreateMonster();
+        monster.CurrentHealth = 10;
         monster.AddActionItem("Test action");
         Assert.IsTrue(monster.ActionItems.Count > 0);
 
@@ -275,6 +277,7 @@ public class MonsterTests
     public void AddActionItem_AddsAction()
     {
         var monster = CreateMonster();
+        monster.CurrentHealth = 10;
         monster.AddActionItem("Test action");
         Assert.IsTrue(monster.ActionItems.Values.Contains("Test action"));
     }
@@ -283,6 +286,7 @@ public class MonsterTests
     public void AddActionItem_Skill_AddsAction()
     {
         var monster = CreateMonster();
+        monster.CurrentHealth = 10;
         var skill = new Skill { Name = "Fireball" };
         monster.AddActionItem(skill);
         Assert.IsTrue(monster.ActionItems.Values.Any(a => a.Contains("uses Fireball")));

@@ -1,20 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleGame.GameDao;
-using ConsoleGame.Helpers.DisplayHelpers;
+﻿using ConsoleGame.GameDao.Interfaces;
+using ConsoleGame.Managers.Interfaces;
 using ConsoleGameEntities.Models.Monsters;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
-namespace ConsoleGame.Managers.DisplayHelpers;
+namespace ConsoleGame.Helpers.DisplayHelpers;
 
-public class MonsterDisplay(OutputManager outputManager, InputManager inputManager, MonsterDao monsterDao)
+public class MonsterDisplay(IOutputManager outputManager, IInputManager inputManager, IMonsterDao monsterDao)
 {
-    private readonly OutputManager _outputManager = outputManager;
-    private readonly InputManager _inputManager = inputManager;
-    private readonly MonsterDao _monsterDao = monsterDao;
+    private readonly IOutputManager _outputManager = outputManager;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IMonsterDao _monsterDao = monsterDao;
 
     public void Menu()
     {

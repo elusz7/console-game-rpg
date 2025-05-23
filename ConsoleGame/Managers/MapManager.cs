@@ -1,18 +1,16 @@
-﻿using System.Collections.Concurrent;
-using ConsoleGame.GameDao;
-using ConsoleGameEntities.Models.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using ConsoleGameEntities.Models.Entities;
+using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame.Managers;
 
-public class MapManager(OutputManager outputManager, InputManager inputManager)
+public class MapManager(IOutputManager outputManager, IInputManager inputManager) : IMapManager
 {
     private const int RoomNameLength = 5;
     private const int gridRows = 8;
     private const int gridCols = 8;
 
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
 
     private readonly string[,] mapGrid = new string[gridRows, gridCols];
     private Room _currentRoom;
@@ -112,7 +110,7 @@ public class MapManager(OutputManager outputManager, InputManager inputManager)
         while (true)
         {
 
-            ConsoleKeyInfo key = InputManager.ReadKey();
+            ConsoleKeyInfo key = _inputManager.ReadKey();
 
             if (key.Key == ConsoleKey.UpArrow)
             {

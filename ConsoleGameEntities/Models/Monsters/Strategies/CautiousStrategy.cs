@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ConsoleGameEntities.Helpers;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
 
@@ -59,7 +60,7 @@ public class CautiousStrategy : DefaultStrategy
 
     private static void MakeAttack(IMonster monster, IPlayer target)
     {
-        var decreasedDamage = (int)Math.Ceiling(monster.AttackPower * 0.8);
+        var decreasedDamage = (int)Math.Ceiling(monster.GetStat(StatType.Attack) * 0.8);
         monster.AddActionItem($"{monster.Name} attacks for {decreasedDamage} damage!");
         target.TakeDamage(decreasedDamage, monster.DamageType);
     }

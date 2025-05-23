@@ -1,25 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleGame.Helpers.DisplayHelpers;
-using ConsoleGame.Managers;
+﻿using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGame.Managers.Interfaces;
 using ConsoleGame.Models;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
+using Microsoft.Extensions.Logging;
 using static ConsoleGame.Helpers.AdventureEnums;
 
 namespace ConsoleGame.Helpers;
 
-public class MerchantHelper(InputManager inputManager, OutputManager outputManager)
+public class MerchantHelper(IInputManager inputManager, IOutputManager outputManager)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
 
     private Floor _floor;
     private Player _player;
@@ -39,16 +33,16 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         }
     }
 
-    public void FirstMerchantMeeting()
+    private void FirstMerchantMeeting()
     {
-        _outputManager.WriteLine("\nYou approach the merchant and she greets you with a smile.");
+        _outputManager.WriteLine("\nYou approach the stranger and she greets you with a smile.");
         _floor.HasMetMerchant = true;
         _outputManager.WriteLine($"Hello, {_player.Name}. I am {_floor.GetMerchantName()}.");
 
         Gift();
 
         _outputManager.WriteLine("\nI also have some other services you might be interested in. Come back soon.");
-        _outputManager.WriteLine($"{_floor.GetMerchantName()} smiles and waves goodbye as you leave.\n");
+        _outputManager.WriteLine($"{_floor.GetMerchantName()} smiles and waves goodbye as you leave.");
     }
 
     private void Gift()
@@ -124,31 +118,26 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
 
         if (items.Count == 0)
         {
-            _outputManager.WriteLine("\nMy stock is currently empty. Come back later.", ConsoleColor.Red);
+            _outputManager.WriteLine("My stock is currently empty. Come back later.", ConsoleColor.Red);
             return;
         }
 
         _outputManager.WriteLine();
         var item = _inputManager.SelectItem("Select an item to purchase", items, purpose: "buy");
 
-        if (item == null)
+        if (item == null) return;
+       
+        try
         {
-            _outputManager.WriteLine("\nYou didn't select an item.", ConsoleColor.Red);
+            _player.Buy(item);
+            _floor.RemoveMerchantItem(item);
+            _outputManager.WriteLine($"\n{item.Name} has been purchased!", ConsoleColor.Green);
         }
-        else
+        catch (ItemPurchaseException ex)
         {
-            try
-            {
-                _player.Buy(item);
-                _floor.RemoveMerchantItem(item);
-                _outputManager.WriteLine($"\n{item.Name} has been purchased!", ConsoleColor.Green);
-            }
-            catch (ItemPurchaseException ex)
-            {
-                _outputManager.WriteLine("\nIt seems there was an issue with your purchase.", ConsoleColor.Red);
-                _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
-            }
-        }
+            _outputManager.WriteLine("\nIt seems there was an issue with your purchase.", ConsoleColor.Red);
+            _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
+        }       
     }
     private void SellItems()
     {
@@ -161,24 +150,20 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
 
         _outputManager.WriteLine();
         var item = _inputManager.SelectItem("Select an item to sell", items, purpose: "sell");
+
+        if (item == null) return;
+        
+        try
+        {
+            _player.Sell(item);
+            _outputManager.WriteLine($"\n{item.Name} has been sold!", ConsoleColor.Green);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _outputManager.WriteLine("\nIt seems there was an issue with your sale.", ConsoleColor.Red);
+            _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
+        }
        
-        if (item == null)
-        {
-            _outputManager.WriteLine("\nYou didn't select an item.", ConsoleColor.Red);
-        }
-        else
-        {
-            try
-            {
-                _player.Sell(item);
-                _outputManager.WriteLine($"\n{item.Name} has been sold!", ConsoleColor.Green);
-            }
-            catch (InvalidOperationException ex)
-            {
-                _outputManager.WriteLine("\nIt seems there was an issue with your sale.", ConsoleColor.Red);
-                _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
-            }
-        }
     }
     private void PurifyItems()
     {
@@ -188,18 +173,16 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
 
         if (items.Count == 0)
         {
-            _outputManager.WriteLine("\nYou have no cursed items to purify.", ConsoleColor.Red);
+            _outputManager.WriteLine("You have no cursed items to purify.", ConsoleColor.Red);
             return;
         }
 
         _outputManager.WriteLine();
         var choice = _inputManager.SelectItem("Select an item to purify", items, purpose: "purify");
 
-        if (choice == null)
-        {
-            _outputManager.WriteLine("\nYou didn't select an item.", ConsoleColor.Red);
-        }
-        else if (choice is ICursable cursed)
+        if (choice == null) return;
+
+        if (choice is ICursable cursed)
         {
             try
             {
@@ -225,19 +208,17 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         _outputManager.WriteLine();
         var choice = _inputManager.SelectItem("Select an item to reforge.", items, purpose: "reforge");
 
-        if (choice == null)
-        {
-            _outputManager.WriteLine("\nYou didn't select an item.", ConsoleColor.Red);
-        }
-        else if (choice is IReforgable reforged)
+        if (choice == null) return;
+
+        if (choice is Armor armor)
         {
             try
             {
-                _outputManager.WriteLine($"\nCURRENT STATS {ColorfulToStringHelper.GetItemStats(choice)} |", ConsoleColor.Cyan);
+                int oldDefense = armor.DefensePower;
+                int oldResistance = armor.Resistance;
 
-                reforged.Reforge();
-                _outputManager.WriteLine($"\n{choice.Name} has been reforged!");
-                _outputManager.WriteLine($"NEW STATS {ColorfulToStringHelper.GetItemStats(choice)} |", ConsoleColor.Cyan);
+                armor.Reforge();
+                _outputManager.WriteLine($"\nUPDATED [{choice.Name}] LVL: {choice.RequiredLevel} | DEF: {oldDefense} --> {armor.DefensePower} | RES: {oldResistance} --> {armor.Resistance}", ConsoleColor.Blue);
             }
             catch (ItemReforgeException ex)
             {
@@ -261,18 +242,32 @@ public class MerchantHelper(InputManager inputManager, OutputManager outputManag
         _outputManager.WriteLine();
         var choice = _inputManager.SelectItem("Select an item to enchant", items, purpose: "enchant");
 
-        if (choice == null)
-        {
-            _outputManager.WriteLine("\nYou didn't select an item.", ConsoleColor.Red);
-        }
-        else if (choice is IEnchantable enchanter)
+        if (choice == null) return;
+
+        if (choice is IEnchantable enchanter)
         {
             try
             {
-                _outputManager.WriteLine($"\nCURRENT STATS | LVL: {choice.RequiredLevel}{ColorfulToStringHelper.GetItemStats(choice)} |", ConsoleColor.Cyan);
-                enchanter.Enchant();
-                _outputManager.WriteLine($"\n{choice.Name} has been enchanted!", ConsoleColor.Green);
-                _outputManager.WriteLine($"NEW STATS | LVL: {choice.RequiredLevel}{ColorfulToStringHelper.GetItemStats(choice)} |", ConsoleColor.Cyan);
+                // Capture pre-enchant stats
+                int oldLevel = choice.RequiredLevel;
+
+                if (choice is Weapon weapon)
+                {
+                    int oldAttack = weapon.AttackPower;
+
+                    enchanter.Enchant();
+
+                    _outputManager.WriteLine($"\n{choice.Name} | LVL: {oldLevel} --> {choice.RequiredLevel} | ATK: {oldAttack} --> {weapon.AttackPower}", ConsoleColor.Magenta);
+                }
+                else if (choice is Armor armor)
+                {
+                    int oldDefense = armor.DefensePower;
+                    int oldResistance = armor.Resistance;
+
+                    enchanter.Enchant();
+
+                    _outputManager.WriteLine($"\n{choice.Name} | LVL: {oldLevel} --> {choice.RequiredLevel} | DEF: {oldDefense} --> {armor.DefensePower} | RES: {oldResistance} --> {armor.Resistance}", ConsoleColor.Magenta);
+                }
             }
             catch (ItemEnchantmentException ex)
             {

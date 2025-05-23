@@ -1,15 +1,15 @@
 ﻿using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
-using ConsoleGame.GameDao;
-using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGame.Managers.Interfaces;
+using ConsoleGame.GameDao.Interfaces;
 
-namespace ConsoleGame.Managers.DisplayHelpers;
+namespace ConsoleGame.Helpers.DisplayHelpers;
 
-public class ArchetypeDisplay(InputManager inputManager, OutputManager outputManager, ArchetypeDao archetypeDao)
+public class ArchetypeDisplay(IInputManager inputManager, IOutputManager outputManager, IArchetypeDao archetypeDao)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
-    private readonly ArchetypeDao _archetypeDao = archetypeDao;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
+    private readonly IArchetypeDao _archetypeDao = archetypeDao;
 
     public void Menu()
     {

@@ -1,10 +1,11 @@
-﻿using ConsoleGameEntities.Data;
+﻿using ConsoleGame.GameDao.Interfaces;
+using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.GameDao;
 
-public class ArchetypeDao(GameContext context)
+public class ArchetypeDao(GameContext context) : IArchetypeDao
 {
     private readonly GameContext _context = context;
 

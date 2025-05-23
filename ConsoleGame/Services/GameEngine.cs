@@ -1,14 +1,14 @@
-﻿using ConsoleGame.Managers;
+﻿using ConsoleGame.Managers.Interfaces;
 using ConsoleGame.Menus;
 
 namespace ConsoleGame.Services;
 
-public class GameEngine(StartMenu startMenu, AdminMenu adminMenu, InputManager inputManager, OutputManager outputManager, AdventureService adventureService)
+public class GameEngine(StartMenu startMenu, AdminMenu adminMenu, IInputManager inputManager, IOutputManager outputManager, AdventureService adventureService)
 {
     private readonly StartMenu _startMenu = startMenu;
     private readonly AdminMenu _adminMenu = adminMenu;
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
     private readonly AdventureService _adventureService = adventureService;
 
     public void Run()
@@ -40,18 +40,18 @@ public class GameEngine(StartMenu startMenu, AdminMenu adminMenu, InputManager i
                 case 2:
                     if (_adventureService.SetUpAdventure())
                     {
-                        _outputManager.WriteLine("\nPress any key to begin your adventure!", ConsoleColor.Cyan);
+                        _outputManager.Write("\n\nPress any key to begin your adventure!", ConsoleColor.Cyan);
                         _outputManager.Display();
-                        InputManager.ReadKey();
+                        _inputManager.ReadKey();
                         _adventureService.Adventure();
                     }
                     break;
                 case 3:
                     if (_adventureService.SetUpCampaign())
                     {
-                        _outputManager.WriteLine("\nPress any key to begin the campaign!", ConsoleColor.Cyan);
+                        _outputManager.Write("\nPress any key to begin the campaign!", ConsoleColor.Cyan);
                         _outputManager.Display();
-                        InputManager.ReadKey();
+                        _inputManager.ReadKey();
                         _adventureService.Adventure();
                     }
                     break;

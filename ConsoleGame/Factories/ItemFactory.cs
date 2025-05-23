@@ -1,14 +1,14 @@
-﻿using System.Linq;
-using ConsoleGame.GameDao;
+﻿using ConsoleGame.Factories.Interfaces;
+using ConsoleGame.GameDao.Interfaces;
 using ConsoleGameEntities.Models.Items;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Factories;
 
-public class ItemFactory(ItemDao itemDao)
+public class ItemFactory(IItemDao itemDao) : IItemFactory
 {
     private static readonly Random _rng = Random.Shared;
-    private readonly ItemDao _itemDao = itemDao;
+    private readonly IItemDao _itemDao = itemDao;
 
     public (List<Item>, int) GenerateLoot(int level, int numMonsters, bool campaign)
     {
@@ -88,7 +88,7 @@ public class ItemFactory(ItemDao itemDao)
 
         return Math.Max(total, numMonsters); 
     }
-    public static void TryRemoveLowestValue(List<Item> loot, List<Valuable> valuables, decimal lootMaxValue)
+    private static void TryRemoveLowestValue(List<Item> loot, List<Valuable> valuables, decimal lootMaxValue)
     {
         var itemToRemove = loot.OfType<Valuable>().OrderBy(i => i.Value).FirstOrDefault();
 
@@ -119,7 +119,7 @@ public class ItemFactory(ItemDao itemDao)
             }
         }
     }
-    public static List<Item> GatherTribute(decimal lootMaxValue, List<Item> availableItems, int numMonsters)
+    private static List<Item> GatherTribute(decimal lootMaxValue, List<Item> availableItems, int numMonsters)
     {
         var loot = new List<Item>();
         
@@ -166,7 +166,7 @@ public class ItemFactory(ItemDao itemDao)
         }
         return loot;
     }
-    public static int ALittlePoisonNeverHurtNoOne(int lootCount, bool campaign, List<Item> loot)
+    private static int ALittlePoisonNeverHurtNoOne(int lootCount, bool campaign, List<Item> loot)
     {
         var curseChance = campaign ? 0.05 : 0.01;
 
@@ -245,7 +245,6 @@ public class ItemFactory(ItemDao itemDao)
 
         return merchantItems;
     }
-
     public List<Item> GetMerchantGifts(ArchetypeType type, int level)
     {
         var availableItems = _itemDao.GetItemsByMaxLevel(level).ToList();

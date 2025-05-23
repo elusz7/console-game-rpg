@@ -1,18 +1,19 @@
-﻿using System.Security.Cryptography.X509Certificates;
-using ConsoleGame.GameDao;
+﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers.DisplayHelpers;
-using ConsoleGame.Managers;
+using ConsoleGame.Managers.Interfaces;
+using ConsoleGame.Models;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Helpers;
 
-public class PlayerHelper(InputManager inputManager, OutputManager outputManager, PlayerDao playerDao, ArchetypeDao archetypeDao)
+public class PlayerHelper(IInputManager inputManager, IOutputManager outputManager, 
+    IPlayerDao playerDao, IArchetypeDao archetypeDao)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
-    private readonly PlayerDao _playerDao = playerDao;
-    private readonly ArchetypeDao _archetypeDao = archetypeDao;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
+    private readonly IPlayerDao _playerDao = playerDao;
+    private readonly IArchetypeDao _archetypeDao = archetypeDao;
 
     public Player? InitializePlayer(bool campaign)
     {
@@ -27,7 +28,7 @@ public class PlayerHelper(InputManager inputManager, OutputManager outputManager
     }
     private Player? CreateCharacter()
     {
-        var name = _inputManager.ReadString("What is the name of your character? ");
+        var name = _inputManager.ReadString("\nWhat is the name of your character? ");
         _outputManager.WriteLine();
 
         var archetypes = _archetypeDao.GetAllArchetypes();
@@ -56,7 +57,7 @@ public class PlayerHelper(InputManager inputManager, OutputManager outputManager
     }
     private Player? SelectCharacter()
     {
-        var availableCharacters = _playerDao.GetAllPlayers();
+        /*var availableCharacters = _playerDao.GetAllPlayers();
 
         if (availableCharacters.Count == 0)
         {
@@ -69,8 +70,11 @@ public class PlayerHelper(InputManager inputManager, OutputManager outputManager
         {
             return null;
         }
+        
+        var player = _playerDao.GetPlayerNoTracking(selection);*/
 
-        var player = _playerDao.GetPlayerNoTracking(selection);
+        var dbPlayer = _playerDao.GetPlayerByName("Kaenji Stormleaf") ?? throw new InvalidDataException("No player found");
+        var player = _playerDao.GetPlayerNoTracking(dbPlayer);
 
         LevelUpPlayer(player);
 
@@ -113,10 +117,17 @@ public class PlayerHelper(InputManager inputManager, OutputManager outputManager
 
         if (dbPlayer == null)
         {
+            
             _playerDao.AddPlayer(player);
         }
         else
         {
+            dbPlayer.Level = player.Level;
+            dbPlayer.Inventory.Capacity = player.Inventory.Capacity;
+            dbPlayer.Inventory.Gold = player.Inventory.Gold;
+            dbPlayer.MaxHealth = player.MaxHealth;
+            dbPlayer.Inventory.Items.Clear();
+
             _playerDao.UpdatePlayer(dbPlayer);
         }
     }

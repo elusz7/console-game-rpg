@@ -39,6 +39,7 @@ public class Consumable : Item
                 throw new InvalidTargetException("You cannot use this consumable on a player.");
             case ConsumableType.Resource:
                 player.RecoverResource(Power);
+                player.AddActionItem($"You recover {Power} {player.Archetype.ResourceName}!");
                 break;
             default:
                 throw new InvalidTargetException($"{Name} cannot be used on {player.GetType().Name}.");

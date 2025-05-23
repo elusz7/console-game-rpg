@@ -35,6 +35,7 @@ public class BossSkillTests
     {
         return new BossMonster
         {
+            CurrentHealth = 10,
             Level = level
         };
     }

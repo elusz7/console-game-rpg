@@ -1,15 +1,16 @@
-﻿using ConsoleGame.GameDao;
+﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
+using ConsoleGame.Managers.Interfaces;
 
-namespace ConsoleGame.Managers.CrudHelpers;
+namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class InventoryManagement(InputManager inputManager, OutputManager outputManager, InventoryDao inventoryDao)
+public class InventoryManagement(IInputManager inputManager, IOutputManager outputManager, IInventoryDao inventoryDao)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
-    private readonly InventoryDao _inventoryDao = inventoryDao;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
+    private readonly IInventoryDao _inventoryDao = inventoryDao;
     private Player? _player;
 
     public void Menu(Player? player = null)

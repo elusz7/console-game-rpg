@@ -1,14 +1,15 @@
-﻿using ConsoleGame.GameDao;
-using ConsoleGame.Helpers.DisplayHelpers;
+﻿using ConsoleGame.GameDao.Interfaces;
+using ConsoleGame.Managers.Interfaces;
 
-namespace ConsoleGame.Managers.DisplayHelpers;
+namespace ConsoleGame.Helpers.DisplayHelpers;
 
-public class RoomDisplay(OutputManager outputManager, InputManager inputManager, MapManager mapManager, RoomDao roomDao)
+public class RoomDisplay(IOutputManager outputManager, IInputManager inputManager, 
+    IMapManager mapManager, IRoomDao roomDao)
 {
-    private readonly OutputManager _outputManager = outputManager;
-    private readonly InputManager _inputManager = inputManager;
-    private readonly MapManager _mapManager = mapManager;
-    private readonly RoomDao _roomDao = roomDao;
+    private readonly IOutputManager _outputManager = outputManager;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IMapManager _mapManager = mapManager;
+    private readonly IRoomDao _roomDao = roomDao;
 
     public void Menu()
     {

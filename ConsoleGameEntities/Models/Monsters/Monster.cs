@@ -72,60 +72,65 @@ public class Monster : IMonster
     }
     public virtual void SetLevel(int newLevel)
     {
-        Level = newLevel;
-        DodgeChance = 0.002 * newLevel;
-
-        int attackMin, attackMax;
-        int defenseMin, defenseMax;
-        int resistMin, resistMax;
-        int healthMin, healthMax;
-        int speedMin, speedMax;
-
-        switch (ThreatLevel)
+        if (Level != newLevel)
         {
-            case ThreatLevel.Medium:
-                attackMin = newLevel * 3; attackMax = newLevel * 6;
-                defenseMin = newLevel * 2; defenseMax = newLevel * 4;
-                resistMin = newLevel * 2; resistMax = newLevel * 4;
-                healthMin = newLevel * 8; healthMax = newLevel * 12;
-                speedMin = 2; speedMax = 4;
-                break;
-            case ThreatLevel.High:
-                attackMin = newLevel * 5; attackMax = newLevel * 8;
-                defenseMin = newLevel * 3; defenseMax = newLevel * 6;
-                resistMin = newLevel * 3; resistMax = newLevel * 6;
-                healthMin = newLevel * 12; healthMax = newLevel * 18;
-                speedMin = 3; speedMax = 6;
-                break;
-            case ThreatLevel.Elite:
-                attackMin = newLevel * 6; attackMax = newLevel * 10;
-                defenseMin = newLevel * 4; defenseMax = newLevel * 7;
-                resistMin = newLevel * 4; resistMax = newLevel * 7;
-                healthMin = newLevel * 18; healthMax = newLevel * 25;
-                speedMin = 4; speedMax = 7;
-                break;
-            case ThreatLevel.Boss:
-                attackMin = newLevel * 8; attackMax = newLevel * 12;
-                defenseMin = newLevel * 5; defenseMax = newLevel * 9;
-                resistMin = newLevel * 5; resistMax = newLevel * 9;
-                healthMin = newLevel * 25; healthMax = newLevel * 35;
-                speedMin = 5; speedMax = 9;
-                break;
-            default:
-                attackMin = newLevel * 2; attackMax = newLevel * 4;
-                defenseMin = newLevel * 1; defenseMax = newLevel * 2;
-                resistMin = newLevel * 1; resistMax = newLevel * 2;
-                healthMin = newLevel * 5; healthMax = newLevel * 8;
-                speedMin = 1; speedMax = 3;
-                break;
+            Level = newLevel;
+
+            int attackMin, attackMax;
+            int defenseMin, defenseMax;
+            int resistMin, resistMax;
+            int healthMin, healthMax;
+            int speedMin, speedMax;
+
+            switch (ThreatLevel)
+            {
+                case ThreatLevel.Medium:
+                    attackMin = newLevel * 3; attackMax = newLevel * 6;
+                    defenseMin = newLevel * 2; defenseMax = newLevel * 4;
+                    resistMin = newLevel * 2; resistMax = newLevel * 4;
+                    healthMin = newLevel * 8; healthMax = newLevel * 12;
+                    speedMin = 2; speedMax = 4;
+                    break;
+                case ThreatLevel.High:
+                    attackMin = newLevel * 5; attackMax = newLevel * 8;
+                    defenseMin = newLevel * 3; defenseMax = newLevel * 6;
+                    resistMin = newLevel * 3; resistMax = newLevel * 6;
+                    healthMin = newLevel * 12; healthMax = newLevel * 18;
+                    speedMin = 3; speedMax = 6;
+                    break;
+                case ThreatLevel.Elite:
+                    attackMin = newLevel * 6; attackMax = newLevel * 10;
+                    defenseMin = newLevel * 4; defenseMax = newLevel * 7;
+                    resistMin = newLevel * 4; resistMax = newLevel * 7;
+                    healthMin = newLevel * 18; healthMax = newLevel * 25;
+                    speedMin = 4; speedMax = 7;
+                    break;
+                case ThreatLevel.Boss:
+                    attackMin = newLevel * 8; attackMax = newLevel * 12;
+                    defenseMin = newLevel * 5; defenseMax = newLevel * 9;
+                    resistMin = newLevel * 5; resistMax = newLevel * 9;
+                    healthMin = newLevel * 25; healthMax = newLevel * 35;
+                    speedMin = 5; speedMax = 9;
+                    break;
+                default:
+                    attackMin = newLevel * 2; attackMax = newLevel * 4;
+                    defenseMin = newLevel * 1; defenseMax = newLevel * 2;
+                    resistMin = newLevel * 1; resistMax = newLevel * 2;
+                    healthMin = newLevel * 5; healthMax = newLevel * 8;
+                    speedMin = 1; speedMax = 3;
+                    break;
+            }
+
+            AttackPower = _rng.Next(attackMin, attackMax + 1);
+            DefensePower = _rng.Next(defenseMin, defenseMax + 1);
+            Resistance = _rng.Next(resistMin, resistMax + 1);
+            AggressionLevel = _rng.Next(speedMin, speedMax + 1);
+            MaxHealth = _rng.Next(healthMin, healthMax + 1);
         }
 
-        AttackPower = _rng.Next(attackMin, attackMax + 1);
-        DefensePower = _rng.Next(defenseMin, defenseMax + 1);
-        Resistance = _rng.Next(resistMin, resistMax + 1);
-        AggressionLevel = _rng.Next(speedMin, speedMax + 1);
-        MaxHealth = _rng.Next(healthMin, healthMax + 1);
+        //set these regardless of level being different
         CurrentHealth = MaxHealth;
+        DodgeChance = 0.002 * newLevel;
     }
 
     public virtual void TakeDamage(int damage, DamageType? damageType)
@@ -179,14 +184,21 @@ public class Monster : IMonster
     }
     public virtual int GetStat(StatType stat)
     {
+        var damageBoost = DamageType switch
+        {
+            DamageType.Martial => ActiveEffects[StatType.Attack],
+            DamageType.Magical => ActiveEffects[StatType.Magic],
+            DamageType.Hybrid => (int)Math.Round((ActiveEffects[StatType.Attack] + ActiveEffects[StatType.Magic]) / 2.0),
+            _ => throw new InvalidDataException("Damage Type not properly mapped to a enum")
+        };
+
         return stat switch
         {
             StatType.Defense => Math.Max(0, DefensePower + ActiveEffects[StatType.Defense]),
             StatType.Speed => Math.Max(0, AggressionLevel + ActiveEffects[StatType.Speed]),
-            StatType.Attack => Math.Max(0, AttackPower + ActiveEffects[StatType.Attack]),
+            StatType.Attack or StatType.Magic => Math.Max(0, AttackPower + damageBoost),
             StatType.Resistance => Math.Max(0, Resistance + ActiveEffects[StatType.Resistance]),
             StatType.Health => CurrentHealth,
-            StatType.Magic => Math.Max(0, AttackPower + ActiveEffects[StatType.Magic]),
             _ => throw new StatTypeException("Monster Get Stat")
         };
     }
@@ -210,6 +222,8 @@ public class Monster : IMonster
 
     public void AddActionItem(string action)
     {
+        if (CurrentHealth <= 0) return;
+
         long key = DateTime.Now.Ticks;
         while (ActionItems.ContainsKey(key)) key++;
 
@@ -217,6 +231,8 @@ public class Monster : IMonster
     }
     public void AddActionItem(Skill skill)
     {
+        if (CurrentHealth <= 0) return;
+
         long key = DateTime.Now.Ticks;
         while (ActionItems.ContainsKey(key)) key++;
 

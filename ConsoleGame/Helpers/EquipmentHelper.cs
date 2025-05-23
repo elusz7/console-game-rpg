@@ -1,5 +1,5 @@
 ﻿using ConsoleGame.Helpers.DisplayHelpers;
-using ConsoleGame.Managers;
+using ConsoleGame.Managers.Interfaces;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Entities;
@@ -8,10 +8,10 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers;
 
-public class EquipmentHelper(InputManager inputManager, OutputManager outputManager)
+public class EquipmentHelper(IInputManager inputManager, IOutputManager outputManager)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
 
     public void ManageEquipment(Player player)
     {
@@ -19,7 +19,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
         {
             DisplayEquipment(player);
 
-            _outputManager.WriteLine("\n1. Equip an item");
+            _outputManager.WriteLine("1. Equip an item");
             _outputManager.WriteLine("2. Unequip an item");
             _outputManager.WriteLine("3. Use a consumable");
             _outputManager.WriteLine("4. Exit");
@@ -49,36 +49,33 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
 
         if (equipment.Count == 0)
         {
-            _outputManager.WriteLine("\nNo items currently equipped.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nNo items currently equipped.\n", ConsoleColor.Red);
             return;
         }
 
-        _outputManager.WriteLine("\nCurrent Equipment: ");
+        _outputManager.WriteLine($"\nCurrent Equipment [{player.Inventory.GetCarryingWeight()}/{player.Inventory.Capacity}]", ConsoleColor.Yellow);
         foreach (Item item in equipment)
         {
             _outputManager.WriteLine(ColorfulToStringHelper.ItemStatsString(item), ColorfulToStringHelper.GetItemColor(item));
         }
+        _outputManager.WriteLine();
     }
     private void UnequipItem(Player player)
     {
         if (player.Equipment.Count == 0)
         {
-            _outputManager.WriteLine("\nNo items currently equipped.\n", ConsoleColor.Red);
+            //_outputManager.WriteLine("\nNo items currently equipped.", ConsoleColor.Red);
             return;
         }
-
-        _outputManager.WriteLine();
+        
         var equippedItems = player.Equipment
             .OfType<Item>() //cast equipment to items
             .ToList();
 
+        _outputManager.WriteLine();
         var unequippedItem = _inputManager.SelectItem("Select an item to unequip", equippedItems);
         
-        if (unequippedItem == null)
-        {
-            _outputManager.WriteLine("\nNo item selected.\n", ConsoleColor.Red);
-        }
-        else
+        if (unequippedItem != null) 
         {
             player.Unequip(unequippedItem);
             OutputActionItems(player);
@@ -86,12 +83,13 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
     }
     public bool EquipItem(Player player, bool weaponsOnly = false)
     {
-        var availableItems = weaponsOnly ?
-            player.Inventory.Items
-            .Where(i => i is Weapon w && !w.IsEquipped())
-            .ToList() :
-            [.. player.Inventory.Items
-                .Where(i => i is IEquippable e && !e.IsEquipped())];
+        var availableItems = player.Inventory.Items
+                .Where(i => i is IEquippable e && !e.IsEquipped() && i.Durability > 0).ToList();
+
+        if (weaponsOnly)
+        {
+            availableItems = [.. availableItems.Where(i => i is Weapon)];
+        }
 
         if (availableItems.Count == 0)
         {
@@ -104,7 +102,6 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
 
         if (selectedItem == null)
         {
-            _outputManager.WriteLine("\nNo item selected.\n", ConsoleColor.Red);
             return false;
         }
         
@@ -117,7 +114,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
         {
             _outputManager.WriteLine("\nAn error occurred while equipping the item!", ConsoleColor.Red);
             _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
-            _outputManager.WriteLine();
+            
             return false;
         }
 
@@ -129,7 +126,7 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
 
         if (consumables.Count == 0)
         {
-            _outputManager.WriteLine("\nNo consumables available for use.", ConsoleColor.Red);
+            _outputManager.WriteLine("No consumables available for use.", ConsoleColor.Red);
             return false;
         }
 
@@ -138,27 +135,27 @@ public class EquipmentHelper(InputManager inputManager, OutputManager outputMana
 
         if (item == null)
         {
-            _outputManager.WriteLine("\nConsumable selection cancelled.", ConsoleColor.Red);
             return false;
         }
-        else if (item is Consumable consumable)
+        
+        if (item is Consumable consumable)
         {
             switch (consumable.ConsumableType)
             {
                 case ConsumableType.Durability:
-                    _outputManager.WriteLine();
-                    var items = player.Inventory.Items.Where(i => i is Armor || i is Weapon).ToList();
+                    
+                    var items = player.Inventory.Items.Where(i => i is IEquippable).ToList();
 
                     if (items.Count == 0)
                     {
                         _outputManager.WriteLine($"\nNo items available to use {consumable.Name} on.", ConsoleColor.Red);
                     }
 
+                    _outputManager.WriteLine();
                     var target = _inputManager.SelectItem("Select an item to increase durability", items);
 
                     if (target == null)
                     {
-                        _outputManager.WriteLine("\nItem selection cancelled.");
                         return false;
                     }
 

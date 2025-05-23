@@ -1,11 +1,12 @@
-﻿using ConsoleGameEntities.Data;
+﻿using ConsoleGame.GameDao.Interfaces;
+using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
 
 namespace ConsoleGame.GameDao;
 
-public class SkillDao(GameContext context)
+public class SkillDao(GameContext context) : ISkillDao
 {
     private readonly GameContext _context = context;
 

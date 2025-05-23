@@ -1,18 +1,18 @@
-﻿using ConsoleGame.GameDao;
+﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers.DisplayHelpers;
-using ConsoleGame.Managers;
-using ConsoleGame.Managers.CrudHelpers;
+using ConsoleGame.Managers.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class PlayerManagement(InputManager inputManager, OutputManager outputManager, PlayerDao playerDao, ArchetypeDao archetypeDao, InventoryManagement inventoryManagement)
+public class PlayerManagement(IInputManager inputManager, IOutputManager outputManager, 
+    IPlayerDao playerDao, IArchetypeDao archetypeDao, InventoryManagement inventoryManagement)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
-    private readonly PlayerDao _playerDao = playerDao;
-    private readonly ArchetypeDao _archetypeDao = archetypeDao;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
+    private readonly IPlayerDao _playerDao = playerDao;
+    private readonly IArchetypeDao _archetypeDao = archetypeDao;
     private readonly InventoryManagement _inventoryManagement = inventoryManagement;
 
     public void Menu()

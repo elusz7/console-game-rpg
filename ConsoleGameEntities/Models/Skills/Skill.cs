@@ -24,7 +24,7 @@ public class Skill : ISkill
     public TargetType TargetType { get; set; }
     public string SkillType { get; set; }
     public SkillCategory SkillCategory { get; set; }
-    public DamageType? DamageType { get; set; }
+    
     public int? ArchetypeId { get; set; }
     public virtual Archetype? Archetype { get; set; }
     public int? MonsterId { get; set; }
@@ -117,16 +117,16 @@ public class Skill : ISkill
                     break;
             }
         }
-        else
+        else if (this is DamageSkill damageSkill)
         {
             switch (TargetType)
             {
                 case TargetType.SingleEnemy:
-                    singleEnemy.TakeDamage(Power, DamageType);
+                    singleEnemy.TakeDamage(Power, damageSkill.DamageType);
                     break;
                 case TargetType.AllEnemies:
                     foreach (var target in multipleEnemies)
-                        target.TakeDamage(Power, DamageType);
+                        target.TakeDamage(Power, damageSkill.DamageType);
                     break;
             }
         }
@@ -138,5 +138,20 @@ public class Skill : ISkill
     public virtual void Reset()
     {
         ElapsedTime = 0;
+    }
+
+    public virtual Skill Clone()
+    {
+        return new Skill
+        {
+            Name = this.Name,
+            Description = this.Description,
+            RequiredLevel = this.RequiredLevel,
+            Cost = this.Cost,
+            Power = this.Power,
+            Cooldown = this.Cooldown,
+            TargetType = this.TargetType,
+            SkillCategory = this.SkillCategory
+        };
     }
 }

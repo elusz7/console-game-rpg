@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleGame.Managers;
+﻿using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame.Menus;
 
-public class AdminMenu(InputManager inputManager, OutputManager outputManager,
+public class AdminMenu(IInputManager inputManager, IOutputManager outputManager,
     PlayerMenu playerManager, InventoryMenu inventoryManager, RoomMenu roomManager,
     MonsterMenu monsterManager, ArchetypeMenu archetypeManager, SkillMenu skillManager)
 {
-    private readonly InputManager _inputManager = inputManager;
-    private readonly OutputManager _outputManager = outputManager;
+    private readonly IInputManager _inputManager = inputManager;
+    private readonly IOutputManager _outputManager = outputManager;
     private readonly PlayerMenu _playerManager = playerManager;
     private readonly InventoryMenu _inventoryManager = inventoryManager;
     private readonly RoomMenu _roomManager = roomManager;

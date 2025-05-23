@@ -100,12 +100,14 @@ public class Player : IPlayer
     public void LevelUp()
     {
         Level++;
+
         var boost = Archetype.LevelUp(Level);
         MaxHealth += boost;
         CurrentHealth = MaxHealth;
-        Inventory.Gold += Level * _rng.Next(8,13);
-        Inventory.Capacity += boost * 0.8M;
-        DodgeChance += 0.002;
+
+        Inventory.Gold += (Level * _rng.Next(8,13));
+        Inventory.Capacity += Math.Round(boost * 0.8M, 2);
+        DodgeChance += 0.003;
 
         foreach (var kvp in ActiveEffects)
         {

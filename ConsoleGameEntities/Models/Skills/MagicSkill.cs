@@ -6,7 +6,7 @@ using ConsoleGameEntities.Exceptions;
 
 namespace ConsoleGameEntities.Models.Skills;
 
-public class MagicSkill : Skill
+public class MagicSkill : DamageSkill
 {
     public override void Activate(ITargetable? caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
@@ -79,5 +79,21 @@ public class MagicSkill : Skill
             default:
                 throw new InvalidOperationException("Invalid caster type.");
         }
+    }
+
+    public override Skill Clone()
+    {
+        return new MagicSkill
+        {
+            Name = this.Name,
+            Description = this.Description,
+            RequiredLevel = this.RequiredLevel,
+            Cost = this.Cost,
+            Power = this.Power,
+            Cooldown = this.Cooldown,
+            TargetType = this.TargetType,
+            SkillCategory = this.SkillCategory,
+            DamageType = this.DamageType
+        };
     }
 }

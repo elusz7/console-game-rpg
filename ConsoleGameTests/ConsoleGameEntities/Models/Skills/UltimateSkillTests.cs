@@ -104,6 +104,12 @@ public class UltimateSkillTests
 
         skill.Activate(player, singleEnemy: target);
 
+        if (target.CurrentHealth == target.MaxHealth)
+        {
+            Assert.IsTrue(target.ActionItems.Values.Any(a => a.Contains("dodged")));
+            return;
+        }
+        
         Assert.IsTrue(target.CurrentHealth < 100);
         Assert.IsTrue(player.Archetype is Archetype a && a.CurrentResource < 50);
     }
