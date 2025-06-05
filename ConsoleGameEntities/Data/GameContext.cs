@@ -3,6 +3,8 @@ using ConsoleGameEntities.Models.Monsters;
 using Microsoft.EntityFrameworkCore;
 using ConsoleGameEntities.Models.Skills;
 using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Runes;
+using ConsoleGameEntities.Models.Runes.Recipes;
 
 namespace ConsoleGameEntities.Data
 {
@@ -15,6 +17,11 @@ namespace ConsoleGameEntities.Data
         public DbSet<Inventory>? Inventories { get; set; }
         public DbSet<Room>? Rooms { get; set; }
         public DbSet<Archetype> Archetypes { get; set; }
+        public DbSet<Rune> Runes { get; set; }
+        public DbSet<Ingredient> Ingredients { get; set; }
+        public DbSet<RecipeIngredient> RecipeIngredients { get; set; }
+        public DbSet<Recipe> Recipes { get; set; }
+        public DbSet<MonsterDrop> MonsterDrops { get; set; }
 
         public GameContext(DbContextOptions<GameContext> options) : base(options)
         {
@@ -47,6 +54,18 @@ namespace ConsoleGameEntities.Data
                 .HasValue<Armor>("Armor")
                 .HasValue<Valuable>("Valuable")
                 .HasValue<Consumable>("Consumable");
+
+            modelBuilder.Entity<Weapon>()
+                .HasOne(w => w.Rune)
+                .WithMany()
+                .HasForeignKey(w => w.RuneId)
+                .IsRequired(false);
+
+            modelBuilder.Entity<Armor>()
+                .HasOne(w => w.Rune)
+                .WithMany()
+                .HasForeignKey(w => w.RuneId)
+                .IsRequired(false);
 
             modelBuilder.Entity<Item>()
                 .Property(i => i.Value)
@@ -164,6 +183,42 @@ namespace ConsoleGameEntities.Data
             modelBuilder.Entity<Archetype>()
                 .Property("ResourceMultiplier")
                 .HasColumnType("decimal(3,2)");
+
+
+            // One-to-one: Recipe owns the Rune
+            modelBuilder.Entity<Recipe>()
+                .HasOne(r => r.Rune)
+                .WithMany() //rune doesn't have a navigation to recipe
+                .HasForeignKey(r => r.RuneId)
+                .OnDelete(DeleteBehavior.Restrict); // Don't delete Rune if Recipe is deleted
+
+            // One-to-many: Recipe has many RecipeIngredients
+            modelBuilder.Entity<Recipe>()
+                .HasMany(r => r.Ingredients)
+                .WithOne(ri => ri.Recipe)
+                .HasForeignKey(ri => ri.RecipeId)
+                .OnDelete(DeleteBehavior.Cascade); // Delete ingredients links if recipe deleted
+
+            // Many-to-one: RecipeIngredient → Ingredient
+            modelBuilder.Entity<RecipeIngredient>()
+                .HasOne(ri => ri.Ingredient)
+                .WithMany()
+                .HasForeignKey(ri => ri.IngredientId)
+                .OnDelete(DeleteBehavior.Restrict); // Don't delete ingredient if used in recipe
+
+
+            //set up monster drops
+            modelBuilder.Entity<MonsterDrop>()
+                .HasKey(md => new { md.Element, md.ThreatLevel, md.IngredientId });
+
+            modelBuilder.Entity<MonsterDrop>()
+                .HasOne(md => md.Ingredient)
+                .WithMany()
+                .HasForeignKey(md => md.IngredientId)
+                .OnDelete(DeleteBehavior.Restrict); // Prevent deletion of ingredient if drop exists
+
+            modelBuilder.Entity<MonsterDrop>()
+                .ToTable("MonsterDrops");
 
             base.OnModelCreating(modelBuilder);
         }

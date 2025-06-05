@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
+using ConsoleGameEntities.Models.Runes;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Items;
@@ -13,6 +14,9 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
     private bool Equipped { get; set; }
     public virtual int AttackPower { get; set; }
     public virtual DamageType DamageType { get; set; }
+
+    public int? RuneId { get; set; }
+    public virtual WeaponRune? Rune { get; set; }
 
     public virtual decimal GetPurificationPrice() => Value * 0.5M;
     public virtual decimal GetEnchantmentPrice() => Value * 1.5M;

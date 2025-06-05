@@ -2,6 +2,7 @@
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
+using ConsoleGameEntities.Models.Runes;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Items;
@@ -16,6 +17,9 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
     public int DefensePower { get; set; }
     public int Resistance { get; set; }
     public ArmorType ArmorType { get; set; }
+
+    public int? RuneId { get; set; }
+    public virtual ArmorRune? Rune { get; set; }
     
     public decimal GetPurificationPrice() => Value * 0.5M;
     public decimal GetReforgePrice() => Value * 0.33M;

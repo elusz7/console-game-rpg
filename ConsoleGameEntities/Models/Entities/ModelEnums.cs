@@ -142,4 +142,12 @@ public class ModelEnums
         Blinded = 4,
         Corrupted = 5
     }
+
+    public enum IngredientType 
+    { 
+        Core = 0,
+        Essence = 1,
+        MonsterPart = 2
+    }
+
 }

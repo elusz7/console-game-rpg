@@ -1,4 +1,5 @@
-﻿using static ConsoleGameEntities.Models.Entities.ModelEnums;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Runes;
 
@@ -24,6 +25,7 @@ public class WeaponRune : Rune
         ElementType.Abyssal => ElementalStatusEffectType.Corrupted,
         _ => throw new ArgumentOutOfRangeException()
     };
+    [NotMapped]
     public int ElapsedTime { get; set; }
     public int Duration { get; set; }
 

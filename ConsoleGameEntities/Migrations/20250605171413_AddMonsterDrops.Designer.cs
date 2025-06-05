@@ -4,6 +4,7 @@ using ConsoleGameEntities.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleGameEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    partial class GameContextModelSnapshot : ModelSnapshot
+    [Migration("20250605171413_AddMonsterDrops")]
+    partial class AddMonsterDrops
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -325,24 +327,6 @@ namespace ConsoleGameEntities.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Ingredients");
-                });
-
-            modelBuilder.Entity("ConsoleGameEntities.Models.Runes.Recipes.MonsterDrop", b =>
-                {
-                    b.Property<int>("Element")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ThreatLevel")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IngredientId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Element", "ThreatLevel", "IngredientId");
-
-                    b.HasIndex("IngredientId");
-
-                    b.ToTable("MonsterDrops", (string)null);
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Runes.Recipes.Recipe", b =>
@@ -722,17 +706,6 @@ namespace ConsoleGameEntities.Migrations
                     b.Navigation("Room");
 
                     b.Navigation("Treasure");
-                });
-
-            modelBuilder.Entity("ConsoleGameEntities.Models.Runes.Recipes.MonsterDrop", b =>
-                {
-                    b.HasOne("ConsoleGameEntities.Models.Runes.Recipes.Ingredient", "Ingredient")
-                        .WithMany()
-                        .HasForeignKey("IngredientId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Ingredient");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Runes.Recipes.Recipe", b =>
