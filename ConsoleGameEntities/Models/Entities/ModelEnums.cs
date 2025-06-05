@@ -112,4 +112,34 @@ public class ModelEnums
         Durability = 1,
         Resource = 2
     }
+
+    public enum ElementType
+    {
+        Fire = 0,
+        Lightning = 1,
+        Ice = 2,
+        Nature = 3,
+        Radiance = 4,
+        Abyssal = 5
+    }
+
+    public enum RarityLevel
+    {
+        Common = 0,
+        Uncommon = 1,
+        Rare = 2,
+        Epic = 3,
+        Legendary = 4,
+        Mythic = 5
+    }
+
+    public enum ElementalStatusEffectType
+    {
+        Charred = 0,
+        Shocked = 1,
+        Frozen = 2,
+        Snared = 3,
+        Blinded = 4,
+        Corrupted = 5
+    }
 }
