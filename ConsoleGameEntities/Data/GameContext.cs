@@ -212,6 +212,10 @@ namespace ConsoleGameEntities.Data
                 .HasKey(md => new { md.Element, md.ThreatLevel, md.IngredientId });
 
             modelBuilder.Entity<MonsterDrop>()
+                .Property("DropRate")
+                .HasColumnType("decimal(5,2)");
+
+            modelBuilder.Entity<MonsterDrop>()
                 .HasOne(md => md.Ingredient)
                 .WithMany()
                 .HasForeignKey(md => md.IngredientId)

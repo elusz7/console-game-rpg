@@ -4,6 +4,7 @@ using ConsoleGameEntities.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleGameEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    partial class GameContextModelSnapshot : ModelSnapshot
+    [Migration("20250605193414_SeedRunes")]
+    partial class SeedRunes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -337,9 +339,6 @@ namespace ConsoleGameEntities.Migrations
 
                     b.Property<int>("IngredientId")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("DropRate")
-                        .HasColumnType("decimal(5,2)");
 
                     b.HasKey("Element", "ThreatLevel", "IngredientId");
 

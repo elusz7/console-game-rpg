@@ -8,4 +8,5 @@ public class MonsterDrop
     public ThreatLevel ThreatLevel { get; set; }
     public int IngredientId { get; set; }
     public virtual Ingredient Ingredient { get; set; }
+    public decimal DropRate { get; set; } // Percentage chance of drop, e.g., 0.05 for 5%
 }

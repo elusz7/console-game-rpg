@@ -14,7 +14,8 @@ namespace ConsoleGameEntities.Migrations
                 {
                     Element = table.Column<int>(type: "int", nullable: false),
                     ThreatLevel = table.Column<int>(type: "int", nullable: false),
-                    IngredientId = table.Column<int>(type: "int", nullable: false)
+                    IngredientId = table.Column<int>(type: "int", nullable: false),
+                    DropRate = table.Column<decimal>(type: "decimal(5,2)", nullable: false)
                 },
                 constraints: table =>
                 {
