@@ -1,7 +1,7 @@
-﻿using static ConsoleGameEntities.Models.Entities.ModelEnums;
-using ConsoleGameEntities.Models.Items;
+﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Managers.Interfaces;
-using ConsoleGame.GameDao.Interfaces;
+using ConsoleGameEntities.Models.Items;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers.DisplayHelpers;
 

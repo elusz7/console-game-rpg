@@ -1,6 +1,5 @@
 ﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGameEntities.Data;
-using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 

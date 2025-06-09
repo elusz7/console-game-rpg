@@ -1,11 +1,9 @@
-﻿using ConsoleGame.Helpers.DisplayHelpers;
-using ConsoleGame.Managers.Interfaces;
+﻿using ConsoleGame.Managers.Interfaces;
 using ConsoleGame.Models;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
-using Microsoft.Extensions.Logging;
 using static ConsoleGame.Helpers.AdventureEnums;
 
 namespace ConsoleGame.Helpers;
@@ -55,7 +53,7 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
 
         _outputManager.WriteLine("Take these items as a token of our new friendship.\n");
 
-        foreach(var item in items)
+        foreach (var item in items)
         {
             try
             {
@@ -126,7 +124,7 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
         var item = _inputManager.SelectItem("Select an item to purchase", items, purpose: "buy");
 
         if (item == null) return;
-       
+
         try
         {
             _player.Buy(item);
@@ -137,7 +135,7 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
         {
             _outputManager.WriteLine("\nIt seems there was an issue with your purchase.", ConsoleColor.Red);
             _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
-        }       
+        }
     }
     private void SellItems()
     {
@@ -152,7 +150,7 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
         var item = _inputManager.SelectItem("Select an item to sell", items, purpose: "sell");
 
         if (item == null) return;
-        
+
         try
         {
             _player.Sell(item);
@@ -163,7 +161,7 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
             _outputManager.WriteLine("\nIt seems there was an issue with your sale.", ConsoleColor.Red);
             _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
         }
-       
+
     }
     private void PurifyItems()
     {

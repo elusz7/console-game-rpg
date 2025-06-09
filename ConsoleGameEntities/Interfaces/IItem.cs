@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleGameEntities.Models.Entities;
+﻿using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 
 namespace ConsoleGameEntities.Interfaces;
@@ -29,5 +24,5 @@ public interface IItem
     void CalculateValue();
 
     decimal GetBuyPrice();
-    decimal GetSellPrice();    
+    decimal GetSellPrice();
 }

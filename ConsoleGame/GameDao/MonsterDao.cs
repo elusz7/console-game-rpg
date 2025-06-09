@@ -1,6 +1,7 @@
 ﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Models.Monsters;
+using ConsoleGameEntities.Models.Runes.Recipes;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.GameDao;
@@ -70,5 +71,11 @@ public class MonsterDao(GameContext context) : IMonsterDao
     {
         if (_context.Monsters == null) throw new InvalidOperationException("Monsters DbSet is null.");
         return [.. _context.Monsters.Where(m => m.Level <= level && (int)m.ThreatLevel == threatLevel)];
+    }
+
+    public List<MonsterDrop> GetMonsterDrops(Monster monster)
+    {
+        if (_context.MonsterDrops == null) throw new InvalidOperationException("MonsterDrops DbSet is null.");
+        return [.. _context.MonsterDrops.Where(md => md.Element == monster.AttackElement && md.ThreatLevel == monster.ThreatLevel)];
     }
 }

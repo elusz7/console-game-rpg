@@ -1,24 +1,24 @@
-﻿using ConsoleGame.GameDao;
+﻿using ConsoleGame.Factories;
+using ConsoleGame.Factories.Interfaces;
+using ConsoleGame.GameDao;
+using ConsoleGame.GameDao.Interfaces;
+using ConsoleGame.Helpers;
+using ConsoleGame.Helpers.CrudHelpers;
+using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGame.Helpers.Interfaces;
 using ConsoleGame.Managers;
+using ConsoleGame.Managers.Interfaces;
+using ConsoleGame.Menus;
 using ConsoleGame.Services;
 using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Helpers;
+using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Monsters.Strategies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NReco.Logging.File;
-using ConsoleGame.Helpers.DisplayHelpers;
-using ConsoleGame.Menus;
-using ConsoleGame.Factories;
-using ConsoleGame.Helpers;
-using ConsoleGame.Helpers.CrudHelpers;
-using ConsoleGameEntities.Models.Monsters.Strategies;
-using ConsoleGame.GameDao.Interfaces;
-using ConsoleGame.Helpers.Interfaces;
-using ConsoleGame.Factories.Interfaces;
-using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame;
 
@@ -68,6 +68,8 @@ public static class Startup
         services.AddScoped<IArchetypeDao, ArchetypeDao>();
         services.AddScoped<IMonsterDao, MonsterDao>();
         services.AddScoped<ISkillDao, SkillDao>();
+        services.AddScoped<IRecipeDao, RecipeDao>();
+        services.AddScoped<IRuneDao, RuneDao>();
 
         services.AddTransient<GameEngine>();
         services.AddTransient<StartMenu>();
@@ -111,6 +113,7 @@ public static class Startup
         services.AddTransient<MerchantHelper>();
         services.AddTransient<EquipmentHelper>();
         services.AddTransient<PlayerHelper>();
+        services.AddTransient<LootHelper>();
 
         services.AddSingleton<IInputManager, InputManager>();
         services.AddSingleton<IOutputManager, OutputManager>();

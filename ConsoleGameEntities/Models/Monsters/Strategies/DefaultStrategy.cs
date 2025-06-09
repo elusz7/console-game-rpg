@@ -70,8 +70,8 @@ public class DefaultStrategy : IMonsterStrategy
 
     private static void MakeAttack(IMonster monster, IPlayer target)
     {
-        monster.AddActionItem($"{monster.Name} attacks for {monster.GetStat(StatType.Attack)} damage!");
-        target.TakeDamage(monster.GetStat(StatType.Attack), monster.DamageType);
+        monster.Logger.Log($"{monster.Name} attacks for {monster.Combat.GetStat((Monster)monster, StatType.Attack)} damage!");
+        target.TakeDamage(monster.Combat.GetStat((Monster)monster, StatType.Attack), monster.DamageType);
     }
 }
 

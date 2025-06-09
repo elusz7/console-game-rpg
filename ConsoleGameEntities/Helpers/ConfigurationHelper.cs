@@ -1,5 +1,4 @@
-﻿using ConsoleGameEntities.Data;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 namespace ConsoleGameEntities.Helpers

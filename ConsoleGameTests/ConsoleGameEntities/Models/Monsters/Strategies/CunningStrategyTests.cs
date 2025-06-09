@@ -1,6 +1,6 @@
 ﻿using ConsoleGameEntities.Models.Monsters.Strategies;
-using static ConsoleGameTests.TestHelpers.StrategyHelper;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
+using static ConsoleGameTests.TestHelpers.StrategyHelper;
 
 namespace ConsoleGameTests.ConsoleGameEntities.Models.Monsters.Strategies;
 

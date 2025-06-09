@@ -1,11 +1,11 @@
-using Moq;
+using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
+using Moq;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
-using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Interfaces.Attributes;
 
 namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
 {
@@ -147,7 +147,7 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
             var targetMock = new Mock<ITargetable>();
 
             player.Attack(targetMock.Object);
-            
+
             targetMock.Verify(t => t.TakeDamage(It.IsAny<int>(), DamageType.Martial), Times.Once);
             Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("broke and can't be used")));
             Assert.IsFalse(weapon.IsEquipped());
@@ -158,7 +158,7 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
         {
             var player = CreatePlayer();
             player.Archetype.DefenseBonus = 0;
-            
+
             player.TakeDamage(10, DamageType.Martial);
 
             if (player.CurrentHealth < player.MaxHealth)
@@ -180,7 +180,7 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
             var player = CreatePlayer();
             player.Archetype.Speed = 0;
             player.Archetype.DefenseBonus = 0;
-            
+
             var armor = CreateArmor();
             armor.Durability = 1;
             armor.RequiredLevel = player.Level;
@@ -349,7 +349,7 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
             var player = CreatePlayer();
             var weapon = CreateWeapon();
             weapon.RequiredLevel = player.Level;
-            player.Inventory.AddItem(weapon);            
+            player.Inventory.AddItem(weapon);
 
             player.Equip(weapon);
 
@@ -511,7 +511,7 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
 
             player.Equip(armor2);
 
-            Assert.IsFalse(player.Equipment.Contains(armor1));            
+            Assert.IsFalse(player.Equipment.Contains(armor1));
             Assert.IsTrue(player.Equipment.Contains(armor2));
             Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains($"unequipped {armor1.Name}")));
             Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains($"equipped {armor2.Name}")));
@@ -600,13 +600,13 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
 
             var ex = Assert.ThrowsException<TreasureException>(() => player.Loot(monster));
             StringAssert.Contains(ex.Message, "has no treasure to loot");
-        }        
+        }
 
         [TestMethod]
         public void ClearActionItems_RemovesAll()
         {
             var player = CreatePlayer();
-            player.AddActionItem("Test action");
+            player.Logger.Log("Test action");
             Assert.IsTrue(player.ActionItems.Count > 0);
 
             player.ClearActionItems();
@@ -615,19 +615,19 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
         }
 
         [TestMethod]
-        public void AddActionItem_AddsAction()
+        public void Logger.Log_AddsAction()
         {
             var player = CreatePlayer();
-            player.AddActionItem("Test action");
+            player.Logger.Log("Test action");
             Assert.IsTrue(player.ActionItems.Values.Contains("Test action"));
         }
 
         [TestMethod]
-        public void AddActionItem_Skill_AddsAction()
+        public void Logger.Log_Skill_AddsAction()
         {
             var player = CreatePlayer();
             var skill = new Skill { Name = "Fireball" };
-            player.AddActionItem(skill);
+            player.Logger.Log(skill);
             Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("use Fireball")));
         }
 

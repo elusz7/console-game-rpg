@@ -1,10 +1,9 @@
-﻿using ConsoleGameEntities.Models.Monsters;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Monsters;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
-using ConsoleGameEntities.Exceptions;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.Extensions.Logging;
 
 namespace ConsoleGameEntities.Models.Skills;
 
@@ -44,7 +43,7 @@ public class UltimateSkill : DamageSkill
             }
             catch (InvalidOperationException) { throw new SkillResourceException("Ultimate"); }
 
-            player.AddActionItem(this);            
+            player.Logger.Log($"You use {Name}!");
 
             switch (TargetType)
             {
@@ -71,7 +70,7 @@ public class UltimateSkill : DamageSkill
 
             ScalePowerWithLevel(monster.Level);
 
-            monster.AddActionItem(this);
+            monster.Logger.Log($"{monster.Name} uses {Name}!");
 
             singleEnemy.TakeDamage(Power, DamageType);
         }

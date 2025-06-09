@@ -2,6 +2,6 @@
 
 public class SupportSkillEffectException : Exception
 {
-    public SupportSkillEffectException() :base() { }
+    public SupportSkillEffectException() : base() { }
     public SupportSkillEffectException(string message) : base(message) { }
 }

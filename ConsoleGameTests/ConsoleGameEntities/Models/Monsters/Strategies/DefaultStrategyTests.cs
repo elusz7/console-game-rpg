@@ -1,7 +1,4 @@
-﻿using ConsoleGameEntities.Interfaces;
-using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Models.Entities;
-using ConsoleGameEntities.Models.Monsters.Strategies;
+﻿using ConsoleGameEntities.Models.Monsters.Strategies;
 using static ConsoleGameTests.TestHelpers.StrategyHelper;
 
 namespace ConsoleGameTests.ConsoleGameEntities.Models.Monsters.Strategies;
@@ -108,7 +105,7 @@ public class DefaultStrategyTests
             Strategy = new DefaultStrategy() // no selector passed
         };
 
-        var ex = Assert.ThrowsException<InvalidOperationException>( () => monster.Attack(player));
+        var ex = Assert.ThrowsException<InvalidOperationException>(() => monster.Attack(player));
         StringAssert.Contains(ex.Message, "Skill selector is null");
     }
 }

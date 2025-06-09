@@ -1,15 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Models.Entities;
-using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Monsters.Strategies;
-using ConsoleGameEntities.Models.Skills;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
-using System.Threading;
 
 namespace ConsoleGameTests.ConsoleGameEntities.Models.Monsters;
 
@@ -18,7 +10,7 @@ public class BossMonsterTests
 {
     private static BossMonster CreateBoss()
     {
-        return new BossMonster (new MonsterSkillSelector())
+        return new BossMonster(new MonsterSkillSelector())
         {
             Name = "Boss",
             Level = 1,
@@ -115,7 +107,7 @@ public class BossMonsterTests
         boss.CurrentHealth = boss.MaxHealth;
 
         boss.TakeDamage(10, DamageType.Hybrid);
-        
+
         if (boss.CurrentHealth < boss.MaxHealth)
         {
             Assert.AreEqual(boss.MaxHealth - 6, boss.CurrentHealth);
@@ -125,7 +117,7 @@ public class BossMonsterTests
         {
             Assert.AreEqual(boss.CurrentHealth, boss.MaxHealth);
             Assert.IsTrue(boss.ActionItems.Values.Any(a => a.Contains("dodged the attack")));
-        }        
+        }
     }
 
     [TestMethod]
@@ -156,7 +148,7 @@ public class BossMonsterTests
     {
         var boss = CreateBoss();
         boss.DefensePower = 0;
-        
+
         boss.CurrentHealth = 10;
         boss.TakeDamage(100, DamageType.Martial); //should set phase to 2
 

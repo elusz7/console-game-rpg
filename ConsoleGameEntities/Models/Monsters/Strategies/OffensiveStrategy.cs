@@ -1,7 +1,5 @@
-﻿using ConsoleGameEntities.Helpers;
-using ConsoleGameEntities.Interfaces;
+﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Models.Monsters.Strategies;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
@@ -31,7 +29,7 @@ public class OffensiveStrategy : DefaultStrategy
 
         var buffSkill = _skillSelector.GetBuffSkill(monster);
         if (buffSkill != null)
-        { 
+        {
             buffSkill.Activate(monster);
             MakeAttack(monster, target);
             return;
@@ -45,13 +43,13 @@ public class OffensiveStrategy : DefaultStrategy
             _skillSelector.GetHealingSkill(monster, healthLost)?.Activate(monster);
         }
 
-        MakeAttack(monster, target);        
+        MakeAttack(monster, target);
     }
 
     private static void MakeAttack(IMonster monster, IPlayer target)
     {
-        var increasedDamage = (int)Math.Ceiling(monster.GetStat(StatType.Attack) * 1.2);
-        monster.AddActionItem($"{monster.Name} attacks for {increasedDamage} damage!");
+        var increasedDamage = (int)Math.Ceiling(monster.Combat.GetStat((Monster)monster, StatType.Attack) * 1.2);
+        monster.Logger.Log($"{monster.Name} attacks for {increasedDamage} damage!");
         target.TakeDamage(increasedDamage, monster.DamageType);
     }
 }

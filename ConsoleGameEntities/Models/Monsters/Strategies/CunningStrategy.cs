@@ -23,7 +23,7 @@ public class CunningStrategy : DefaultStrategy
      * - Else, fallback to basic attack.
     */
     public override void ExecuteAttack(IMonster monster, IPlayer target)
-    {        
+    {
         var healthLost = monster.MaxHealth - monster.CurrentHealth;
         var emergencyHealThreshold = monster.MaxHealth * 0.25;
 
@@ -79,8 +79,8 @@ public class CunningStrategy : DefaultStrategy
 
     private static void MakeAttack(IMonster monster, IPlayer target)
     {
-        var adjustedDamage = (int)Math.Ceiling(monster.GetStat(StatType.Attack) * 1.1); // 10% stronger basic hit
-        monster.AddActionItem($"{monster.Name} attacks for {adjustedDamage} damage!");
+        var adjustedDamage = (int)Math.Ceiling(monster.Combat.GetStat((Monster)monster, StatType.Attack) * 1.1); // 10% stronger basic hit
+        monster.Logger.Log($"{monster.Name} attacks for {adjustedDamage} damage!");
         target.TakeDamage(adjustedDamage, monster.DamageType);
     }
 }

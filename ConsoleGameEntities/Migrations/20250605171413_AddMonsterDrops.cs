@@ -33,6 +33,25 @@ namespace ConsoleGameEntities.Migrations
                 name: "IX_MonsterDrops_IngredientId",
                 table: "MonsterDrops",
                 column: "IngredientId");
+
+            //add new monster variables
+            migrationBuilder.AddColumn<int>(
+                name: "AttackElement",
+                table: "Monsters",
+                type: "int",
+                nullable: true);
+
+            migrationBuilder.AddColumn<int>(
+                name: "ElementalPower",
+                table: "Monsters",
+                type: "int",
+                nullable: true);
+
+            migrationBuilder.AddColumn<int>(
+                name: "Vulnerability",
+                table: "Monsters",
+                type: "int",
+                nullable: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

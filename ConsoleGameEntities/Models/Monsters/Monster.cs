@@ -1,20 +1,19 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Helpers.Gameplay;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Models.Skills;
 using ConsoleGameEntities.Models.Entities;
-using ConsoleGameEntities.Models.Monsters.Strategies;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Models.Items;
-using System.Text;
+using ConsoleGameEntities.Models.Monsters.Strategies;
+using ConsoleGameEntities.Models.Runes;
+using ConsoleGameEntities.Models.Skills;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters;
 public class Monster : IMonster
-{    
+{
     private static readonly Random _rng = Random.Shared;
-    [NotMapped]
-    public Dictionary<long, string> ActionItems { get; } = new();
+
     public int Id { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
@@ -22,18 +21,18 @@ public class Monster : IMonster
     [NotMapped]
     public int CurrentHealth { get; set; }
     [NotMapped]
-    private readonly Dictionary<StatType, int> ActiveEffects = new()
-    {
-        { StatType.Defense, 0 },
-        { StatType.Resistance, 0 },
-        { StatType.Speed, 0 },
-        { StatType.Attack, 0 },
-        { StatType.Magic, 0 },
-    };
+    public EffectManager Effects { get; } = new();
+    [NotMapped]
+    public MonsterCombatBehavior Combat { get; } = new();
+    [NotMapped]
+    public ActionLogger Logger { get; } = new();
+    [NotMapped]
+    public bool Looted { get; set; } = false; //indicates if the monster has been looted
     public int MaxHealth { get; set; }
     public ThreatLevel ThreatLevel { get; set; }
     public int AggressionLevel { get; set; }
-    private double DodgeChance { get; set; } = 0.01;
+    [NotMapped]
+    public virtual double DodgeChance { get; set; } = 0.01;
     public string MonsterType { get; set; }
     public virtual List<Skill> Skills { get; set; } = new List<Skill>();
     public int? RoomId { get; set; }
@@ -44,10 +43,13 @@ public class Monster : IMonster
     public int AttackPower { get; set; } //base damage for all types
     public DamageType DamageType { get; set; }
     public int Resistance { get; set; }
+    public ElementType? AttackElement { get; set; }
+    public int? ElementalPower { get; set; }
+    public ElementType? Vulnerability { get; set; }
     [NotMapped]
     public virtual IMonsterStrategy Strategy { get; set; }
     [NotMapped]
-    private Dictionary<DamageType, int> DamageRecord = new()
+    private readonly Dictionary<DamageType, int> DamageRecord = new()
     {
         { DamageType.Martial, 0 },
         { DamageType.Magical, 0 }
@@ -56,7 +58,7 @@ public class Monster : IMonster
 
     public virtual void Attack(IPlayer target)
     {
-        Strategy.ExecuteAttack(this, target);
+        Combat.Attack(this, target, Strategy);
     }
     public static IMonsterStrategy GetStrategyFor(MonsterBehaviorType behavior, IMonsterSkillSelector skillSelector)
     {
@@ -135,110 +137,28 @@ public class Monster : IMonster
 
     public virtual void TakeDamage(int damage, DamageType? damageType)
     {
-        var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
-        bool dodged = _rng.Next(0, 100) < chance;
-
-        if (dodged)
-        {
-            AddActionItem($"{Name} dodged the attack and took no damage!");
-            return;
-        }
-
-        int damageTaken = 0;
-        switch (damageType)
-        {
-            case DamageType.Martial:
-                damageTaken = Math.Max(1, damage - GetStat(StatType.Defense));
-                DamageRecord[DamageType.Martial] += 1;
-                break;
-            case DamageType.Magical:
-                damageTaken = Math.Max(1, damage - GetStat(StatType.Resistance));
-                DamageRecord[DamageType.Magical] += 1;
-                break;
-            case DamageType.Hybrid:
-                damageTaken = Math.Max(1, damage - (Math.Max(GetStat(StatType.Defense), GetStat(StatType.Resistance)) / 2));
-                break;
-        }
-
-        AddActionItem($"{Name} takes {damageTaken} damage!");
-        CurrentHealth -= damageTaken;
-
-        if (CurrentHealth <= 0)
-        {
-            AddActionItem($"{Name} is now dead.");
-            throw new MonsterDeathException();
-        }
+        Combat.TakeDamage(this, damage, damageType);
+    }
+    public virtual void TakeDamage(int damage, ElementType element)
+    {
+        Combat.TakeElementalDamage(this, damage, element);
     }
     public virtual void Heal(int regainedHealth)
     {
-        if (CurrentHealth + regainedHealth > MaxHealth)
-        {
-            AddActionItem($"{Name} heals for {MaxHealth - CurrentHealth} health!");
-            CurrentHealth = MaxHealth;
-        }
-        else
-        {
-            AddActionItem($"{Name} heals for {regainedHealth} health!");
-            CurrentHealth += regainedHealth;
-        }
+        Combat.Heal(this, regainedHealth);
     }
-    public virtual int GetStat(StatType stat)
-    {
-        var damageBoost = DamageType switch
-        {
-            DamageType.Martial => ActiveEffects[StatType.Attack],
-            DamageType.Magical => ActiveEffects[StatType.Magic],
-            DamageType.Hybrid => (int)Math.Round((ActiveEffects[StatType.Attack] + ActiveEffects[StatType.Magic]) / 2.0),
-            _ => throw new InvalidDataException("Damage Type not properly mapped to a enum")
-        };
 
-        return stat switch
-        {
-            StatType.Defense => Math.Max(0, DefensePower + ActiveEffects[StatType.Defense]),
-            StatType.Speed => Math.Max(0, AggressionLevel + ActiveEffects[StatType.Speed]),
-            StatType.Attack or StatType.Magic => Math.Max(0, AttackPower + damageBoost),
-            StatType.Resistance => Math.Max(0, Resistance + ActiveEffects[StatType.Resistance]),
-            StatType.Health => CurrentHealth,
-            _ => throw new StatTypeException("Monster Get Stat")
-        };
-    }
-    public virtual void ModifyStat(StatType stat, int amount)
+    public virtual void ModifyStat(StatType stat, int duration, int amount)
     {
         if (stat == StatType.Health)
             Heal(amount);
-        else if (ActiveEffects.ContainsKey(stat))
-        {
-            AddActionItem($"{Name}'s {stat} is changed by {amount}!");
-            ActiveEffects[stat] += amount;
-        }
         else
-            throw new StatTypeException("Invalid stat to modify");
+        {
+            Effects.AddEffect(StatusRecordType.Skill, (int)stat, duration, amount);
+
+            Logger.Log($"{Name}'s {stat} is changed by {amount}!");
+        }
     }
-
-    public void ClearActionItems()
-    {
-        ActionItems.Clear();
-    }
-
-    public void AddActionItem(string action)
-    {
-        if (CurrentHealth <= 0) return;
-
-        long key = DateTime.Now.Ticks;
-        while (ActionItems.ContainsKey(key)) key++;
-
-        ActionItems.Add(key, action);
-    }
-    public void AddActionItem(Skill skill)
-    {
-        if (CurrentHealth <= 0) return;
-
-        long key = DateTime.Now.Ticks;
-        while (ActionItems.ContainsKey(key)) key++;
-
-        ActionItems.Add(key, $"{Name} uses {skill.Name}!");
-    }
-
     public Item? Loot()
     {
         if (Treasure == null)
@@ -247,9 +167,9 @@ public class Monster : IMonster
         Item loot = Treasure;
 
         loot.MonsterId = null; // Remove the item from the monster
-        loot.Monster = null; 
+        loot.Monster = null;
         ItemId = null;
-        Treasure = null; 
+        Treasure = null;
 
         return loot;
     }
@@ -260,5 +180,42 @@ public class Monster : IMonster
         item.Monster = this;
         ItemId = item.Id;
         Treasure = item;
+    }
+
+    public void RuneAttack(WeaponRune rune)
+    {
+        Combat.ApplyRuneEffect(this, rune);
+    }
+    public virtual void ElapseTime()
+    {
+        Effects.ElapseTime(
+            onExpire: e =>
+            {
+                switch (e.Source)
+                {
+                    case StatusRecordType.Skill:
+                        Logger.Log($"An effect affecting {(StatType)e.Type} has ended!");
+                        break;
+                    case StatusRecordType.ElementalStatus:
+                        Logger.Log($"An elemental status {(ElementalStatusEffectType)e.Type} has ended!");
+                        break;
+                    default:
+                        Logger.Log($"A {(ElementDamageType)e.Type} effect has ended!");
+                        break;
+                }
+            },
+            onTick: e =>
+            {
+                if (e.Source == StatusRecordType.ElementalDamage)
+                {
+                    TakeDamage(e.Power, (ElementType)e.Type);
+                }
+            }
+        );
+
+        foreach (var skill in Skills)
+        {
+            skill.UpdateElapsedTime();
+        }
     }
 }

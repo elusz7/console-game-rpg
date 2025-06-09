@@ -4,7 +4,7 @@ using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame.Menus;
 
-public class RoomMenu(IInputManager inputManager, IOutputManager outputManager, RoomDisplay roomDisplay, 
+public class RoomMenu(IInputManager inputManager, IOutputManager outputManager, RoomDisplay roomDisplay,
     RoomManagement roomManagement, RoomConnectionManagement roomConnectionManagement)
 {
     private readonly IInputManager _inputManager = inputManager;
@@ -23,7 +23,7 @@ public class RoomMenu(IInputManager inputManager, IOutputManager outputManager, 
                 + "\n2. Manage Rooms"
                 + "\n3. Update Room Connections"
                 + "\n4. Return to Admin Menu");
-            
+
             var input = _inputManager.ReadMenuKey(4);
 
             switch (input)

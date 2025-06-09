@@ -1,7 +1,7 @@
-﻿using ConsoleGameEntities.Models.Entities;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
+﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Managers.Interfaces;
-using ConsoleGame.GameDao.Interfaces;
+using ConsoleGameEntities.Models.Entities;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers.DisplayHelpers;
 
@@ -41,7 +41,7 @@ public class ArchetypeDisplay(IInputManager inputManager, IOutputManager outputM
     private void ListArchetypes(string? criteria = null)
     {
         var archetypes = new List<Archetype>();
-        
+
         switch (criteria)
         {
             case "Type":

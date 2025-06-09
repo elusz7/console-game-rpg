@@ -107,8 +107,8 @@ public static class StrategyHelper
         private readonly BossSkill? _bossSkill;
         private readonly UltimateSkill? _ultimateSkill;
 
-        public FakeSkillSelector(Skill? damageSkill = null, SupportSkill? debuffSkill = null, 
-            SupportSkill? healingSkill = null, SupportSkill? buffSkill = null, 
+        public FakeSkillSelector(Skill? damageSkill = null, SupportSkill? debuffSkill = null,
+            SupportSkill? healingSkill = null, SupportSkill? buffSkill = null,
             BossSkill? bossSkill = null, UltimateSkill? ultimateSkill = null)
         {
             _damageSkill = damageSkill;
@@ -133,4 +133,3 @@ public static class StrategyHelper
         public override UltimateSkill? GetUltimateSkill(IMonster monster) => _ultimateSkill;
     }
 }
-    

@@ -1,8 +1,6 @@
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameTests.ConsoleGameEntities.Models.Items;
@@ -33,7 +31,7 @@ public class ConsumableTests
         }
 
         public List<string> Actions { get; } = new();
-        public override void AddActionItem(string message) => Actions.Add(message);
+        public override void Logger.Log(string message) => Actions.Add(message);
     }
 
     public class MockInventory : Inventory

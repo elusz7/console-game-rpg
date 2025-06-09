@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ConsoleGameTests.ConsoleGameEntities.Models.Skills;
+﻿namespace ConsoleGameTests.ConsoleGameEntities.Models.Skills;
 
 using System;
 using System.Collections.Generic;
@@ -39,7 +33,7 @@ public class SkillTests
         var ex = Assert.ThrowsException<SkillCooldownException>(() => skill.Activate(caster));
         StringAssert.Contains(ex.Message, "on cooldown");
     }
-    
+
     [TestMethod]
     public void Activate_Throws_WhenCasterLevelTooLow()
     {
@@ -50,7 +44,7 @@ public class SkillTests
         var ex = Assert.ThrowsException<InvalidSkillLevelException>(() => skill.Activate(caster));
         StringAssert.Contains(ex.Message, "does not meet the required level");
     }
-    
+
     [TestMethod]
     public void Activate_Throws_WhenTargetMissing_ForSingleEnemy()
     {
@@ -67,7 +61,7 @@ public class SkillTests
     {
         var archetype = new Archetype() { CurrentResource = 10, MaxResource = 12 };
 
-        var player = new Player() { Level= 3, Archetype = archetype };
+        var player = new Player() { Level = 3, Archetype = archetype };
 
         var skill = new Skill { RequiredLevel = 1, Cost = 5, ElapsedTime = 10 };
 
@@ -98,7 +92,7 @@ public class SkillTests
         var archetype = new Archetype() { CurrentResource = 10, MaxResource = 12 };
         var player = new Player() { Level = 3, Archetype = archetype };
         var skill = new TestSkill { RequiredLevel = 1, ElapsedTime = 10 };
-        
+
 
         skill.Activate(player);
 

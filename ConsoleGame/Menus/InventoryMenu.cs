@@ -41,5 +41,5 @@ public class InventoryMenu(IInputManager inputManager, IOutputManager outputMana
                     return;
             }
         }
-    } 
+    }
 }

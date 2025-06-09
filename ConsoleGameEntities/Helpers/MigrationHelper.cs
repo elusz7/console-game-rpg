@@ -15,7 +15,7 @@ namespace ConsoleGameEntities.Helpers
 
             // Get the directory of the executing assembly
             string? assemblyLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? throw new Exception("Assembly location not found");
-            
+
             // Build the path to the SQL script
             string scriptPath = Path.Combine(assemblyLocation, "Migrations", "Scripts", scriptFileName);
 

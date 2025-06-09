@@ -3,7 +3,7 @@ using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame.Helpers.DisplayHelpers;
 
-public class RoomDisplay(IOutputManager outputManager, IInputManager inputManager, 
+public class RoomDisplay(IOutputManager outputManager, IInputManager inputManager,
     IMapManager mapManager, IRoomDao roomDao)
 {
     private readonly IOutputManager _outputManager = outputManager;
@@ -40,7 +40,7 @@ public class RoomDisplay(IOutputManager outputManager, IInputManager inputManage
     private void ViewAllRooms()
     {
         var rooms = _roomDao.GetAllRooms();
-        
+
         _inputManager.Viewer(rooms, r => ColorfulToStringHelper.RoomToString(r), "");
 
         _outputManager.Clear();

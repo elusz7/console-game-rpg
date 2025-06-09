@@ -1,6 +1,4 @@
-﻿using System.Text;
-using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Interfaces;
+﻿using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Runes;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
@@ -12,7 +10,7 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
     private readonly Random _rng = Random.Shared;
 
     private bool Cursed { get; set; }
-    private bool Equipped { get; set;  }
+    private bool Equipped { get; set; }
 
     public int DefensePower { get; set; }
     public int Resistance { get; set; }
@@ -20,11 +18,11 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
 
     public int? RuneId { get; set; }
     public virtual ArmorRune? Rune { get; set; }
-    
+
     public decimal GetPurificationPrice() => Value * 0.5M;
     public decimal GetReforgePrice() => Value * 0.33M;
     public decimal GetEnchantmentPrice() => Value * 1.5M;
-    
+
     public void Curse() => Cursed = true;
     public void TargetCursed() => Cursed = false;
     public bool IsCursed() => Cursed;
@@ -131,7 +129,7 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
 
         var total = _rng.Next(RequiredLevel * 5, RequiredLevel * 8);
         DefensePower = _rng.Next(0, total + 1);
-        Resistance = total - DefensePower;                
+        Resistance = total - DefensePower;
     }
     public override void CalculateLevelByStats()
     {

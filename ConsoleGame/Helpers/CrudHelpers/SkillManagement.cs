@@ -1,6 +1,6 @@
-﻿using ConsoleGame.Managers.Interfaces;
-using ConsoleGame.GameDao.Interfaces;
+﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGame.Managers.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
@@ -8,7 +8,7 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class SkillManagement(IInputManager inputManager, IOutputManager outputManager, 
+public class SkillManagement(IInputManager inputManager, IOutputManager outputManager,
     ISkillDao skillDao, IMonsterDao monsterDao, IArchetypeDao archetypeDao)
 {
     private readonly IInputManager _inputManager = inputManager;
@@ -108,7 +108,7 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
         {
             _outputManager.WriteLine("\nSkill creation cancelled.\n", ConsoleColor.Red);
             return;
-        }    
+        }
 
         var newSkill = CreateSkillObject(skillType, name, description, numericValues);
         _skillDao.AddSkill(newSkill);
@@ -177,7 +177,7 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
         var propertyActions = new Dictionary<string, Action>
         {
             { "Name", () => skill.Name = _inputManager.ReadString("\nEnter new value for Name: ") },
-            { "Power (Will Also Affect Level, Cost, Cooldown, and Duration) ", () => 
+            { "Power (Will Also Affect Level, Cost, Cooldown, and Duration) ", () =>
                 {
                     var powerPrompt = skill.SkillCategory == SkillCategory.Support ? "\nEnter stat boost/reduction power: " : "\nEnter skill damage: ";
                     var power = _inputManager.ReadInt(powerPrompt);
@@ -282,7 +282,7 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
                 return;
             }
 
-            var skill = 
+            var skill =
                 _inputManager.Selector(
                     skills,
                     s => ColorfulToStringHelper.SkillToString(s),
@@ -504,7 +504,7 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
     private static Skill CreateSkillObject(SkillType skillType, string name, string description, Dictionary<string, int> numericValues)
     {
         var skillCategory = (SkillCategory)numericValues[SkillKeys.CATEGORY];
-        var targetType = (TargetType)numericValues[SkillKeys.TARGET];        
+        var targetType = (TargetType)numericValues[SkillKeys.TARGET];
         var power = numericValues[SkillKeys.POWER];
         var level = numericValues[SkillKeys.LEVEL];
         var cost = numericValues[SkillKeys.COST];

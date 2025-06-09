@@ -5,14 +5,14 @@ namespace ConsoleGameEntities.Models.Runes;
 
 public class WeaponRune : Rune
 {
-    public string Description => Element switch
+    public ElementDamageType Description => Element switch
     {
-        ElementType.Fire => "Burning",
-        ElementType.Lightning => "Static",
-        ElementType.Ice => "Frostbite",
-        ElementType.Nature => "Poisoned",
-        ElementType.Radiance => "Weakened",
-        ElementType.Abyssal => "Despair",
+        ElementType.Fire => ElementDamageType.Burning,
+        ElementType.Lightning => ElementDamageType.Static,
+        ElementType.Ice => ElementDamageType.Frostbite,
+        ElementType.Nature => ElementDamageType.Poisoned,
+        ElementType.Radiance => ElementDamageType.Weakened,
+        ElementType.Abyssal => ElementDamageType.Despair,
         _ => throw new ArgumentOutOfRangeException()
     };
     public ElementalStatusEffectType StatusEffect => Element switch

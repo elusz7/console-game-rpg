@@ -1,6 +1,9 @@
-﻿using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Interfaces;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Models.Runes;
+using ConsoleGameEntities.Models.Runes.Recipes;
 
 namespace ConsoleGameEntities.Models.Entities;
 
@@ -12,6 +15,10 @@ public class Inventory : IInventory
     public int PlayerId { get; set; }
     public virtual Player Player { get; set; }
     public virtual List<Item> Items { get; set; } = new();
+    [NotMapped]
+    public Dictionary<Rune, int> Runes { get; set; } = new();
+    [NotMapped]
+    public Dictionary<Ingredient, int> Ingredients { get; set; } = new();
 
     public virtual void AddItem(Item item)
     {
@@ -61,6 +68,134 @@ public class Inventory : IInventory
             throw new ItemNotFoundException($"You do not have {item.Name} in your inventory.");
         }
     }
+    public virtual void AddIngredient(Ingredient ingredient)
+    {
+        if (Ingredients.ContainsKey(ingredient))
+        {
+            Ingredients[ingredient]++;
+        }
+        else
+        {
+            Ingredients.Add(ingredient, 1);
+        }
+    }
+    private void AddIngredient(Ingredient ingredient, int quantity)
+    {
+        if (Ingredients.ContainsKey(ingredient))
+        {
+            Ingredients[ingredient] += quantity;
+        }
+        else
+        {
+            Ingredients.Add(ingredient, quantity);
+        }
+    }
+    public virtual void RemoveIngredient(Ingredient ingredient, int quantity)
+    {
+        if (Ingredients.ContainsKey(ingredient) && Ingredients[ingredient] >= quantity)
+        {
+            Ingredients[ingredient] -= quantity;
+            if (Ingredients[ingredient] <= 0)
+            {
+                Ingredients.Remove(ingredient);
+            }
+        }
+        else
+        {
+            throw new IngredientNotFoundException($"You do not have enough {ingredient.Name} in your inventory.");
+        }
+    }
+    public void AddRune(Rune rune)
+    {
+        if (Runes.ContainsKey(rune))
+        {
+            Runes[rune]++;
+        }
+        else
+        {
+            Runes.Add(rune, 1);
+        }
+    }
+    public void RemoveRune(Rune rune, int quantity)
+    {
+        if (Runes.ContainsKey(rune) && Runes[rune] >= quantity)
+        {
+            Runes[rune] -= quantity;
+            if (Runes[rune] <= 0)
+            {
+                Runes.Remove(rune);
+            }
+        }
+        else
+        {
+            throw new RuneNotFoundException($"You do not have {rune.Name} in your inventory.");
+        }
+    }
+    public List<(Rune rune, int quantity)> GetFuseableRunes()
+    {
+        return Runes
+            .Where(kvp => kvp.Value >= 4)
+            .Select(kvp => (kvp.Key, kvp.Value))
+            .ToList();
+    }
+    public List<Rune> GetDestroyableRunes()
+    {
+        // Step 1: Get equipped runes
+        var equipment = Player?.Equipment;
+        var equippedRunes = new List<(Rune rune, int qty)>();
+        if (equipment != null)
+        {
+            equippedRunes = equipment
+                .Select<IEquippable, Rune?>(e =>
+                {
+                    if (e is Weapon weapon) return weapon.Rune;
+                    if (e is Armor armor) return armor.Rune;
+                    return null;
+                })
+                .Where(r => r != null)
+                .Select(r => r!) // assert non-null
+                .GroupBy(r => new { r.Element, r.Tier, r.Rarity, r.RuneType })
+                .Select(g => (rune: g.First(), qty: g.Count()))
+                .ToList();
+        }
+
+        // Step 2: If nothing is equipped, all runes can be destroyed
+        if (equippedRunes.Count == 0)
+        {
+            return Runes.Select(kvp => kvp.Key).ToList();
+        }
+
+        // Step 3: Filter out runes that are fully equipped (i.e., no spares left)
+        var destroyableRunes = Runes
+            .Where(kvp =>
+            {
+                var matchingEquipped = equippedRunes.FirstOrDefault(e =>
+                    e.rune.Element == kvp.Key.Element &&
+                    e.rune.Rarity == kvp.Key.Rarity &&
+                    e.rune.Tier == kvp.Key.Tier &&
+                    e.rune.RuneType == kvp.Key.RuneType);
+
+                return matchingEquipped == default || kvp.Value > matchingEquipped.qty;
+            })
+            .Select(kvp => kvp.Key)
+            .ToList();
+
+        return destroyableRunes;
+    }
+    public void DestroyRune(Rune rune)
+    {
+        if (!Runes.ContainsKey(rune))
+            throw new RuneNotFoundException($"You do not have {rune.Name} in your inventory.");
+
+        RemoveRune(rune, 1);
+
+        var ingredientsRecovered = rune.DestroyRune();
+        foreach (var (ingredient, quantity) in ingredientsRecovered)
+        {
+            AddIngredient(ingredient, quantity);
+        }
+    }
+
     private void AddConsumable(Item item)
     {
         var cap = Math.Max(3m, Capacity * 0.10m);

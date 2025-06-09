@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleGameEntities.Interfaces;
+﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
@@ -36,7 +31,7 @@ public class MonsterSkillSelector : IMonsterSkillSelector
 
     public virtual List<SupportSkill> GetSupportSkills(IMonster monster)
     {
-        return GetAvailableSkills(monster).OfType<SupportSkill>().ToList() 
+        return GetAvailableSkills(monster).OfType<SupportSkill>().ToList()
             ?? new List<SupportSkill>();
     }
 

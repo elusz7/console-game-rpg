@@ -67,15 +67,15 @@ public class EquipmentHelper(IInputManager inputManager, IOutputManager outputMa
             //_outputManager.WriteLine("\nNo items currently equipped.", ConsoleColor.Red);
             return;
         }
-        
+
         var equippedItems = player.Equipment
             .OfType<Item>() //cast equipment to items
             .ToList();
 
         _outputManager.WriteLine();
         var unequippedItem = _inputManager.SelectItem("Select an item to unequip", equippedItems);
-        
-        if (unequippedItem != null) 
+
+        if (unequippedItem != null)
         {
             player.Unequip(unequippedItem);
             OutputActionItems(player);
@@ -104,7 +104,7 @@ public class EquipmentHelper(IInputManager inputManager, IOutputManager outputMa
         {
             return false;
         }
-        
+
         try
         {
             player.Equip(selectedItem);
@@ -114,7 +114,7 @@ public class EquipmentHelper(IInputManager inputManager, IOutputManager outputMa
         {
             _outputManager.WriteLine("\nAn error occurred while equipping the item!", ConsoleColor.Red);
             _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
-            
+
             return false;
         }
 
@@ -137,13 +137,13 @@ public class EquipmentHelper(IInputManager inputManager, IOutputManager outputMa
         {
             return false;
         }
-        
+
         if (item is Consumable consumable)
         {
             switch (consumable.ConsumableType)
             {
                 case ConsumableType.Durability:
-                    
+
                     var items = player.Inventory.Items.Where(i => i is IEquippable).ToList();
 
                     if (items.Count == 0)
@@ -166,32 +166,20 @@ public class EquipmentHelper(IInputManager inputManager, IOutputManager outputMa
                     break;
             }
         }
-        
+
         OutputActionItems(player);
         return true;
     }
-        
+
     private void OutputActionItems(Player player)
     {
-        // SortedList auto-orders by key and avoids Dictionary's duplicate key issue
-        var actions = new SortedList<long, string>();
-
-        // Add player actions
-        foreach (var kvp in player.ActionItems)
-        {
-            long key = kvp.Key;
-            while (actions.ContainsKey(key)) key++; // Avoid duplicate keys
-            actions.Add(key, kvp.Value);
-        }
-
-        // Output ordered actions
         _outputManager.WriteLine();
-        foreach (var action in actions)
+        foreach (var action in player.Logger.GetOrderedLog())
         {
             _outputManager.WriteLine(action.Value, ConsoleColor.Cyan);
         }
 
-        player.ClearActionItems();
+        player.Logger.Clear();
 
         _outputManager.Display();
     }

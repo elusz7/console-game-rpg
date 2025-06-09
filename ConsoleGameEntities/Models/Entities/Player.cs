@@ -1,20 +1,17 @@
-﻿using System.Text;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Helpers.Gameplay;
 using ConsoleGameEntities.Interfaces;
-using ConsoleGameEntities.Models.Skills;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
-using System.ComponentModel.DataAnnotations.Schema;
-using ConsoleGameEntities.Models.Items;
-using System.Numerics;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
+using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Models.Runes.Recipes;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Entities;
 
 public class Player : IPlayer
 {
-    [NotMapped]
-    public Dictionary<long, string> ActionItems { get; } = new();
     [NotMapped]
 
     private static readonly Random _rng = Random.Shared;
@@ -23,79 +20,40 @@ public class Player : IPlayer
     public string Name { get; set; }
     [NotMapped]
     public int CurrentHealth { get; set; }
-    private double DodgeChance { get; set; } = 0.01;
+    [NotMapped]
+    public double DodgeChance { get; set; } = 0.015;
     public int MaxHealth { get; set; }
     public int ArchetypeId { get; set; }
     public virtual Archetype Archetype { get; set; }
     public virtual Inventory Inventory { get; set; }
     public int? RoomId { get; set; }
     public virtual Room? CurrentRoom { get; set; }
+
     [NotMapped]
-    public List<IEquippable> Equipment { get; set; } = new();
+    public EffectManager Effects { get; } = new();
     [NotMapped]
-    private readonly Dictionary<StatType, int> ActiveEffects = new()
-    {
-        { StatType.Defense, 0 },
-        { StatType.Resistance, 0 },
-        { StatType.Speed, 0 },
-        { StatType.Attack, 0 },
-        { StatType.Magic, 0 },
-    };
+    public PlayerCombatBehavior Combat { get; } = new();
+    [NotMapped]
+    public EquipmentManager EquipmentManager { get; } = new();
+    [NotMapped]
+    public IReadOnlyCollection<IEquippable> Equipment => EquipmentManager.GetEquippedItems();
+    [NotMapped]
+    public ActionLogger Logger { get; } = new();
     public void Attack(ITargetable target)
     {
-        var weapon = EquippedWeapon() ?? throw new EquipmentException("You need to equip a weapon before attacking.");
-
-        var damage = Archetype.ArchetypeType == ArchetypeType.Martial ?
-            GetStat(StatType.Attack) :
-            GetStat(StatType.Magic);
-        
-        AddActionItem($"You attack with {weapon.Name} for {damage} damage!");
-        target.TakeDamage(damage, DamageType.Martial);
-        
-        CheckWeaponDurability();
+        Combat.Attack(this, target);
     }
     public virtual void TakeDamage(int damage, DamageType? damageType)
     {
-        var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
-        bool dodged = _rng.Next(0, 100) < chance;
-
-        if (dodged)
-        {
-            AddActionItem($"You dodged the attack and took no damage!");
-            return;
-        }
-
-        int damageTaken = damageType switch
-        {
-            DamageType.Martial => Math.Max(1, damage - GetStat(StatType.Defense)),
-            DamageType.Magical => Math.Max(1, damage - GetStat(StatType.Resistance)),
-            DamageType.Hybrid => Math.Max(1, damage - (Math.Max(GetStat(StatType.Defense), GetStat(StatType.Resistance)) / 2)),
-            _ => damage
-        };
-
-        
-        CurrentHealth -= damageTaken;
-        AddActionItem($"You've taken {damageTaken} damage! [{CurrentHealth} / {MaxHealth}]");
-
-        if (CurrentHealth <= 0)
-            throw new PlayerDeathException();
-
-        CheckArmorDurability(damageType);
+        Combat.TakeDamage(this, damage, damageType);
+    }
+    public virtual void TakeDamage(int damage, ElementType element)
+    {
+        Combat.TakeElementalDamage(this, damage, element);
     }
     public virtual void Heal(int regainedHealth)
     {
-        int healedAmount;
-        if (CurrentHealth + regainedHealth > MaxHealth)
-        {
-            healedAmount = MaxHealth - CurrentHealth;
-            CurrentHealth = MaxHealth;
-        }
-        else
-        {
-            healedAmount = regainedHealth;
-            CurrentHealth += regainedHealth;
-        }
-        AddActionItem($"You healed for {healedAmount} health! [{CurrentHealth} / {MaxHealth}]");
+        Combat.Heal(this, regainedHealth);
     }
     public void LevelUp()
     {
@@ -105,156 +63,40 @@ public class Player : IPlayer
         MaxHealth += boost;
         CurrentHealth = MaxHealth;
 
-        Inventory.Gold += (Level * _rng.Next(8,13));
+        Inventory.Gold += (Level * _rng.Next(8, 13));
         Inventory.Capacity += Math.Round(boost * 0.8M, 2);
         DodgeChance += 0.003;
 
-        foreach (var kvp in ActiveEffects)
-        {
-            var key = kvp.Key;
-            ActiveEffects[key] = 0;
-        }
+        Effects.ClearEffects();
     }
-    public int GetStat(StatType stat)
-    {
-        return stat switch
-        {
-            StatType.Defense => Math.Max(0, EquippedDefense() + Archetype.DefenseBonus + ActiveEffects[StatType.Defense]),
-            StatType.Speed => Math.Max(0, Archetype.Speed + ActiveEffects[StatType.Speed]),
-            StatType.Attack => Math.Max(0, EquippedAttack() + Archetype.AttackBonus + ActiveEffects[StatType.Attack]),
-            StatType.Resistance => Math.Max(0, EquippedResistance() + Archetype.ResistanceBonus + ActiveEffects[StatType.Resistance]),
-            StatType.Health => CurrentHealth,
-            StatType.Magic => Math.Max(0, EquippedAttack() + Archetype.MagicBonus + ActiveEffects[StatType.Magic]),
-            _ => throw new StatTypeException("Monster Get Stat")
-        };
-    }
-    public void Equip(Item item)
-    {
-        if (item.Inventory?.Player != this)
-            throw new ItemNotFoundException("This item is not in your inventory.");
 
-        if (item.RequiredLevel > Level)
-            throw new EquipmentException("Your level is too low to equip this item");
+    public void Equip(Item item) => EquipmentManager.Equip(this, item);
+    public void Unequip(Item item) => EquipmentManager.Unequip(this, item);
 
-        if (item.Durability < 1)
-            throw new EquipmentException("This item is broken and cannot be equipped");
-
-        if (item is Weapon newWeapon)
-        {
-            if ((newWeapon.DamageType == DamageType.Martial && Archetype.ArchetypeType == ArchetypeType.Magical)
-                || (newWeapon.DamageType == DamageType.Magical && Archetype.ArchetypeType == ArchetypeType.Martial))
-                throw new EquipmentException($"You cannot equip weapons that deal {newWeapon.DamageType} damage");
-
-            //can only have 1 weapon equipped
-            var weapon = Equipment.OfType<Weapon>().FirstOrDefault();
-
-            if (weapon != null)
-            {
-                weapon.Unequip();
-                Equipment.Remove(weapon);
-                AddActionItem($"You unequipped {weapon.Name}.");
-            }
-
-            newWeapon.Equip();
-            Equipment.Add(newWeapon);
-            AddActionItem($"You equipped {newWeapon.Name}.");
-        }
-        else if (item is Armor newArmor)
-        {
-            var armorPiece = Equipment.OfType<Armor>().Where(a => a.ArmorType == newArmor.ArmorType).FirstOrDefault();
-
-            if (armorPiece != null)
-            {
-                armorPiece.Unequip();
-                Equipment.Remove(armorPiece);
-                AddActionItem($"You unequipped {armorPiece.Name}.");
-            }
-
-            newArmor.Equip();
-            Equipment.Add(newArmor);
-            AddActionItem($"You equipped {newArmor.Name}.");
-        }
-        else
-        {
-            throw new EquipmentException($"Cannot equip {item.Name}");
-        }
-
-        if (item is ICursable c && c.IsCursed())
-            EnactCursedEffect(c);
-    }
-    private void EnactCursedEffect(ICursable cursedItem)
-    {
-        var cursedDeduction = Math.Max(1, (int)Math.Floor(MaxHealth * 0.1));
-
-        CurrentHealth -= cursedDeduction;
-        MaxHealth -= cursedDeduction;
-
-        AddActionItem($"You have been cursed! Your max health has been lowered by {cursedDeduction}!");
-
-        cursedItem.TargetCursed();
-    }
-    public void ModifyStat(StatType stat, int amount)
+    public void ModifyStat(StatType stat, int duration, int amount)
     {
         if (stat == StatType.Health)
             Heal(amount);
-        else if (ActiveEffects.ContainsKey(stat))
-        {
-            ActiveEffects[stat] += amount;
-            AddActionItem($"Your {stat} has been modified by {amount}.");
-        }
         else
-            throw new StatTypeException("Invalid stat to modify");
+        {
+            Effects.AddEffect(StatusRecordType.Skill, (int)stat, duration, amount);
+        }
     }
-    private int EquippedDefense()
-    {
-        var equippedArmor = EquippedArmor();
 
-        if (equippedArmor.Count == 0)
-            return 0;
-
-        var totalDefense = equippedArmor.Sum(a => a.DefensePower);
-        var averageDefense = totalDefense / equippedArmor.Count;
-
-        return averageDefense;
-    }
-    private int EquippedResistance()
-    {
-        var equippedArmor = EquippedArmor();
-
-        if (equippedArmor.Count == 0)
-            return 0;
-
-        var totalResistance = equippedArmor.Sum(a => a.Resistance);
-        var averageResistance = totalResistance / equippedArmor.Count;
-
-        return averageResistance;
-    }
-    private List<Armor> EquippedArmor()
-    {
-        return Equipment.OfType<Armor>().ToList() ?? new List<Armor>();
-    }
-    private int EquippedAttack()
-    {
-        return EquippedWeapon()?.AttackPower ?? 0;
-    }
-    private Weapon? EquippedWeapon()
-    {
-        return Equipment.OfType<Weapon>().FirstOrDefault();
-    }
     public void Loot(IMonster monster)
     {
-        
+
         if (monster.CurrentHealth >= 1)
         {
             throw new TreasureException($"You think it might be better to defeat {monster.Name} before trying to take its treasure.");
         }
 
         Item loot = monster.Loot() ?? throw new TreasureException($"{monster.Name} has no treasure to loot.");
-        
+
         try
         {
             Inventory.AddItem(loot);
-            
+
         }
         catch (Exception ex)
         {
@@ -262,72 +104,21 @@ public class Player : IPlayer
             throw new TreasureException(ex.Message);
         }
 
-        AddActionItem($"You found {loot.Name} on {monster.Name}!");
+        Logger.Log($"You found {loot.Name} on {monster.Name}!");
     }
-    public void Unequip(Item item)
+    public void Loot(List<Ingredient> monsterDrop)
     {
-        if (item is IEquippable equippableItem && Equipment.Contains(equippableItem))
-        {
-            Equipment.Remove(equippableItem);
-            equippableItem.Unequip();
-            AddActionItem($"You unequipped {item.Name}.");
-        }
-    }
-    private void CheckArmorDurability(DamageType? damageType)
-    {
-        //randomly select an armor piece to use durability
-        var damagedArmor = damageType == DamageType.Martial ? 
-            Equipment.OfType<Armor>().Where(a => a.DefensePower > 0).OrderBy(_ => _rng.Next()).FirstOrDefault()
-            : Equipment.OfType<Armor>().Where(a => a.Resistance > 0).OrderBy(_ => _rng.Next()).FirstOrDefault();
-
-        if (damagedArmor != null)
+        foreach (var ingredient in monsterDrop)
         {
             try
             {
-                damagedArmor.Use();
+                Inventory.AddIngredient(ingredient);
             }
-            catch (ItemDurabilityException)
+            catch (Exception ex)
             {
-                Equipment.Remove(damagedArmor);
-                damagedArmor.Unequip();
-                AddActionItem($"Your {damagedArmor.Name} broke and can't be used anymore.");
+                throw new TreasureException(ex.Message);
             }
         }
-    }
-    private void CheckWeaponDurability()
-    {
-        var weapon = Equipment.OfType<Weapon>().FirstOrDefault();
-        if (weapon != null)
-        {
-            try
-            {
-                weapon.Use();
-            }
-            catch (ItemDurabilityException)
-            {
-                Equipment.Remove(weapon);
-                weapon.Unequip();
-                AddActionItem($"Your {weapon.Name} broke and can't be used anymore.");
-            }
-        }
-    }
-    public void ClearActionItems()
-    {
-        ActionItems.Clear();
-    }
-    public virtual void AddActionItem(string action)
-    {
-        long key = DateTime.Now.Ticks;
-        while (ActionItems.ContainsKey(key)) key++;
-
-        ActionItems.Add(key, action);
-    }
-    public void AddActionItem(Skill skill)
-    {
-        long key = DateTime.Now.Ticks;
-        while (ActionItems.ContainsKey(key)) key++;
-
-        ActionItems.Add(key, $"You use {skill.Name}!");
     }
     public virtual void Sell(Item item)
     {
@@ -349,7 +140,6 @@ public class Player : IPlayer
         {
             Gold = _rng.Next(15, 24),
             Capacity = (decimal)Math.Round((_rng.NextDouble() * 10 + 15), 2),
-            Items = new List<Item>(),
             Player = this
         };
 
@@ -364,5 +154,39 @@ public class Player : IPlayer
     public virtual void RecoverResource(int recoveryPower)
     {
         Archetype.RecoverResource(recoveryPower);
+    }
+
+    public virtual void ElapseTime()
+    {
+        Effects.ElapseTime(
+            onExpire: e =>
+            {
+                switch (e.Source)
+                {
+                    case StatusRecordType.Skill:
+                        Logger.Log($"An effect affecting {(StatType)e.Type} has ended!");
+                        break;
+                    case StatusRecordType.ElementalStatus:
+                        Logger.Log($"An elemental status {(ElementalStatusEffectType)e.Type} has ended!");
+                        break;
+                    default:
+                        Logger.Log($"A {(ElementDamageType)e.Type} effect has ended!");
+                        break;
+                }
+            },
+            onTick: e =>
+            {
+                if (e.Source == StatusRecordType.ElementalDamage)
+                {
+                    TakeDamage(e.Power, (ElementType)e.Type);
+                }
+            }
+        );
+        Archetype.RecoverResource();
+
+        foreach (var skill in Archetype.Skills)
+        {
+            skill.UpdateElapsedTime();
+        }
     }
 }

@@ -1,9 +1,9 @@
-﻿using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
-
-namespace ConsoleGameEntities.Models.Entities;
+﻿namespace ConsoleGameEntities.Models.Entities;
 
 public class ModelEnums
 {
+    public record StatusRecord(StatusRecordType Source, int Type, int Duration, int Power);
+
     public enum ItemType
     {
         Weapon = 0,
@@ -133,6 +133,16 @@ public class ModelEnums
         Mythic = 5
     }
 
+    public enum ElementDamageType
+    {
+        Burning = 0,
+        Static = 1,
+        Frostbite = 2,
+        Poisoned = 3,
+        Weakened = 4,
+        Despair = 5
+    }
+
     public enum ElementalStatusEffectType
     {
         Charred = 0,
@@ -143,11 +153,17 @@ public class ModelEnums
         Corrupted = 5
     }
 
-    public enum IngredientType 
-    { 
+    public enum IngredientType
+    {
         Core = 0,
         Essence = 1,
         MonsterPart = 2
     }
 
+    public enum StatusRecordType
+    {
+        Skill = 0,
+        ElementalStatus = 1,
+        ElementalDamage = 2
+    }
 }

@@ -1,12 +1,12 @@
-﻿using ConsoleGame.Managers.Interfaces;
-using ConsoleGame.GameDao.Interfaces;
+﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Helpers.Interfaces;
+using ConsoleGame.Managers.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class RoomManagement(IInputManager inputManager, IOutputManager outputManager, 
+public class RoomManagement(IInputManager inputManager, IOutputManager outputManager,
             IRoomDao roomDao, IMapHelper mapHelper)
 {
     private readonly IInputManager _inputManager = inputManager;
@@ -125,7 +125,7 @@ public class RoomManagement(IInputManager inputManager, IOutputManager outputMan
 
         _outputManager.Write("\nnote: Entrance cannot be edited", ConsoleColor.Yellow);
 
-        var roomToEdit = 
+        var roomToEdit =
             _inputManager.Selector(
                 rooms,
                 r => ColorfulToStringHelper.RoomToString(r),

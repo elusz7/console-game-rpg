@@ -1,5 +1,5 @@
-﻿using ConsoleGameEntities.Models.Entities;
-using ConsoleGame.Managers.Interfaces;
+﻿using ConsoleGame.Managers.Interfaces;
+using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Managers;
 

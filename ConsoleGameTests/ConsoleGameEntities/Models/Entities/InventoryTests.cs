@@ -1,10 +1,6 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
+using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
-using System.Collections.Generic;
-using System;
-using ConsoleGameEntities.Exceptions;
 
 namespace ConsoleGameEntities.Tests.Models.Entities;
 
@@ -148,7 +144,7 @@ public class InventoryTests
         var item = CreateItem(value: 10);
         int expectedGold = inventory.Gold - (int)Math.Round(item.GetBuyPrice());
 
-        inventory.Buy(item);        
+        inventory.Buy(item);
 
         Assert.AreEqual(expectedGold, inventory.Gold);
         Assert.IsTrue(inventory.Items.Contains(item));

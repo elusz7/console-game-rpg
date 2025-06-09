@@ -22,7 +22,7 @@ public class MonsterDisplay(IOutputManager outputManager, IInputManager inputMan
                 + "\n3. List Monsters By Damage Type"
                 + "\n4. Search For Monster By Name"
                 + "\n5. Return to Monster Menu");
-            
+
             var input = _inputManager.ReadMenuKey(5);
             switch (input)
             {

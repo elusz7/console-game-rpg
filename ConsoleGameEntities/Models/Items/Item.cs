@@ -1,10 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
+﻿using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
-using ConsoleGameEntities.Exceptions;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Items;
 

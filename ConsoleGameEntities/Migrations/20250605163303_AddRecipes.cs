@@ -72,6 +72,13 @@ public partial class AddRecipes : Migration
                     onDelete: ReferentialAction.Cascade);
             });
 
+        // add recipe id to Runes table
+        migrationBuilder.AddColumn<int>(
+            name: "RecipeId",
+            table: "Runes",
+            type: "int",
+            nullable: true);
+
         // Indexes
         migrationBuilder.CreateIndex(
             name: "IX_Recipes_RuneId",

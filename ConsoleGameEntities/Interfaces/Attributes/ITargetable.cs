@@ -1,15 +1,13 @@
-﻿using ConsoleGameEntities.Models.Skills;
+﻿using ConsoleGameEntities.Helpers.Gameplay;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 namespace ConsoleGameEntities.Interfaces.Attributes;
 
 public interface ITargetable
 {
-    Dictionary<long, string> ActionItems { get; }
+    ActionLogger Logger { get; }
     void TakeDamage(int damage, DamageType? damageType);
+    void TakeDamage(int damage, ElementType element);
     void Heal(int regainedHealth);
-    int GetStat(StatType stat);
-    void ModifyStat(StatType stat, int amount);
-    void AddActionItem(Skill skill);
-    void AddActionItem(string action);
-    void ClearActionItems();
+    void ModifyStat(StatType stat, int duration, int amount);
+
 }

@@ -1,7 +1,4 @@
-﻿using ConsoleGameEntities.Models.Monsters;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
-
-namespace ConsoleGameEntities.Models.Items;
+﻿namespace ConsoleGameEntities.Models.Items;
 
 public class Valuable : Item
 {
@@ -37,7 +34,7 @@ public class Valuable : Item
             RequiredLevel = 1;
             return;
         }
-        
+
         decimal rawLevelEstimate = (decimal)Math.Pow((double)(estimatedBaseValue / 1.5M), 1.0 / 1.15);
 
         RequiredLevel = Math.Max(1, (int)Math.Round(rawLevelEstimate));

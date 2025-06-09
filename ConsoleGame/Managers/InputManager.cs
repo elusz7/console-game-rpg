@@ -1,7 +1,7 @@
-﻿using ConsoleGameEntities.Models.Items;
-using ConsoleGame.Helpers.DisplayHelpers;
-using ConsoleGameEntities.Interfaces.ItemAttributes;
+﻿using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Managers.Interfaces;
+using ConsoleGameEntities.Interfaces.ItemAttributes;
+using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Managers;
 public class InputManager(IOutputManager outputManager) : IInputManager

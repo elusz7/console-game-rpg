@@ -1,5 +1,4 @@
-﻿using ConsoleGameEntities.Models.Monsters.Strategies;
-using static ConsoleGameTests.TestHelpers.StrategyHelper;
+﻿using static ConsoleGameTests.TestHelpers.StrategyHelper;
 
 namespace ConsoleGameTests.ConsoleGameEntities.Models.Monsters.Strategies;
 

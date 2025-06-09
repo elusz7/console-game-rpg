@@ -1,19 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using ConsoleGameEntities.Exceptions;
+﻿using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
-using global::ConsoleGameEntities.Exceptions;
 using global::ConsoleGameEntities.Interfaces.Attributes;
-using global::ConsoleGameEntities.Models.Entities;
-using global::ConsoleGameEntities.Models.Monsters;
-using global::ConsoleGameEntities.Models.Skills;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 

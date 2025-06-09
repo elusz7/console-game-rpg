@@ -9,7 +9,13 @@ namespace ConsoleGameEntities.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<int>(
-                name: "RuneId",
+                name: "Weapon_RuneId",
+                table: "Items",
+                type: "int",
+                nullable: true);
+
+            migrationBuilder.AddColumn<int>(
+                name: "Armor_RuneId",
                 table: "Items",
                 type: "int",
                 nullable: true);
@@ -34,14 +40,26 @@ namespace ConsoleGameEntities.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Items_RuneId",
+                name: "IX_Items_ArmorRuneId",
                 table: "Items",
-                column: "RuneId");
+                column: "Armor_RuneId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Items_WeaponRuneId",
+                table: "Items",
+                column: "Weapon_RuneId");
 
             migrationBuilder.AddForeignKey(
-                name: "FK_Items_Runes_RuneId",
+                name: "FK_Items_Runes_ArmorRuneId",
                 table: "Items",
-                column: "RuneId",
+                column: "Armor_RuneId",
+                principalTable: "Runes",
+                principalColumn: "Id");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Items_Runes_WeaponRuneId",
+                table: "Items",
+                column: "Weapon_RuneId",
                 principalTable: "Runes",
                 principalColumn: "Id");
         }
@@ -49,18 +67,30 @@ namespace ConsoleGameEntities.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_Items_Rune_RuneId",
+                name: "FK_Items_Rune_ArmorRuneId",
+                table: "Items");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Items_Rune_WeaponRuneId",
                 table: "Items");
 
             migrationBuilder.DropTable(
                 name: "Runes");
 
             migrationBuilder.DropIndex(
-                name: "IX_Items_RuneId",
+                name: "IX_Items_WeaponRuneId",
+                table: "Items");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Items_ArmorRuneId",
                 table: "Items");
 
             migrationBuilder.DropColumn(
-                name: "RuneId",
+                name: "Armor_RuneId",
+                table: "Items");
+
+            migrationBuilder.DropColumn(
+                name: "Weapon_RuneId",
                 table: "Items");
         }
     }

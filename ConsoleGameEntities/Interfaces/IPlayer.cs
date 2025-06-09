@@ -1,5 +1,4 @@
 ﻿using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 

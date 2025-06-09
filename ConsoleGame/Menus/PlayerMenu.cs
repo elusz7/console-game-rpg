@@ -20,9 +20,9 @@ public class PlayerMenu(IInputManager inputManager, IOutputManager outputManager
             _outputManager.WriteLine("1. View Players"
                 + "\n2. Manage Players"
                 + "\n3. Return to Admin Menu");
-            
+
             var choice = _inputManager.ReadMenuKey(3);
-            
+
             switch (choice)
             {
                 case 1:
@@ -36,5 +36,5 @@ public class PlayerMenu(IInputManager inputManager, IOutputManager outputManager
                     return;
             }
         }
-    }    
+    }
 }

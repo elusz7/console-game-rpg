@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleGameEntities.Models.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.GameDao.Interfaces;

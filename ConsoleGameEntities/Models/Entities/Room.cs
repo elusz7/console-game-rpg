@@ -1,5 +1,4 @@
-﻿using System.Text;
-using ConsoleGameEntities.Interfaces;
+﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Monsters;
 
 namespace ConsoleGameEntities.Models.Entities;

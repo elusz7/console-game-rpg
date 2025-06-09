@@ -1,9 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using ConsoleGameEntities.Exceptions;
+﻿using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
-using Microsoft.Extensions.Logging;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Skills;
@@ -13,10 +11,6 @@ public class SupportSkill : Skill
     public int Duration { get; set; } // Duration MUST be less than cooldown
     public StatType StatAffected { get; set; }
     public int SupportEffect { get; set; }
-
-    // Track how many turns each target has left under the effect
-    [NotMapped]
-    public Dictionary<ITargetable, int> TargetsAffected { get; set; } = new();
 
     public override void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
@@ -37,7 +31,7 @@ public class SupportSkill : Skill
                 throw new SkillResourceException();
             }
 
-            self.AddActionItem(this);
+            self.Logger.Log($"You use {Name}!");
 
             if (TargetType == TargetType.Self)
             {
@@ -65,13 +59,12 @@ public class SupportSkill : Skill
                 }
             }
 
-            ElapsedTime = 0;
+            Reset();
         }
         else if (caster is Monster monster)
         {
             if (TargetType == TargetType.Self)
             {
-                monster.AddActionItem(this);
                 ApplyEffect(monster);
             }
             else if (TargetType == TargetType.SingleEnemy)
@@ -79,66 +72,28 @@ public class SupportSkill : Skill
                 if (singleEnemy == null)
                     throw new InvalidTargetException("Support");
 
-                monster.AddActionItem(this);
                 ApplyEffect(singleEnemy);
             }
 
-            ElapsedTime = 0;
+            monster.Logger.Log($"{monster.Name} uses {Name}!");
+            Reset();
         }
     }
 
     public override void UpdateElapsedTime()
     {
-        var expiredTargets = new List<ITargetable>();
-
-        foreach (var kvp in TargetsAffected)
-        {
-            var target = kvp.Key;
-            int turnsRemaining = kvp.Value - 1;
-
-            if (turnsRemaining <= 0)
-            {
-                RevertEffect(target);
-                expiredTargets.Add(target);
-            }
-            else
-            {
-                TargetsAffected[target] = turnsRemaining;
-            }
-        }
-
-        foreach (var target in expiredTargets)
-            TargetsAffected.Remove(target);
-
         ElapsedTime++;
     }
 
     public override void Reset()
     {
-        foreach (var target in TargetsAffected.Keys)
-            RevertEffect(target);
-
-        TargetsAffected.Clear();
         ElapsedTime = 0;
     }
 
     public void ApplyEffect(ITargetable target)
     {
-        if (TargetsAffected.ContainsKey(target))
-            throw new InvalidTargetException("Cannot apply multiple effects to same target with same skill");
-
         int modifier = SupportEffect == (int)SupportEffectType.Boost ? Power : -Power;
-        target.ModifyStat(StatAffected, modifier);
-
-        if (StatAffected != StatType.Health)
-            TargetsAffected[target] = Duration;
-    }
-
-    private void RevertEffect(ITargetable target)
-    {
-        target.AddActionItem($"{Name} effect expired");
-        int modifier = SupportEffect == (int)SupportEffectType.Boost ? -Power : Power;
-        target.ModifyStat(StatAffected, modifier);
+        target.ModifyStat(StatAffected, Duration, modifier);
     }
 
     public override Skill Clone()

@@ -1,7 +1,7 @@
-﻿using ConsoleGameEntities.Exceptions;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.Attributes;
-using System.ComponentModel.DataAnnotations.Schema;
+using ConsoleGameEntities.Models.Monsters;
 
 namespace ConsoleGameEntities.Models.Skills;
 
@@ -29,7 +29,10 @@ public class BossSkill : DamageSkill
             _ => 1.0 // fallback in case Phase is invalid
         };
 
-        caster.AddActionItem(this);
+        if (caster is not BossMonster)
+            throw new InvalidOperationException("Only monsters can use boss skills.");
+        else if (caster is BossMonster boss)
+            boss.Logger.Log($"{boss.Name} uses {Name}!");
 
         int damage = (int)(Power * multiplier);
         singleEnemy?.TakeDamage(damage, DamageType);

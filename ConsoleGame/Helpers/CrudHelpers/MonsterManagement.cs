@@ -103,7 +103,7 @@ public class MonsterManagement(IOutputManager outputManager, IInputManager input
             return;
         }
 
-        var monsterToEdit = 
+        var monsterToEdit =
             _inputManager.Selector(
                 monsters,
                 m => ColorfulToStringHelper.MonsterToString(m),

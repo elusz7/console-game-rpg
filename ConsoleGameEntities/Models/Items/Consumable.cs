@@ -1,5 +1,4 @@
 ﻿using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 namespace ConsoleGameEntities.Models.Items;
@@ -19,12 +18,12 @@ public class Consumable : Item
             throw new InvalidTargetException($"{Name} cannot be used on {item.GetType().Name}.");
 
         item.RecoverDurability(Power);
-        item.Inventory?.Player?.AddActionItem($"{item.Name} has been repaired by {Power} durability!");
+        item.Inventory?.Player?.Logger.Log($"{item.Name} has been repaired by {Power} durability!");
 
         Durability--;
         if (Durability < 1)
         {
-            item.Inventory?.Player?.AddActionItem($"{Name} has been used up.");
+            item.Inventory?.Player?.Logger.Log($"{Name} has been used up.");
             Inventory?.RemoveItem(this);
         }
     }
@@ -39,7 +38,7 @@ public class Consumable : Item
                 throw new InvalidTargetException("You cannot use this consumable on a player.");
             case ConsumableType.Resource:
                 player.RecoverResource(Power);
-                player.AddActionItem($"You recover {Power} {player.Archetype.ResourceName}!");
+                player.Logger.Log($"You recover {Power} {player.Archetype.ResourceName}!");
                 break;
             default:
                 throw new InvalidTargetException($"{Name} cannot be used on {player.GetType().Name}.");
@@ -48,8 +47,8 @@ public class Consumable : Item
         Durability--;
 
         if (Durability < 1)
-        { 
-            player.AddActionItem($"{Name} has been used up.");
+        {
+            player.Logger.Log($"{Name} has been used up.");
             Inventory?.RemoveItem(this);
         }
     }

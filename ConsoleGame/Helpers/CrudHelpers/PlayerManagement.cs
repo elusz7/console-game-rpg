@@ -6,7 +6,7 @@ using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class PlayerManagement(IInputManager inputManager, IOutputManager outputManager, 
+public class PlayerManagement(IInputManager inputManager, IOutputManager outputManager,
     IPlayerDao playerDao, IArchetypeDao archetypeDao, InventoryManagement inventoryManagement)
 {
     private readonly IInputManager _inputManager = inputManager;
@@ -188,7 +188,7 @@ public class PlayerManagement(IInputManager inputManager, IOutputManager outputM
             }
 
             _outputManager.WriteLine();
-            var playerToDelete = 
+            var playerToDelete =
                 _inputManager.Selector(
                     players,
                     p => ColorfulToStringHelper.PlayerToString(p),

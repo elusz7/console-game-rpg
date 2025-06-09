@@ -1,11 +1,11 @@
 ﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers.Interfaces;
-using ConsoleGameEntities.Models.Entities;
 using ConsoleGame.Managers.Interfaces;
+using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class RoomConnectionManagement(IInputManager inputManager, IOutputManager outputManager, 
+public class RoomConnectionManagement(IInputManager inputManager, IOutputManager outputManager,
             IRoomDao roomDao, IMapHelper mapHelper)
 {
     private readonly IInputManager _inputManager = inputManager;
@@ -62,7 +62,7 @@ public class RoomConnectionManagement(IInputManager inputManager, IOutputManager
                 _outputManager.WriteLine("\nNo rooms available!\n", ConsoleColor.Red);
                 return;
             }
-            
+
             var room = _inputManager.Selector(
                 rooms,
                 r => r.Name,
@@ -161,7 +161,8 @@ public class RoomConnectionManagement(IInputManager inputManager, IOutputManager
 
             var entry = _inputManager.Selector(
                 unlinkedNeighbors.Keys.ToList(),
-                r => {
+                r =>
+                {
                     var parts = r.Split("-");
                     var (name1, direction) = _mapHelper.ParseKey(r);
                     return $"{name1} is {direction} of {unlinkedNeighbors[r]}";

@@ -428,6 +428,9 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("Tier")
                         .HasColumnType("int");
 
+                    b.Property<int>("RecipeId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.ToTable("Runes");
@@ -504,9 +507,10 @@ namespace ConsoleGameEntities.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("RuneId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("Armor_RuneId");
 
-                    b.HasIndex("RuneId");
+                    b.HasIndex("IX_Items_ArmorRuneId");
 
                     b.HasDiscriminator().HasValue("Armor");
                 });
@@ -545,7 +549,7 @@ namespace ConsoleGameEntities.Migrations
                         .HasColumnType("int")
                         .HasColumnName("Weapon_RuneId");
 
-                    b.HasIndex("RuneId");
+                    b.HasIndex("IX_Items_WeaponRuneId");
 
                     b.HasDiscriminator().HasValue("Weapon");
                 });
@@ -835,6 +839,10 @@ namespace ConsoleGameEntities.Migrations
             modelBuilder.Entity("ConsoleGameEntities.Models.Runes.Recipes.Recipe", b =>
                 {
                     b.Navigation("Ingredients");
+                });
+            modelBuilder.Entity("ConsoleGameEntities.Models.Runes.Rune", b =>
+                {
+                    b.Navigation("Recipes");
                 });
 #pragma warning restore 612, 618
         }

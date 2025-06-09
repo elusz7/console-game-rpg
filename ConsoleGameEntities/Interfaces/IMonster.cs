@@ -1,4 +1,5 @@
-﻿using ConsoleGameEntities.Interfaces.Attributes;
+﻿using ConsoleGameEntities.Helpers.Gameplay;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Skills;
@@ -28,6 +29,9 @@ public interface IMonster : ITargetable
     List<Skill> Skills { get; set; }
     Item? Treasure { get; set; }
     Room? Room { get; set; }
+
+    MonsterCombatBehavior Combat { get; }
+    EffectManager Effects { get; }
 
     void Attack(IPlayer target);
     Item? Loot();

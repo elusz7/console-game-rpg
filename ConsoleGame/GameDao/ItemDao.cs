@@ -18,13 +18,13 @@ public class ItemDao(GameContext context) : IItemDao
     }
 
     public void UpdateItem(Item item)
-    {        
+    {
         _context.Items?.Update(item);
         _context.SaveChanges();
     }
 
     public void DeleteItem(Item item)
-    {        
+    {
         _context.Items?.Remove(item);
         _context.SaveChanges();
     }
@@ -46,7 +46,7 @@ public class ItemDao(GameContext context) : IItemDao
     public List<Item> GetAllItems()
     {
         var items = _context.Items?.Include(i => i.Inventory).ThenInclude(i => i!.Player).ToList() ?? [];
-        
+
         return SortOrder switch
         {
             "ASC" => [.. items.OrderBy(i => i.Name)],

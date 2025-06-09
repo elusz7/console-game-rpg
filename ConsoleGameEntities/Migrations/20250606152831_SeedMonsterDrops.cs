@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 #nullable disable
 

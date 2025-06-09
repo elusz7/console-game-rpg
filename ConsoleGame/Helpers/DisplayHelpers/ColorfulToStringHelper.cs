@@ -1,10 +1,12 @@
-﻿using ConsoleGameEntities.Models.Items;
+﻿using System.Text;
+using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Monsters;
+using ConsoleGameEntities.Models.Runes.Recipes;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
-using System.Text;
-using ConsoleGameEntities.Exceptions;
+using Rune = ConsoleGameEntities.Models.Runes.Rune;
 
 namespace ConsoleGame.Helpers.DisplayHelpers;
 
@@ -32,16 +34,32 @@ public static class ColorfulToStringHelper
     };
     public static ConsoleColor GetMonsterColor(Monster monster)
     {
-        return monster.ThreatLevel switch { 
-            ThreatLevel.Low => ConsoleColor.Gray, 
-            ThreatLevel.Medium => ConsoleColor.Green, 
-            ThreatLevel.High => ConsoleColor.Blue, 
+        return monster.ThreatLevel switch
+        {
+            ThreatLevel.Low => ConsoleColor.Gray,
+            ThreatLevel.Medium => ConsoleColor.Green,
+            ThreatLevel.High => ConsoleColor.Blue,
             ThreatLevel.Elite => ConsoleColor.Yellow,
-            _ => ConsoleColor.Red };
-    }    
+            _ => ConsoleColor.Red
+        };
+    }
+    public static ConsoleColor GetRarityColor(RarityLevel rarity)
+    {
+        return rarity switch
+        {
+            RarityLevel.Common => ConsoleColor.Gray,
+            RarityLevel.Uncommon => ConsoleColor.Green,
+            RarityLevel.Rare => ConsoleColor.Blue,
+            RarityLevel.Epic => ConsoleColor.Magenta,
+            RarityLevel.Legendary => ConsoleColor.Yellow,
+            RarityLevel.Mythic => ConsoleColor.Red,
+            _ => ConsoleColor.White
+        };
+    }
+
     public static string ItemStatsString(Item item, decimal? value = null)
     {
-        if (value != null) 
+        if (value != null)
             return $"{item.Name}{GetArmorType(item)} - {value:0.00} [DUR: {item.Durability}{GetItemStats(item)}]";
 
         return $"{item.Name}{GetArmorType(item)} [DUR: {item.Durability}{GetItemStats(item)}]";
@@ -116,6 +134,20 @@ public static class ColorfulToStringHelper
 
         return sb.ToString();
     }
+    public static string RecipeToString(Recipe recipe)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"[{recipe.Name}]");
+        sb.AppendLine(string.Join("\n\t", recipe.Ingredients.Select(i => $"{i.Ingredient.Name} x{i.Quantity}")));
+        return sb.ToString();
+    }
+    public static string RuneToString(Rune rune)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"[{rune.Name}] - {rune.RuneType.Split("Rune")[0]}");
+        sb.AppendLine($"\tRarity: {rune.Rarity} | Element: {rune.Element} | Tier: {rune.Tier} | Power: {rune.Power}");
+        return sb.ToString();
+    }
 
 
 
@@ -174,7 +206,7 @@ public static class ColorfulToStringHelper
     }
     public static string WaitingStats(Player player, Skill skill)
     {
-        var parts = new List<string> ();
+        var parts = new List<string>();
 
         var resourceNeeded = SkillResourceNeeded(player, skill);
         if (!string.IsNullOrWhiteSpace(resourceNeeded))
@@ -182,7 +214,7 @@ public static class ColorfulToStringHelper
 
         var turnsNeeded = SkillTurnsNeeded(skill);
         if (!string.IsNullOrWhiteSpace(turnsNeeded))
-            parts.Add(turnsNeeded);        
+            parts.Add(turnsNeeded);
 
         return parts.Count == 0 ? "" : string.Join(" ", parts);
     }

@@ -9,8 +9,10 @@ public class AdventureEnums
         Rest = 3,
         Merchant = 4,
         Equipment = 5,
-        Move = 6,
-        Quit = 7
+        Crafting = 6,
+        Move = 7,
+        NextFloor = 8,
+        Quit = 9
     }
 
     public enum MerchantOptions
@@ -21,6 +23,25 @@ public class AdventureEnums
         Reforge = 3, //reroll armor defense/resistance power
         Purify = 4, //remove curse from item
         Exit = 5,
+    }
+
+    public enum CraftingOptions
+    {
+        CraftRune = 0,
+        FuseRunes = 1,
+        DestroyRune = 2,
+        ViewRecipes = 3,
+        Exit = 4
+    }
+
+    public enum RecipeOptions
+    {
+        ViewAll = 0,
+        ViewCraftable = 1,
+        SearchByName = 2,
+        SearchByElement = 3,
+        SearchByRarity = 4,
+        Exit = 5
     }
 
     public enum CombatOptions

@@ -1,10 +1,10 @@
-﻿using ConsoleGameEntities.Models.Items;
+﻿using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Monsters;
-using Microsoft.EntityFrameworkCore;
-using ConsoleGameEntities.Models.Skills;
-using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Runes;
 using ConsoleGameEntities.Models.Runes.Recipes;
+using ConsoleGameEntities.Models.Skills;
+using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGameEntities.Data
 {
@@ -61,11 +61,19 @@ namespace ConsoleGameEntities.Data
                 .HasForeignKey(w => w.RuneId)
                 .IsRequired(false);
 
+            modelBuilder.Entity<Weapon>()
+                .Property(w => w.RuneId)
+                .HasColumnName("Weapon_RuneId");
+
             modelBuilder.Entity<Armor>()
                 .HasOne(w => w.Rune)
                 .WithMany()
                 .HasForeignKey(w => w.RuneId)
                 .IsRequired(false);
+
+            modelBuilder.Entity<Armor>()
+                .Property(w => w.RuneId)
+                .HasColumnName("Armor_RuneId");
 
             modelBuilder.Entity<Item>()
                 .Property(i => i.Value)
@@ -188,8 +196,8 @@ namespace ConsoleGameEntities.Data
             // One-to-one: Recipe owns the Rune
             modelBuilder.Entity<Recipe>()
                 .HasOne(r => r.Rune)
-                .WithMany() //rune doesn't have a navigation to recipe
-                .HasForeignKey(r => r.RuneId)
+                .WithOne(ru => ru.Recipe)
+                .HasForeignKey<Recipe>(r => r.RuneId)
                 .OnDelete(DeleteBehavior.Restrict); // Don't delete Rune if Recipe is deleted
 
             // One-to-many: Recipe has many RecipeIngredients

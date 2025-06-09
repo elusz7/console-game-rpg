@@ -1,6 +1,5 @@
-﻿using ConsoleGameEntities.Models.Entities;
+﻿using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Items;
-using ConsoleGameEntities.Exceptions;
 
 
 namespace ConsoleGameTests.ConsoleGameEntities.Models.Items;

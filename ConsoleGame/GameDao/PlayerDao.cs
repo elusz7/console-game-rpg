@@ -110,7 +110,7 @@ public class PlayerDao(GameContext context) : IPlayerDao
     }
     public List<Player> GetAllPlayers()
     {
-            return [.. _context.Players!];
+        return [.. _context.Players!];
     }
     public List<Archetype> GetAllPlayerArchetypes()
     {

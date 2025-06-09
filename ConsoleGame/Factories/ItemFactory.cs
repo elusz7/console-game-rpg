@@ -72,7 +72,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
     }
     private static decimal CalculateLootValue(int level, int numMonsters, bool campaign)
     {
-        decimal baseGold = 0.75M * level * level + 14.25M; 
+        decimal baseGold = 0.75M * level * level + 14.25M;
 
         decimal monsterBonus = numMonsters * (3M + (level * 0.3M)); // More monsters, more gold
 
@@ -86,7 +86,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         if (campaign)
             total *= 1.2M;
 
-        return Math.Max(total, numMonsters); 
+        return Math.Max(total, numMonsters);
     }
     private static void TryRemoveLowestValue(List<Item> loot, List<Valuable> valuables, decimal lootMaxValue)
     {
@@ -122,7 +122,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
     private static List<Item> GatherTribute(decimal lootMaxValue, List<Item> availableItems, int numMonsters)
     {
         var loot = new List<Item>();
-        
+
         decimal currentValue = 0.0M;
 
         var valuables = availableItems.OfType<Valuable>().ToList();

@@ -24,7 +24,7 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
             {
                 var aliveMonsters = monsters
                     .Where(m => m.CurrentHealth > 0)
-                    .OrderByDescending(m => m.GetStat(StatType.Speed))
+                    .OrderByDescending(m => m.Combat.GetStat(m, StatType.Speed))
                     .ToList();
 
                 if (aliveMonsters.Count == 0)
@@ -34,9 +34,9 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
 
                 foreach (var monster in aliveMonsters)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[{monster.Name}] ({monster.CurrentHealth}/{monster.MaxHealth}) {monster.DamageType}: {monster.GetStat(StatType.Attack)}, DEF: {monster.GetStat(StatType.Defense)}, RES: {monster.GetStat(StatType.Resistance)}");
+                    System.Diagnostics.Debug.WriteLine($"[{monster.Name}] ({monster.CurrentHealth}/{monster.MaxHealth}) {monster.DamageType}: {monster.Combat.GetStat(monster, StatType.Attack)}, DEF: {monster.Combat.GetStat(monster, StatType.Defense)}, RES: {monster.Combat.GetStat(monster, StatType.Resistance)}");
 
-                    if (player.GetStat(StatType.Speed) > monster.GetStat(StatType.Speed) && !playerTurnTaken)
+                    if (player.Combat.GetStat(player, StatType.Speed) > monster.Combat.GetStat(monster, StatType.Speed) && !playerTurnTaken)
                     {
                         _outputManager.Display();
                         PlayerCombatTurn(player, aliveMonsters);
@@ -50,7 +50,7 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
                     if (monster.CurrentHealth > 0)
                     {
                         monster.Attack(player);
-                        
+
                         OutputActionItems(player, aliveMonsters);
                     }
                 }
@@ -122,21 +122,20 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
         }
     }
     private void OutputActionItems(Player player, List<Monster> monsters)
-    {        
+    {
         // SortedList auto-orders by key and avoids Dictionary's duplicate key issue
         var actions = new SortedList<long, string>();
 
         // Add player actions
-        foreach (var kvp in player.ActionItems)
+        foreach (var kvp in player.Logger.GetOrderedLog())
         {
-            long key = kvp.Key;
-            while (!actions.TryAdd(key, kvp.Value)) key++;
+            actions.Add(kvp.Key, kvp.Value);
         }
 
         // Add monster actions
         foreach (var monster in monsters ?? [])
         {
-            foreach (var kvp in monster.ActionItems)
+            foreach (var kvp in monster.Logger.GetOrderedLog())
             {
                 long key = kvp.Key;
                 while (!actions.TryAdd(key, kvp.Value)) key++;
@@ -149,10 +148,10 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
             _outputManager.WriteLine(action.Value, ConsoleColor.Cyan);
         }
 
-        player.ClearActionItems();
+        player.Logger.Clear();
         foreach (var monster in monsters ?? [])
         {
-            monster.ClearActionItems();
+            monster.Logger.Clear();
         }
     }
     private static void ElapseTime(Player player, List<Monster> monsters)
@@ -186,7 +185,7 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
         }
     }
     private bool Attack(Player player, List<Monster> targets)
-    {        
+    {
         var target = targets.Count == 1 ? targets[0]
                     : SelectTarget(targets, "attack");
 
@@ -234,16 +233,17 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
 
         if (usableSkills.Count == 0)
         {
+            _outputManager.WriteLine();
             if (waitingSkills.Count != 0)
             {
-                
+
                 _inputManager.Viewer(waitingSkills, s => ColorfulToStringHelper.SkillStatsString(player, s), "", _ => ConsoleColor.DarkRed);
             }
-            _outputManager.WriteLine("No skills available to use currently.", ConsoleColor.Red);
+            _outputManager.WriteLine("No skills available to use currently.\n", ConsoleColor.Red);
             return false;
         }
-        
-        var skill = SelectSkill(player, usableSkills, waitingSkills);        
+
+        var skill = SelectSkill(player, usableSkills, waitingSkills);
 
         if (skill == null)
         {
@@ -288,7 +288,7 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
             return false;
         }
 
-        if(skill.SkillCategory == SkillCategory.Support)
+        if (skill.SkillCategory == SkillCategory.Support)
         {
             bool wantsToAttack = _inputManager.ReadString("\nYou may also make an attack if you wish (y/n): ", ["y", "n"]) == "y";
             if (wantsToAttack)
@@ -296,7 +296,7 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
                 Attack(player, targets);
                 return true;
             }
-            
+
         }
 
         return true;
@@ -315,14 +315,14 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
             }
         }
 
-        
+
         return used;
     }
     private Monster? SelectTarget(List<Monster> validTargets, string purpose)
     {
         return _inputManager.Selector(
-            validTargets, 
-            m => m.Name, 
+            validTargets,
+            m => m.Name,
             $"Select a target to {purpose}",
             _ => ConsoleColor.DarkRed
         );
@@ -343,7 +343,7 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
 
         if (index < 0)
             return null;
-        
+
         return usableSkills[index];
     }
 }

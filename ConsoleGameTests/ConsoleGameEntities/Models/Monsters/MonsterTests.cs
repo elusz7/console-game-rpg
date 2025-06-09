@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleGameEntities.Exceptions;
+﻿using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
@@ -187,7 +182,7 @@ public class MonsterTests
         var monster = CreateMonster();
         monster.CurrentHealth = 1;
 
-        Assert.ThrowsException<MonsterDeathException>(() =>  monster.TakeDamage(1000, DamageType.Magical));
+        Assert.ThrowsException<MonsterDeathException>(() => monster.TakeDamage(1000, DamageType.Magical));
     }
 
     [TestMethod]
@@ -265,7 +260,7 @@ public class MonsterTests
     {
         var monster = CreateMonster();
         monster.CurrentHealth = 10;
-        monster.AddActionItem("Test action");
+        monster.Logger.Log("Test action");
         Assert.IsTrue(monster.ActionItems.Count > 0);
 
         monster.ClearActionItems();
@@ -274,21 +269,21 @@ public class MonsterTests
     }
 
     [TestMethod]
-    public void AddActionItem_AddsAction()
+    public void Logger.Log_AddsAction()
     {
         var monster = CreateMonster();
         monster.CurrentHealth = 10;
-        monster.AddActionItem("Test action");
+        monster.Logger.Log("Test action");
         Assert.IsTrue(monster.ActionItems.Values.Contains("Test action"));
     }
 
     [TestMethod]
-    public void AddActionItem_Skill_AddsAction()
+    public void Logger.Log_Skill_AddsAction()
     {
         var monster = CreateMonster();
         monster.CurrentHealth = 10;
         var skill = new Skill { Name = "Fireball" };
-        monster.AddActionItem(skill);
+        monster.Logger.Log(skill);
         Assert.IsTrue(monster.ActionItems.Values.Any(a => a.Contains("uses Fireball")));
     }
     [TestMethod]

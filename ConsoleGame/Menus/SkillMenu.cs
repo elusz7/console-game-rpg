@@ -1,6 +1,6 @@
 ﻿using ConsoleGame.Helpers.CrudHelpers;
-using ConsoleGame.Managers.Interfaces;
 using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame.Menus;
 

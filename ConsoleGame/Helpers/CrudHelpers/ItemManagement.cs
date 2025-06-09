@@ -22,7 +22,7 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
                 + "\n2. Edit Item"
                 + "\n3. Remove Item"
                 + "\n4. Return to Inventory Main Menu");
-            
+
             var input = _inputManager.ReadMenuKey(4);
 
             switch (input)
@@ -125,7 +125,7 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
 
         item.CalculateStatsByLevel();
         item.CalculateValue();
-        
+
         _outputManager.WriteLine($"\nBased on the level provided, stats have been automatically generated.", ConsoleColor.Green);
         _outputManager.WriteLine(ColorfulToStringHelper.ItemToString(item), ColorfulToStringHelper.GetItemColor(item));
 
@@ -194,7 +194,7 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
             return;
         }
 
-        Item? item = 
+        Item? item =
             _inputManager.Selector(
                 items,
                 i => ColorfulToStringHelper.ItemStatsString(i),
@@ -263,7 +263,7 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
             {
                 _outputManager.WriteLine("\nNo items available to delete.\n", ConsoleColor.Red);
                 break;
-            } 
+            }
 
             Item? itemToDelete =
                 _inputManager.Selector(

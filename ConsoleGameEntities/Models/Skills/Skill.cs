@@ -24,7 +24,7 @@ public class Skill : ISkill
     public TargetType TargetType { get; set; }
     public string SkillType { get; set; }
     public SkillCategory SkillCategory { get; set; }
-    
+
     public int? ArchetypeId { get; set; }
     public virtual Archetype? Archetype { get; set; }
     public int? MonsterId { get; set; }
@@ -32,7 +32,7 @@ public class Skill : ISkill
 
     public virtual void InitializeSkill(int level)
     {
-        ElapsedTime = Cooldown + 1;        
+        ElapsedTime = Cooldown + 1;
     }
     public virtual void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
@@ -45,11 +45,11 @@ public class Skill : ISkill
         if (caster is Player player)
         {
             ConsumePlayerResources(player);
-            player.AddActionItem(this);
+            player.Logger.Log($"You use {Name}!");
         }
         else if (caster is Monster monster)
         {
-            monster.AddActionItem(this);
+            monster.Logger.Log($"{monster.Name} uses {Name}!");
         }
 
         ApplySkillEffect(caster, singleEnemy, multipleEnemies);

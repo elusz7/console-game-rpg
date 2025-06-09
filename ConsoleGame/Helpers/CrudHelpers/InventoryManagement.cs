@@ -1,8 +1,8 @@
 ﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers.DisplayHelpers;
+using ConsoleGame.Managers.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
-using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
@@ -69,11 +69,11 @@ public class InventoryManagement(IInputManager inputManager, IOutputManager outp
             return false;
         }
 
-        var player = 
+        var player =
             _inputManager.Selector(
-                players, 
-                p => ColorfulToStringHelper.PlayerToString(p), 
-                "Select a player to manage their inventory", 
+                players,
+                p => ColorfulToStringHelper.PlayerToString(p),
+                "Select a player to manage their inventory",
                 q => ColorfulToStringHelper.GetArchetypeColor(q.Archetype));
 
         if (player == null)
@@ -85,7 +85,7 @@ public class InventoryManagement(IInputManager inputManager, IOutputManager outp
         return true;
     }
     private void AddItemToInventory()
-    {       
+    {
         do
         {
             var equippableItems = _inventoryDao.GetEquippableItems(_player!);
@@ -113,7 +113,7 @@ public class InventoryManagement(IInputManager inputManager, IOutputManager outp
 
             _outputManager.WriteLine($"You have selected [{itemToAdd.Name}]", ConsoleColor.Green);
 
-            if( !_inputManager.ConfirmAction("addition"))
+            if (!_inputManager.ConfirmAction("addition"))
             {
                 _outputManager.WriteLine($"\nAction cancelled. {itemToAdd.Name} not added to inventory.\n", ConsoleColor.Red);
             }

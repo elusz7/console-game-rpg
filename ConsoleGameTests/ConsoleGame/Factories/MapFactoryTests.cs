@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ConsoleGameTests.ConsoleGame.Factories;
+﻿namespace ConsoleGameTests.ConsoleGame.Factories;
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using global::ConsoleGame.Factories;
 using global::ConsoleGame.GameDao.Interfaces;
 using global::ConsoleGame.Helpers.Interfaces;
@@ -101,6 +94,6 @@ public class MapFactoryTests
         _roomDaoMock.Setup(d => d.GetAllRooms()).Returns(rooms);
 
         // Act
-        Assert.ThrowsException<InvalidOperationException>(() =>_mapFactory.GenerateMap(level: 1, campaign: false, randomMap: false));
+        Assert.ThrowsException<InvalidOperationException>(() => _mapFactory.GenerateMap(level: 1, campaign: false, randomMap: false));
     }
 }

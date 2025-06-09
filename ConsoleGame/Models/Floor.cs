@@ -29,7 +29,7 @@ public class Floor
         {
             var randomRoomIndex = _rng.Next(0, availableRooms.Count);
             var room = availableRooms[randomRoomIndex];
-            
+
             monster.Room = room;
             room.Monsters.Add(monster);
 
@@ -99,7 +99,7 @@ public class Floor
     }
     public void UpdateMerchantItems()
     {
-        MerchantItems = ItemFactory.CreateMerchantItems(Level);   
+        MerchantItems = ItemFactory.CreateMerchantItems(Level);
     }
 
     public List<Item> GetMerchantGifts(ArchetypeType type, int level)

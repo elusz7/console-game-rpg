@@ -1,13 +1,12 @@
 ﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Managers.Interfaces;
-using ConsoleGame.Models;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Helpers;
 
-public class PlayerHelper(IInputManager inputManager, IOutputManager outputManager, 
+public class PlayerHelper(IInputManager inputManager, IOutputManager outputManager,
     IPlayerDao playerDao, IArchetypeDao archetypeDao)
 {
     private readonly IInputManager _inputManager = inputManager;
@@ -34,9 +33,9 @@ public class PlayerHelper(IInputManager inputManager, IOutputManager outputManag
         var archetypes = _archetypeDao.GetAllArchetypes();
 
         var archetype = _inputManager.Selector(
-            archetypes, 
-            a => ColorfulToStringHelper.ArchetypeToString(a), 
-            $"Select the archetype of {name}", 
+            archetypes,
+            a => ColorfulToStringHelper.ArchetypeToString(a),
+            $"Select the archetype of {name}",
             a => ColorfulToStringHelper.GetArchetypeColor(a));
 
         if (archetype == null)
@@ -110,14 +109,14 @@ public class PlayerHelper(IInputManager inputManager, IOutputManager outputManag
     public void SavePlayer(Player player)
     {
         var dbPlayer = _playerDao.GetPlayerByName(player.Name);
-        
+
         SellInventory(player);
         player.RoomId = null;
         player.CurrentRoom = null;
 
         if (dbPlayer == null)
         {
-            
+
             _playerDao.AddPlayer(player);
         }
         else
@@ -139,7 +138,7 @@ public class PlayerHelper(IInputManager inputManager, IOutputManager outputManag
         {
             player.Unequip(equippedItem);
         }
-        
+
         var inventory = player.Inventory.Items.ToList();
         foreach (var item in inventory)
         {

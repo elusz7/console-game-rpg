@@ -1,5 +1,4 @@
-﻿using System.Text;
-using ConsoleGameEntities.Exceptions;
+﻿using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Runes;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
@@ -55,7 +54,7 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
         CalculateValue();
 
         Inventory.Gold -= price;
-    }  
+    }
     public virtual void Purify()
     {
         if (!Cursed)

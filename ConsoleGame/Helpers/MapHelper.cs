@@ -14,7 +14,7 @@ public class MapHelper : IMapHelper
     {
         Shuffle(availableRooms);
 
-        availableRooms.Remove(entrance); 
+        availableRooms.Remove(entrance);
 
         var connectedRooms = new List<Room> { entrance };
         var frontier = new List<Room> { entrance };
@@ -149,20 +149,20 @@ public class MapHelper : IMapHelper
         try
         {
             var (x, y) = FindRoomCoordinates(room, grid);
-        
 
-        foreach (var dir in new[] { "North", "South", "East", "West" })
-        {
-            if (HasReverseConflict(room, dir, connectedRooms)) continue;
 
-            var (dx, dy) = GetDirectionOffset(dir);
-            var targetCoords = (x + dx, y + dy);
-
-            if (!grid.ContainsKey(targetCoords)) // no logical conflict
+            foreach (var dir in new[] { "North", "South", "East", "West" })
             {
-                directions.Add(dir);
+                if (HasReverseConflict(room, dir, connectedRooms)) continue;
+
+                var (dx, dy) = GetDirectionOffset(dir);
+                var targetCoords = (x + dx, y + dy);
+
+                if (!grid.ContainsKey(targetCoords)) // no logical conflict
+                {
+                    directions.Add(dir);
+                }
             }
-        }
         }
         catch (InvalidOperationException) { return []; }
 
@@ -359,7 +359,7 @@ public class MapHelper : IMapHelper
         });
 
         return [.. singlePathRooms];
-    }    
+    }
     public Dictionary<Room, List<string>> GetAvailableDirections2(List<Room> rooms, Room? editingRoom = null)
     {
         var availableRooms = new Dictionary<Room, List<string>>();

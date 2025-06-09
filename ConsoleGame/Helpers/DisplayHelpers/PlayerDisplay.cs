@@ -29,7 +29,7 @@ public class PlayerDisplay(IInputManager inputManager, IOutputManager outputMana
                     ListPlayers("Search");
                     break;
                 case 2:
-                    ListPlayers(); 
+                    ListPlayers();
                     break;
                 case 3:
                     ListPlayers("Archetype");
@@ -65,9 +65,9 @@ public class PlayerDisplay(IInputManager inputManager, IOutputManager outputMana
 
                 _outputManager.WriteLine();
                 var archetype = _inputManager.Selector(
-                    archetypes, 
-                    a => ColorfulToStringHelper.ArchetypeToString(a), 
-                    "Select an Archetype", 
+                    archetypes,
+                    a => ColorfulToStringHelper.ArchetypeToString(a),
+                    "Select an Archetype",
                     a => ColorfulToStringHelper.GetArchetypeColor(a));
 
                 if (archetype == null)
@@ -95,7 +95,7 @@ public class PlayerDisplay(IInputManager inputManager, IOutputManager outputMana
 
         _outputManager.WriteLine();
         _inputManager.Viewer(
-            players, 
+            players,
             p => ColorfulToStringHelper.PlayerToString(p),
             "",
             p => ColorfulToStringHelper.GetArchetypeColor(p.Archetype));

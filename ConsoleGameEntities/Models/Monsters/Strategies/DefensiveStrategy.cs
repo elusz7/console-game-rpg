@@ -50,8 +50,8 @@ public class DefensiveStrategy : DefaultStrategy
 
     private static void MakeAttack(IMonster monster, IPlayer target)
     {
-        var decreasedDamage = (int)Math.Round(monster.GetStat(StatType.Attack) * .8);
-        monster.AddActionItem($"{monster.Name} attacks for {decreasedDamage} damage!");
+        var decreasedDamage = (int)Math.Round(monster.Combat.GetStat((Monster)monster, StatType.Attack) * .8);
+        monster.Logger.Log($"{monster.Name} attacks for {decreasedDamage} damage!");
         target.TakeDamage(decreasedDamage, monster.DamageType);
     }
 }

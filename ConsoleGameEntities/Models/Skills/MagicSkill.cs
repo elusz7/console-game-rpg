@@ -1,8 +1,8 @@
-﻿using ConsoleGameEntities.Interfaces.Attributes;
+﻿using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Models.Monsters;
-using ConsoleGameEntities.Exceptions;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Skills;
 
@@ -33,7 +33,7 @@ public class MagicSkill : DamageSkill
                     throw new SkillResourceException($"Not enough {player.Archetype.ResourceName} available to use this skill.");
                 }
 
-                player.AddActionItem(this);
+                player.Logger.Log($"You use {Name}!");
 
                 switch (TargetType)
                 {
@@ -70,7 +70,7 @@ public class MagicSkill : DamageSkill
                 if (singleEnemy == null)
                     throw new InvalidTargetException("Monster skill requires a single enemy target.");
 
-                monster.AddActionItem(this);
+                monster.Logger.Log($"{monster.Name} uses {Name}!");
                 singleEnemy.TakeDamage(Power, DamageType);
 
                 Reset();

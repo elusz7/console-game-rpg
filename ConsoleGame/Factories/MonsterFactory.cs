@@ -72,7 +72,7 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
             {
                 // Select a random monster and create a fresh instance
                 var randomMonsterBase = availableMonsters[_rng.Next(availableMonsters.Count)];
-                var randomMonster = CreateMonster(randomMonsterBase, level);                
+                var randomMonster = CreateMonster(randomMonsterBase, level);
 
                 // Calculate weight based on monster threat level and relative level to player
                 var weight = CalculateMonsterWeight(randomMonster, level);
@@ -82,7 +82,7 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
                 currentCount += (int)Math.Round(weight);
             }
         }
-        
+
         SetMonsterSkills(level, selectedMonsters);
 
         if (selectedMonsters.Count == 0) throw new InvalidOperationException("No monsters selected for combat");

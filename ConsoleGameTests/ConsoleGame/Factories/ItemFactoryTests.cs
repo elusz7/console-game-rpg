@@ -1,5 +1,4 @@
 ﻿using ConsoleGame.Factories;
-using ConsoleGame.GameDao;
 using ConsoleGame.GameDao.Interfaces;
 using ConsoleGameEntities.Models.Items;
 using Moq;

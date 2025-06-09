@@ -1,8 +1,8 @@
-﻿using ConsoleGameEntities.Interfaces.Attributes;
+﻿using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Models.Monsters;
-using ConsoleGameEntities.Exceptions;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Skills;
 
@@ -10,7 +10,7 @@ public class MartialSkill : DamageSkill
 {
     public override void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
-        if (IsOnCooldown) 
+        if (IsOnCooldown)
             throw new SkillCooldownException();
 
         if (singleEnemy == null && (multipleEnemies == null || multipleEnemies.Count == 0))
@@ -29,12 +29,12 @@ public class MartialSkill : DamageSkill
             }
             catch (InvalidOperationException) { throw new SkillResourceException($"You don't have enough {player.Archetype.ResourceName}."); }
 
-            player.AddActionItem(this);
+            player.Logger.Log($"You use {Name}!");
 
             switch (TargetType)
             {
                 case TargetType.SingleEnemy:
-                        singleEnemy.TakeDamage(Power, DamageType);
+                    singleEnemy.TakeDamage(Power, DamageType);
                     break;
 
                 case TargetType.AllEnemies:
@@ -46,7 +46,7 @@ public class MartialSkill : DamageSkill
                         }
                         catch (MonsterDeathException) { monsterDeath = true; }
                     }
-                        
+
                     break;
             }
 
@@ -59,7 +59,7 @@ public class MartialSkill : DamageSkill
             if (monster.Level < RequiredLevel)
                 throw new InvalidSkillLevelException("This monster's level is too low to use this skill.");
 
-            monster.AddActionItem(this);
+            monster.Logger.Log($"{monster.Name} uses {Name}!");
 
             singleEnemy.TakeDamage(Power, DamageType);
             Reset();

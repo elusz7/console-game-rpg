@@ -523,8 +523,7 @@ namespace ConsoleGameEntities.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("RuneId")
-                        .HasColumnType("int")
-                        .HasColumnName("Weapon_RuneId");
+                        .HasColumnType("int");
 
                     b.HasIndex("RuneId");
 

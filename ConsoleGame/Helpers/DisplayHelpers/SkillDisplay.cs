@@ -23,9 +23,9 @@ public class SkillDisplay(IInputManager inputManager, IOutputManager outputManag
                 + "\n5. List Unassigned Skills"
                 + "\n6. Search Skills By Name"
                 + "\n7. Return to Skill Menu");
-            
+
             var input = _inputManager.ReadMenuKey(7);
-            
+
             switch (input)
             {
                 case 1:

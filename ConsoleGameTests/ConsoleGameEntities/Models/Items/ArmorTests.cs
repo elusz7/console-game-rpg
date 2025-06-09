@@ -1,7 +1,6 @@
-using ConsoleGameEntities.Models.Items;
-using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Exceptions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGameTests.ConsoleGameEntities.Models.Items;
 
