@@ -17,7 +17,7 @@ public class MapFactory(IRoomDao roomDao, IMapHelper mapHelper) : IMapFactory
             : _roomDao.GetAllRooms()/*.Select(r => r.DeepClone())*/.ToList();
 
         var entrance = rooms.First(r => r.Name.Equals("Entrance", StringComparison.OrdinalIgnoreCase));
-        var totalRoomsAllowed = Math.Min(level * 3, rooms.Count) + 2;
+        var totalRoomsAllowed = campaign ? Math.Min(level * 3, rooms.Count) + 2 : Math.Min(level * 5, rooms.Count) + 2;
 
         if (campaign || randomMap)
         {

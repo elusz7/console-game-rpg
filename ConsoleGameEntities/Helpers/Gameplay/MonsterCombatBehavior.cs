@@ -1,4 +1,5 @@
-﻿using ConsoleGameEntities.Exceptions;
+﻿using System.Threading;
+using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Monsters;
@@ -14,6 +15,26 @@ public class MonsterCombatBehavior
     public void Attack(Monster self, IPlayer target, IMonsterStrategy strategy)
     {
         strategy.ExecuteAttack(self, target);
+    }
+
+    public void BasicAttack(IMonster self, IPlayer target, double damageAdjustment)
+    {
+        var actualDamage = (int)Math.Round(self.AttackPower * damageAdjustment);
+        self.Logger.Log($"{self.Name} attacks for {actualDamage} damage!");
+        target.TakeDamage(actualDamage, self.DamageType);
+
+        ElementalAttack(self, target);
+    }
+    private static void ElementalAttack(IMonster self, IPlayer target)
+    {
+        if (self.AttackElement != null && self.ElementalPower != null)
+        {
+            var elementalDamage = (int)self.ElementalPower;
+            var element = (ElementType)self.AttackElement;
+
+            self.Logger.Log($"{self.Name}'s attack is empowered. The attack deals {elementalDamage} {element} damage!");
+            target.TakeDamage(elementalDamage, element);
+        }
     }
 
     public void TakeDamage(Monster self, int damage, DamageType? type)

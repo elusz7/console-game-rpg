@@ -12,7 +12,8 @@ public class AdventureEnums
         Crafting = 6,
         Move = 7,
         NextFloor = 8,
-        Quit = 9
+        SameFloor = 9,
+        Quit = 10
     }
 
     public enum MerchantOptions
@@ -30,8 +31,9 @@ public class AdventureEnums
         CraftRune = 0,
         FuseRunes = 1,
         DestroyRune = 2,
-        ViewRecipes = 3,
-        Exit = 4
+        TransmuteEssence = 3,
+        ViewRecipes = 4,
+        Exit = 5
     }
 
     public enum RecipeOptions

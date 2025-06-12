@@ -17,7 +17,7 @@ public abstract class Rune : IRune
     public int? RecipeId { get; set; }
     public virtual Recipe? Recipe { get; set; }
 
-    public Dictionary<Ingredient, int> DestroyRune()
+    public virtual Dictionary<Ingredient, int> DestroyRune()
     {
         if (Recipe == null)
         {

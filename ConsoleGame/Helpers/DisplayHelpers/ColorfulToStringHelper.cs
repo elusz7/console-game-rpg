@@ -60,9 +60,9 @@ public static class ColorfulToStringHelper
     public static string ItemStatsString(Item item, decimal? value = null)
     {
         if (value != null)
-            return $"{item.Name}{GetArmorType(item)} - {value:0.00} [DUR: {item.Durability}{GetItemStats(item)}]";
+            return $"{item.Name}{GetArmorType(item)} - {value:0.00} [DUR: {item.Durability}{GetItemStats(item)}]{RuneInfo(item)}";
 
-        return $"{item.Name}{GetArmorType(item)} [DUR: {item.Durability}{GetItemStats(item)}]";
+        return $"{item.Name}{GetArmorType(item)} [DUR: {item.Durability}{GetItemStats(item)}]{RuneInfo(item)}";
     }
     public static string SkillStatsString(Player player, Skill skill)
     {
@@ -134,11 +134,20 @@ public static class ColorfulToStringHelper
 
         return sb.ToString();
     }
-    public static string RecipeToString(Recipe recipe)
+    public static string RecipeToString(Recipe recipe, Dictionary<Ingredient, int> availableIngredients)
     {
         var sb = new StringBuilder();
         sb.AppendLine($"[{recipe.Name}]");
-        sb.AppendLine(string.Join("\n\t", recipe.Ingredients.Select(i => $"{i.Ingredient.Name} x{i.Quantity}")));
+        //sb.AppendLine(string.Join("\n\t", recipe.Ingredients.Select(i => $"{i.Ingredient.Name} x{i.Quantity}")));
+        foreach (var recipeIngredient in recipe.Ingredients)
+        {
+            sb.Append($"\t{recipeIngredient.Ingredient.Name} x{recipeIngredient.Quantity}");
+            if (availableIngredients.TryGetValue(recipeIngredient.Ingredient, out var qty))
+            {
+                sb.Append($" | available: {qty}");
+            }
+            sb.Append('\n');
+        }
         return sb.ToString();
     }
     public static string RuneToString(Rune rune)
@@ -158,6 +167,15 @@ public static class ColorfulToStringHelper
             Weapon weapon => $" | ATK: {weapon.AttackPower}",
             Armor armor => $" | DEF: {armor.DefensePower} | RES: {armor.Resistance}",
             Consumable consumable => $" | POW: {consumable.Power} | AFF: {consumable.ConsumableType}",
+            _ => ""
+        };
+    }
+    private static string RuneInfo(Item item)
+    {
+        return item switch
+        {
+            Armor armor => armor.Rune == null ? "" : $" {armor.Rune.Name}",
+            Weapon weapon => weapon.Rune == null ? "" : $" {weapon.Rune.Name}",
             _ => ""
         };
     }

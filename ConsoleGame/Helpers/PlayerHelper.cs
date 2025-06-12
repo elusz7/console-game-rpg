@@ -56,7 +56,7 @@ public class PlayerHelper(IInputManager inputManager, IOutputManager outputManag
     }
     private Player? SelectCharacter()
     {
-        /*var availableCharacters = _playerDao.GetAllPlayers();
+        var availableCharacters = _playerDao.GetAllPlayers();
 
         if (availableCharacters.Count == 0)
         {
@@ -70,10 +70,10 @@ public class PlayerHelper(IInputManager inputManager, IOutputManager outputManag
             return null;
         }
         
-        var player = _playerDao.GetPlayerNoTracking(selection);*/
+        var player = _playerDao.GetPlayerNoTracking(selection);
 
-        var dbPlayer = _playerDao.GetPlayerByName("Kaenji Stormleaf") ?? throw new InvalidDataException("No player found");
-        var player = _playerDao.GetPlayerNoTracking(dbPlayer);
+        //var dbPlayer = _playerDao.GetPlayerByName("Kaenji Stormleaf") ?? throw new InvalidDataException("No player found");
+        //var player = _playerDao.GetPlayerNoTracking(dbPlayer);
 
         LevelUpPlayer(player);
 
@@ -113,6 +113,7 @@ public class PlayerHelper(IInputManager inputManager, IOutputManager outputManag
         SellInventory(player);
         player.RoomId = null;
         player.CurrentRoom = null;
+        player.Logger.Clear();
 
         if (dbPlayer == null)
         {

@@ -55,8 +55,6 @@ public class CautiousStrategy : DefaultStrategy
 
     private static void MakeAttack(IMonster monster, IPlayer target)
     {
-        var decreasedDamage = (int)Math.Ceiling(monster.Combat.GetStat((Monster)monster, StatType.Attack) * 0.8);
-        monster.Logger.Log($"{monster.Name} attacks for {decreasedDamage} damage!");
-        target.TakeDamage(decreasedDamage, monster.DamageType);
+        monster.Combat.BasicAttack(monster, target, 0.8);
     }
 }

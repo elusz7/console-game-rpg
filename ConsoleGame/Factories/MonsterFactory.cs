@@ -29,7 +29,7 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
 
     private static readonly Dictionary<string, int> NameCounts = [];
 
-    public List<Monster> GenerateMonsters(int level, bool campaign)
+    public List<Monster> GenerateMonsters(int level, bool campaign, int numRooms)
     {
         NameCounts.Clear();
         var selectedMonsters = new List<Monster>();
@@ -65,21 +65,44 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
             if (availableMonsters.Count == 0)
                 throw new InvalidOperationException("No available monsters found for the given level.");
 
-            int targetMonsterCount = (int)Math.Round(level * 3.5);
-            int currentCount = 0;
+            int targetMonsterCount = (int)Math.Round(level * 3.5); //weighted monster score
+            int maxMonsterCount = (int)Math.Round((numRooms - 2) * 1.5); //unweighted monster score
 
-            while (currentCount < targetMonsterCount)
+            int weightedMonsterCount = 0;
+            int flatMonsterCount = 0;
+            int eliteCount = 0;
+
+            if (level < 3)
             {
+                availableMonsters = [.. availableMonsters
+                    .Where(m => m.ThreatLevel == ThreatLevel.Low 
+                        || m.ThreatLevel == ThreatLevel.Medium)];
+            }
+            else if (level < 5)
+            {
+                availableMonsters = [.. availableMonsters
+                    .Where(m => m.ThreatLevel != ThreatLevel.Elite)];
+            }
+
+            while (weightedMonsterCount < targetMonsterCount && flatMonsterCount < maxMonsterCount)
+            {
+                if (eliteCount > (level / 5)) //remove elitemonsters if their count passes the threshold
+                {
+                    availableMonsters.RemoveAll(m => m is EliteMonster);
+                }
+
                 // Select a random monster and create a fresh instance
                 var randomMonsterBase = availableMonsters[_rng.Next(availableMonsters.Count)];
                 var randomMonster = CreateMonster(randomMonsterBase, level);
+                if (randomMonster is EliteMonster) eliteCount++;
 
                 // Calculate weight based on monster threat level and relative level to player
                 var weight = CalculateMonsterWeight(randomMonster, level);
 
                 // Add the monster and increase the monster count by the calculated weight
                 selectedMonsters.Add(randomMonster);
-                currentCount += (int)Math.Round(weight);
+                weightedMonsterCount += (int)Math.Round(weight);
+                flatMonsterCount += 1;
             }
         }
 
@@ -123,6 +146,47 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
         monster.AggressionLevel = monsterBase.AggressionLevel;
         monster.MaxHealth = monsterBase.MaxHealth;
 
+        //set up random elements so that even if the base monster is pulled several times, the elements will be different
+        var elements = Enumerable.Range(0, 7);
+        var attackElement = elements.ElementAt(_rng.Next(elements.Count())) switch
+        {
+            0 => ElementType.Fire,
+            1 => ElementType.Ice,
+            2 => ElementType.Lightning,
+            3 => ElementType.Nature,
+            4 => ElementType.Radiance,
+            5 => ElementType.Abyssal,
+            _ => (ElementType?)null
+        };
+        var vulnerability = elements.ElementAt(_rng.Next(elements.Count())) switch
+        {
+            0 => ElementType.Fire,
+            1 => ElementType.Ice,
+            2 => ElementType.Lightning,
+            3 => ElementType.Nature,
+            4 => ElementType.Radiance,
+            5 => ElementType.Abyssal,
+            _ => (ElementType?)null
+        };
+        while (attackElement == vulnerability)
+        {
+            vulnerability = elements.ElementAt(_rng.Next(elements.Count())) switch
+            {
+                0 => ElementType.Fire,
+                1 => ElementType.Ice,
+                2 => ElementType.Lightning,
+                3 => ElementType.Nature,
+                4 => ElementType.Radiance,
+                5 => ElementType.Abyssal,
+                _ => (ElementType?)null
+            };
+        }
+        int? elementalPower = attackElement == null ? null : _rng.Next(1, 3); 
+
+        monster.AttackElement = attackElement;
+        monster.ElementalPower = elementalPower;
+        monster.Vulnerability = vulnerability;
+
         return monster;
     }
 
@@ -155,21 +219,21 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
             throw new ArgumentOutOfRangeException(nameof(number), "Value must be between 1 and 3999.");
 
         var romanNumerals = new[]
-        {
-        (1000, "M"),
-        (900, "CM"),
-        (500, "D"),
-        (400, "CD"),
-        (100, "C"),
-        (90, "XC"),
-        (50, "L"),
-        (40, "XL"),
-        (10, "X"),
-        (9, "IX"),
-        (5, "V"),
-        (4, "IV"),
-        (1, "I")
-    };
+            {
+            (1000, "M"),
+            (900, "CM"),
+            (500, "D"),
+            (400, "CD"),
+            (100, "C"),
+            (90, "XC"),
+            (50, "L"),
+            (40, "XL"),
+            (10, "X"),
+            (9, "IX"),
+            (5, "V"),
+            (4, "IV"),
+            (1, "I")
+        };
 
         var result = new StringBuilder();
 
@@ -301,10 +365,15 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
     }
     private static double CalculateMonsterWeight(Monster monster, int level)
     {
-        double threatWeight = _monsterThreatWeights[monster.ThreatLevel];
-        double levelRatio = Math.Clamp(level / (double)monster.Level, 0.5, 2.0);
+        double baseWeight = monster.ThreatLevel switch
+        {
+            ThreatLevel.Low => 0.75,
+            ThreatLevel.Medium => 1.5,
+            ThreatLevel.High => 2.0,
+            ThreatLevel.Elite => 3.5
+        };
 
-        return threatWeight * levelRatio;
+        return baseWeight * (1 + level * 0.05); // gradually increases
     }
 }
 

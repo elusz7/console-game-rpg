@@ -56,23 +56,29 @@ namespace ConsoleGameEntities.Data
                 .HasValue<Consumable>("Consumable");
 
             modelBuilder.Entity<Weapon>()
+                .Property<int?>("WeaponRuneId");
+
+            modelBuilder.Entity<Weapon>()
                 .HasOne(w => w.Rune)
                 .WithMany()
-                .HasForeignKey(w => w.RuneId)
+                .HasForeignKey(w => w.WeaponRuneId)
                 .IsRequired(false);
 
             modelBuilder.Entity<Weapon>()
-                .Property(w => w.RuneId)
+                .Property(w => w.WeaponRuneId)
                 .HasColumnName("Weapon_RuneId");
+
+            modelBuilder.Entity<Armor>()
+                .Property<int?>("ArmorRuneId");
 
             modelBuilder.Entity<Armor>()
                 .HasOne(w => w.Rune)
                 .WithMany()
-                .HasForeignKey(w => w.RuneId)
+                .HasForeignKey(w => w.ArmorRuneId)
                 .IsRequired(false);
 
             modelBuilder.Entity<Armor>()
-                .Property(w => w.RuneId)
+                .Property(w => w.ArmorRuneId)
                 .HasColumnName("Armor_RuneId");
 
             modelBuilder.Entity<Item>()
@@ -231,6 +237,17 @@ namespace ConsoleGameEntities.Data
 
             modelBuilder.Entity<MonsterDrop>()
                 .ToTable("MonsterDrops");
+
+            modelBuilder.Entity<Ingredient>()
+                .ToTable("Ingredients");
+
+            modelBuilder.Entity<Rune>()
+                .HasDiscriminator<string>(r => r.RuneType)
+                .HasValue<ArmorRune>("ArmorRune")
+                .HasValue<WeaponRune>("WeaponRune");
+
+            modelBuilder.Entity<Rune>()
+                .ToTable("Runes");
 
             base.OnModelCreating(modelBuilder);
         }

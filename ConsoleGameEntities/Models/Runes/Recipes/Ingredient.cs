@@ -6,5 +6,5 @@ public class Ingredient
 {
     public int Id { get; set; }
     public string Name { get; set; }
-    public IngredientType IngredientType { get; set; }
+    public ComponentType ComponentType { get; set; }
 }

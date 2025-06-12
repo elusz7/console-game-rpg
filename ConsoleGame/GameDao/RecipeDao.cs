@@ -10,7 +10,9 @@ public class RecipeDao(GameContext context) : IRecipeDao
 
     public List<Recipe> GetCraftableRecipes(Dictionary<Ingredient, int> availableIngredients)
     {
-        var craftableRecipes = _context.Recipes
+        var allRecipes = _context.Recipes.ToList();
+
+        var craftableRecipes = allRecipes
             .Where(recipe => recipe.Ingredients.All(recipeIngredient => HasSufficientIngredient(recipeIngredient, availableIngredients)))
             .ToList();
 

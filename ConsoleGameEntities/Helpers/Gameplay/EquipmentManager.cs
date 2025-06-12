@@ -2,6 +2,7 @@
 using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Models.Runes;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Helpers.Gameplay;
@@ -90,6 +91,42 @@ public class EquipmentManager
 
         player.Logger.Log($"You have been cursed! Your max health has been lowered by {deduction}!");
         cursedItem.TargetCursed();
+    }
+
+    public void ApplyRune(Player player, WeaponRune rune)
+    {
+        var weapon = player.Combat.EquippedWeapon(player);
+
+        if (weapon == null)
+            throw new RuneException("You must equip a weapon before applying a rune.");
+
+        var existingRune = weapon.Rune;
+        if (existingRune != null)
+        {
+            player.Logger.Log($"You destroy the current rune [{existingRune.Name}] on {weapon.Name}.");
+            weapon.RemoveRune();
+            var ingredients = existingRune.DestroyRune();
+            player.Inventory.AddIngredients(ingredients);
+        }
+
+        player.Logger.Log($"You apply {rune.Name} to {weapon.Name}.");
+        player.Inventory.RemoveRune(rune, 1);
+        weapon.ApplyRune(rune);
+    }
+    public void ApplyRune(Player player, ArmorRune rune, Armor armor)
+    {
+        var existingRune = armor.Rune;
+        if (existingRune != null)
+        {
+            player.Logger.Log($"You destroy the current rune [{existingRune.Name}] on {armor.Name}.");
+            armor.RemoveRune();
+            var ingredients = existingRune.DestroyRune();
+            player.Inventory.AddIngredients(ingredients);
+        }
+
+        player.Logger.Log($"You apply {rune.Name} to {armor.Name}.");
+        player.Inventory.RemoveRune(rune, 1);
+        armor.ApplyRune(rune);
     }
 
     public IReadOnlyCollection<IEquippable> GetEquippedItems() => _equippedItems.AsReadOnly();

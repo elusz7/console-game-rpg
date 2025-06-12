@@ -5,6 +5,7 @@ using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Models.Runes;
 using ConsoleGameEntities.Models.Runes.Recipes;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
@@ -39,31 +40,27 @@ public class Player : IPlayer
     public IReadOnlyCollection<IEquippable> Equipment => EquipmentManager.GetEquippedItems();
     [NotMapped]
     public ActionLogger Logger { get; } = new();
-    public void Attack(ITargetable target)
+
+
+    public void Attack(ITargetable target) => Combat.Attack(this, target);
+    public virtual void TakeDamage(int damage, DamageType? damageType) => Combat.TakeDamage(this, damage, damageType);
+    public virtual void TakeDamage(int damage, ElementType element) => Combat.TakeElementalDamage(this, damage, element);
+    public virtual void Heal(int regainedHealth) => Combat.Heal(this, regainedHealth);
+    public virtual void MaxHeal()
     {
-        Combat.Attack(this, target);
+        Heal(MaxHealth);
+        Logger.Clear();
     }
-    public virtual void TakeDamage(int damage, DamageType? damageType)
-    {
-        Combat.TakeDamage(this, damage, damageType);
-    }
-    public virtual void TakeDamage(int damage, ElementType element)
-    {
-        Combat.TakeElementalDamage(this, damage, element);
-    }
-    public virtual void Heal(int regainedHealth)
-    {
-        Combat.Heal(this, regainedHealth);
-    }
+    
     public void LevelUp()
     {
         Level++;
 
         var boost = Archetype.LevelUp(Level);
-        MaxHealth += boost;
+        MaxHealth += (boost * 2);//boost;
         CurrentHealth = MaxHealth;
 
-        Inventory.Gold += (Level * _rng.Next(8, 13));
+        Inventory.Gold += 500;//RESET (Level * _rng.Next(8, 13));
         Inventory.Capacity += Math.Round(boost * 0.8M, 2);
         DodgeChance += 0.003;
 
@@ -72,6 +69,8 @@ public class Player : IPlayer
 
     public void Equip(Item item) => EquipmentManager.Equip(this, item);
     public void Unequip(Item item) => EquipmentManager.Unequip(this, item);
+    public void ApplyRune(WeaponRune rune) => EquipmentManager.ApplyRune(this, rune);
+    public void ApplyRune(ArmorRune rune, Armor armor) => EquipmentManager.ApplyRune(this, rune, armor);
 
     public void ModifyStat(StatType stat, int duration, int amount)
     {
@@ -79,6 +78,7 @@ public class Player : IPlayer
             Heal(amount);
         else
         {
+            Logger.Log($"Your {stat} has been modified by {amount} for {duration} turns!");
             Effects.AddEffect(StatusRecordType.Skill, (int)stat, duration, amount);
         }
     }
@@ -120,26 +120,18 @@ public class Player : IPlayer
             }
         }
     }
-    public virtual void Sell(Item item)
-    {
-        if (item is IEquippable e && e.IsEquipped())
-            throw new InvalidOperationException("Cannot sell an equipped item.");
+    public virtual void Sell(Item item) => Inventory.Sell(item);
+    public virtual void Buy(Item item) => Inventory.Buy(item);
 
-        Inventory.Sell(item);
-    }
-    public virtual void Buy(Item item)
-    {
-        Inventory.Buy(item);
-    }
     public virtual void Initialize()
     {
         Level = 1;
-        MaxHealth = (int)Math.Round(Archetype.HealthBase * 1.5);
+        MaxHealth = Archetype.HealthBase * 2;
 
         Inventory = new Inventory
         {
-            Gold = _rng.Next(15, 24),
-            Capacity = (decimal)Math.Round((_rng.NextDouble() * 10 + 15), 2),
+            Gold = 1000, //RESET _rng.Next(15, 24),
+            Capacity = 500, //(decimal)Math.Round((_rng.NextDouble() * 10 + 15), 2),
             Player = this
         };
 
@@ -151,10 +143,7 @@ public class Player : IPlayer
         CurrentHealth = MaxHealth;
         Archetype.CurrentResource = Archetype.MaxResource;
     }
-    public virtual void RecoverResource(int recoveryPower)
-    {
-        Archetype.RecoverResource(recoveryPower);
-    }
+    public virtual void RecoverResource(int recoveryPower) => Archetype.RecoverResource(recoveryPower);
 
     public virtual void ElapseTime()
     {

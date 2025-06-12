@@ -14,7 +14,7 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
     public virtual int AttackPower { get; set; }
     public virtual DamageType DamageType { get; set; }
 
-    public int? RuneId { get; set; }
+    public int? WeaponRuneId { get; set; }
     public virtual WeaponRune? Rune { get; set; }
 
     public virtual decimal GetPurificationPrice() => Value * 0.5M;
@@ -44,6 +44,7 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
         }
 
         RequiredLevel++;
+        Durability += 2;
 
         var newStatMax = _rng.Next(RequiredLevel * 3, RequiredLevel * 6 + 1);
         var newStatMin = (int)Math.Max(1, Math.Floor(newStatMax * 0.33));
@@ -77,10 +78,12 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
         var baseValue = (decimal)Math.Pow(RequiredLevel, 1.15) * 1.5M;
         var durabilityValue = Durability * 1.5M;
         var attackValue = AttackPower * 1.2M;
+        var runeBase = Rune == null ? 0 : (int)Rune.Rarity + 1;
+        var runeValue = 25.0M * runeBase; // +25 gold per rarity level?
 
         var variance = (decimal)(_rng.NextDouble() * 0.2) + 0.9M;
 
-        var calculation = (baseValue + durabilityValue + attackValue) * variance;
+        var calculation = (baseValue + durabilityValue + attackValue + runeValue) * variance;
 
         Value = Math.Round(calculation, 2);
     }
@@ -95,5 +98,22 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
         var estimatedLevel = (int)Math.Round(AttackPower / 9.5M);
 
         RequiredLevel = Math.Max(1, estimatedLevel); // Safety cap
+    }
+
+    public void RemoveRune()
+    {
+        if (Rune == null)
+            throw new RuneException("No rune to remove.");
+        Rune = null;
+        WeaponRuneId = null;
+    }
+
+    public void ApplyRune(WeaponRune rune)
+    {
+        if (Rune != null)
+            throw new RuneException("A rune is already applied. Remove it first.");
+
+        Rune = rune ?? throw new RuneException("Cannot apply a null rune.");
+        WeaponRuneId = rune.Id;
     }
 }

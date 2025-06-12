@@ -1,6 +1,7 @@
 ﻿using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Models.Runes;
 
 namespace ConsoleGameEntities.Interfaces;
 
@@ -16,5 +17,7 @@ public interface IPlayer : ITargetable
     void Attack(ITargetable target);
     void Equip(Item item);
     void Unequip(Item item);
+    void ApplyRune(WeaponRune rune);
+    void ApplyRune(ArmorRune rune, Armor armor);
     void LevelUp();
 }

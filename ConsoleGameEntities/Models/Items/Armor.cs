@@ -16,7 +16,7 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
     public int Resistance { get; set; }
     public ArmorType ArmorType { get; set; }
 
-    public int? RuneId { get; set; }
+    public int? ArmorRuneId { get; set; }
     public virtual ArmorRune? Rune { get; set; }
 
     public decimal GetPurificationPrice() => Value * 0.5M;
@@ -81,6 +81,7 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
         }
 
         RequiredLevel++;
+        Durability += 2;
 
         var newStats = _rng.Next(RequiredLevel, RequiredLevel * 2 + 1);
 
@@ -116,10 +117,12 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
         var baseValue = (decimal)Math.Pow(RequiredLevel, 1.15) * 1.5M;
         var durabilityValue = Durability * 1.5M;
         var armorValue = DefensePower * 0.5M + Resistance * 0.5M;
+        var runeBase = Rune == null ? 0 : (int)Rune.Rarity + 1;
+        var runeValue = 25.0M * runeBase; // +25 gold per rarity level?
 
         var variance = (decimal)(_rng.NextDouble() * 0.2) + 0.9M;
 
-        var calculation = (baseValue + durabilityValue + armorValue) * variance;
+        var calculation = (baseValue + durabilityValue + armorValue + runeValue) * variance;
 
         Value = Math.Round(calculation, 2);
     }
@@ -137,5 +140,22 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
         var estimatedLevel = (int)Math.Round(total / 8.5M);
 
         RequiredLevel = Math.Max(1, estimatedLevel); // Safety cap
+    }
+
+    public void RemoveRune()
+    {
+        if (Rune == null)
+            throw new RuneException("No rune to remove.");
+        Rune = null;
+        ArmorRuneId = null;
+    }
+
+    public void ApplyRune(ArmorRune rune)
+    {
+        if (Rune != null)
+            throw new RuneException("A rune is already applied. Remove it first.");
+
+        Rune = rune ?? throw new RuneException("Cannot apply a null rune.");
+        ArmorRuneId = rune.Id;
     }
 }

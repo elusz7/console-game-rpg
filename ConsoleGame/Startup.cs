@@ -70,6 +70,7 @@ public static class Startup
         services.AddScoped<ISkillDao, SkillDao>();
         services.AddScoped<IRecipeDao, RecipeDao>();
         services.AddScoped<IRuneDao, RuneDao>();
+        services.AddScoped<IIngredientDao, IngredientDao>();
 
         services.AddTransient<GameEngine>();
         services.AddTransient<StartMenu>();
@@ -114,6 +115,7 @@ public static class Startup
         services.AddTransient<EquipmentHelper>();
         services.AddTransient<PlayerHelper>();
         services.AddTransient<LootHelper>();
+        services.AddTransient<CraftingHelper>();
 
         services.AddSingleton<IInputManager, InputManager>();
         services.AddSingleton<IOutputManager, OutputManager>();

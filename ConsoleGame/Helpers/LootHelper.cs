@@ -29,7 +29,9 @@ public class LootHelper(IMonsterDao monsterDao, IOutputManager outputManager)
         foreach (var loot in potentialLoot)
         {
             var dropRate = (double)(loot.DropRate / 100.0M); // Convert percentage to a decimal
-            if (dropRate > new Random().NextDouble())
+            var levelBonus = (double)(monster.Level * 0.02); //2% bonus per monster level
+
+            if ((dropRate + levelBonus) > new Random().NextDouble())
             {
                 actualLoot.Add(loot.Ingredient);
             }
@@ -43,7 +45,7 @@ public class LootHelper(IMonsterDao monsterDao, IOutputManager outputManager)
         else
         {
             var itemNames = actualLoot.Select(i => i.Name).ToList();
-            _outputManager.WriteLine($"You found {string.Join(", ", itemNames)} on {monster.Name}!", ConsoleColor.Blue);
+            _outputManager.WriteLine($"\nYou found {string.Join(", ", itemNames)} on {monster.Name}!", ConsoleColor.Blue);
             player.Loot(actualLoot);
         }
     }

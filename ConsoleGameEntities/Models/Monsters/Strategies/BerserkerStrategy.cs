@@ -26,10 +26,7 @@ public class BerserkerStrategy : DefaultStrategy
             return;
         }
 
-        int boostedDamage = (int)Math.Ceiling(monster.Combat.GetStat((Monster)monster, StatType.Attack) * 1.5);
-        monster.Logger.Log($"{monster.Name} attacks for {boostedDamage} damage!");
-        target.TakeDamage(boostedDamage, monster.DamageType);
-
+        monster.Combat.BasicAttack(monster, target, 1.5);
     }
 }
 

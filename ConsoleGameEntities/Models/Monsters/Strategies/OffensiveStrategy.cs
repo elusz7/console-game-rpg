@@ -48,8 +48,6 @@ public class OffensiveStrategy : DefaultStrategy
 
     private static void MakeAttack(IMonster monster, IPlayer target)
     {
-        var increasedDamage = (int)Math.Ceiling(monster.Combat.GetStat((Monster)monster, StatType.Attack) * 1.2);
-        monster.Logger.Log($"{monster.Name} attacks for {increasedDamage} damage!");
-        target.TakeDamage(increasedDamage, monster.DamageType);
+        monster.Combat.BasicAttack(monster, target, 1.2);
     }
 }

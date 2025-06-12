@@ -165,7 +165,7 @@ public class PlayerManagement(IInputManager inputManager, IOutputManager outputM
             int option = _inputManager.DisplayEditMenu([.. propertyActions.Keys]);
 
             if (option == propertyActions.Count + 1)
-            {
+            {                
                 _playerDao.UpdatePlayer(player);
                 _outputManager.WriteLine($"\nExiting. Any changes made have been successfully saved to {player.Name}\n", ConsoleColor.Green);
                 return;

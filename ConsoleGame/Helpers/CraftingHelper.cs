@@ -10,46 +10,54 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers;
 
-public class CraftingHelper(IOutputManager outputManager, IInputManager inputManager, IRecipeDao recipeDao, IRuneDao runeDao)
+public class CraftingHelper(IOutputManager outputManager, IInputManager inputManager, IRecipeDao recipeDao, 
+    IRuneDao runeDao, IIngredientDao ingredientDao)
 {
     private readonly IOutputManager _outputManager = outputManager;
     private readonly IInputManager _inputManager = inputManager;
     private readonly IRecipeDao _recipeDao = recipeDao;
     private readonly IRuneDao _runeDao = runeDao;
+    private readonly IIngredientDao _ingredientDao = ingredientDao;
     private Player _player;
 
     public void CraftingTable(Player player)
     {
         _player = player;
 
-        var options = GetCraftingOptions();
-
-        var index = 1;
-        foreach (var option in options)
+        while (true)
         {
-            _outputManager.WriteLine($"{index}. {option.Value}", ConsoleColor.Yellow);
-            index++;
-        }
+            var options = GetCraftingOptions();
 
-        var choice = options.ElementAt(_inputManager.ReadInt("\tSelect an option: ", options.Count) - 1);
+            var index = 1;
+            foreach (var option in options)
+            {
+                _outputManager.WriteLine($"{index}. {option.Key}", ConsoleColor.Yellow);
+                index++;
+            }
 
-        switch (choice.Value)
-        {
-            case CraftingOptions.CraftRune:
-                CraftRune();
-                break;
-            case CraftingOptions.FuseRunes:
-                FuseRunes();
-                break;
-            case CraftingOptions.DestroyRune:
-                DestroyRune();
-                break;
-            case CraftingOptions.ViewRecipes:
-                ViewRecipeMenu();
-                break;
-            case CraftingOptions.Exit:
-                _outputManager.WriteLine("Leaving the crafting table.", ConsoleColor.Green);
-                return;
+            var choice = options.ElementAt(_inputManager.ReadInt("\tSelect an option: ", options.Count) - 1);
+
+            switch (choice.Value)
+            {
+                case CraftingOptions.CraftRune:
+                    CraftRune();
+                    break;
+                case CraftingOptions.FuseRunes:
+                    FuseRunes();
+                    break;
+                case CraftingOptions.DestroyRune:
+                    DestroyRune();
+                    break;
+                case CraftingOptions.TransmuteEssence:
+                    TransmuteEssence();
+                    break;
+                case CraftingOptions.ViewRecipes:
+                    ViewRecipeMenu();
+                    break;
+                case CraftingOptions.Exit:
+                    _outputManager.WriteLine("Leaving the crafting table.", ConsoleColor.Green);
+                    return;
+            }
         }
     }
 
@@ -59,15 +67,15 @@ public class CraftingHelper(IOutputManager outputManager, IInputManager inputMan
         List<Recipe> craftableRecipes = _recipeDao.GetCraftableRecipes(_player.Inventory.Ingredients);
         if (craftableRecipes.Count == 0)
         {
-            _outputManager.WriteLine("You have no recipes available to craft.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nYou have no recipes available to craft.\n", ConsoleColor.Red);
             return;
         }
 
         // Select rune to craft
-        Recipe? recipe = _inputManager.Selector(craftableRecipes, r => ColorfulToStringHelper.RecipeToString(r), "Select a rune to craft:", r => ColorfulToStringHelper.GetRarityColor(r.Rune.Rarity));
+        Recipe? recipe = _inputManager.Selector(craftableRecipes, r => ColorfulToStringHelper.RecipeToString(r, _player.Inventory.Ingredients), "Select a rune to craft:", r => ColorfulToStringHelper.GetRarityColor(r.Rune.Rarity));
         if (recipe == null)
         {
-            _outputManager.WriteLine("No rune selected.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nNo rune selected.\n", ConsoleColor.Red);
             return;
         }
 
@@ -76,11 +84,11 @@ public class CraftingHelper(IOutputManager outputManager, IInputManager inputMan
         {
             Rune craftedRune = recipe.CraftRune(_player.Inventory.Ingredients);
             _player.Inventory.AddRune(craftedRune);
-            _outputManager.WriteLine($"Successfully crafted {craftedRune.Name}!", ConsoleColor.Green);
+            _outputManager.WriteLine($"\nSuccessfully crafted {craftedRune.Name}!\n", ConsoleColor.Green);
         }
         catch (RecipeException ex)
         {
-            _outputManager.WriteLine($"Error crafting rune: {ex.Message}", ConsoleColor.Red);
+            _outputManager.WriteLine($"\nError crafting rune: {ex.Message}\n", ConsoleColor.Red);
             return;
         }
     }
@@ -91,7 +99,7 @@ public class CraftingHelper(IOutputManager outputManager, IInputManager inputMan
         var runesToFuse = _player.Inventory.GetFuseableRunes();
         if (runesToFuse.Count == 0)
         {
-            _outputManager.WriteLine("You have no runes available to fuse.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nYou have no runes available to fuse.\n", ConsoleColor.Red);
             return;
         }
 
@@ -100,7 +108,7 @@ public class CraftingHelper(IOutputManager outputManager, IInputManager inputMan
 
         if (rune == null)
         {
-            _outputManager.WriteLine("No rune selected for fusion.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nNo rune selected for fusion.\n", ConsoleColor.Red);
             return;
         }
 
@@ -116,62 +124,94 @@ public class CraftingHelper(IOutputManager outputManager, IInputManager inputMan
         var runesToDestroy = _player.Inventory.GetDestroyableRunes();
         if (runesToDestroy.Count == 0)
         {
-            _outputManager.WriteLine("You have no runes available to destroy.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nYou have no runes available to destroy.\n", ConsoleColor.Red);
             return;
         }
         // Select rune to destroy
         var rune = _inputManager.Selector(runesToDestroy, r => ColorfulToStringHelper.RuneToString(r), "Select a rune to destroy:", r => ColorfulToStringHelper.GetRarityColor(r.Rarity));
         if (rune == null)
         {
-            _outputManager.WriteLine("No rune selected for destruction.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nNo rune selected for destruction.\n", ConsoleColor.Red);
             return;
         }
 
         // Confirm destruction
-        var confirm = _inputManager.ReadString($"Are you sure you want to destroy {rune.Name}? This action cannot be undone. (y/n): ", ["y", "n"]).ToLower();
-        if (confirm.Equals("y"))
+        var confirm = _inputManager.ReadString($"\nAre you sure you want to destroy {rune.Name}? This action cannot be undone. (y/n): ", ["y", "n"]).ToLower();
+        if (!confirm.Equals("y"))
         {
-            _outputManager.WriteLine("Rune destruction cancelled.", ConsoleColor.Yellow);
+            _outputManager.WriteLine("\nRune destruction cancelled.\n", ConsoleColor.Red);
             return;
         }
 
         // Destroy Rune
         _player.Inventory.DestroyRune(rune); // remove the rune from the inventory
-        _outputManager.WriteLine($"Successfully destroyed {rune.Name}!", ConsoleColor.Green);
+        _outputManager.WriteLine($"\nSuccessfully destroyed {rune.Name}!\n", ConsoleColor.Green);
     }
+    private void TransmuteEssence()
+    {
+        var transmutableEssence = _player.Inventory.GetTransmutableEssence();
+        if (transmutableEssence.Count == 0)
+        {
+            _outputManager.WriteLine("\nYou have no essence available to transmute.\n", ConsoleColor.Red);
+            return;
+        }
 
+        var oldEssence = _inputManager.Selector(transmutableEssence, e => e.Name, "Select an essence to transmute:");
+        if (oldEssence == null)
+        {
+            _outputManager.WriteLine("\nNo essence selected for transmutation.\n", ConsoleColor.Red);
+            return;
+        }
+
+        var newEssence = _ingredientDao.TransmuteEssence(oldEssence);
+
+        try
+        {
+            _player.Inventory.TransmuteEssence(oldEssence, newEssence);
+            _outputManager.WriteLine($"\nSuccessfully transmuted {oldEssence.Name} into {newEssence.Name}!\n", ConsoleColor.Green);
+        }
+        catch (IngredientNotFoundException ex)
+        {
+            _outputManager.WriteLine($"\nError transmuting essence: {ex.Message}\n", ConsoleColor.Red);
+        }
+    }
     private void ViewRecipeMenu()
     {
         var options = GetRecipeOptions();
 
-        var index = 1;
-        foreach (var option in options)
+        while (true)
         {
-            _outputManager.WriteLine($"{index}. {option.Value}", ConsoleColor.Yellow);
-            index++;
-        }
+            var index = 1;
+            _outputManager.WriteLine();
+            foreach (var option in options)
+            {
+                _outputManager.WriteLine($"{index}. {option.Key}", ConsoleColor.Yellow);
+                index++;
+            }
 
-        var choice = options.ElementAt(_inputManager.ReadInt("\tSelect an option: ", options.Count) - 1);
+            var choice = options.ElementAt(_inputManager.ReadInt("\tSelect an option: ", options.Count) - 1);
 
-        switch (choice.Value)
-        {
-            case RecipeOptions.ViewAll:
-                ViewRecipes("All");
-                break;
-            case RecipeOptions.ViewCraftable:
-                ViewRecipes("Craftable");
-                break;
-            case RecipeOptions.SearchByName:
-                SearchRecipes("Name");
-                break;
-            case RecipeOptions.SearchByElement:
-                SearchRecipes("Element");
-                break;
-            case RecipeOptions.SearchByRarity:
-                SearchRecipes("Rarity");
-                break;
-            case RecipeOptions.Exit:
-                return;
+            switch (choice.Value)
+            {
+                case RecipeOptions.ViewAll:
+                    ViewRecipes("All");
+                    break;
+                case RecipeOptions.ViewCraftable:
+                    ViewRecipes("Craftable");
+                    break;
+                case RecipeOptions.SearchByName:
+                    SearchRecipes("Name");
+                    break;
+                case RecipeOptions.SearchByElement:
+                    SearchRecipes("Element");
+                    break;
+                case RecipeOptions.SearchByRarity:
+                    SearchRecipes("Rarity");
+                    break;
+                case RecipeOptions.Exit:
+                    _outputManager.WriteLine();
+                    return;
+            }
         }
     }
     private void ViewRecipes(string type)
@@ -185,20 +225,20 @@ public class CraftingHelper(IOutputManager outputManager, IInputManager inputMan
 
         if (recipes.Count == 0)
         {
-            _outputManager.WriteLine($"No recipes found.", ConsoleColor.Red);
+            _outputManager.WriteLine($"\nNo recipes found.\n", ConsoleColor.Red);
             return;
         }
 
-        _inputManager.Viewer(recipes, r => ColorfulToStringHelper.RecipeToString(r), $"Viewing {type} Recipes", r => ColorfulToStringHelper.GetRarityColor(r.Rune.Rarity));
+        _inputManager.Viewer(recipes, r => ColorfulToStringHelper.RecipeToString(r, _player.Inventory.Ingredients), $"Viewing {type} Recipes", r => ColorfulToStringHelper.GetRarityColor(r.Rune.Rarity));
     }
 
     private void SearchRecipes(string criteria)
     {
         var searchTerm = criteria switch
         {
-            "Name" => _inputManager.ReadString("Enter recipe name: "),
-            "Element" => _inputManager.GetEnumChoice<ElementType>("Select Element : ").ToString(),
-            "Rarity" => _inputManager.GetEnumChoice<RarityLevel>("Select Rarity: ").ToString(),
+            "Name" => _inputManager.ReadString("\nEnter recipe name: "),
+            "Element" => _inputManager.GetEnumChoice<ElementType>("\nSelect Element").ToString(),
+            "Rarity" => _inputManager.GetEnumChoice<RarityLevel>("\nSelect Rarity").ToString(),
             _ => throw new ArgumentException("Invalid search criteria.")
         };
 
@@ -212,11 +252,12 @@ public class CraftingHelper(IOutputManager outputManager, IInputManager inputMan
 
         if (recipes.Count == 0)
         {
-            _outputManager.WriteLine($"No recipes found for {criteria.ToLower()} '{searchTerm}'.", ConsoleColor.Red);
+            _outputManager.WriteLine($"\nNo recipes found for {criteria.ToLower()} '{searchTerm}'.\n", ConsoleColor.Red);
             return;
         }
 
-        _inputManager.Viewer(recipes, r => ColorfulToStringHelper.RecipeToString(r), $"Viewing Recipes by {criteria}", r => ColorfulToStringHelper.GetRarityColor(r.Rune.Rarity));
+        _outputManager.WriteLine();
+        _inputManager.Viewer(recipes, r => ColorfulToStringHelper.RecipeToString(r, _player.Inventory.Ingredients), $"Viewing Recipes by {criteria}", r => ColorfulToStringHelper.GetRarityColor(r.Rune.Rarity));
     }
 
     private static Dictionary<string, CraftingOptions> GetCraftingOptions()
@@ -226,6 +267,7 @@ public class CraftingHelper(IOutputManager outputManager, IInputManager inputMan
         AddMenuOption(options, "Craft Runes", CraftingOptions.CraftRune);
         AddMenuOption(options, "Fuse Runes", CraftingOptions.FuseRunes);
         AddMenuOption(options, "Destroy Rune", CraftingOptions.DestroyRune);
+        AddMenuOption(options, "Transmute Essence", CraftingOptions.TransmuteEssence);
         AddMenuOption(options, "View Recipes", CraftingOptions.ViewRecipes);
 
         AddMenuOption(options, "Exit", CraftingOptions.Exit);

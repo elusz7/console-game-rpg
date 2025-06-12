@@ -47,7 +47,6 @@ public class BossStrategy : DefaultStrategy
 
     private static void MakeAttack(IMonster monster, IPlayer target)
     {
-        monster.Logger.Log($"{monster.Name} attacks for {monster.Combat.GetStat((Monster)monster, StatType.Attack)} damage!");
-        target.TakeDamage(monster.Combat.GetStat((Monster)monster, StatType.Attack), monster.DamageType);
+        monster.Combat.BasicAttack(monster, target, 1.0);
     }
 }

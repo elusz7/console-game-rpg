@@ -4,6 +4,7 @@ using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Models.Runes;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers;
@@ -22,9 +23,10 @@ public class EquipmentHelper(IInputManager inputManager, IOutputManager outputMa
             _outputManager.WriteLine("1. Equip an item");
             _outputManager.WriteLine("2. Unequip an item");
             _outputManager.WriteLine("3. Use a consumable");
-            _outputManager.WriteLine("4. Exit");
+            _outputManager.WriteLine("4. Apply a Rune");
+            _outputManager.WriteLine("5. Exit");
 
-            var choice = _inputManager.ReadInt("\tChoose an option: ", 4);
+            var choice = _inputManager.ReadInt("\tChoose an option: ", 5);
 
             switch (choice)
             {
@@ -38,6 +40,9 @@ public class EquipmentHelper(IInputManager inputManager, IOutputManager outputMa
                     UseConsumable(player);
                     break;
                 case 4:
+                    ApplyRune(player);
+                    break;
+                case 5:
                     _outputManager.WriteLine();
                     return; // Exit the equipment management
             }
@@ -126,7 +131,7 @@ public class EquipmentHelper(IInputManager inputManager, IOutputManager outputMa
 
         if (consumables.Count == 0)
         {
-            _outputManager.WriteLine("No consumables available for use.", ConsoleColor.Red);
+            _outputManager.WriteLine("\nNo consumables available for use.", ConsoleColor.Red);
             return false;
         }
 
@@ -169,6 +174,65 @@ public class EquipmentHelper(IInputManager inputManager, IOutputManager outputMa
 
         OutputActionItems(player);
         return true;
+    }
+    private void ApplyRune(Player player)
+    {
+        var allRunes = player.Inventory.Runes;
+        if (allRunes.Count == 0)
+        {
+            _outputManager.WriteLine("\nNo runes available for application.", ConsoleColor.Red);
+            return;
+        }
+
+        var rune = _inputManager.Selector(allRunes.Keys.ToList(), r => $"{r.Name} ({r.RuneType.Split("Rune")[0]}) - Tier {r.Tier}", "Select a rune to apply");
+        if (rune == null)
+        {
+            _outputManager.WriteLine("\nNo rune selected for application.", ConsoleColor.Red);
+            return;
+        }
+
+        if (rune is WeaponRune wRune)
+        {
+            var confirmation = _inputManager.ReadString($"\nAre you sure you want to apply the rune {rune.Name} to your weapon? (y/n) ", ["y", "n"]).ToLower();
+            if (confirmation != "y")
+            {
+                _outputManager.WriteLine("\nRune application cancelled.", ConsoleColor.Yellow);
+                return;
+            }
+
+            player.ApplyRune(wRune);
+        }
+        else if (rune is ArmorRune aRune)
+        {
+            var equippedArmor = player.Combat.EquippedArmor(player);
+            if (equippedArmor == null)
+            {
+                _outputManager.WriteLine("\nNo armor equipped to apply the rune.", ConsoleColor.Red);
+                return;
+            }
+
+            var selectedArmor = _inputManager.Selector(equippedArmor, a => a.Name, "Select the armor to apply the rune");
+            if (selectedArmor == null)
+            {
+                _outputManager.WriteLine("\nNo armor selected for rune application.", ConsoleColor.Red);
+                return;
+            }
+
+            var confirmation = _inputManager.ReadString($"\nAre you sure you want to apply the rune {rune.Name} to {selectedArmor.Name}? (y/n) ", ["y", "n"]).ToLower();
+            if (confirmation != "y")
+            {
+                _outputManager.WriteLine("\nRune application cancelled.", ConsoleColor.Yellow);
+                return;
+            }
+
+            player.ApplyRune(aRune, selectedArmor);
+        }
+        else
+        {
+            _outputManager.WriteLine("\nSelected rune cannot be applied to equipment.", ConsoleColor.Red);
+            return;
+        }
+        OutputActionItems(player);
     }
 
     private void OutputActionItems(Player player)

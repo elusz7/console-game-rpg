@@ -40,7 +40,7 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
                     {
                         _outputManager.Display();
                         PlayerCombatTurn(player, aliveMonsters);
-                        _outputManager.Clear();
+
                         OutputActionItems(player, aliveMonsters);
                         playerTurnTaken = true;
                     }
@@ -156,7 +156,7 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
     }
     private static void ElapseTime(Player player, List<Monster> monsters)
     {
-        foreach (var monster in monsters)
+        /*foreach (var monster in monsters)
         {
             foreach (var skill in monster.Skills ?? [])
             {
@@ -169,7 +169,10 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
             skill.UpdateElapsedTime();
         }
 
-        player.Archetype.RecoverResource();
+        player.Archetype.RecoverResource();*/
+        player.ElapseTime();
+        foreach (var monster in monsters)
+            monster.ElapseTime();
     }
     private static void ResetSupportSkills(List<Monster> monsters)
     {
@@ -247,7 +250,7 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
 
         if (skill == null)
         {
-            _outputManager.WriteLine("Skill selection cancelled.");
+            _outputManager.WriteLine("\nSkill selection cancelled.\n", ConsoleColor.Red);
             return false;
         }
 
@@ -296,7 +299,10 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
                 Attack(player, targets);
                 return true;
             }
-
+        }
+        else
+        {
+            _outputManager.WriteLine();
         }
 
         return true;
@@ -310,6 +316,7 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
             bool wantsToAttack = _inputManager.ReadString("\nYou may also make an attack if you wish (y/n): ", ["y", "n"]) == "y";
             if (wantsToAttack)
             {
+                _outputManager.WriteLine();
                 Attack(player, validTargets);
                 return used;
             }

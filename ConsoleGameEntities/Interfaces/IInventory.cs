@@ -22,9 +22,11 @@ public interface IInventory
     void RemoveIngredient(Ingredient ingredient, int quantity);
     void AddRune(Rune rune);
     void RemoveRune(Rune rune, int quantity);
-    void DestoyRune(Rune rune);
+    void DestroyRune(Rune rune);
+    void TransmuteEssence(Ingredient oldEssence, Ingredient newEsence);
     List<(Rune rune, int quantity)> GetFuseableRunes();
     List<Rune> GetDestroyableRunes();
+    List<Ingredient> GetTransmutableEssence();
     public bool ContainsConsumables();
     public decimal GetCarryingWeight();
 }

@@ -4,6 +4,7 @@ using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Runes;
 using ConsoleGameEntities.Models.Runes.Recipes;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Entities;
 
@@ -70,13 +71,13 @@ public class Inventory : IInventory
     }
     public virtual void AddIngredient(Ingredient ingredient)
     {
-        if (Ingredients.ContainsKey(ingredient))
+        AddIngredient(ingredient, 1);
+    }
+    public virtual void AddIngredients(Dictionary<Ingredient, int> ingredients)
+    {
+        foreach (var kvp in ingredients)
         {
-            Ingredients[ingredient]++;
-        }
-        else
-        {
-            Ingredients.Add(ingredient, 1);
+            AddIngredient(kvp.Key, kvp.Value);
         }
     }
     private void AddIngredient(Ingredient ingredient, int quantity)
@@ -135,6 +136,7 @@ public class Inventory : IInventory
     {
         return Runes
             .Where(kvp => kvp.Value >= 4)
+            .Where(kvp => kvp.Key.Rarity != RarityLevel.Mythic && kvp.Key.Tier != 3) // Exclude mythic runes already at tier 3
             .Select(kvp => (kvp.Key, kvp.Value))
             .ToList();
     }
@@ -182,6 +184,23 @@ public class Inventory : IInventory
 
         return destroyableRunes;
     }
+    public List<Ingredient> GetTransmutableEssence()
+    {
+        return Ingredients.Where(kvp => kvp.Key.ComponentType == ComponentType.Essence && kvp.Value > 5)
+            .Where(kvp => kvp.Key.Id != 6) // Exclude mythic essences
+            .Select(kvp => kvp.Key)
+            .ToList();
+    }
+    public void TransmuteEssence(Ingredient oldEssence, Ingredient newEssence)
+    {
+        if (!Ingredients.ContainsKey(oldEssence) || Ingredients[oldEssence] < 6)
+            throw new IngredientNotFoundException($"You do not have enough {oldEssence.Name} to transmute.");
+
+        RemoveIngredient(oldEssence, 5); // remove 5 of the essence
+        AddIngredient(newEssence, 1); // add 1 of the new essence
+
+    }
+
     public void DestroyRune(Rune rune)
     {
         if (!Runes.ContainsKey(rune))
@@ -233,6 +252,9 @@ public class Inventory : IInventory
     }
     public void Sell(Item item)
     {
+        if (item is IEquippable e && e.IsEquipped())
+            throw new InvalidOperationException("Cannot sell an equipped item.");
+
         Gold += (int)Math.Round(item.GetSellPrice());
         RemoveItem(item);
     }

@@ -160,23 +160,42 @@ public class AdventureService(IOutputManager outputManager, IInputManager inputM
                             _mapManager.DisplayMap();
                             break;
                         case AdventureOptions.Crafting:
+                            _outputManager.Clear();
                             _craftingHelper.CraftingTable(player);
                             _outputManager.Clear();
                             _outputManager.WriteLine();
                             _mapManager.DisplayMap();
                             break;
                         case AdventureOptions.NextFloor:
-                            _outputManager.Write("Setting up next floor...", ConsoleColor.DarkGray);
+                            _outputManager.WriteLine("\nSetting up next floor...", ConsoleColor.DarkGray);
                             _outputManager.Display();
 
                             SetUpNextFloor();
                             floorCleared = false; // reset for the new floor
                             moveToNextFloor = true;
 
+                            if (!IsCampaign) _outputManager.WriteLine("\n");
+
                             _outputManager.Write("Press any key to continue...", ConsoleColor.DarkCyan);
                             _outputManager.Display();
                             _inputManager.ReadKey();
                             roomChanged = true; // reset inner loop
+                            break;
+                        case AdventureOptions.SameFloor:
+                            _outputManager.WriteLine("\nResetting the floor...", ConsoleColor.DarkGray);
+                            _outputManager.Display();
+
+                            ResetFloor();
+                            floorCleared = false; // reset for the new floor
+                            moveToNextFloor = false;
+
+                            if (!IsCampaign) _outputManager.WriteLine("\n");
+
+                            _outputManager.Write("Press any key to continue...", ConsoleColor.DarkCyan);
+                            _outputManager.Display();
+                            _inputManager.ReadKey();
+                            roomChanged = true; // reset inner loop
+                            _outputManager.Clear();
                             break;
                         case AdventureOptions.Quit:
                             var prompt = IsCampaign ? "Quit Campaign" : "Quit Adventure";
@@ -278,7 +297,7 @@ public class AdventureService(IOutputManager outputManager, IInputManager inputM
     {
         _outputManager.WriteLine("\nYou lay down on the soft moss next to the gently bubbling fountain and fall asleep.", ConsoleColor.Gray);
 
-        player.CurrentHealth = player.MaxHealth;
+        player.MaxHeal();
 
         _outputManager.WriteLine("You wake up feeling refreshed and ready to take on the world!", ConsoleColor.Green);
     }
@@ -319,6 +338,7 @@ public class AdventureService(IOutputManager outputManager, IInputManager inputM
         if (floorCleared)
         {
             AddMenuOption(options, "Descend to the Next Floor", AdventureOptions.NextFloor);
+            AddMenuOption(options, "Challenge Floor Again", AdventureOptions.SameFloor);
         }
 
         if (IsCampaign)
@@ -372,6 +392,21 @@ public class AdventureService(IOutputManager outputManager, IInputManager inputM
     private void SetUpNextFloor()
     {
         player.LevelUp();
+        bool merchant = floor.HasMetMerchant;
+
+        var map = 1;
+        if (!IsCampaign)
+        {
+            map = GetAdventureMapOption();
+        }
+
+        floor = _floorFactory.CreateFloor(player.Level, IsCampaign, map == 2);
+        floor.HasMetMerchant = merchant;
+        player.CurrentRoom = floor.GetEntrance();
+    }
+
+    private void ResetFloor()
+    {
         bool merchant = floor.HasMetMerchant;
 
         var map = 1;

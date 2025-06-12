@@ -153,7 +153,7 @@ public class ModelEnums
         Corrupted = 5
     }
 
-    public enum IngredientType
+    public enum ComponentType
     {
         Core = 0,
         Essence = 1,

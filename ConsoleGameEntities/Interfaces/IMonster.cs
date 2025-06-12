@@ -26,6 +26,10 @@ public interface IMonster : ITargetable
     DamageType DamageType { get; set; }
     ThreatLevel ThreatLevel { get; set; }
 
+    ElementType? AttackElement { get; set; }
+    int? ElementalPower { get; set; }
+    ElementType? Vulnerability { get; set; }
+
     List<Skill> Skills { get; set; }
     Item? Treasure { get; set; }
     Room? Room { get; set; }

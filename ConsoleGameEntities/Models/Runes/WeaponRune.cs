@@ -25,8 +25,6 @@ public class WeaponRune : Rune
         ElementType.Abyssal => ElementalStatusEffectType.Corrupted,
         _ => throw new ArgumentOutOfRangeException()
     };
-    [NotMapped]
-    public int ElapsedTime { get; set; }
     public int Duration { get; set; }
 
     public double StatusEffectChance => Rarity switch
@@ -42,30 +40,15 @@ public class WeaponRune : Rune
 
     public (int Damage, bool StatusEffectApplied) Use()
     {
-        int damage = Power * (Tier + 1);
+        int damage = Power * Tier;
 
         bool applyStatus = false;
 
-        if (ElapsedTime > Duration)
+        if (Random.Shared.NextDouble() < (StatusEffectChance / 100.0))
         {
-            if (Random.Shared.NextDouble() < StatusEffectChance / 100.0)
-            {
-                applyStatus = true;
-            }
+            applyStatus = true;
         }
 
         return (damage, applyStatus);
-    }
-
-    public bool ElapseTime()
-    {
-        ElapsedTime++;
-
-        return ElapsedTime == Duration;
-    }
-
-    public void EnableEffect()
-    {
-        ElapsedTime = 0;
     }
 }

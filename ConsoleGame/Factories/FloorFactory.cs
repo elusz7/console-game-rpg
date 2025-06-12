@@ -12,7 +12,7 @@ public class FloorFactory(IMapFactory mapFactory, IMonsterFactory monsterFactory
     public Floor CreateFloor(int level, bool campaign, bool randomMap)
     {
         var rooms = _mapFactory.GenerateMap(level, campaign, randomMap);
-        var monsters = _monsterFactory.GenerateMonsters(level, campaign);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign, rooms.Count);
         var (loot, numberOfCursedItems) = _itemFactory.GenerateLoot(level, monsters.Count, campaign);
 
         var floor = new Floor

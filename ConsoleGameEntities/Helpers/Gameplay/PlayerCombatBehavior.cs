@@ -19,7 +19,15 @@ public class PlayerCombatBehavior
             GetStat(self, StatType.Magic);
 
         self.Logger.Log($"You attack with {weapon.Name} for {damage} damage!");
-        target.TakeDamage(damage, DamageType.Martial);
+        try
+        {
+            target.TakeDamage(damage, DamageType.Martial);
+        }
+        catch (MonsterDeathException ex)
+        {
+            CheckWeaponDurability(self);
+            throw new MonsterDeathException(ex.Message);
+        }
 
         if (weapon.Rune != null && target is Monster monster)
         {
@@ -66,7 +74,7 @@ public class PlayerCombatBehavior
         {
             if (armor.Rune != null && armor.Rune.Element == element)
             {
-                damageTaken -= armor.Rune.Power;
+                damageTaken -= armor.Rune.Use();
                 break;
             }
         }
@@ -116,7 +124,7 @@ public class PlayerCombatBehavior
     }
     public List<Armor> EquippedArmor(Player self)
     {
-        return self.Equipment.OfType<Armor>().ToList() ?? new List<Armor>();
+        return self.Equipment.OfType<Armor>().ToList();
     }
     public int EquippedAttack(Player self)
     {

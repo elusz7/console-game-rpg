@@ -254,6 +254,9 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("AggressionLevel")
                         .HasColumnType("int");
 
+                    b.Property<int?>("AttackElement")
+                        .HasColumnType("int");
+
                     b.Property<int>("AttackPower")
                         .HasColumnType("int");
 
@@ -267,6 +270,9 @@ namespace ConsoleGameEntities.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("Description");
+
+                    b.Property<int?>("ElementalPower")
+                        .HasColumnType("int");
 
                     b.Property<int?>("ItemId")
                         .HasColumnType("int");
@@ -294,6 +300,9 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("ThreatLevel")
                         .HasColumnType("int");
 
+                    b.Property<int?>("Vulnerability")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ItemId")
@@ -315,7 +324,7 @@ namespace ConsoleGameEntities.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int>("IngredientType")
+                    b.Property<int>("ComponentType")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -365,7 +374,8 @@ namespace ConsoleGameEntities.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RuneId");
+                    b.HasIndex("RuneId")
+                        .IsUnique();
 
                     b.ToTable("Recipes");
                 });
@@ -404,10 +414,6 @@ namespace ConsoleGameEntities.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("Element")
                         .HasColumnType("int");
 
@@ -421,6 +427,9 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("Rarity")
                         .HasColumnType("int");
 
+                    b.Property<int?>("RecipeId")
+                        .HasColumnType("int");
+
                     b.Property<string>("RuneType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -428,14 +437,11 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("Tier")
                         .HasColumnType("int");
 
-                    b.Property<int>("RecipeId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.ToTable("Runes");
 
-                    b.HasDiscriminator<string>("Discriminator").HasValue("Rune");
+                    b.HasDiscriminator<string>("RuneType").HasValue("Rune");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Skills.Skill", b =>
@@ -497,6 +503,10 @@ namespace ConsoleGameEntities.Migrations
                 {
                     b.HasBaseType("ConsoleGameEntities.Models.Items.Item");
 
+                    b.Property<int?>("ArmorRuneId")
+                        .HasColumnType("int")
+                        .HasColumnName("Armor_RuneId");
+
                     b.Property<int>("ArmorType")
                         .HasColumnType("int");
 
@@ -506,11 +516,7 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("Resistance")
                         .HasColumnType("int");
 
-                    b.Property<int?>("RuneId")
-                        .HasColumnType("int")
-                        .HasColumnName("Armor_RuneId");
-
-                    b.HasIndex("IX_Items_ArmorRuneId");
+                    b.HasIndex("ArmorRuneId");
 
                     b.HasDiscriminator().HasValue("Armor");
                 });
@@ -545,11 +551,11 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("DamageType")
                         .HasColumnType("int");
 
-                    b.Property<int?>("RuneId")
+                    b.Property<int?>("WeaponRuneId")
                         .HasColumnType("int")
                         .HasColumnName("Weapon_RuneId");
 
-                    b.HasIndex("IX_Items_WeaponRuneId");
+                    b.HasIndex("WeaponRuneId");
 
                     b.HasDiscriminator().HasValue("Weapon");
                 });
@@ -745,8 +751,8 @@ namespace ConsoleGameEntities.Migrations
             modelBuilder.Entity("ConsoleGameEntities.Models.Runes.Recipes.Recipe", b =>
                 {
                     b.HasOne("ConsoleGameEntities.Models.Runes.Rune", "Rune")
-                        .WithMany()
-                        .HasForeignKey("RuneId")
+                        .WithOne("Recipe")
+                        .HasForeignKey("ConsoleGameEntities.Models.Runes.Recipes.Recipe", "RuneId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -791,7 +797,7 @@ namespace ConsoleGameEntities.Migrations
                 {
                     b.HasOne("ConsoleGameEntities.Models.Runes.ArmorRune", "Rune")
                         .WithMany()
-                        .HasForeignKey("RuneId");
+                        .HasForeignKey("ArmorRuneId");
 
                     b.Navigation("Rune");
                 });
@@ -800,7 +806,7 @@ namespace ConsoleGameEntities.Migrations
                 {
                     b.HasOne("ConsoleGameEntities.Models.Runes.WeaponRune", "Rune")
                         .WithMany()
-                        .HasForeignKey("RuneId");
+                        .HasForeignKey("WeaponRuneId");
 
                     b.Navigation("Rune");
                 });
@@ -840,9 +846,10 @@ namespace ConsoleGameEntities.Migrations
                 {
                     b.Navigation("Ingredients");
                 });
+
             modelBuilder.Entity("ConsoleGameEntities.Models.Runes.Rune", b =>
                 {
-                    b.Navigation("Recipes");
+                    b.Navigation("Recipe");
                 });
 #pragma warning restore 612, 618
         }
