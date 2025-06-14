@@ -68,7 +68,12 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
                 OutputActionItems(player, aliveMonsters);
             }
 
+            _outputManager.WriteLine();
             OutputActionItems(player, monsters);
+
+            _outputManager.Write("\nCombat is now over. Press any key to continue...", ConsoleColor.DarkBlue);
+            _outputManager.Display();
+            _inputManager.ReadKey();
         }
         catch (PlayerDeathException)
         {
@@ -208,8 +213,12 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
         {
             _outputManager.WriteLine("\nYou cannot attack with your bare hands!", ConsoleColor.Red);
 
-            _equipmentHelper.EquipItem(player, true);
-            _outputManager.WriteLine();
+            if (_equipmentHelper.EquipItem(player, true))
+            {
+                _outputManager.WriteLine();
+                return Attack(player, targets);
+            }
+
             return false;
         }
     }

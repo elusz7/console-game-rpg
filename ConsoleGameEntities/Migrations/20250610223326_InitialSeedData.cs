@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using ConsoleGameEntities.Models.Monsters;
+using Microsoft.EntityFrameworkCore.Migrations;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 #nullable disable
@@ -1364,11 +1365,11 @@ public partial class InitialSeedData : Migration
 
         var essenceDropRatesByThreat = new Dictionary<int, Dictionary<int, decimal>> // new Dictionary<threatLevel, Dictionary<essenceId, dropRate>>
         {
-            [0] = new() { [1] = 25.0M, [2] = 10.0M, [3] = 1.0M },
-            [1] = new() { [1] = 30.0M, [2] = 15.0M, [3] = 5.0M, [4] = 1.0M },
-            [2] = new() { [1] = 35.0M, [2] = 20.0M, [3] = 10.0M, [4] = 5.0M, [5] = 1.0M },
-            [3] = new() { [1] = 40.0M, [2] = 25.0M, [3] = 15.0M, [4] = 10.0M, [5] = 5.0M, [6] = 1.0M },
-            [4] = new() { [1] = 60.0M, [2] = 35.0M, [3] = 25.0M, [4] = 20.0M, [5] = 10.0M, [6] = 5.0M }
+            [0] = new() { [1] = 30.0M, [2] = 15.0M, [3] = 5.0M },
+            [1] = new() { [1] = 40.0M, [2] = 30.0M, [3] = 15.0M, [4] = 5.0M },
+            [2] = new() { [1] = 50.0M, [2] = 40.0M, [3] = 30.0M, [4] = 15.0M, [5] = 5.0M },
+            [3] = new() { [1] = 60.0M, [2] = 50.0M, [3] = 40.0M, [4] = 30.0M, [5] = 15.0M, [6] = 5.0M },
+            [4] = new() { [1] = 75.0M, [2] = 60.0M, [3] = 50.0M, [4] = 40.0M, [5] = 30.0M, [6] = 15.0M }
         };
 
         foreach (var threatLevel in essenceDropRatesByThreat.Keys)
@@ -1395,11 +1396,11 @@ public partial class InitialSeedData : Migration
 
         var coreDropRatesByThreat = new List<decimal>()
         {
-            10.0M, // ThreatLevel 0, 10%
-            20.0M, // ThreatLevel 1, 20%
-            30.0M, // ThreatLevel 2, 30%
-            40.0M, // ThreatLevel 3, 40%
-            50.0M, // ThreatLevel 4, 50%
+            25.0M, // ThreatLevel 0
+            35.0M, // ThreatLevel 1
+            40.0M, // ThreatLevel 2
+            50.0M, // ThreatLevel 3
+            60.0M, // ThreatLevel 4
         };
 
         var coreDropTable = new List<object[]>();
@@ -1455,35 +1456,38 @@ public partial class InitialSeedData : Migration
         var monsterPartDropsByThreat = new Dictionary<int, List<(RarityLevel rarity, decimal dropRate)>>()
         {
             [0] = new() {
-                (RarityLevel.Common, 30.0M),
-                (RarityLevel.Uncommon, 15.0M),
+                (RarityLevel.Common, 40.0M),
+                (RarityLevel.Uncommon, 20.0M),
                 (RarityLevel.Rare, 5.0M),
             },
             [1] = new() {
-                (RarityLevel.Common, 40.0M),
-                (RarityLevel.Uncommon, 30.0M),
-                (RarityLevel.Rare, 15.0M),
+                (RarityLevel.Common, 50.0M),
+                (RarityLevel.Uncommon, 40.0M),
+                (RarityLevel.Rare, 20.0M),
                 (RarityLevel.Epic, 5.0M),
             },
             [2] = new() {
-                (RarityLevel.Common, 20.0M),
-                (RarityLevel.Uncommon, 40.0M),
-                (RarityLevel.Rare, 30.0M),
-                (RarityLevel.Epic, 15.0M),
+                (RarityLevel.Common, 60.0M),
+                (RarityLevel.Uncommon, 50.0M),
+                (RarityLevel.Rare, 40.0M),
+                (RarityLevel.Epic, 20.0M),
                 (RarityLevel.Legendary, 5.0M),
             },
             [3] = new() {
-                (RarityLevel.Uncommon, 20.0M),
-                (RarityLevel.Rare, 40.0M),
-                (RarityLevel.Epic, 30.0M),
-                (RarityLevel.Legendary, 10.0M),
-                (RarityLevel.Mythic, 1.0M),
+                (RarityLevel.Common, 75.0M ),
+                (RarityLevel.Uncommon, 60.0M),
+                (RarityLevel.Rare, 50.0M),
+                (RarityLevel.Epic, 40.0M),
+                (RarityLevel.Legendary, 20.0M),
+                (RarityLevel.Mythic, 5.0M),
             },
             [4] = new() {
-                (RarityLevel.Rare, 20.0M),
-                (RarityLevel.Epic, 40.0M),
-                (RarityLevel.Legendary, 30.0M),
-                (RarityLevel.Mythic, 5.0M),
+                (RarityLevel.Common, 90.0M ),
+                (RarityLevel.Uncommon, 75.0M),
+                (RarityLevel.Rare, 60.0M),
+                (RarityLevel.Epic, 50.0M),
+                (RarityLevel.Legendary, 40.0M),
+                (RarityLevel.Mythic, 20.0M),
             },
         };
 
@@ -1498,19 +1502,26 @@ public partial class InitialSeedData : Migration
             foreach (var (rarity, dropRate) in rarityDrops)
             {
                 var (startId, endId) = ingredientTiers[rarity];
-                int count = endId - startId + 1;
 
-                // Repeat element list to match ingredient count
-                var expandedElements = Enumerable.Range(0, count)
-                .Select(i => baseElements[i % baseElements.Count])
-                .OrderBy(_ => Random.Shared.Next())
-                .ToList();
-
-                int index = 0;
                 for (int id = startId; id <= endId; id++)
                 {
-                    var element = expandedElements[index++];
-                    monsterPartDropTable.Add(new object[] { element, threatLevel, id, dropRate });
+                    // Shuffle elements and pick 3 unique ones
+                    var selectedElements = baseElements
+                        .OrderBy(_ => Random.Shared.Next())
+                        .Take(3)
+                        .ToList();
+
+                    foreach (var element in selectedElements)
+                    {
+                        string formattedDropRate = dropRate.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+                        string sql = $@"
+                            INSERT INTO MonsterDrops (Element, ThreatLevel, IngredientId, DropRate) VALUES
+                            ({element}, {threatLevel}, {id}, {formattedDropRate});
+                        ";
+
+                        migrationBuilder.Sql(sql);
+                    }
                 }
             }
         }

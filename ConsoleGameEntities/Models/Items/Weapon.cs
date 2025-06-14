@@ -78,7 +78,7 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
         var baseValue = (decimal)Math.Pow(RequiredLevel, 1.15) * 1.5M;
         var durabilityValue = Durability * 1.5M;
         var attackValue = AttackPower * 1.2M;
-        var runeBase = Rune == null ? 0 : (int)Rune.Rarity + 1;
+        var runeBase = Rune == null ? 0 : (int)Rune.Rarity + Rune.Tier;
         var runeValue = 25.0M * runeBase; // +25 gold per rarity level?
 
         var variance = (decimal)(_rng.NextDouble() * 0.2) + 0.9M;

@@ -3,6 +3,7 @@ using ConsoleGame.Helpers;
 using ConsoleGame.Managers.Interfaces;
 using ConsoleGame.Models;
 using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Monsters;
 using static ConsoleGame.Helpers.AdventureEnums;
 
 namespace ConsoleGame.Services;
@@ -275,7 +276,9 @@ public class AdventureService(IOutputManager outputManager, IInputManager inputM
         }
 
         _outputManager.WriteLine();
-        var selection = _inputManager.Selector(monsters, m => m.Name, "Select a monster to examine");
+        var selection = monsters.Count == 1 ? 
+            monsters[0] 
+            : _inputManager.Selector(monsters, m => m.Name, "Select a monster to examine");
 
         if (selection == null)
         {
@@ -418,5 +421,6 @@ public class AdventureService(IOutputManager outputManager, IInputManager inputM
         floor = _floorFactory.CreateFloor(player.Level, IsCampaign, map == 2);
         floor.HasMetMerchant = merchant;
         player.CurrentRoom = floor.GetEntrance();
+        player.Inventory.Gold += 500; //RESET to random value like in Player class
     }
 }

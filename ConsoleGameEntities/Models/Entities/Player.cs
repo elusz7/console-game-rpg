@@ -153,13 +153,13 @@ public class Player : IPlayer
                 switch (e.Source)
                 {
                     case StatusRecordType.Skill:
-                        Logger.Log($"An effect affecting {(StatType)e.Type} has ended!");
+                        Logger.Log($"An effect affecting your {(StatType)e.Type} has ended!");
                         break;
                     case StatusRecordType.ElementalStatus:
-                        Logger.Log($"An elemental status {(ElementalStatusEffectType)e.Type} has ended!");
+                        Logger.Log($"An elemental status causing you to be {(ElementalStatusEffectType)e.Type} has ended!");
                         break;
                     default:
-                        Logger.Log($"A {(ElementDamageType)e.Type} effect has ended!");
+                        Logger.Log($"A(n) {(ElementDamageType)e.Type} effect on you has ended!");
                         break;
                 }
             },

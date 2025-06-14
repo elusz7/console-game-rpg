@@ -64,7 +64,7 @@ public class CraftingHelper(IOutputManager outputManager, IInputManager inputMan
     private void CraftRune()
     {
         // List available runes for crafting
-        List<Recipe> craftableRecipes = _recipeDao.GetCraftableRecipes(_player.Inventory.Ingredients);
+        var craftableRecipes = _recipeDao.GetCraftableRecipes(_player.Inventory.Ingredients);
         if (craftableRecipes.Count == 0)
         {
             _outputManager.WriteLine("\nYou have no recipes available to craft.\n", ConsoleColor.Red);
@@ -72,7 +72,7 @@ public class CraftingHelper(IOutputManager outputManager, IInputManager inputMan
         }
 
         // Select rune to craft
-        Recipe? recipe = _inputManager.Selector(craftableRecipes, r => ColorfulToStringHelper.RecipeToString(r, _player.Inventory.Ingredients), "Select a rune to craft:", r => ColorfulToStringHelper.GetRarityColor(r.Rune.Rarity));
+        var recipe = _inputManager.Selector(craftableRecipes, r => r.Name, "Select a rune to craft:", r => ColorfulToStringHelper.GetRarityColor(r.Rune.Rarity));
         if (recipe == null)
         {
             _outputManager.WriteLine("\nNo rune selected.\n", ConsoleColor.Red);
@@ -82,7 +82,7 @@ public class CraftingHelper(IOutputManager outputManager, IInputManager inputMan
         // Craft Rune
         try
         {
-            Rune craftedRune = recipe.CraftRune(_player.Inventory.Ingredients);
+            var craftedRune = recipe.CraftRune(_player.Inventory.Ingredients);
             _player.Inventory.AddRune(craftedRune);
             _outputManager.WriteLine($"\nSuccessfully crafted {craftedRune.Name}!\n", ConsoleColor.Green);
         }

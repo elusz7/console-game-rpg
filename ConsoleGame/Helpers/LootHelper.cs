@@ -39,13 +39,12 @@ public class LootHelper(IMonsterDao monsterDao, IOutputManager outputManager)
 
         if (actualLoot.Count == 0)
         {
-            _outputManager.WriteLine("\nYou weren't able to salvage anything of the monster.", ConsoleColor.Red);
+            _outputManager.WriteLine("$\nYou weren't able to salvage anything off {monster.Name}.", ConsoleColor.Red);
             return;
         }
         else
         {
-            var itemNames = actualLoot.Select(i => i.Name).ToList();
-            _outputManager.WriteLine($"\nYou found {string.Join(", ", itemNames)} on {monster.Name}!", ConsoleColor.Blue);
+            _outputManager.WriteLine($"\nYou stripped {monster.Name} down for {actualLoot.Count} parts!", ConsoleColor.Blue);
             player.Loot(actualLoot);
         }
     }
