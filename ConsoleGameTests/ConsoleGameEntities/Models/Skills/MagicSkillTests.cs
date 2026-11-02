@@ -148,6 +148,7 @@ public class MagicSkillTests
         var player = new Player()
         {
             CurrentHealth = 100,
+            DodgeChance = 0.0,
             Archetype = new Archetype()
             {
                 ResistanceBonus = 0

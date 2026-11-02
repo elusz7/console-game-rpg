@@ -40,7 +40,7 @@ public class PlayerDao(GameContext context) : IPlayerDao
             .Include(p => p.Archetype)
                 .ThenInclude(a => a.Skills)
             .Include(p => p.CurrentRoom)
-                .ThenInclude(r => r.Monsters)
+                .ThenInclude(r => r!.Monsters)
             .First(p => p.Id == player.Id);
 
         // Detach the root entity and all its related entities
@@ -115,10 +115,10 @@ public class PlayerDao(GameContext context) : IPlayerDao
     public List<Archetype> GetAllPlayerArchetypes()
     {
         return [.. _context.Players!
-         .Select(p => p.Archetype)
-         .Distinct()];
+            .Where(p => p.Archetype != null)
+            .Select(p => p.Archetype!)
+            .Distinct()];
     }
-
     public List<Player> GetAllPlayersByArchetype(Archetype archetype)
     {
         return [.. _context.Players!.ToList()

@@ -46,7 +46,7 @@ public class SkillDao(GameContext context) : ISkillDao
     {
         return [.. _context.Skills
             .Where(s => s.Archetype != null)
-            .Select(s => s.Archetype)
+            .Select(s => s.Archetype!)
             .Distinct()];
     }
 
@@ -54,7 +54,7 @@ public class SkillDao(GameContext context) : ISkillDao
     {
         return [.. _context.Skills
             .Where(s => s.Monster != null)
-            .Select(s => s.Monster)
+            .Select(s => s.Monster!)
             .Distinct()];
     }
 
