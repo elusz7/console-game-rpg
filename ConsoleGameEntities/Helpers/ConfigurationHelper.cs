@@ -1,34 +1,39 @@
-﻿using ConsoleGameEntities.Data;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
-namespace ConsoleGameEntities.Helpers
+namespace ConsoleGameEntities.Helpers;
+
+public static class ConfigurationHelper
 {
-    public static class ConfigurationHelper
+    public static IConfigurationRoot GetConfiguration(
+        string? basePath = null,
+        string? environmentName = null)
     {
-        public static IConfigurationRoot GetConfiguration(string? basePath = null, string? environmentName = null)
-        {
-            basePath ??= Directory.GetCurrentDirectory();
+        basePath ??= AppContext.BaseDirectory;
 
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(basePath)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+        environmentName ??=
+            Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
+            ?? "Development";
 
-            // Optionally add environment-specific configuration
-            if (!string.IsNullOrEmpty(environmentName))
-            {
-                builder.AddJsonFile($"appsettings.{environmentName}.json", optional: true);
-            }
+        var builder = new ConfigurationBuilder()
+            .SetBasePath(basePath)
+            .AddJsonFile(
+                "appsettings.json",
+                optional: false,
+                reloadOnChange: true)
+            .AddJsonFile(
+                $"appsettings.{environmentName}.json",
+                optional: true)
+            .AddEnvironmentVariables();
 
-            builder.AddEnvironmentVariables();
+        return builder.Build();
+    }
 
-            return builder.Build();
-        }
-
-        public static void ConfigureDbContextOptions(DbContextOptionsBuilder optionsBuilder, string connectionString)
-        {
-            optionsBuilder.UseSqlServer(connectionString)
-                .UseLazyLoadingProxies();
-        }
+    public static void ConfigureDbContextOptions(
+        DbContextOptionsBuilder optionsBuilder,
+        string connectionString)
+    {
+        optionsBuilder.UseSqlServer(connectionString)
+            .UseLazyLoadingProxies();
     }
 }

@@ -156,13 +156,13 @@ public class BossMonsterTests
     {
         var boss = CreateBoss();
         boss.DefensePower = 0;
+        boss.DodgeChance = 0;
         
         boss.CurrentHealth = 10;
         boss.TakeDamage(100, DamageType.Martial); //should set phase to 2
 
         boss.CurrentHealth = 10;
         boss.TakeDamage(100, DamageType.Martial); //should set phase to 3
-
 
         boss.CurrentHealth = 10;
         Assert.ThrowsException<MonsterDeathException>(() => boss.TakeDamage(100, DamageType.Martial));
