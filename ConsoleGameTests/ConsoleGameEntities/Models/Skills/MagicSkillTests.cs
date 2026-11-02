@@ -104,8 +104,8 @@ public class MagicSkillTests
         var skill = GetBasicMagicSkill(TargetType.AllEnemies);
         var monsters = new List<ITargetable>
         {
-            new Monster { CurrentHealth = 40 },
-            new Monster { CurrentHealth = 40 }
+            new Monster { CurrentHealth = 40, DodgeChance = 0 },
+            new Monster { CurrentHealth = 40, DodgeChance = 0 }
         };
         var caster = new Player
         {
