@@ -50,7 +50,8 @@ public class ArchetypeManagementTests
 
         // Act
         var addArchetypeMethod = typeof(ArchetypeManagement)
-            .GetMethod("AddArchetype", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                                     .GetMethod("AddArchetype", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                                 ?? throw new InvalidOperationException("AddArchetype method not found.");
         addArchetypeMethod.Invoke(_archetypeManagement, null);
 
         // Assert
@@ -66,7 +67,8 @@ public class ArchetypeManagementTests
 
         // Act
         var editArchetypeMethod = typeof(ArchetypeManagement)
-            .GetMethod("EditArchetype", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                                      .GetMethod("EditArchetype", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                                  ?? throw new InvalidOperationException("EditArchetype method not found.");
         editArchetypeMethod.Invoke(_archetypeManagement, null);
 
         // Assert
@@ -81,7 +83,8 @@ public class ArchetypeManagementTests
 
         // Act
         var deleteArchetypeMethod = typeof(ArchetypeManagement)
-            .GetMethod("DeleteArchetype", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                                        .GetMethod("DeleteArchetype", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                                    ?? throw new InvalidOperationException("DeleteArchetype method not found.");
         deleteArchetypeMethod.Invoke(_archetypeManagement, null);
 
         // Assert
