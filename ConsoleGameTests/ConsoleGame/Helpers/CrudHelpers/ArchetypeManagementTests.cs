@@ -31,22 +31,18 @@ public class ArchetypeManagementTests
     {
         // Arrange
         _inputManagerMock.SetupSequence(m => m.ReadInt(It.IsAny<string>(), null, false))
-            .Returns(1) // Martial
-            .Returns(1) // Stat priorities
-            .Returns(2)
-            .Returns(3)
-            .Returns(4)
-            .Returns(5)
-            .Returns(6)
-            .Returns(10) // Damage bonus
+            .Returns(1)   // Martial
+            .Returns(10)  // Damage bonus
             .Returns(100) // Health
-            .Returns(5) // Defense
-            .Returns(3) // Resistance
-            .Returns(7) // Speed
+            .Returns(5)   // Defense
+            .Returns(3)   // Resistance
+            .Returns(7)   // Speed
             .Returns(20); // Max Resource
 
-        _inputManagerMock.Setup(m => m.ReadString(It.IsAny<string>(), null))
-            .Returns("Test");
+        _inputManagerMock.SetupSequence(m => m.ReadString(It.IsAny<string>(), null))
+            .Returns("1,2,3,4,5,6") // Stat priorities
+            .Returns("Test")       // Archetype name
+            .Returns("Test");      // Archetype description
 
         _inputManagerMock.Setup(m => m.LoopAgain("create")).Returns(false);
 
