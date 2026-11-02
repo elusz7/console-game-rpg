@@ -13,8 +13,18 @@ public class MartialSkill : DamageSkill
         if (IsOnCooldown) 
             throw new SkillCooldownException();
 
-        if (singleEnemy == null && (multipleEnemies == null || multipleEnemies.Count == 0))
-            throw new InvalidTargetException("No suitable target(s) provided.");
+        switch (TargetType)
+        {
+            case TargetType.SingleEnemy:
+                if (singleEnemy == null)
+                    throw new InvalidTargetException("Single enemy target not provided.");
+                break;
+
+            case TargetType.AllEnemies:
+                if (multipleEnemies == null || multipleEnemies.Count == 0)
+                    throw new InvalidTargetException("Multiple enemies not provided.");
+                break;
+        }
 
         var monsterDeath = false;
 
@@ -34,19 +44,23 @@ public class MartialSkill : DamageSkill
             switch (TargetType)
             {
                 case TargetType.SingleEnemy:
-                        singleEnemy.TakeDamage(Power, DamageType);
+                    (singleEnemy ?? throw new InvalidTargetException("Single enemy target not provided."))
+                        .TakeDamage(Power, DamageType);
                     break;
 
                 case TargetType.AllEnemies:
-                    foreach (var tar in multipleEnemies)
+                    foreach (var tar in multipleEnemies
+                                        ?? throw new InvalidTargetException("Multiple enemies not provided."))
                     {
                         try
                         {
                             tar.TakeDamage(Power, DamageType);
                         }
-                        catch (MonsterDeathException) { monsterDeath = true; }
+                        catch (MonsterDeathException)
+                        {
+                            monsterDeath = true;
+                        }
                     }
-                        
                     break;
             }
 
@@ -61,7 +75,8 @@ public class MartialSkill : DamageSkill
 
             monster.AddActionItem(this);
 
-            singleEnemy.TakeDamage(Power, DamageType);
+            (singleEnemy ?? throw new InvalidTargetException("Single enemy target not provided."))
+                .TakeDamage(Power, DamageType);
             Reset();
         }
     }

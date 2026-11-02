@@ -13,7 +13,10 @@ namespace ConsoleGameEntities.Data
             var configuration = ConfigurationHelper.GetConfiguration();
 
             // Get connection string
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            var connectionString = configuration.GetConnectionString("DefaultConnection")
+                                   ?? throw new InvalidOperationException(
+                                       "The 'DefaultConnection' connection string is missing from configuration.");
+            //var connectionString = configuration.GetConnectionString("DefaultConnection");
             //var connectionString = configuration.GetConnectionString("ProductionConnection");
 
             // Build options

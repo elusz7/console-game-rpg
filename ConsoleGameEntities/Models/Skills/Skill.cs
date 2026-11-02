@@ -99,7 +99,10 @@ public class Skill : ISkill
             throw new SkillResourceException(ex.Message);
         }
     }
-    private void ApplySkillEffect(ITargetable caster, ITargetable? singleEnemy, List<ITargetable>? multipleEnemies)
+    private void ApplySkillEffect(
+        ITargetable caster,
+        ITargetable? singleEnemy,
+        List<ITargetable>? multipleEnemies)
     {
         if (this is SupportSkill support)
         {
@@ -108,12 +111,20 @@ public class Skill : ISkill
                 case TargetType.Self:
                     support.ApplyEffect(caster);
                     break;
+
                 case TargetType.SingleEnemy:
-                    support.ApplyEffect(singleEnemy);
+                    support.ApplyEffect(
+                        singleEnemy ?? throw new InvalidTargetException(
+                            "Single enemy target not provided."));
                     break;
+
                 case TargetType.AllEnemies:
-                    foreach (var target in multipleEnemies)
+                    foreach (var target in multipleEnemies
+                                           ?? throw new InvalidTargetException(
+                                               "Multiple enemies not provided."))
+                    {
                         support.ApplyEffect(target);
+                    }
                     break;
             }
         }
@@ -122,11 +133,18 @@ public class Skill : ISkill
             switch (TargetType)
             {
                 case TargetType.SingleEnemy:
-                    singleEnemy.TakeDamage(Power, damageSkill.DamageType);
+                    (singleEnemy ?? throw new InvalidTargetException(
+                            "Single enemy target not provided."))
+                        .TakeDamage(Power, damageSkill.DamageType);
                     break;
+
                 case TargetType.AllEnemies:
-                    foreach (var target in multipleEnemies)
+                    foreach (var target in multipleEnemies
+                                           ?? throw new InvalidTargetException(
+                                               "Multiple enemies not provided."))
+                    {
                         target.TakeDamage(Power, damageSkill.DamageType);
+                    }
                     break;
             }
         }
