@@ -1,0 +1,28 @@
+﻿
+name: .NET CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore console-game-rpg.sln
+
+      - name: Build solution
+        run: dotnet build console-game-rpg.sln --no-restore --configuration Release
+
+      - name: Run tests
+        run: dotnet test console-game-rpg.sln --no-build --configuration Release
