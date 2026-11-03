@@ -107,6 +107,14 @@ public static class Startup
         services.AddTransient<IMapFactory, MapFactory>();
 
         services.AddTransient<AdventureService>();
+        // Handles player leveling, automatic loot, and floor transitions.
+        services.AddTransient<FloorProgressionService>();
+        // Handles player movement and room-related monster cleanup.
+        services.AddTransient<RoomNavigationService>();
+        // Handles monster treasure collection and monster cleanup.
+        services.AddTransient<LootService>();
+        // Handles saving campaign progress when a campaign ends.
+        services.AddTransient<CampaignPersistenceService>();
         services.AddTransient<CombatHelper>();
         services.AddTransient<MerchantHelper>();
         services.AddTransient<EquipmentHelper>();

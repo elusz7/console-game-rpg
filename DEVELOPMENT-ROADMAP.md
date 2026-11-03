@@ -45,18 +45,18 @@ Use `[x]` for completed tasks and `[ ]` for outstanding tasks.
 
 **Goal:** Reduce the responsibilities of AdventureService and make gameplay orchestration easier to maintain and test.
 
-- [ ] Review the current AdventureService implementation.
-- [ ] Identify responsibilities that should belong to separate services.
-- [ ] Introduce an explicit GameSession or AdventureState object.
-    - [ ] Store player state.
-    - [ ] Store current floor and room.
-    - [ ] Store adventure mode and session status.
-- [ ] Separate floor progression from general adventure orchestration.
-- [ ] Separate room navigation and room resolution.
-- [ ] Separate loot and treasure resolution.
-- [ ] Separate campaign persistence from gameplay orchestration.
-- [ ] Add tests for session state transitions.
-- [ ] Add tests for floor progression and adventure completion.
+- [x] Review the current AdventureService implementation.
+- [x] Identify responsibilities that should belong to separate services.
+- [x] Introduce an explicit GameSession or AdventureState object.
+    - [x] Store player state.
+    - [x] Store current floor and room.
+    - [x] Store adventure mode and session status.
+- [x] Separate floor progression from general adventure orchestration.
+- [x] Separate room navigation and room resolution.
+- [x] Separate loot and treasure resolution.
+- [x] Separate campaign persistence from gameplay orchestration.
+- [x] Add tests for session state transitions.
+- [x] Add tests for floor progression and adventure completion.
 
 **Completion criteria:** AdventureService coordinates gameplay without owning every detail of the gameplay process.
 
