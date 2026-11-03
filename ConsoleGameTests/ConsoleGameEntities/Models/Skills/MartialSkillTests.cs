@@ -79,14 +79,13 @@ public class MartialSkillTests
     public void Activate_DealsDamageToSingleEnemy()
     {
         var skill = GetBasicMartialSkill();
-        var monster = new Monster();
+        var monster = new Monster{CurrentHealth = 50, DodgeChance = 0};
         var caster = new Player
         {
             Level = 5,
             Archetype = new Archetype { CurrentResource = 10, MaxResource = 10 }
         };
 
-        monster.CurrentHealth = 50;
         skill.Activate(caster, monster);
 
         Assert.IsTrue(monster.CurrentHealth < 50);
@@ -98,8 +97,8 @@ public class MartialSkillTests
         var skill = GetBasicMartialSkill(TargetType.AllEnemies);
         var monsters = new List<ITargetable>
         {
-            new Monster { CurrentHealth = 40 },
-            new Monster { CurrentHealth = 40 }
+            new Monster { CurrentHealth = 40, DodgeChance = 0 },
+            new Monster { CurrentHealth = 40, DodgeChance = 0 }
         };
         var caster = new Player
         {
@@ -119,8 +118,8 @@ public class MartialSkillTests
         var skill = GetBasicMartialSkill(TargetType.AllEnemies);
         var monsters = new List<ITargetable>
         {
-            new Monster { CurrentHealth = 5 },
-            new Monster { CurrentHealth = 100 }
+            new Monster { CurrentHealth = 5, DodgeChance = 0 },
+            new Monster { CurrentHealth = 100, DodgeChance = 0 }
         };
         var caster = new Player
         {
@@ -135,7 +134,7 @@ public class MartialSkillTests
     public void Activate_ResetsCooldownAfterUse()
     {
         var skill = GetBasicMartialSkill();
-        var monster = new Monster { CurrentHealth = 100 };
+        var monster = new Monster { CurrentHealth = 100, DodgeChance = 0 };
         var caster = new Player
         {
             Level = 5,
@@ -159,7 +158,7 @@ public class MartialSkillTests
 
         var monster = new Monster
         {
-            Level = 5
+            Level = 5, DodgeChance = 0
         };
 
         skill.Activate(monster, player);

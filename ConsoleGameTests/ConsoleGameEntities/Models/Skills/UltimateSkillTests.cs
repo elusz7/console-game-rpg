@@ -48,7 +48,7 @@ public class UltimateSkillTests
     {
         return new Monster
         {
-            Level = level
+            Level = level, DodgeChance = 0
         };
     }
 
@@ -75,7 +75,7 @@ public class UltimateSkillTests
             CurrentHealth = hp,
             MaxHealth = hp,
             DefensePower = 0,
-            Resistance = 0
+            Resistance = 0, DodgeChance = 0
         };
     }
 
