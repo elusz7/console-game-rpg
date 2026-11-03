@@ -34,14 +34,15 @@ public class CautiousStrategy : DefaultStrategy
         }
 
         var damageSkill = _skillSelector.GetHighestDamageSkill(monster);
-        if (damageSkill != null) {
+        if (damageSkill != null)
+        {
             damageSkill.Activate(monster, target);
             return;
         }
 
         var healthLost = monster.MaxHealth - monster.CurrentHealth;
         var healingThreshold = monster.MaxHealth * 0.75;
-        
+
         if (monster.CurrentHealth <= healingThreshold)
         {
             var healingSkill = _skillSelector.GetHealingSkill(monster, healthLost);
@@ -50,12 +51,12 @@ public class CautiousStrategy : DefaultStrategy
                 healingSkill.Activate(monster);
                 MakeAttack(monster, target);
                 return;
-            }            
+            }
         }
 
         _skillSelector.GetBuffSkill(monster)?.Activate(monster);
 
-        MakeAttack(monster, target);        
+        MakeAttack(monster, target);
     }
 
     private static void MakeAttack(IMonster monster, IPlayer target)

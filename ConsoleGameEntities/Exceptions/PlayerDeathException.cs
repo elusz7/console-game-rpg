@@ -2,6 +2,11 @@
 
 public class PlayerDeathException : Exception
 {
-    public PlayerDeathException() :base() { }
-    public PlayerDeathException(string message) : base(message) { }
+    public PlayerDeathException() : base()
+    {
+    }
+
+    public PlayerDeathException(string message) : base(message)
+    {
+    }
 }

@@ -17,15 +17,15 @@ public class SkillDisplay(IInputManager inputManager, IOutputManager outputManag
         {
             _outputManager.WriteLine("Skill Menu", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. List All Skills"
-                + "\n2. List Skills By Level"
-                + "\n3. List Skills By Archetype"
-                + "\n4. List Skills By Monster"
-                + "\n5. List Unassigned Skills"
-                + "\n6. Search Skills By Name"
-                + "\n7. Return to Skill Menu");
-            
+                                     + "\n2. List Skills By Level"
+                                     + "\n3. List Skills By Archetype"
+                                     + "\n4. List Skills By Monster"
+                                     + "\n5. List Unassigned Skills"
+                                     + "\n6. Search Skills By Name"
+                                     + "\n7. Return to Skill Menu");
+
             var input = _inputManager.ReadMenuKey(7);
-            
+
             switch (input)
             {
                 case 1:
@@ -74,7 +74,8 @@ public class SkillDisplay(IInputManager inputManager, IOutputManager outputManag
             return;
         }
 
-        _inputManager.Viewer(skills, s => ColorfulToStringHelper.SkillToString(s), "", s => ColorfulToStringHelper.GetSkillColor(s));
+        _inputManager.Viewer(skills, s => ColorfulToStringHelper.SkillToString(s), "",
+            s => ColorfulToStringHelper.GetSkillColor(s));
     }
 
     private List<Skill> SelectLevel()
@@ -83,6 +84,7 @@ public class SkillDisplay(IInputManager inputManager, IOutputManager outputManag
 
         return _skillDao.GetSkillsByLevel(level);
     }
+
     private List<Skill> SelectName()
     {
         var name = _inputManager.ReadString("Enter the name of the skill you want to see: ");
@@ -99,7 +101,8 @@ public class SkillDisplay(IInputManager inputManager, IOutputManager outputManag
             return [];
         }
 
-        var selectedArchetype = _inputManager.Selector(archetypes, a => ColorfulToStringHelper.ArchetypeToString(a), "Select an archetype to see their skills", a => ColorfulToStringHelper.GetArchetypeColor(a));
+        var selectedArchetype = _inputManager.Selector(archetypes, a => ColorfulToStringHelper.ArchetypeToString(a),
+            "Select an archetype to see their skills", a => ColorfulToStringHelper.GetArchetypeColor(a));
 
         if (selectedArchetype == null)
         {
@@ -120,7 +123,8 @@ public class SkillDisplay(IInputManager inputManager, IOutputManager outputManag
             return [];
         }
 
-        var selectedMonster = _inputManager.Selector(monsters, a => ColorfulToStringHelper.MonsterToString(a), "Select a monster to see their skills", m => ColorfulToStringHelper.GetMonsterColor(m));
+        var selectedMonster = _inputManager.Selector(monsters, a => ColorfulToStringHelper.MonsterToString(a),
+            "Select a monster to see their skills", m => ColorfulToStringHelper.GetMonsterColor(m));
 
         if (selectedMonster == null)
         {

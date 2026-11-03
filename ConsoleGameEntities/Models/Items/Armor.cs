@@ -11,16 +11,16 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
     private readonly Random _rng = Random.Shared;
 
     private bool Cursed { get; set; }
-    private bool Equipped { get; set;  }
+    private bool Equipped { get; set; }
 
     public int DefensePower { get; set; }
     public int Resistance { get; set; }
     public ArmorType ArmorType { get; set; }
-    
+
     public decimal GetPurificationPrice() => Value * 0.5M;
     public decimal GetReforgePrice() => Value * 0.33M;
     public decimal GetEnchantmentPrice() => Value * 1.5M;
-    
+
     public void Curse() => Cursed = true;
     public void TargetCursed() => Cursed = false;
     public bool IsCursed() => Cursed;
@@ -61,6 +61,7 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
 
         Inventory.Gold -= price;
     }
+
     public void Enchant()
     {
         if (Inventory == null)
@@ -92,6 +93,7 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
 
         Inventory.Gold -= price;
     }
+
     public void Purify()
     {
         if (!Cursed)
@@ -121,14 +123,16 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
 
         Value = Math.Round(calculation, 2);
     }
+
     public override void CalculateStatsByLevel()
     {
         Durability = _rng.Next(3, 9);
 
         var total = _rng.Next(RequiredLevel * 5, RequiredLevel * 8);
         DefensePower = _rng.Next(0, total + 1);
-        Resistance = total - DefensePower;                
+        Resistance = total - DefensePower;
     }
+
     public override void CalculateLevelByStats()
     {
         var total = DefensePower + Resistance;

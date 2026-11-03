@@ -59,7 +59,7 @@ public class CautiousStrategyTests
         monster.Attack(player);
 
         Assert.IsTrue(healingSkill.Activated);
-        Assert.AreEqual(expectedDamage, player.DamageTaken);        
+        Assert.AreEqual(expectedDamage, player.DamageTaken);
     }
 
     [TestMethod]

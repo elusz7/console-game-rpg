@@ -22,7 +22,8 @@ public class MonsterFactoryTests
         return new MonsterFactory(_monsterDaoMock.Object, _skillDaoMock.Object, _skillSelectorMock.Object);
     }
 
-    private static Monster CreateMonster(string name, int level, ThreatLevel threat, DamageType damageType = DamageType.Martial)
+    private static Monster CreateMonster(string name, int level, ThreatLevel threat,
+        DamageType damageType = DamageType.Martial)
     {
         return new Monster
         {

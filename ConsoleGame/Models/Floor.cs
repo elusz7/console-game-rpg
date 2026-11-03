@@ -29,7 +29,7 @@ public class Floor
         {
             var randomRoomIndex = _rng.Next(0, availableRooms.Count);
             var room = availableRooms[randomRoomIndex];
-            
+
             monster.Room = room;
             room.Monsters.Add(monster);
 
@@ -43,13 +43,15 @@ public class Floor
             }
         }
     }
+
     public void AssignItemsToMonsters()
     {
         var availableMonsters = Monsters.Where(m => m.Treasure == null).OrderBy(_ => _rng.Next()).ToList();
 
         if (Loot.Count > availableMonsters.Count)
         {
-            throw new InvalidOperationException($"Not enough monsters to assign items. Items: {Loot.Count}, Available Monsters: {availableMonsters.Count}");
+            throw new InvalidOperationException(
+                $"Not enough monsters to assign items. Items: {Loot.Count}, Available Monsters: {availableMonsters.Count}");
         }
 
         var shuffledItems = Loot.OrderBy(_ => _rng.Next()).ToList();
@@ -59,13 +61,15 @@ public class Floor
             availableMonsters[i].Treasure = shuffledItems[i];
         }
     }
+
     public void AssignCursesToItems()
     {
         var availableItems = Loot.OfType<ICursable>().ToList();
 
         if (NumberOfCursedItems > availableItems.Count)
         {
-            throw new InvalidOperationException($"Not enough items to assign cursed items. Cursed Items: {NumberOfCursedItems}, Available Items: {availableItems.Count}");
+            throw new InvalidOperationException(
+                $"Not enough items to assign cursed items. Cursed Items: {NumberOfCursedItems}, Available Items: {availableItems.Count}");
         }
 
         var shuffledItems = availableItems.OrderBy(_ => _rng.Next()).ToList();
@@ -74,10 +78,12 @@ public class Floor
             shuffledItems[i].Curse();
         }
     }
+
     public Room GetEntrance()
     {
         return Rooms.First(r => r.Name.Equals("Entrance"));
     }
+
     public string GetMerchantName()
     {
         if (HasMetMerchant)
@@ -89,22 +95,24 @@ public class Floor
             return "A Mysterious Stranger";
         }
     }
+
     public List<Item> GetMerchantItems()
     {
         return MerchantItems;
     }
+
     public void RemoveMerchantItem(Item item)
     {
         MerchantItems.Remove(item);
     }
+
     public void UpdateMerchantItems()
     {
-        MerchantItems = ItemFactory.CreateMerchantItems(Level);   
+        MerchantItems = ItemFactory.CreateMerchantItems(Level);
     }
 
     public List<Item> GetMerchantGifts(ArchetypeType type, int level)
     {
         return ItemFactory.GetMerchantGifts(type, level);
     }
-
 }

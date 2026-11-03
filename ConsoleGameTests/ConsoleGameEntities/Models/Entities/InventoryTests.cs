@@ -21,6 +21,7 @@ public class InventoryTests
             Items = []
         };
     }
+
     private static Item CreateItem(decimal value = 42.0M, decimal weight = 10.2M)
     {
         return new Item
@@ -34,6 +35,7 @@ public class InventoryTests
             RequiredLevel = 1
         };
     }
+
     private static Consumable CreateConsumable()
     {
         return new Consumable
@@ -44,6 +46,7 @@ public class InventoryTests
             Durability = 1
         };
     }
+
     private static Valuable CreateValuable()
     {
         return new Valuable
@@ -141,6 +144,7 @@ public class InventoryTests
 
         Assert.IsTrue(inventory.Items.Contains(valuable));
     }
+
     [TestMethod]
     public void Buy_Success()
     {
@@ -148,11 +152,12 @@ public class InventoryTests
         var item = CreateItem(value: 10);
         int expectedGold = inventory.Gold - (int)Math.Round(item.GetBuyPrice());
 
-        inventory.Buy(item);        
+        inventory.Buy(item);
 
         Assert.AreEqual(expectedGold, inventory.Gold);
         Assert.IsTrue(inventory.Items.Contains(item));
     }
+
     [TestMethod]
     public void Buy_ThrowsException_NotEnoughGold()
     {
@@ -174,6 +179,7 @@ public class InventoryTests
 
         StringAssert.Contains(ex.Message, "Will exceed carrying capacity");
     }
+
     [TestMethod]
     public void Sell_Success()
     {

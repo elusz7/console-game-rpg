@@ -9,13 +9,13 @@ using ConsoleGame.Factories.Interfaces;
 namespace ConsoleGame.Services;
 
 public class AdventureService(
-    IOutputManager outputManager, 
-    IInputManager inputManager, 
-    PlayerHelper playerHelper, 
-    IMapManager mapManager, 
-    CombatHelper combatHelper, 
-    MerchantHelper merchantHelper, 
-    EquipmentHelper equipmentHelper, 
+    IOutputManager outputManager,
+    IInputManager inputManager,
+    PlayerHelper playerHelper,
+    IMapManager mapManager,
+    CombatHelper combatHelper,
+    MerchantHelper merchantHelper,
+    EquipmentHelper equipmentHelper,
     IFloorFactory floorFactory,
     FloorProgressionService floorProgressionService,
     RoomNavigationService roomNavigationService,
@@ -29,24 +29,30 @@ public class AdventureService(
     private readonly CombatHelper _combatHelper = combatHelper;
     private readonly EquipmentHelper _equipmentHelper = equipmentHelper;
     private readonly MerchantHelper _merchantHelper = merchantHelper;
+
     private readonly IFloorFactory _floorFactory = floorFactory;
+
     // Handles leveling up, collecting leftover loot, and creating the next floor.
     private readonly FloorProgressionService _floorProgressionService = floorProgressionService;
+
     // Handles player movement and room-related monster cleanup.
     private readonly RoomNavigationService _roomNavigationService = roomNavigationService;
+
     // Handles monster treasure collection and cleanup.
     private readonly LootService _lootService = lootService;
+
     // Handles persistence of player upon quit or death
     private readonly CampaignPersistenceService _campaignPersistenceService = campaignPersistenceService;
-    
+
     // Holds the state for the current adventure or campaign.
     private GameSession? _session;
+
     // Provides access to the active session.
     // Throws a clear exception if gameplay is accessed before setup succeeds.
     private GameSession Session =>
         _session ?? throw new InvalidOperationException("No active game session.");
 
-    
+
     private bool SetUp(bool isCampaign)
     {
         // Clear any previous session before starting a new one.
@@ -105,17 +111,19 @@ public class AdventureService(
 
     public bool SetUpAdventure() => SetUp(false);
     public bool SetUpCampaign() => SetUp(true);
+
     private int GetAdventureMapOption()
     {
         _outputManager.Write("\n1. Use Map As Configured\n2. Generate Random Map");
         return _inputManager.ReadMenuKey(2);
     }
+
     public void Adventure()
     {
         while (true)
         {
             _outputManager.Clear();
-            _outputManager.WriteLine($"Now adventuring on Floor {Session.CurrentFloor.Level}.\n", ConsoleColor.Yellow);            
+            _outputManager.WriteLine($"Now adventuring on Floor {Session.CurrentFloor.Level}.\n", ConsoleColor.Yellow);
 
             bool floorCompleted = false;
 
@@ -156,7 +164,7 @@ public class AdventureService(
                             _outputManager.Clear();
                             var monsters = Session.Player.CurrentRoom?.Monsters ?? [];
                             _combatHelper.CombatRunner(Session.Player, monsters);
-                            
+
                             // Remove monsters that no longer have treasure after combat.
                             _roomNavigationService.CleanUpDeadMonsters(Session);
 
@@ -168,12 +176,13 @@ public class AdventureService(
                                 _outputManager.Clear();
                                 _outputManager.WriteLine();
                                 _mapManager.DisplayMap();
-                                _outputManager.WriteLine("\nYou have defeated all the monsters in the room!", ConsoleColor.Green);
-                                _outputManager.WriteLine("You are now free to continue exploring.", ConsoleColor.Cyan);                                
+                                _outputManager.WriteLine("\nYou have defeated all the monsters in the room!",
+                                    ConsoleColor.Green);
+                                _outputManager.WriteLine("You are now free to continue exploring.", ConsoleColor.Cyan);
                             }
 
                             break;
-                        case AdventureOptions.Examine:  
+                        case AdventureOptions.Examine:
                             Examine();
                             break;
                         case AdventureOptions.Rest:
@@ -209,11 +218,12 @@ public class AdventureService(
                             {
                                 // Record that the player chose to end the session.
                                 Session.End(AdventureStatus.Quit);
-                                
+
                                 _outputManager.WriteLine("\nThanks for playing!\n", ConsoleColor.Yellow);
                                 _campaignPersistenceService.SaveIfCampaign(Session);
                                 return;
                             }
+
                             _outputManager.Clear();
                             _outputManager.WriteLine();
                             _mapManager.DisplayMap();
@@ -224,20 +234,20 @@ public class AdventureService(
                     {
                         // Record the session's end state after the player's death.
                         Session.End(AdventureStatus.PlayerDead);
-                        
+
                         _outputManager.WriteLine("You have died! Adventure is now over.", ConsoleColor.Red);
                         _outputManager.WriteLine("Press any key to continue...", ConsoleColor.Gray);
                         _outputManager.Display();
-                        
+
                         _campaignPersistenceService.SaveIfCampaign(Session);
-                        
+
                         _inputManager.ReadKey();
                         _outputManager.Clear();
                         return;
                     }
                 }
             }
-            
+
             _outputManager.Write("Setting up next floor...", ConsoleColor.DarkGray);
             _outputManager.Display();
 
@@ -248,6 +258,7 @@ public class AdventureService(
             _inputManager.ReadKey();
         }
     }
+
     // Checks whether the current floor has been cleared and handles the console feedback.
     private bool CheckFloorCompletion()
     {
@@ -268,6 +279,7 @@ public class AdventureService(
 
         return true;
     }
+
     private void Move()
     {
         var room = Session.Player.CurrentRoom ?? throw new InvalidOperationException("Current room is null.");
@@ -280,8 +292,11 @@ public class AdventureService(
 
         if (room == Session.CurrentFloor.GetEntrance())
         {
-            _outputManager.WriteLine("\tThere is a water fountain with a patch of moss next to it on your right.", ConsoleColor.Cyan);
-            _outputManager.WriteLine($"\t{Session.CurrentFloor.GetMerchantName()} is sitting across the fountain, examining something shiny.", ConsoleColor.Cyan);
+            _outputManager.WriteLine("\tThere is a water fountain with a patch of moss next to it on your right.",
+                ConsoleColor.Cyan);
+            _outputManager.WriteLine(
+                $"\t{Session.CurrentFloor.GetMerchantName()} is sitting across the fountain, examining something shiny.",
+                ConsoleColor.Cyan);
             if (!Session.CurrentFloor.HasMetMerchant)
             {
                 _merchantHelper.Meeting(Session.CurrentFloor, Session.Player);
@@ -291,8 +306,9 @@ public class AdventureService(
         if (room.Monsters.Count != 0 && room.Monsters.Any(m => m.CurrentHealth > 0))
         {
             _outputManager.WriteLine("\nYou are not alone in the room. Prepare to fight. Or die.", ConsoleColor.Red);
-        }        
+        }
     }
+
     private void Examine()
     {
         var monsters = Session.Player.CurrentRoom?.Monsters?.Where(m => m.CurrentHealth <= 0).ToList() ?? [];
@@ -335,14 +351,17 @@ public class AdventureService(
 
         _outputManager.Display();
     }
+
     private void Rest()
     {
-        _outputManager.WriteLine("\nYou lay down on the soft moss next to the gently bubbling fountain and fall asleep.", ConsoleColor.Gray);
-        
+        _outputManager.WriteLine(
+            "\nYou lay down on the soft moss next to the gently bubbling fountain and fall asleep.", ConsoleColor.Gray);
+
         Session.Player.CurrentHealth = Session.Player.MaxHealth;
 
         _outputManager.WriteLine("You wake up feeling refreshed and ready to take on the world!", ConsoleColor.Green);
     }
+
     private Dictionary<string, AdventureOptions> GetMenuOptions()
     {
         var options = new Dictionary<string, AdventureOptions>();
@@ -375,6 +394,7 @@ public class AdventureService(
                 AddMenuOption(options, $"Go {direction.Key}", AdventureOptions.Move);
             }
         }
+
         if (Session.IsCampaign)
             AddMenuOption(options, "Quit Campaigning", AdventureOptions.Quit);
         else
@@ -382,7 +402,9 @@ public class AdventureService(
 
         return options;
     }
-    private static void AddMenuOption(Dictionary<string, AdventureOptions> options, string label, AdventureOptions option)
+
+    private static void AddMenuOption(Dictionary<string, AdventureOptions> options, string label,
+        AdventureOptions option)
     {
         options.TryAdd(label, option);
     }

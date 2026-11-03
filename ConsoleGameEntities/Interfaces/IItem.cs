@@ -29,5 +29,5 @@ public interface IItem
     void CalculateValue();
 
     decimal GetBuyPrice();
-    decimal GetSellPrice();    
+    decimal GetSellPrice();
 }

@@ -101,4 +101,3 @@ public class CunningStrategyTests
         Assert.AreEqual(expectedDamage, player.DamageTaken);
     }
 }
-

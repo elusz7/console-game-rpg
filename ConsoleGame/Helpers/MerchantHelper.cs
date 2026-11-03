@@ -55,14 +55,16 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
 
         _outputManager.WriteLine("Take these items as a token of our new friendship.\n");
 
-        foreach(var item in items)
+        foreach (var item in items)
         {
             try
             {
                 _player.Inventory.AddItem(item);
                 _outputManager.WriteLine($"{item.Name} has been gifted to you!", ConsoleColor.Green);
             }
-            catch (InventoryException) { }
+            catch (InventoryException)
+            {
+            }
         }
     }
 
@@ -112,6 +114,7 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
             }
         }
     }
+
     private void BuyItems()
     {
         var items = _floor.GetMerchantItems();
@@ -126,7 +129,7 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
         var item = _inputManager.SelectItem("Select an item to purchase", items, purpose: "buy");
 
         if (item == null) return;
-       
+
         try
         {
             _player.Buy(item);
@@ -137,8 +140,9 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
         {
             _outputManager.WriteLine("\nIt seems there was an issue with your purchase.", ConsoleColor.Red);
             _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
-        }       
+        }
     }
+
     private void SellItems()
     {
         var items = _player.Inventory.Items.ToList();
@@ -152,7 +156,7 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
         var item = _inputManager.SelectItem("Select an item to sell", items, purpose: "sell");
 
         if (item == null) return;
-        
+
         try
         {
             _player.Sell(item);
@@ -163,8 +167,8 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
             _outputManager.WriteLine("\nIt seems there was an issue with your sale.", ConsoleColor.Red);
             _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
         }
-       
     }
+
     private void PurifyItems()
     {
         var items = _player.Inventory.Items
@@ -196,6 +200,7 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
             }
         }
     }
+
     private void ReforgeArmor()
     {
         var items = _player.Inventory.Items.Where(i => i is IReforgable).ToList();
@@ -218,7 +223,9 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
                 int oldResistance = armor.Resistance;
 
                 armor.Reforge();
-                _outputManager.WriteLine($"\nUPDATED [{choice.Name}] LVL: {choice.RequiredLevel} | DEF: {oldDefense} --> {armor.DefensePower} | RES: {oldResistance} --> {armor.Resistance}", ConsoleColor.Blue);
+                _outputManager.WriteLine(
+                    $"\nUPDATED [{choice.Name}] LVL: {choice.RequiredLevel} | DEF: {oldDefense} --> {armor.DefensePower} | RES: {oldResistance} --> {armor.Resistance}",
+                    ConsoleColor.Blue);
             }
             catch (ItemReforgeException ex)
             {
@@ -227,6 +234,7 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
             }
         }
     }
+
     private void EnchantItems()
     {
         var items = _player.Inventory.Items
@@ -257,7 +265,9 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
 
                     enchanter.Enchant();
 
-                    _outputManager.WriteLine($"\n{choice.Name} | LVL: {oldLevel} --> {choice.RequiredLevel} | ATK: {oldAttack} --> {weapon.AttackPower}", ConsoleColor.Magenta);
+                    _outputManager.WriteLine(
+                        $"\n{choice.Name} | LVL: {oldLevel} --> {choice.RequiredLevel} | ATK: {oldAttack} --> {weapon.AttackPower}",
+                        ConsoleColor.Magenta);
                 }
                 else if (choice is Armor armor)
                 {
@@ -266,16 +276,20 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
 
                     enchanter.Enchant();
 
-                    _outputManager.WriteLine($"\n{choice.Name} | LVL: {oldLevel} --> {choice.RequiredLevel} | DEF: {oldDefense} --> {armor.DefensePower} | RES: {oldResistance} --> {armor.Resistance}", ConsoleColor.Magenta);
+                    _outputManager.WriteLine(
+                        $"\n{choice.Name} | LVL: {oldLevel} --> {choice.RequiredLevel} | DEF: {oldDefense} --> {armor.DefensePower} | RES: {oldResistance} --> {armor.Resistance}",
+                        ConsoleColor.Magenta);
                 }
             }
             catch (ItemEnchantmentException ex)
             {
-                _outputManager.WriteLine("\nIt seems there was an issue with the enchantment process.", ConsoleColor.Red);
+                _outputManager.WriteLine("\nIt seems there was an issue with the enchantment process.",
+                    ConsoleColor.Red);
                 _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
             }
         }
     }
+
     private Dictionary<string, MerchantOptions> GetMenuOptions()
     {
         var options = new Dictionary<string, MerchantOptions>();
@@ -303,6 +317,7 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
 
         return options;
     }
+
     private static void AddMenuOption(Dictionary<string, MerchantOptions> options, string label, MerchantOptions option)
     {
         options.TryAdd(label, option);

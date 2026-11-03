@@ -52,6 +52,7 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
 
             return player;
         }
+
         private static Valuable CreateValuable()
         {
             return new Valuable
@@ -63,6 +64,7 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
                 Durability = 1
             };
         }
+
         private static Weapon CreateWeapon()
         {
             return new Weapon
@@ -75,6 +77,7 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
                 Durability = 3
             };
         }
+
         private static Armor CreateArmor()
         {
             return new Armor
@@ -88,6 +91,7 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
                 ArmorType = ArmorType.Head
             };
         }
+
         private static Monster CreateMonster()
         {
             return new Monster
@@ -147,7 +151,7 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
             var targetMock = new Mock<ITargetable>();
 
             player.Attack(targetMock.Object);
-            
+
             targetMock.Verify(t => t.TakeDamage(It.IsAny<int>(), DamageType.Martial), Times.Once);
             Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("broke and can't be used")));
             Assert.IsFalse(weapon.IsEquipped());
@@ -158,12 +162,11 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
         {
             var player = CreatePlayer();
             player.Archetype.DefenseBonus = 0;
-            
+
             player.TakeDamage(10, DamageType.Martial);
 
             if (player.CurrentHealth < player.MaxHealth)
             {
-
                 Assert.AreEqual(90, player.CurrentHealth);
                 Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("You've taken")));
             }
@@ -180,7 +183,7 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
             var player = CreatePlayer();
             player.Archetype.Speed = 0;
             player.Archetype.DefenseBonus = 0;
-            
+
             var armor = CreateArmor();
             armor.Durability = 1;
             armor.RequiredLevel = player.Level;
@@ -231,6 +234,7 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
 
             Assert.AreEqual(armor.Durability, oldDurability);
         }
+
         [TestMethod]
         public void TakeDamage_Magical_ArmorHasNoResistance_ArmorNotUsed()
         {
@@ -261,7 +265,6 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
 
             if (player.CurrentHealth < player.MaxHealth)
             {
-
                 Assert.AreEqual(90, player.CurrentHealth);
                 Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("You've taken")));
             }
@@ -349,13 +352,14 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
             var player = CreatePlayer();
             var weapon = CreateWeapon();
             weapon.RequiredLevel = player.Level;
-            player.Inventory.AddItem(weapon);            
+            player.Inventory.AddItem(weapon);
 
             player.Equip(weapon);
 
             Assert.IsTrue(player.Equipment.Contains(weapon));
             Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains($"equipped {weapon.Name}")));
         }
+
         [TestMethod]
         public void Equip_CursedItem()
         {
@@ -511,7 +515,7 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
 
             player.Equip(armor2);
 
-            Assert.IsFalse(player.Equipment.Contains(armor1));            
+            Assert.IsFalse(player.Equipment.Contains(armor1));
             Assert.IsTrue(player.Equipment.Contains(armor2));
             Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains($"unequipped {armor1.Name}")));
             Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains($"equipped {armor2.Name}")));
@@ -600,7 +604,7 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
 
             var ex = Assert.ThrowsException<TreasureException>(() => player.Loot(monster));
             StringAssert.Contains(ex.Message, "has no treasure to loot");
-        }        
+        }
 
         [TestMethod]
         public void ClearActionItems_RemovesAll()

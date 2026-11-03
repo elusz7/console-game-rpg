@@ -64,18 +64,20 @@ Use `[x]` for completed tasks and `[ ]` for outstanding tasks.
 
 **Goal:** Make saving predictable and prevent persistence operations from unexpectedly changing gameplay state.
 
-- [ ] Review PlayerHelper.SavePlayer().
-- [ ] Identify inventory modifications and other gameplay side effects occurring during saves.
-- [ ] Make saving a persistence-only operation.
-- [ ] Move inventory liquidation or campaign settlement into explicitly named gameplay operations.
-- [ ] Define when each game mode saves player progress.
-- [ ] Verify new-player insertion.
-- [ ] Verify existing-player updates.
-- [ ] Verify inventory preservation.
-- [ ] Verify repeated saves do not duplicate or remove data.
-- [ ] Add persistence integration tests.
+- [x] Review PlayerHelper.SavePlayer().
+- [x] Identify inventory modifications and other gameplay side effects occurring during saves.
+- [x] Make saving a persistence-only operation.
+- [x] Move inventory liquidation or campaign settlement into explicitly named gameplay operations.
+- [x] Define when each game mode saves player progress.
+- [x] Verify new-player insertion.
+- [x] Verify existing-player updates.
+- [x] Verify inventory preservation.
+- [x] Verify repeated saves do not duplicate or remove data.
+- [x] Add persistence integration tests.
 
 **Completion criteria:** Saving a player never unexpectedly changes their inventory, equipment, or gameplay state.
+
+Deferred: Persisting Weapon.Cursed across game sessions.
 
 ---
 

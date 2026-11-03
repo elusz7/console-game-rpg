@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities;
+
 [TestClass]
 public class RoomTests
 {
@@ -20,6 +21,7 @@ public class RoomTests
         Assert.AreEqual(original.Description, clone.Description);
         Assert.AreNotSame(original, clone);
     }
+
     [TestMethod]
     public void GetConnections_ReturnsOnlyNonNullConnections()
     {

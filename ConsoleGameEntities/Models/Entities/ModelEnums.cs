@@ -14,9 +14,9 @@ public class ModelEnums
 
     public enum TargetType
     {
-        Self = 0,            // Buffs, heals yourself
-        SingleEnemy = 1,     // Single-target attacks, debuffs
-        AllEnemies = 2     // AoE attacks, mass debuff
+        Self = 0, // Buffs, heals yourself
+        SingleEnemy = 1, // Single-target attacks, debuffs
+        AllEnemies = 2 // AoE attacks, mass debuff
     }
 
     public enum ArchetypeType

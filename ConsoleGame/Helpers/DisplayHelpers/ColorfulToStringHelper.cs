@@ -17,6 +17,7 @@ public static class ColorfulToStringHelper
         Consumable => ConsoleColor.Blue,
         _ => ConsoleColor.Yellow
     };
+
     public static ConsoleColor GetSkillColor(Skill skill) => skill.SkillCategory switch
     {
         SkillCategory.Basic => ConsoleColor.Red,
@@ -24,44 +25,58 @@ public static class ColorfulToStringHelper
         SkillCategory.Ultimate => ConsoleColor.Green,
         _ => ConsoleColor.Yellow
     };
+
     public static ConsoleColor GetArchetypeColor(Archetype archetype) => archetype.ArchetypeType switch
     {
         ArchetypeType.Martial => ConsoleColor.Red,
         ArchetypeType.Magical => ConsoleColor.Blue,
         _ => ConsoleColor.White
     };
+
     public static ConsoleColor GetMonsterColor(Monster monster)
     {
-        return monster.ThreatLevel switch { 
-            ThreatLevel.Low => ConsoleColor.Gray, 
-            ThreatLevel.Medium => ConsoleColor.Green, 
-            ThreatLevel.High => ConsoleColor.Blue, 
+        return monster.ThreatLevel switch
+        {
+            ThreatLevel.Low => ConsoleColor.Gray,
+            ThreatLevel.Medium => ConsoleColor.Green,
+            ThreatLevel.High => ConsoleColor.Blue,
             ThreatLevel.Elite => ConsoleColor.Yellow,
-            _ => ConsoleColor.Red };
-    }    
+            _ => ConsoleColor.Red
+        };
+    }
+
     public static string ItemStatsString(Item item, decimal? value = null)
     {
-        if (value != null) 
+        if (value != null)
             return $"{item.Name}{GetArmorType(item)} - {value:0.00} [DUR: {item.Durability}{GetItemStats(item)}]";
 
         return $"{item.Name}{GetArmorType(item)} [DUR: {item.Durability}{GetItemStats(item)}]";
     }
+
     public static string SkillStatsString(Player player, Skill skill)
     {
-        return $"{skill.Name} [power: {skill.Power}, cost: {skill.Cost}, cooldown: {skill.Cooldown}, {GetTargets(skill)}{GetSupportStat(skill)}]{WaitingStats(player, skill)}";
+        return
+            $"{skill.Name} [power: {skill.Power}, cost: {skill.Cost}, cooldown: {skill.Cooldown}, {GetTargets(skill)}{GetSupportStat(skill)}]{WaitingStats(player, skill)}";
     }
+
     public static string ArchetypeToString(Archetype archetype)
     {
-        return $"{archetype.Name} [Health: {archetype.HealthBase}, Attack: {archetype.AttackBonus}, Magic: {archetype.MagicBonus}, Defense: {archetype.DefenseBonus}, Resistance: {archetype.ResistanceBonus}, Speed: {archetype.Speed}]";
+        return
+            $"{archetype.Name} [Health: {archetype.HealthBase}, Attack: {archetype.AttackBonus}, Magic: {archetype.MagicBonus}, Defense: {archetype.DefenseBonus}, Resistance: {archetype.ResistanceBonus}, Speed: {archetype.Speed}]";
     }
+
     public static string SkillToString(Skill skill)
     {
-        return $"{skill.Name} - {skill.Description}\n\t[level: {skill.RequiredLevel}, power: {skill.Power}, cost: {skill.Cost}, cooldown: {skill.Cooldown}, {GetTargets(skill)}{GetSupportStat(skill)}]";
+        return
+            $"{skill.Name} - {skill.Description}\n\t[level: {skill.RequiredLevel}, power: {skill.Power}, cost: {skill.Cost}, cooldown: {skill.Cooldown}, {GetTargets(skill)}{GetSupportStat(skill)}]";
     }
+
     public static string MonsterToString(Monster monster)
     {
-        return $"{monster.Name} - {monster.Description}\n\t[threat level: {monster.ThreatLevel}, damage type: {monster.DamageType}, level: {monster.Level}, health: {monster.MaxHealth}]";
+        return
+            $"{monster.Name} - {monster.Description}\n\t[threat level: {monster.ThreatLevel}, damage type: {monster.DamageType}, level: {monster.Level}, health: {monster.MaxHealth}]";
     }
+
     public static string RoomToString(Room room)
     {
         var sb = new StringBuilder();
@@ -82,14 +97,17 @@ public static class ColorfulToStringHelper
 
         return sb.ToString();
     }
+
     public static string PlayerToString(Player player)
     {
         var sb = new StringBuilder();
         sb.Append($"{player.Name} [Level {player.Level} {player.Archetype.Name}]");
-        sb.Append($"\n\t[Health: {player.MaxHealth}, Gold: {player.Inventory.Gold}, Carrying Weight: {player.Inventory.GetCarryingWeight()}/{player.Inventory.Capacity}]");
+        sb.Append(
+            $"\n\t[Health: {player.MaxHealth}, Gold: {player.Inventory.Gold}, Carrying Weight: {player.Inventory.GetCarryingWeight()}/{player.Inventory.Capacity}]");
 
         return sb.ToString();
     }
+
     public static string ItemToString(Item item)
     {
         var sb = new StringBuilder();
@@ -118,7 +136,6 @@ public static class ColorfulToStringHelper
     }
 
 
-
     public static string GetItemStats(Item item)
     {
         return item switch
@@ -129,6 +146,7 @@ public static class ColorfulToStringHelper
             _ => ""
         };
     }
+
     private static string GetArmorType(Item item)
     {
         return item switch
@@ -137,6 +155,7 @@ public static class ColorfulToStringHelper
             _ => ""
         };
     }
+
     private static string GetTargets(Skill skill)
     {
         return skill.TargetType switch
@@ -147,6 +166,7 @@ public static class ColorfulToStringHelper
             _ => throw new InvalidTargetException("Invalid target option on skill")
         };
     }
+
     private static string GetSupportStat(Skill skill)
     {
         if (skill is SupportSkill supportSkill)
@@ -156,6 +176,7 @@ public static class ColorfulToStringHelper
 
         return "";
     }
+
     private static string SkillResourceNeeded(Player player, Skill skill)
     {
         int deficit = skill.Cost - player.Archetype.CurrentResource;
@@ -167,14 +188,16 @@ public static class ColorfulToStringHelper
 
         return "";
     }
+
     private static string SkillTurnsNeeded(Skill skill)
     {
         int turns = Math.Max(0, skill.Cooldown - skill.ElapsedTime);
         return turns > 0 ? $"({turns} TURNS UNTIL READY)" : "";
     }
+
     public static string WaitingStats(Player player, Skill skill)
     {
-        var parts = new List<string> ();
+        var parts = new List<string>();
 
         var resourceNeeded = SkillResourceNeeded(player, skill);
         if (!string.IsNullOrWhiteSpace(resourceNeeded))
@@ -182,7 +205,7 @@ public static class ColorfulToStringHelper
 
         var turnsNeeded = SkillTurnsNeeded(skill);
         if (!string.IsNullOrWhiteSpace(turnsNeeded))
-            parts.Add(turnsNeeded);        
+            parts.Add(turnsNeeded);
 
         return parts.Count == 0 ? "" : string.Join(" ", parts);
     }

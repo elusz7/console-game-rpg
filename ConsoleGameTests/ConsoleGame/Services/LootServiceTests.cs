@@ -104,8 +104,7 @@ public class LootServiceTests
         var session = CreateSession(player, monster);
 
         // Act & Assert
-        Assert.ThrowsException<TreasureException>(
-            () => _service.LootMonster(session, monster));
+        Assert.ThrowsException<TreasureException>(() => _service.LootMonster(session, monster));
 
         // The monster is removed even though no treasure was collected.
         Assert.AreEqual(0, player.CurrentRoom!.Monsters.Count);
@@ -127,8 +126,7 @@ public class LootServiceTests
         player.Inventory.Capacity = 1;
 
         // Act & Assert
-        Assert.ThrowsException<TreasureException>(
-            () => _service.LootMonster(session, monster));
+        Assert.ThrowsException<TreasureException>(() => _service.LootMonster(session, monster));
 
         // The treasure should be restored to the monster.
         Assert.AreSame(treasure, monster.Treasure);

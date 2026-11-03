@@ -2,6 +2,11 @@
 
 public class OverweightException : InventoryException
 {
-    public OverweightException() : base() { }
-    public OverweightException(string message) : base(message) { }
+    public OverweightException() : base()
+    {
+    }
+
+    public OverweightException(string message) : base(message)
+    {
+    }
 }

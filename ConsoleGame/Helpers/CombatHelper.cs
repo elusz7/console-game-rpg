@@ -34,7 +34,8 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
 
                 foreach (var monster in aliveMonsters)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[{monster.Name}] ({monster.CurrentHealth}/{monster.MaxHealth}) {monster.DamageType}: {monster.GetStat(StatType.Attack)}, DEF: {monster.GetStat(StatType.Defense)}, RES: {monster.GetStat(StatType.Resistance)}");
+                    System.Diagnostics.Debug.WriteLine(
+                        $"[{monster.Name}] ({monster.CurrentHealth}/{monster.MaxHealth}) {monster.DamageType}: {monster.GetStat(StatType.Attack)}, DEF: {monster.GetStat(StatType.Defense)}, RES: {monster.GetStat(StatType.Resistance)}");
 
                     if (player.GetStat(StatType.Speed) > monster.GetStat(StatType.Speed) && !playerTurnTaken)
                     {
@@ -50,7 +51,7 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
                     if (monster.CurrentHealth > 0)
                     {
                         monster.Attack(player);
-                        
+
                         OutputActionItems(player, aliveMonsters);
                     }
                 }
@@ -76,9 +77,12 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
             _outputManager.Display();
         }
     }
+
     private void PlayerCombatTurn(Player player, List<Monster> validTargets)
     {
-        _outputManager.WriteLine($"\nYour turn! You have {player.CurrentHealth} health and {player.Archetype.CurrentResource} {player.Archetype.ResourceName}.\n", ConsoleColor.Green);
+        _outputManager.WriteLine(
+            $"\nYour turn! You have {player.CurrentHealth} health and {player.Archetype.CurrentResource} {player.Archetype.ResourceName}.\n",
+            ConsoleColor.Green);
         while (true)
         {
             var options = new Dictionary<string, CombatOptions>
@@ -121,8 +125,9 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
             }
         }
     }
+
     private void OutputActionItems(Player player, List<Monster> monsters)
-    {        
+    {
         // SortedList auto-orders by key and avoids Dictionary's duplicate key issue
         var actions = new SortedList<long, string>();
 
@@ -155,6 +160,7 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
             monster.ClearActionItems();
         }
     }
+
     private static void ElapseTime(Player player, List<Monster> monsters)
     {
         foreach (var monster in monsters)
@@ -172,6 +178,7 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
 
         player.Archetype.RecoverResource();
     }
+
     private static void ResetSupportSkills(List<Monster> monsters)
     {
         foreach (var monster in monsters)
@@ -185,10 +192,12 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
             }
         }
     }
+
     private bool Attack(Player player, List<Monster> targets)
-    {        
-        var target = targets.Count == 1 ? targets[0]
-                    : SelectTarget(targets, "attack");
+    {
+        var target = targets.Count == 1
+            ? targets[0]
+            : SelectTarget(targets, "attack");
 
         if (target == null) return false;
 
@@ -211,16 +220,17 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
             return false;
         }
     }
+
     private bool UseSkill(Player player, List<Monster> targets)
     {
         var allSkills = player.Archetype.Skills
-                .Where(s => s.RequiredLevel <= player.Level)
-                .ToList() ?? [];
+            .Where(s => s.RequiredLevel <= player.Level)
+            .ToList() ?? [];
 
         var usableSkills = allSkills
-                .Where(s => s.Cost <= player.Archetype.CurrentResource)
-                .Where(s => !s.IsOnCooldown)
-                .Where(s => s is not UltimateSkill).ToList();
+            .Where(s => s.Cost <= player.Archetype.CurrentResource)
+            .Where(s => !s.IsOnCooldown)
+            .Where(s => s is not UltimateSkill).ToList();
         usableSkills.AddRange(allSkills.Where(s => s is UltimateSkill ult && ult.IsReady)
             .Where(s => s.Cost <= player.Archetype.CurrentResource));
 
@@ -236,14 +246,15 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
         {
             if (waitingSkills.Count != 0)
             {
-                
-                _inputManager.Viewer(waitingSkills, s => ColorfulToStringHelper.SkillStatsString(player, s), "", _ => ConsoleColor.DarkRed);
+                _inputManager.Viewer(waitingSkills, s => ColorfulToStringHelper.SkillStatsString(player, s), "",
+                    _ => ConsoleColor.DarkRed);
             }
+
             _outputManager.WriteLine("No skills available to use currently.", ConsoleColor.Red);
             return false;
         }
-        
-        var skill = SelectSkill(player, usableSkills, waitingSkills);        
+
+        var skill = SelectSkill(player, usableSkills, waitingSkills);
 
         if (skill == null)
         {
@@ -260,7 +271,8 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
                     break;
                 case TargetType.SingleEnemy:
                     _outputManager.WriteLine();
-                    var target = targets.Count == 1 ? targets[0]
+                    var target = targets.Count == 1
+                        ? targets[0]
                         : SelectTarget(targets, $"use {skill.Name} on");
 
                     if (target == null)
@@ -288,26 +300,28 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
             return false;
         }
 
-        if(skill.SkillCategory == SkillCategory.Support)
+        if (skill.SkillCategory == SkillCategory.Support)
         {
-            bool wantsToAttack = _inputManager.ReadString("\nYou may also make an attack if you wish (y/n): ", ["y", "n"]) == "y";
+            bool wantsToAttack =
+                _inputManager.ReadString("\nYou may also make an attack if you wish (y/n): ", ["y", "n"]) == "y";
             if (wantsToAttack)
             {
                 Attack(player, targets);
                 return true;
             }
-            
         }
 
         return true;
     }
+
     private bool UseConsumable(Player player, List<Monster> validTargets)
     {
         var used = _equipmentHelper.UseConsumable(player);
 
         if (used)
         {
-            bool wantsToAttack = _inputManager.ReadString("\nYou may also make an attack if you wish (y/n): ", ["y", "n"]) == "y";
+            bool wantsToAttack =
+                _inputManager.ReadString("\nYou may also make an attack if you wish (y/n): ", ["y", "n"]) == "y";
             if (wantsToAttack)
             {
                 Attack(player, validTargets);
@@ -315,35 +329,40 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
             }
         }
 
-        
+
         return used;
     }
+
     private Monster? SelectTarget(List<Monster> validTargets, string purpose)
     {
         return _inputManager.Selector(
-            validTargets, 
-            m => m.Name, 
+            validTargets,
+            m => m.Name,
             $"Select a target to {purpose}",
             _ => ConsoleColor.DarkRed
         );
     }
+
     private Skill? SelectSkill(Player player, List<Skill> usableSkills, List<Skill> waitingSkills)
     {
         _outputManager.WriteLine();
         for (int i = 0; i < usableSkills.Count; i++)
         {
-            _outputManager.WriteLine($"{i + 1}. {ColorfulToStringHelper.SkillStatsString(player, usableSkills[i])}", ColorfulToStringHelper.GetSkillColor(usableSkills[i]));
+            _outputManager.WriteLine($"{i + 1}. {ColorfulToStringHelper.SkillStatsString(player, usableSkills[i])}",
+                ColorfulToStringHelper.GetSkillColor(usableSkills[i]));
         }
+
         for (int k = 0; k < waitingSkills.Count; k++)
         {
-            _outputManager.WriteLine($"---{ColorfulToStringHelper.SkillStatsString(player, waitingSkills[k])}", ConsoleColor.DarkRed);
+            _outputManager.WriteLine($"---{ColorfulToStringHelper.SkillStatsString(player, waitingSkills[k])}",
+                ConsoleColor.DarkRed);
         }
 
         int index = _inputManager.ReadInt("\tSelect a skill to use (-1 to cancel): ", usableSkills.Count, true) - 1;
 
         if (index < 0)
             return null;
-        
+
         return usableSkills[index];
     }
 }

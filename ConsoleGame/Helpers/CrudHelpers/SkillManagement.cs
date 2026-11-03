@@ -8,8 +8,12 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class SkillManagement(IInputManager inputManager, IOutputManager outputManager, 
-    ISkillDao skillDao, IMonsterDao monsterDao, IArchetypeDao archetypeDao)
+public class SkillManagement(
+    IInputManager inputManager,
+    IOutputManager outputManager,
+    ISkillDao skillDao,
+    IMonsterDao monsterDao,
+    IArchetypeDao archetypeDao)
 {
     private readonly IInputManager _inputManager = inputManager;
     private readonly IOutputManager _outputManager = outputManager;
@@ -24,11 +28,11 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
         {
             _outputManager.WriteLine("=== Skill Management Menu ===", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. Add Skill"
-                + "\n2. Edit Skill"
-                + "\n3. Assign Skills"
-                + "\n4. Unassign Skills"
-                + "\n5. Delete Skill"
-                + "\n6. Back to Skill Menu");
+                                     + "\n2. Edit Skill"
+                                     + "\n3. Assign Skills"
+                                     + "\n4. Unassign Skills"
+                                     + "\n5. Delete Skill"
+                                     + "\n6. Back to Skill Menu");
 
             var choice = _inputManager.ReadMenuKey(6);
             switch (choice)
@@ -53,6 +57,7 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
             }
         }
     }
+
     private void AddSkill()
     {
         do
@@ -60,6 +65,7 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
             CreateSkill();
         } while (_inputManager.LoopAgain("create"));
     }
+
     private void CreateSkill()
     {
         _outputManager.WriteLine("=== Create Skill ===", ConsoleColor.Magenta);
@@ -108,13 +114,14 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
         {
             _outputManager.WriteLine("\nSkill creation cancelled.\n", ConsoleColor.Red);
             return;
-        }    
+        }
 
         var newSkill = CreateSkillObject(skillType, name, description, numericValues);
         _skillDao.AddSkill(newSkill);
 
         _outputManager.WriteLine($"Skill [{name}] added successfully!", ConsoleColor.Green);
     }
+
     private void GetValidTargetType(SkillType skillType, Dictionary<string, int> numericValues)
     {
         while (true)
@@ -125,7 +132,9 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
 
             if (target == (int)TargetType.Self && skillType != SkillType.SupportSkill)
             {
-                _outputManager.WriteLine("\nSelf target type is only valid for Support Skills. Please select a different target type.", ConsoleColor.Red);
+                _outputManager.WriteLine(
+                    "\nSelf target type is only valid for Support Skills. Please select a different target type.",
+                    ConsoleColor.Red);
             }
             else
             {
@@ -134,6 +143,7 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
             }
         }
     }
+
     private void GetValidSupportStat(Dictionary<string, int> numericValues)
     {
         while (true)
@@ -142,7 +152,9 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
 
             if (stat == StatType.Health && numericValues[SkillKeys.TARGET] != (int)TargetType.Self)
             {
-                _outputManager.WriteLine("\nHealth is not a valid option for a support skill targeting enemies. Please select a different stat type.", ConsoleColor.Red);
+                _outputManager.WriteLine(
+                    "\nHealth is not a valid option for a support skill targeting enemies. Please select a different stat type.",
+                    ConsoleColor.Red);
             }
             else
             {
@@ -151,6 +163,7 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
             }
         }
     }
+
     private void EditSkill()
     {
         var skills = _skillDao.GetAllNonCoreSkills();
@@ -177,9 +190,12 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
         var propertyActions = new Dictionary<string, Action>
         {
             { "Name", () => skill.Name = _inputManager.ReadString("\nEnter new value for Name: ") },
-            { "Power (Will Also Affect Level, Cost, Cooldown, and Duration) ", () => 
+            {
+                "Power (Will Also Affect Level, Cost, Cooldown, and Duration) ", () =>
                 {
-                    var powerPrompt = skill.SkillCategory == SkillCategory.Support ? "\nEnter stat boost/reduction power: " : "\nEnter skill damage: ";
+                    var powerPrompt = skill.SkillCategory == SkillCategory.Support
+                        ? "\nEnter stat boost/reduction power: "
+                        : "\nEnter skill damage: ";
                     var power = _inputManager.ReadInt(powerPrompt);
 
                     StatType? statEffected = null;
@@ -202,9 +218,14 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
                     skill.Cooldown = cooldown;
                     if (skill is SupportSkill supportSkill)
                         supportSkill.Duration = duration;
-                }},
-            { "Description", () => skill.Description = _inputManager.ReadString("\nEnter new value for skill description: ") },
-            { "Target Type", () =>
+                }
+            },
+            {
+                "Description",
+                () => skill.Description = _inputManager.ReadString("\nEnter new value for skill description: ")
+            },
+            {
+                "Target Type", () =>
                 {
                     var targetType = _inputManager.GetEnumChoice<TargetType>("Select the new target");
 
@@ -214,7 +235,8 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
                             supportSkill.SupportEffect = (int)SupportEffectType.Boost;
                         else if (targetType != TargetType.Self && supportSkill.StatAffected == StatType.Health)
                         {
-                            _outputManager.WriteLine("\nCannot target enemies with a support skill affected health!\n", ConsoleColor.Red);
+                            _outputManager.WriteLine("\nCannot target enemies with a support skill affected health!\n",
+                                ConsoleColor.Red);
                             return;
                         }
                         else
@@ -226,13 +248,15 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
                     {
                         if (targetType == TargetType.Self)
                         {
-                            _outputManager.WriteLine("\nCannot target yourself with damaging skills!\n", ConsoleColor.Red);
+                            _outputManager.WriteLine("\nCannot target yourself with damaging skills!\n",
+                                ConsoleColor.Red);
                             return;
                         }
 
                         skill.TargetType = targetType;
                     }
-                }}
+                }
+            }
         };
 
         if (skill is SupportSkill)
@@ -245,9 +269,12 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
 
                     if (statType == StatType.Health && skill.TargetType != TargetType.Self)
                     {
-                        _outputManager.WriteLine("Health is not a valid option for a support skill targeting enemies. Please select a different stat type.", ConsoleColor.Red);
+                        _outputManager.WriteLine(
+                            "Health is not a valid option for a support skill targeting enemies. Please select a different stat type.",
+                            ConsoleColor.Red);
                         return;
                     }
+
                     supportSkill.StatAffected = statType;
                 }
             };
@@ -263,7 +290,8 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
             if (option == propertyActions.Count + 1)
             {
                 _skillDao.UpdateSkill(skill);
-                _outputManager.WriteLine($"\nExiting. Any changes made have been successfully saved to {skill.Name}\n", ConsoleColor.Green);
+                _outputManager.WriteLine($"\nExiting. Any changes made have been successfully saved to {skill.Name}\n",
+                    ConsoleColor.Green);
                 return;
             }
 
@@ -271,6 +299,7 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
             propertyActions[selectedProperty].Invoke();
         }
     }
+
     private void AssignSkill()
     {
         do
@@ -282,7 +311,7 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
                 return;
             }
 
-            var skill = 
+            var skill =
                 _inputManager.Selector(
                     skills,
                     s => ColorfulToStringHelper.SkillToString(s),
@@ -295,12 +324,17 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
                 return;
             }
 
-            var assignment = _inputManager.ReadString("\nAssign skill to monster or archetype (m/a)? ", ["m", "a"]).ToLower();
+            var assignment = _inputManager.ReadString("\nAssign skill to monster or archetype (m/a)? ", ["m", "a"])
+                .ToLower();
 
             object? target = assignment switch
             {
-                "m" => _inputManager.Selector(_monsterDao.GetAllMonsters(), m => ColorfulToStringHelper.MonsterToString(m), $"Select which monster to assign {skill.Name}", m => ColorfulToStringHelper.GetMonsterColor(m)),
-                "a" => _inputManager.Selector(_archetypeDao.GetAllArchetypes(), a => ColorfulToStringHelper.ArchetypeToString(a), $"Select which archetype to assign {skill.Name}", a => ColorfulToStringHelper.GetArchetypeColor(a)),
+                "m" => _inputManager.Selector(_monsterDao.GetAllMonsters(),
+                    m => ColorfulToStringHelper.MonsterToString(m), $"Select which monster to assign {skill.Name}",
+                    m => ColorfulToStringHelper.GetMonsterColor(m)),
+                "a" => _inputManager.Selector(_archetypeDao.GetAllArchetypes(),
+                    a => ColorfulToStringHelper.ArchetypeToString(a), $"Select which archetype to assign {skill.Name}",
+                    a => ColorfulToStringHelper.GetArchetypeColor(a)),
                 _ => null
             };
 
@@ -314,19 +348,22 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
             {
                 if (skill is BossSkill && monster is not BossMonster)
                 {
-                    _outputManager.WriteLine("\nYou cannot assign a boss-level skill to a non-boss monster.\n", ConsoleColor.Red);
+                    _outputManager.WriteLine("\nYou cannot assign a boss-level skill to a non-boss monster.\n",
+                        ConsoleColor.Red);
                     return;
                 }
 
                 if (skill is UltimateSkill && monster is not EliteMonster)
                 {
-                    _outputManager.WriteLine("\nYou cannot assign ultimate skills to a non-elite monster.\n", ConsoleColor.Red);
+                    _outputManager.WriteLine("\nYou cannot assign ultimate skills to a non-elite monster.\n",
+                        ConsoleColor.Red);
                     return;
                 }
 
                 if (skill.TargetType == TargetType.AllEnemies)
                 {
-                    _outputManager.WriteLine("\nCannot assign a skill that affects multiple targets to a monster.\n", ConsoleColor.Red);
+                    _outputManager.WriteLine("\nCannot assign a skill that affects multiple targets to a monster.\n",
+                        ConsoleColor.Red);
                     return;
                 }
 
@@ -334,30 +371,36 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
                     ((damageSkill.DamageType == DamageType.Martial && monster.DamageType == DamageType.Magical) ||
                      (damageSkill.DamageType == DamageType.Magical && monster.DamageType == DamageType.Martial)))
                 {
-                    _outputManager.WriteLine($"\nYou cannot assign a {damageSkill.DamageType} skill to a {monster.DamageType} monster.\n", ConsoleColor.Red);
+                    _outputManager.WriteLine(
+                        $"\nYou cannot assign a {damageSkill.DamageType} skill to a {monster.DamageType} monster.\n",
+                        ConsoleColor.Red);
                     return;
                 }
 
                 skill.MonsterId = monster.Id;
                 _skillDao.UpdateSkill(skill);
-                _outputManager.WriteLine($"\n{skill.Name} successfully assigned to {monster.Name}!", ConsoleColor.Green);
+                _outputManager.WriteLine($"\n{skill.Name} successfully assigned to {monster.Name}!",
+                    ConsoleColor.Green);
             }
             else if (target is Archetype archetype && skill is DamageSkill damageSkill)
             {
                 if ((damageSkill.DamageType.Equals("Martial") && archetype.ArchetypeType.Equals("Magic")) ||
                     (damageSkill.DamageType.Equals("Magic") && archetype.ArchetypeType.Equals("Martial")))
                 {
-                    _outputManager.WriteLine($"\nYou cannot assign a {damageSkill.DamageType} skill to a {archetype.ArchetypeType} archetype.\n", ConsoleColor.Red);
+                    _outputManager.WriteLine(
+                        $"\nYou cannot assign a {damageSkill.DamageType} skill to a {archetype.ArchetypeType} archetype.\n",
+                        ConsoleColor.Red);
                     return;
                 }
 
                 skill.ArchetypeId = archetype.Id;
                 _skillDao.UpdateSkill(skill);
-                _outputManager.WriteLine($"\n{skill.Name} successfully assigned to {archetype.Name}!", ConsoleColor.Green);
+                _outputManager.WriteLine($"\n{skill.Name} successfully assigned to {archetype.Name}!",
+                    ConsoleColor.Green);
             }
-
         } while (_inputManager.LoopAgain("assign"));
     }
+
     private void UnassignSkill()
     {
         var skills = _skillDao.GetAllAssignedNonCoreSkills();
@@ -369,10 +412,10 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
         }
 
         var skill = _inputManager.Selector(
-                skills,
-                s => ColorfulToStringHelper.SkillToString(s),
-                "Select a skill to unassign",
-                s => ColorfulToStringHelper.GetSkillColor(s));
+            skills,
+            s => ColorfulToStringHelper.SkillToString(s),
+            "Select a skill to unassign",
+            s => ColorfulToStringHelper.GetSkillColor(s));
 
         if (skill == null)
         {
@@ -394,6 +437,7 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
         _skillDao.UpdateSkill(skill);
         _outputManager.WriteLine($"\n{skill.Name} has been unassigned successfully.\n", ConsoleColor.Green);
     }
+
     private void DeleteSkill()
     {
         var skills = _skillDao.GetAllNonCoreSkills();
@@ -402,6 +446,7 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
             _outputManager.WriteLine("No skills available for deletion.", ConsoleColor.Red);
             return;
         }
+
         var skill = _inputManager.Selector(
             skills,
             s => ColorfulToStringHelper.SkillToString(s),
@@ -426,9 +471,11 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
             _outputManager.WriteLine("Deletion cancelled.", ConsoleColor.Red);
             return;
         }
+
         _skillDao.DeleteSkill(skill);
         _outputManager.WriteLine($"\n{skill.Name} has been deleted successfully.\n", ConsoleColor.Green);
     }
+
     private void SkillAdjustment(Dictionary<string, int> numericValues, string powerPrompt)
     {
         var power = numericValues[SkillKeys.POWER];
@@ -470,6 +517,7 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
             power = _inputManager.ReadInt(powerPrompt);
         }
     }
+
     private static void ApplySupportScaling(Dictionary<string, int> values, int power)
     {
         if ((StatType)values[SkillKeys.STAT] == StatType.Health)
@@ -484,9 +532,12 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
             values[SkillKeys.LEVEL] = Math.Max(1, power / 2); // 2 power = 1 level
             values[SkillKeys.COST] = Math.Clamp((int)(power / 3.0 * 2), 2, 50); // 3 power = cost 2
             values[SkillKeys.COOLDOWN] = Math.Clamp((int)(power / 2.0), 3, 60); // 2 power = cooldown 1
-            values[SkillKeys.DURATION] = Math.Clamp((int)(values[SkillKeys.COOLDOWN] * 0.43), 1, values[SkillKeys.COOLDOWN] - 1); // duration ~43% of cooldown
+            values[SkillKeys.DURATION] =
+                Math.Clamp((int)(values[SkillKeys.COOLDOWN] * 0.43), 1,
+                    values[SkillKeys.COOLDOWN] - 1); // duration ~43% of cooldown
         }
     }
+
     private static void ApplyUltimateScaling(Dictionary<string, int> values, int power)
     {
         values[SkillKeys.LEVEL] = Math.Max(3, power / 15); // 15 power = level 1
@@ -494,6 +545,7 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
         values[SkillKeys.COOLDOWN] = Math.Clamp((int)(power / 15.0), 8, 80); // 15 power = cooldown 1
         values.Remove(SkillKeys.DURATION); // No duration for ultimates
     }
+
     private static void ApplyDefaultScaling(Dictionary<string, int> values, int power)
     {
         values[SkillKeys.LEVEL] = Math.Max(1, power / 10); // 10 power = level 1
@@ -501,10 +553,12 @@ public class SkillManagement(IInputManager inputManager, IOutputManager outputMa
         values[SkillKeys.COOLDOWN] = Math.Clamp((int)(power / 12.0), 3, 50); // 12 power = cooldown 1
         values.Remove(SkillKeys.DURATION); // Default doesn't use duration
     }
-    private static Skill CreateSkillObject(SkillType skillType, string name, string description, Dictionary<string, int> numericValues)
+
+    private static Skill CreateSkillObject(SkillType skillType, string name, string description,
+        Dictionary<string, int> numericValues)
     {
         var skillCategory = (SkillCategory)numericValues[SkillKeys.CATEGORY];
-        var targetType = (TargetType)numericValues[SkillKeys.TARGET];        
+        var targetType = (TargetType)numericValues[SkillKeys.TARGET];
         var power = numericValues[SkillKeys.POWER];
         var level = numericValues[SkillKeys.LEVEL];
         var cost = numericValues[SkillKeys.COST];

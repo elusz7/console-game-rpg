@@ -13,7 +13,7 @@ public class RoomNavigationServiceTests
 {
     // Mocks the item factory used when refreshing merchant inventory.
     private readonly Mock<IItemFactory> _itemFactoryMock = new();
-    
+
     // The service being tested.
     private readonly RoomNavigationService _service = new();
 
@@ -48,7 +48,7 @@ public class RoomNavigationServiceTests
             Level = 1
         };
     }
-    
+
     [TestMethod]
     public void ChangeCurrentRoom_MovesPlayerToConnectedRoom()
     {
@@ -75,7 +75,7 @@ public class RoomNavigationServiceTests
         player.CurrentRoom = entrance;
 
         var session = new GameSession(player, floor, false);
-        
+
         // Act
         _service.ChangeCurrentRoom(session, "North");
 
@@ -86,7 +86,7 @@ public class RoomNavigationServiceTests
             factory => factory.CreateMerchantItems(1),
             Times.Once);
     }
-    
+
     [TestMethod]
     public void ChangeCurrentRoom_InvalidDirection_ThrowsException()
     {
@@ -106,8 +106,7 @@ public class RoomNavigationServiceTests
         var session = new GameSession(player, floor, false);
 
         // Verify that invalid movement throws an InvalidOperationException.
-        Assert.ThrowsException<InvalidOperationException>(
-            () => _service.ChangeCurrentRoom(session, "North"));
+        Assert.ThrowsException<InvalidOperationException>(() => _service.ChangeCurrentRoom(session, "North"));
 
         // Confirm the player remains in the original room.
         Assert.AreSame(entrance, player.CurrentRoom);

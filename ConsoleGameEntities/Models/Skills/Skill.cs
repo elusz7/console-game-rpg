@@ -16,15 +16,13 @@ public class Skill : ISkill
     public int RequiredLevel { get; set; }
     public int Cost { get; set; }
     public int Power { get; set; }
-    [NotMapped]
-    public int ElapsedTime { get; set; }
+    [NotMapped] public int ElapsedTime { get; set; }
     public int Cooldown { get; set; }
-    [NotMapped]
-    public bool IsOnCooldown => ElapsedTime < Cooldown;
+    [NotMapped] public bool IsOnCooldown => ElapsedTime < Cooldown;
     public TargetType TargetType { get; set; }
     public string SkillType { get; set; }
     public SkillCategory SkillCategory { get; set; }
-    
+
     public int? ArchetypeId { get; set; }
     public virtual Archetype? Archetype { get; set; }
     public int? MonsterId { get; set; }
@@ -32,9 +30,11 @@ public class Skill : ISkill
 
     public virtual void InitializeSkill(int level)
     {
-        ElapsedTime = Cooldown + 1;        
+        ElapsedTime = Cooldown + 1;
     }
-    public virtual void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
+
+    public virtual void Activate(ITargetable caster, ITargetable? singleEnemy = null,
+        List<ITargetable>? multipleEnemies = null)
     {
         if (IsOnCooldown)
             throw new SkillCooldownException($"Skill '{Name}' is on cooldown!");
@@ -56,19 +56,23 @@ public class Skill : ISkill
 
         Reset();
     }
+
     private void ValidateCasterLevel(ITargetable caster)
     {
         if (caster is Player p)
         {
             if (p.Level < RequiredLevel)
-                throw new InvalidSkillLevelException($"{p.Name} does not meet the required level ({RequiredLevel}) for '{Name}'.");
+                throw new InvalidSkillLevelException(
+                    $"{p.Name} does not meet the required level ({RequiredLevel}) for '{Name}'.");
         }
         else if (caster is Monster m)
         {
             if (m.Level < RequiredLevel)
-                throw new InvalidSkillLevelException($"{m.Name} does not meet the required level ({RequiredLevel}) for '{Name}'.");
+                throw new InvalidSkillLevelException(
+                    $"{m.Name} does not meet the required level ({RequiredLevel}) for '{Name}'.");
         }
     }
+
     private void ValidateTargets(ITargetable caster, ITargetable? singleEnemy, List<ITargetable>? multipleEnemies)
     {
         switch (TargetType)
@@ -85,6 +89,7 @@ public class Skill : ISkill
                 break;
         }
     }
+
     private void ConsumePlayerResources(Player player)
     {
         if (player.Level < RequiredLevel)
@@ -99,6 +104,7 @@ public class Skill : ISkill
             throw new SkillResourceException(ex.Message);
         }
     }
+
     private void ApplySkillEffect(
         ITargetable caster,
         ITargetable? singleEnemy,
@@ -125,6 +131,7 @@ public class Skill : ISkill
                     {
                         support.ApplyEffect(target);
                     }
+
                     break;
             }
         }
@@ -145,14 +152,17 @@ public class Skill : ISkill
                     {
                         target.TakeDamage(Power, damageSkill.DamageType);
                     }
+
                     break;
             }
         }
     }
+
     public virtual void UpdateElapsedTime()
     {
         ElapsedTime++;
     }
+
     public virtual void Reset()
     {
         ElapsedTime = 0;

@@ -80,7 +80,7 @@ public class FloorProgressionServiceTests
 
         // Assert
         Assert.AreEqual(initialLevel + 1, player.Level);
-        
+
         // Verify the next floor was generated using the updated player level.
         _floorFactoryMock.Verify(factory => factory.CreateFloor(
                 initialLevel + 1,
@@ -115,7 +115,7 @@ public class FloorProgressionServiceTests
         Assert.AreSame(nextFloor.GetEntrance(), player.CurrentRoom);
         Assert.AreSame(nextFloor, session.CurrentFloor);
     }
-    
+
     [TestMethod]
     public void AdvanceToNextFloor_CollectsMonsterTreasure()
     {
@@ -239,7 +239,7 @@ public class FloorProgressionServiceTests
         Assert.AreEqual(0, collectedItems.Count);
         Assert.AreSame(nextFloor, session.CurrentFloor);
     }
-    
+
     [TestMethod]
     public void AdvanceToNextFloor_PreservesMerchantProgressWhenMerchantWasMet()
     {

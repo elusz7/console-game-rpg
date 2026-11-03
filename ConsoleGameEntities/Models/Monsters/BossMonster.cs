@@ -18,14 +18,17 @@ public class BossMonster : Monster
     private int BaseAttack = 0;
     public override double DodgeChance { get; set; } = 0.01;
 
-    [NotMapped]
-    public override IMonsterStrategy Strategy { get; set; }
+    [NotMapped] public override IMonsterStrategy Strategy { get; set; }
 
-    public BossMonster() { }
+    public BossMonster()
+    {
+    }
+
     public BossMonster(IMonsterSkillSelector skillSelector)
     {
         Strategy = new BossStrategy(skillSelector);
     }
+
     public override void Attack(IPlayer target)
     {
         Strategy.ExecuteAttack(this, target);
@@ -41,7 +44,7 @@ public class BossMonster : Monster
 
         CurrentPhase++;
         if (CurrentPhase > MaxPhases)
-            throw new MonsterDeathException();        
+            throw new MonsterDeathException();
 
         foreach (var skill in Skills.OfType<BossSkill>())
             skill.Phase = CurrentPhase;
@@ -62,8 +65,10 @@ public class BossMonster : Monster
             DefensePower += 1;
             Resistance += 2;
         }
+
         AddActionItem($"Boss [{Name}] has entered phase {CurrentPhase}!");
     }
+
     public override void TakeDamage(int damage, DamageType? damageType)
     {
         var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
@@ -79,7 +84,8 @@ public class BossMonster : Monster
         {
             DamageType.Martial => Math.Max(1, damage - GetStat(StatType.Defense)),
             DamageType.Magical => Math.Max(1, damage - GetStat(StatType.Resistance)),
-            DamageType.Hybrid => Math.Max(1, damage - (Math.Max(GetStat(StatType.Defense), GetStat(StatType.Resistance)) / 2)),
+            DamageType.Hybrid => Math.Max(1,
+                damage - (Math.Max(GetStat(StatType.Defense), GetStat(StatType.Resistance)) / 2)),
             _ => damage
         };
 
@@ -89,11 +95,10 @@ public class BossMonster : Monster
         if (CurrentHealth <= 0)
             CheckPhaseChange();
     }
+
     public override void SetLevel(int newLevel)
     {
         CurrentPhase = 1;
         base.SetLevel(newLevel);
     }
 }
-
-

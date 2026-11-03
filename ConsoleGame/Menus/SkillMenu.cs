@@ -4,7 +4,11 @@ using ConsoleGame.Helpers.DisplayHelpers;
 
 namespace ConsoleGame.Menus;
 
-public class SkillMenu(IInputManager inputManager, IOutputManager outputManager, SkillDisplay skillDisplay, SkillManagement skillManagement)
+public class SkillMenu(
+    IInputManager inputManager,
+    IOutputManager outputManager,
+    SkillDisplay skillDisplay,
+    SkillManagement skillManagement)
 {
     private readonly IInputManager _inputManager = inputManager;
     private readonly IOutputManager _outputManager = outputManager;
@@ -18,8 +22,8 @@ public class SkillMenu(IInputManager inputManager, IOutputManager outputManager,
         {
             _outputManager.WriteLine("=== Skill Main Menu ===", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. View Skills"
-                + "\n2. Manage Skills"
-                + "\n3. Return to Admin Menu");
+                                     + "\n2. Manage Skills"
+                                     + "\n3. Return to Admin Menu");
 
             var choice = _inputManager.ReadMenuKey(3);
             switch (choice)

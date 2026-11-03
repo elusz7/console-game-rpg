@@ -169,5 +169,3 @@ namespace ConsoleGameEntities.Data
         }
     }
 }
-
-

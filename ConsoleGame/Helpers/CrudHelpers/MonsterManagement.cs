@@ -19,9 +19,9 @@ public class MonsterManagement(IOutputManager outputManager, IInputManager input
         {
             _outputManager.WriteLine("=== Monster Management Menu ===", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. Add Monster"
-                + "\n2. Edit Monster"
-                + "\n3. Delete Monster"
-                + "\n4. Return to Monster Menu");
+                                     + "\n2. Edit Monster"
+                                     + "\n3. Delete Monster"
+                                     + "\n4. Return to Monster Menu");
             var input = _inputManager.ReadMenuKey(4);
             switch (input)
             {
@@ -103,7 +103,7 @@ public class MonsterManagement(IOutputManager outputManager, IInputManager input
             return;
         }
 
-        var monsterToEdit = 
+        var monsterToEdit =
             _inputManager.Selector(
                 monsters,
                 m => ColorfulToStringHelper.MonsterToString(m),
@@ -119,13 +119,27 @@ public class MonsterManagement(IOutputManager outputManager, IInputManager input
         var propertyActions = new Dictionary<string, Action>
         {
             { "Name", () => monsterToEdit.Name = _inputManager.ReadString("\nEnter new value for Name: ") },
-            { "Description", () => monsterToEdit.Description = _inputManager.ReadString("\nEnter new value for Description: ") },
+            {
+                "Description",
+                () => monsterToEdit.Description = _inputManager.ReadString("\nEnter new value for Description: ")
+            },
             { "Level", () => monsterToEdit.Level = _inputManager.ReadInt("\nEnter new value for Level: ") },
-            { "Attack Power", () => monsterToEdit.AttackPower = _inputManager.ReadInt("\nEnter new value for Attack Power: ") },
-            { "Defense Power", () => monsterToEdit.DefensePower = _inputManager.ReadInt("\nEnter new value for Defense Power: ") },
-            { "Resistance Power", () => monsterToEdit.Resistance = _inputManager.ReadInt("\nEnter new value for Resistance Power: ") },
+            {
+                "Attack Power",
+                () => monsterToEdit.AttackPower = _inputManager.ReadInt("\nEnter new value for Attack Power: ")
+            },
+            {
+                "Defense Power",
+                () => monsterToEdit.DefensePower = _inputManager.ReadInt("\nEnter new value for Defense Power: ")
+            },
+            {
+                "Resistance Power",
+                () => monsterToEdit.Resistance = _inputManager.ReadInt("\nEnter new value for Resistance Power: ")
+            },
             { "Speed", () => monsterToEdit.AggressionLevel = _inputManager.ReadInt("\nEnter new value for Speed: ") },
-            { "Threat Level", () => {
+            {
+                "Threat Level", () =>
+                {
                     monsterToEdit.ThreatLevel = _inputManager.GetEnumChoice<ThreatLevel>("Select the new Threat Level");
                     monsterToEdit.MonsterType = monsterToEdit.ThreatLevel switch
                     {
@@ -133,8 +147,12 @@ public class MonsterManagement(IOutputManager outputManager, IInputManager input
                         ThreatLevel.Boss => "BossMonster",
                         _ => "Monster"
                     };
-                }},
-            { "Damage Type", () => monsterToEdit.DamageType = _inputManager.GetEnumChoice<DamageType>("Select the new DamageType") },
+                }
+            },
+            {
+                "Damage Type",
+                () => monsterToEdit.DamageType = _inputManager.GetEnumChoice<DamageType>("Select the new DamageType")
+            },
             { "Health", () => monsterToEdit.MaxHealth = _inputManager.ReadInt("\nEnter new value for Health: ") }
         };
 
@@ -148,7 +166,9 @@ public class MonsterManagement(IOutputManager outputManager, IInputManager input
             if (option == propertyActions.Count + 1)
             {
                 _monsterDao.UpdateMonster(monsterToEdit);
-                _outputManager.WriteLine($"\nExiting. Any changes made have been successfully saved to {monsterToEdit.Name}\n", ConsoleColor.Green);
+                _outputManager.WriteLine(
+                    $"\nExiting. Any changes made have been successfully saved to {monsterToEdit.Name}\n",
+                    ConsoleColor.Green);
                 return;
             }
 
@@ -156,6 +176,7 @@ public class MonsterManagement(IOutputManager outputManager, IInputManager input
             propertyActions[selectedProperty].Invoke();
         }
     }
+
     private void DeleteMonster()
     {
         var monsters = _monsterDao.GetAllNonCoreMonsters();
@@ -164,6 +185,7 @@ public class MonsterManagement(IOutputManager outputManager, IInputManager input
             _outputManager.WriteLine("\nNo monsters available to delete.\n", ConsoleColor.Red);
             return;
         }
+
         var monsterToDelete =
             _inputManager.Selector(
                 monsters,
@@ -182,6 +204,7 @@ public class MonsterManagement(IOutputManager outputManager, IInputManager input
             _outputManager.WriteLine("\nDeletion cancelled.\n", ConsoleColor.Red);
             return;
         }
+
         _monsterDao.DeleteMonster(monsterToDelete);
         _outputManager.WriteLine($"\n{monsterToDelete.Name} has been deleted successfully.\n", ConsoleColor.Green);
     }

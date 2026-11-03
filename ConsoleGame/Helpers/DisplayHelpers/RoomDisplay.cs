@@ -3,8 +3,11 @@ using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame.Helpers.DisplayHelpers;
 
-public class RoomDisplay(IOutputManager outputManager, IInputManager inputManager, 
-    IMapManager mapManager, IRoomDao roomDao)
+public class RoomDisplay(
+    IOutputManager outputManager,
+    IInputManager inputManager,
+    IMapManager mapManager,
+    IRoomDao roomDao)
 {
     private readonly IOutputManager _outputManager = outputManager;
     private readonly IInputManager _inputManager = inputManager;
@@ -18,8 +21,8 @@ public class RoomDisplay(IOutputManager outputManager, IInputManager inputManage
         {
             _outputManager.WriteLine("=== Room Display Menu ===", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. View All Rooms"
-                + "\n2. View Map"
-                + "\n3. Return to Room Menu");
+                                     + "\n2. View Map"
+                                     + "\n3. Return to Room Menu");
 
             var input = _inputManager.ReadMenuKey(3);
 
@@ -37,10 +40,11 @@ public class RoomDisplay(IOutputManager outputManager, IInputManager inputManage
             }
         }
     }
+
     private void ViewAllRooms()
     {
         var rooms = _roomDao.GetAllRooms();
-        
+
         _inputManager.Viewer(rooms, r => ColorfulToStringHelper.RoomToString(r), "");
 
         _outputManager.Clear();

@@ -19,7 +19,10 @@ public class Room : IRoom
     public virtual Room? East { get; set; }
     public virtual List<Monster> Monsters { get; set; } = new List<Monster>();
 
-    public Room() { }
+    public Room()
+    {
+    }
+
     public Room(string name, string description)
     {
         Name = name;

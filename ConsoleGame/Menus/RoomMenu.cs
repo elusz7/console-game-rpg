@@ -4,8 +4,12 @@ using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame.Menus;
 
-public class RoomMenu(IInputManager inputManager, IOutputManager outputManager, RoomDisplay roomDisplay, 
-    RoomManagement roomManagement, RoomConnectionManagement roomConnectionManagement)
+public class RoomMenu(
+    IInputManager inputManager,
+    IOutputManager outputManager,
+    RoomDisplay roomDisplay,
+    RoomManagement roomManagement,
+    RoomConnectionManagement roomConnectionManagement)
 {
     private readonly IInputManager _inputManager = inputManager;
     private readonly IOutputManager _outputManager = outputManager;
@@ -20,10 +24,10 @@ public class RoomMenu(IInputManager inputManager, IOutputManager outputManager, 
         {
             _outputManager.WriteLine("=== Room Main Menu ===", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. View Rooms"
-                + "\n2. Manage Rooms"
-                + "\n3. Update Room Connections"
-                + "\n4. Return to Admin Menu");
-            
+                                     + "\n2. Manage Rooms"
+                                     + "\n3. Update Room Connections"
+                                     + "\n4. Return to Admin Menu");
+
             var input = _inputManager.ReadMenuKey(4);
 
             switch (input)
@@ -44,5 +48,3 @@ public class RoomMenu(IInputManager inputManager, IOutputManager outputManager, 
         }
     }
 }
-
-

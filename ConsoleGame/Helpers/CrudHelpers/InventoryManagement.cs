@@ -21,7 +21,8 @@ public class InventoryManagement(IInputManager inputManager, IOutputManager outp
         {
             if (!SelectPlayer())
             {
-                _outputManager.WriteLine("No player available or selected. Returning to previous menu.", ConsoleColor.Red);
+                _outputManager.WriteLine("No player available or selected. Returning to previous menu.",
+                    ConsoleColor.Red);
                 return;
             }
         }
@@ -41,8 +42,8 @@ public class InventoryManagement(IInputManager inputManager, IOutputManager outp
         {
             _outputManager.WriteLine($"=== {_player.Name}'s Inventory Management ===", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. Add Item to Inventory"
-                + "\n2. Remove Item from Inventory"
-                + "\n3. Return to Previous Menu");
+                                     + "\n2. Remove Item from Inventory"
+                                     + "\n3. Return to Previous Menu");
             var input = _inputManager.ReadMenuKey(3);
 
             switch (input)
@@ -60,6 +61,7 @@ public class InventoryManagement(IInputManager inputManager, IOutputManager outp
             }
         }
     }
+
     private bool SelectPlayer()
     {
         List<Player> players = _inventoryDao.GetAllPlayers();
@@ -69,11 +71,11 @@ public class InventoryManagement(IInputManager inputManager, IOutputManager outp
             return false;
         }
 
-        var player = 
+        var player =
             _inputManager.Selector(
-                players, 
-                p => ColorfulToStringHelper.PlayerToString(p), 
-                "Select a player to manage their inventory", 
+                players,
+                p => ColorfulToStringHelper.PlayerToString(p),
+                "Select a player to manage their inventory",
                 q => ColorfulToStringHelper.GetArchetypeColor(q.Archetype));
 
         if (player == null)
@@ -84,26 +86,29 @@ public class InventoryManagement(IInputManager inputManager, IOutputManager outp
         _player = player;
         return true;
     }
+
     private void AddItemToInventory()
-    {       
+    {
         do
         {
             var equippableItems = _inventoryDao.GetEquippableItems(_player!);
 
-            _outputManager.WriteLine($"\nCapacity: {_player!.Inventory.GetCarryingWeight()} / {_player.Inventory.Capacity}");
+            _outputManager.WriteLine(
+                $"\nCapacity: {_player!.Inventory.GetCarryingWeight()} / {_player.Inventory.Capacity}");
 
             if (equippableItems.Count == 0)
             {
                 _outputManager.WriteLine("\nNo equippable items available.\n");
                 break;
             }
+
             Item? itemToAdd =
                 _inputManager.Selector(
                     equippableItems,
                     i => ColorfulToStringHelper.ItemToString(i),
                     "Select an item to add to inventory",
                     j => ColorfulToStringHelper.GetItemColor(j)
-                    );
+                );
 
             if (itemToAdd == null)
             {
@@ -113,18 +118,20 @@ public class InventoryManagement(IInputManager inputManager, IOutputManager outp
 
             _outputManager.WriteLine($"You have selected [{itemToAdd.Name}]", ConsoleColor.Green);
 
-            if( !_inputManager.ConfirmAction("addition"))
+            if (!_inputManager.ConfirmAction("addition"))
             {
-                _outputManager.WriteLine($"\nAction cancelled. {itemToAdd.Name} not added to inventory.\n", ConsoleColor.Red);
+                _outputManager.WriteLine($"\nAction cancelled. {itemToAdd.Name} not added to inventory.\n",
+                    ConsoleColor.Red);
             }
 
             _player.Inventory.AddItem(itemToAdd);
             _inventoryDao.UpdateInventory(_player.Inventory);
             _outputManager.WriteLine($"\nItem {itemToAdd.Name} added to inventory.\n", ConsoleColor.Green);
-
         } while (_inputManager.LoopAgain("add"));
+
         _outputManager.WriteLine();
     }
+
     private void RemoveItemFromInventory()
     {
         do
@@ -142,7 +149,7 @@ public class InventoryManagement(IInputManager inputManager, IOutputManager outp
                     i => ColorfulToStringHelper.ItemToString(i),
                     "Select an item to remove from inventory",
                     j => ColorfulToStringHelper.GetItemColor(j)
-                    );
+                );
 
             if (itemToRemove == null || !_inputManager.ConfirmAction("removal"))
             {
@@ -153,8 +160,10 @@ public class InventoryManagement(IInputManager inputManager, IOutputManager outp
             _player.Inventory.RemoveItem(itemToRemove);
             _inventoryDao.UpdateInventory(_player.Inventory);
 
-            _outputManager.WriteLine($"\nItem Successfully Removed From {_player.Name}'s Inventory\n", ConsoleColor.Green);
+            _outputManager.WriteLine($"\nItem Successfully Removed From {_player.Name}'s Inventory\n",
+                ConsoleColor.Green);
         } while (_inputManager.LoopAgain("remove"));
+
         _outputManager.WriteLine();
     }
 }

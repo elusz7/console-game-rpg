@@ -26,9 +26,21 @@ public class ItemFactoryTests
         var items = new List<Item>
         {
             new Valuable { Name = "Gold Coin", Value = 10, RequiredLevel = 1 },
-            new Weapon { Name = "Sword", Value = 20, RequiredLevel = 1, DamageType = DamageType.Martial, AttackPower = 5, Durability = 10 },
-            new Armor { Name = "Shield", Value = 15, RequiredLevel = 1, ArmorType = ArmorType.Chest, DefensePower = 3, Resistance = 2, Durability = 5 },
-            new Consumable { Name = "Potion", Value = 5, RequiredLevel = 1, ConsumableType = ConsumableType.Health, Power = 2, Durability = 1 }
+            new Weapon
+            {
+                Name = "Sword", Value = 20, RequiredLevel = 1, DamageType = DamageType.Martial, AttackPower = 5,
+                Durability = 10
+            },
+            new Armor
+            {
+                Name = "Shield", Value = 15, RequiredLevel = 1, ArmorType = ArmorType.Chest, DefensePower = 3,
+                Resistance = 2, Durability = 5
+            },
+            new Consumable
+            {
+                Name = "Potion", Value = 5, RequiredLevel = 1, ConsumableType = ConsumableType.Health, Power = 2,
+                Durability = 1
+            }
         };
         _itemDaoMock.Setup(d => d.GetItemsByMaxLevel(It.IsAny<int>())).Returns(items);
 
@@ -43,10 +55,26 @@ public class ItemFactoryTests
     {
         var items = new List<Item>
         {
-            new Consumable { Name = "Potion", Value = 5, RequiredLevel = 1, ConsumableType = ConsumableType.Health, Power = 2, Durability = 1 },
-            new Weapon { Name = "Sword", Value = 20, RequiredLevel = 1, DamageType = DamageType.Martial, AttackPower = 5, Durability = 10 },
-            new Weapon { Name = "Staff", Value = 25, RequiredLevel = 1, DamageType = DamageType.Magical, AttackPower = 7, Durability = 8 },
-            new Armor { Name = "Shield", Value = 15, RequiredLevel = 1, ArmorType = ArmorType.Chest, DefensePower = 3, Resistance = 2, Durability = 5 }
+            new Consumable
+            {
+                Name = "Potion", Value = 5, RequiredLevel = 1, ConsumableType = ConsumableType.Health, Power = 2,
+                Durability = 1
+            },
+            new Weapon
+            {
+                Name = "Sword", Value = 20, RequiredLevel = 1, DamageType = DamageType.Martial, AttackPower = 5,
+                Durability = 10
+            },
+            new Weapon
+            {
+                Name = "Staff", Value = 25, RequiredLevel = 1, DamageType = DamageType.Magical, AttackPower = 7,
+                Durability = 8
+            },
+            new Armor
+            {
+                Name = "Shield", Value = 15, RequiredLevel = 1, ArmorType = ArmorType.Chest, DefensePower = 3,
+                Resistance = 2, Durability = 5
+            }
         };
         _itemDaoMock.Setup(d => d.GetItemsByMaxLevel(It.IsAny<int>())).Returns(items);
 
@@ -61,9 +89,21 @@ public class ItemFactoryTests
     {
         var items = new List<Item>
         {
-            new Weapon { Name = "Sword", Value = 20, RequiredLevel = 1, DamageType = DamageType.Martial, AttackPower = 5, Durability = 10 },
-            new Armor { Name = "Shield", Value = 15, RequiredLevel = 1, ArmorType = ArmorType.Chest, DefensePower = 3, Resistance = 2, Durability = 5 },
-            new Consumable { Name = "Potion", Value = 5, RequiredLevel = 1, ConsumableType = ConsumableType.Health, Power = 2, Durability = 1 }
+            new Weapon
+            {
+                Name = "Sword", Value = 20, RequiredLevel = 1, DamageType = DamageType.Martial, AttackPower = 5,
+                Durability = 10
+            },
+            new Armor
+            {
+                Name = "Shield", Value = 15, RequiredLevel = 1, ArmorType = ArmorType.Chest, DefensePower = 3,
+                Resistance = 2, Durability = 5
+            },
+            new Consumable
+            {
+                Name = "Potion", Value = 5, RequiredLevel = 1, ConsumableType = ConsumableType.Health, Power = 2,
+                Durability = 1
+            }
         };
         _itemDaoMock.Setup(d => d.GetItemsByMaxLevel(It.IsAny<int>())).Returns(items);
 

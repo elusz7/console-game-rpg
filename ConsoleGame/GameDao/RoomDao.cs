@@ -27,6 +27,7 @@ public class RoomDao(GameContext context) : IRoomDao
         {
             _context.Rooms?.Update(room);
         }
+
         _context.SaveChanges();
     }
 
@@ -42,6 +43,7 @@ public class RoomDao(GameContext context) : IRoomDao
             .Include(r => r.Monsters)
             .ToList() ?? [];
     }
+
     public Room? FindRoomByName(string name)
     {
         return _context.Rooms?.ToList().FirstOrDefault(r => r.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
@@ -70,14 +72,17 @@ public class RoomDao(GameContext context) : IRoomDao
     public List<Room> GetAllRoomsMaxConnections(int maxConnections)
     {
         var editableRooms = GetAllEditableRooms();
-        return [.. editableRooms.Where(r =>
-        {
-            int connections = 0;
-            if (r.North != null) connections++;
-            if (r.South != null) connections++;
-            if (r.East != null) connections++;
-            if (r.West != null) connections++;
-            return connections <= maxConnections;
-        })];
+        return
+        [
+            .. editableRooms.Where(r =>
+            {
+                int connections = 0;
+                if (r.North != null) connections++;
+                if (r.South != null) connections++;
+                if (r.East != null) connections++;
+                if (r.West != null) connections++;
+                return connections <= maxConnections;
+            })
+        ];
     }
 }

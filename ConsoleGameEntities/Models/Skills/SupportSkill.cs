@@ -15,10 +15,10 @@ public class SupportSkill : Skill
     public int SupportEffect { get; set; }
 
     // Track how many turns each target has left under the effect
-    [NotMapped]
-    public Dictionary<ITargetable, int> TargetsAffected { get; set; } = new();
+    [NotMapped] public Dictionary<ITargetable, int> TargetsAffected { get; set; } = new();
 
-    public override void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
+    public override void Activate(ITargetable caster, ITargetable? singleEnemy = null,
+        List<ITargetable>? multipleEnemies = null)
     {
         if (IsOnCooldown)
             throw new SkillCooldownException();
@@ -61,7 +61,10 @@ public class SupportSkill : Skill
                     {
                         ApplyEffect(tar);
                     }
-                    catch (InvalidTargetException) { /*do nothing, the stat has been effected*/ }
+                    catch (InvalidTargetException)
+                    {
+                        /*do nothing, the stat has been effected*/
+                    }
                 }
             }
 

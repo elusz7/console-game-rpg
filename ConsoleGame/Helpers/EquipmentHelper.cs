@@ -43,6 +43,7 @@ public class EquipmentHelper(IInputManager inputManager, IOutputManager outputMa
             }
         }
     }
+
     private void DisplayEquipment(Player player)
     {
         var equipment = player.Equipment;
@@ -53,13 +54,18 @@ public class EquipmentHelper(IInputManager inputManager, IOutputManager outputMa
             return;
         }
 
-        _outputManager.WriteLine($"\nCurrent Equipment [{player.Inventory.GetCarryingWeight()}/{player.Inventory.Capacity}]", ConsoleColor.Yellow);
+        _outputManager.WriteLine(
+            $"\nCurrent Equipment [{player.Inventory.GetCarryingWeight()}/{player.Inventory.Capacity}]",
+            ConsoleColor.Yellow);
         foreach (Item item in equipment)
         {
-            _outputManager.WriteLine(ColorfulToStringHelper.ItemStatsString(item), ColorfulToStringHelper.GetItemColor(item));
+            _outputManager.WriteLine(ColorfulToStringHelper.ItemStatsString(item),
+                ColorfulToStringHelper.GetItemColor(item));
         }
+
         _outputManager.WriteLine();
     }
+
     private void UnequipItem(Player player)
     {
         if (player.Equipment.Count == 0)
@@ -67,24 +73,25 @@ public class EquipmentHelper(IInputManager inputManager, IOutputManager outputMa
             //_outputManager.WriteLine("\nNo items currently equipped.", ConsoleColor.Red);
             return;
         }
-        
+
         var equippedItems = player.Equipment
             .OfType<Item>() //cast equipment to items
             .ToList();
 
         _outputManager.WriteLine();
         var unequippedItem = _inputManager.SelectItem("Select an item to unequip", equippedItems);
-        
-        if (unequippedItem != null) 
+
+        if (unequippedItem != null)
         {
             player.Unequip(unequippedItem);
             OutputActionItems(player);
         }
     }
+
     public bool EquipItem(Player player, bool weaponsOnly = false)
     {
         var availableItems = player.Inventory.Items
-                .Where(i => i is IEquippable e && !e.IsEquipped() && i.Durability > 0).ToList();
+            .Where(i => i is IEquippable e && !e.IsEquipped() && i.Durability > 0).ToList();
 
         if (weaponsOnly)
         {
@@ -104,7 +111,7 @@ public class EquipmentHelper(IInputManager inputManager, IOutputManager outputMa
         {
             return false;
         }
-        
+
         try
         {
             player.Equip(selectedItem);
@@ -114,12 +121,13 @@ public class EquipmentHelper(IInputManager inputManager, IOutputManager outputMa
         {
             _outputManager.WriteLine("\nAn error occurred while equipping the item!", ConsoleColor.Red);
             _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
-            
+
             return false;
         }
 
         return true;
     }
+
     public bool UseConsumable(Player player)
     {
         var consumables = player.Inventory.Items.Where(i => i is Consumable).ToList();
@@ -137,18 +145,19 @@ public class EquipmentHelper(IInputManager inputManager, IOutputManager outputMa
         {
             return false;
         }
-        
+
         if (item is Consumable consumable)
         {
             switch (consumable.ConsumableType)
             {
                 case ConsumableType.Durability:
-                    
+
                     var items = player.Inventory.Items.Where(i => i is IEquippable).ToList();
 
                     if (items.Count == 0)
                     {
-                        _outputManager.WriteLine($"\nNo items available to use {consumable.Name} on.", ConsoleColor.Red);
+                        _outputManager.WriteLine($"\nNo items available to use {consumable.Name} on.",
+                            ConsoleColor.Red);
                     }
 
                     _outputManager.WriteLine();
@@ -166,11 +175,11 @@ public class EquipmentHelper(IInputManager inputManager, IOutputManager outputMa
                     break;
             }
         }
-        
+
         OutputActionItems(player);
         return true;
     }
-        
+
     private void OutputActionItems(Player player)
     {
         // SortedList auto-orders by key and avoids Dictionary's duplicate key issue

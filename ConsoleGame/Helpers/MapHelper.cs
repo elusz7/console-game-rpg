@@ -7,6 +7,7 @@ namespace ConsoleGame.Managers;
 public class MapHelper : IMapHelper
 {
     private static readonly Random _rng = Random.Shared;
+
     private record RoomPosition(Room Room, int X, int Y);
 
 
@@ -14,7 +15,7 @@ public class MapHelper : IMapHelper
     {
         Shuffle(availableRooms);
 
-        availableRooms.Remove(entrance); 
+        availableRooms.Remove(entrance);
 
         var connectedRooms = new List<Room> { entrance };
         var frontier = new List<Room> { entrance };
@@ -80,15 +81,28 @@ public class MapHelper : IMapHelper
             list[n] = value;
         }
     }
+
     public void UnlinkRoom(Room room)
     {
         foreach (var (neighbor, reverseSetter) in new (Room? neighbor, Action<Room?> reverseSetter)[]
-        {
-            (room.North, r => { if (r != null) r.South = null; }),
-            (room.South, r => { if (r != null) r.North = null; }),
-            (room.East,  r => { if (r != null) r.West = null; }),
-            (room.West,  r => { if (r != null) r.East = null; })
-        })
+                 {
+                     (room.North, r =>
+                     {
+                         if (r != null) r.South = null;
+                     }),
+                     (room.South, r =>
+                     {
+                         if (r != null) r.North = null;
+                     }),
+                     (room.East, r =>
+                     {
+                         if (r != null) r.West = null;
+                     }),
+                     (room.West, r =>
+                     {
+                         if (r != null) r.East = null;
+                     })
+                 })
         {
             if (neighbor != null)
             {
@@ -98,6 +112,7 @@ public class MapHelper : IMapHelper
 
         room.North = room.South = room.East = room.West = null;
     }
+
     public void UnlinkDirection(Room from, Room to, string direction)
     {
         switch (direction)
@@ -120,6 +135,7 @@ public class MapHelper : IMapHelper
                 break;
         }
     }
+
     public void LinkRooms(Room from, Room to, string direction)
     {
         switch (direction)
@@ -142,6 +158,7 @@ public class MapHelper : IMapHelper
                 break;
         }
     }
+
     public List<string> GetAvailableDirectionsForRoom(Room room, List<Room> connectedRooms)
     {
         var directions = new List<string>();
@@ -149,25 +166,29 @@ public class MapHelper : IMapHelper
         try
         {
             var (x, y) = FindRoomCoordinates(room, grid);
-        
 
-        foreach (var dir in new[] { "North", "South", "East", "West" })
-        {
-            if (HasReverseConflict(room, dir, connectedRooms)) continue;
 
-            var (dx, dy) = GetDirectionOffset(dir);
-            var targetCoords = (x + dx, y + dy);
-
-            if (!grid.ContainsKey(targetCoords)) // no logical conflict
+            foreach (var dir in new[] { "North", "South", "East", "West" })
             {
-                directions.Add(dir);
+                if (HasReverseConflict(room, dir, connectedRooms)) continue;
+
+                var (dx, dy) = GetDirectionOffset(dir);
+                var targetCoords = (x + dx, y + dy);
+
+                if (!grid.ContainsKey(targetCoords)) // no logical conflict
+                {
+                    directions.Add(dir);
+                }
             }
         }
+        catch (InvalidOperationException)
+        {
+            return [];
         }
-        catch (InvalidOperationException) { return []; }
 
         return directions;
     }
+
     public Dictionary<(int x, int y), Room> GetRoomGrid(Room rootRoom)
     {
         Dictionary<(int x, int y), Room> _gridCache = [];
@@ -197,6 +218,7 @@ public class MapHelper : IMapHelper
 
         return _gridCache;
     }
+
     public (int x, int y) FindRoomCoordinates(Room room, Dictionary<(int x, int y), Room> grid)
     {
         foreach (var kvp in grid)
@@ -204,8 +226,10 @@ public class MapHelper : IMapHelper
             if (kvp.Value.Id == room.Id)
                 return kvp.Key;
         }
+
         throw new InvalidOperationException("Room not found in grid.");
     }
+
     public (int dx, int dy) GetDirectionOffset(string direction)
     {
         return direction switch
@@ -217,6 +241,7 @@ public class MapHelper : IMapHelper
             _ => (0, 0)
         };
     }
+
     public bool HasReverseConflict(Room baseRoom, string direction, List<Room> rooms)
     {
         return rooms.Any(r => direction switch
@@ -228,6 +253,7 @@ public class MapHelper : IMapHelper
             _ => false
         });
     }
+
     public List<Room> FindUnconnectedRooms(Room rootRoom, List<Room> rooms)
     {
         var list = new List<Room>();
@@ -250,6 +276,7 @@ public class MapHelper : IMapHelper
 
         return list;
     }
+
     public Room? GetNeighbor(Room room, string direction)
     {
         return direction switch
@@ -261,6 +288,7 @@ public class MapHelper : IMapHelper
             _ => null
         };
     }
+
     public string GetReverseDirection(string direction)
     {
         return direction switch
@@ -272,6 +300,7 @@ public class MapHelper : IMapHelper
             _ => ""
         };
     }
+
     public int CountPathsToEntranceThroughRoom(Room startRoom, Room requiredRoom, Room entrance)
     {
         int pathCount = 0;
@@ -311,6 +340,7 @@ public class MapHelper : IMapHelper
                 {
                     pathCount++;
                 }
+
                 continue; // If reached entrance, no need to explore further
             }
 
@@ -324,16 +354,19 @@ public class MapHelper : IMapHelper
                 roomParents[currentRoom.North] = currentRoom;
                 queue.Enqueue(currentRoom.North);
             }
+
             if (currentRoom.South != null && !visitedRooms.Contains(currentRoom.South))
             {
                 roomParents[currentRoom.South] = currentRoom;
                 queue.Enqueue(currentRoom.South);
             }
+
             if (currentRoom.East != null && !visitedRooms.Contains(currentRoom.East))
             {
                 roomParents[currentRoom.East] = currentRoom;
                 queue.Enqueue(currentRoom.East);
             }
+
             if (currentRoom.West != null && !visitedRooms.Contains(currentRoom.West))
             {
                 roomParents[currentRoom.West] = currentRoom;
@@ -343,6 +376,7 @@ public class MapHelper : IMapHelper
 
         return pathCount;
     }
+
     public List<Room>? SinglePathThrough(Room requiredRoom, List<Room> rooms)
     {
         var entrance = rooms.Where(r => r.Id == 1).First();
@@ -359,7 +393,8 @@ public class MapHelper : IMapHelper
         });
 
         return [.. singlePathRooms];
-    }    
+    }
+
     public Dictionary<Room, List<string>> GetAvailableDirections2(List<Room> rooms, Room? editingRoom = null)
     {
         var availableRooms = new Dictionary<Room, List<string>>();
@@ -379,6 +414,7 @@ public class MapHelper : IMapHelper
 
         return availableRooms;
     }
+
     public Dictionary<string, string> FindUnlinkedNeighbors(List<Room> rooms)
     {
         Dictionary<string, string> unlinkedNeighbors = [];
@@ -432,6 +468,7 @@ public class MapHelper : IMapHelper
 
         return unlinkedNeighbors;
     }
+
     public List<Room> CheckForDisconnectedRooms(List<Room> rooms)
     {
         var disconnectedRooms = new List<Room>();
@@ -455,6 +492,7 @@ public class MapHelper : IMapHelper
 
         return disconnectedRooms;
     }
+
     public (string name, string direction) ParseKey(string key)
     {
         var parts = key.Split("-");
@@ -490,5 +528,4 @@ public class MapHelper : IMapHelper
             unlinkedNeighbors.Remove(randomElement.Key);
         }
     }
-
 }

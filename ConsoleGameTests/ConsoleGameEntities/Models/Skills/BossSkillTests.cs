@@ -61,10 +61,7 @@ public class BossSkillTests
         var monster = GetMonsterCaster();
         var target = GetTargetablePlayer();
 
-        Assert.ThrowsException<SkillCooldownException>(() =>
-        {
-            skill.Activate(monster, target);
-        });
+        Assert.ThrowsException<SkillCooldownException>(() => { skill.Activate(monster, target); });
     }
 
     [TestMethod]

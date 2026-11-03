@@ -31,6 +31,7 @@ public class Item : IItem
         if (Durability < 1)
             throw new ItemDurabilityException("This item is broken and can't be used");
     }
+
     public virtual void RecoverDurability(int power)
     {
         if (Durability + power > 100)
@@ -50,10 +51,12 @@ public class Item : IItem
 
         Value = Math.Round(calculation, 2);
     }
+
     public virtual void CalculateStatsByLevel()
     {
         Durability = _rng.Next(3, 9);
     }
+
     public virtual void CalculateLevelByStats()
     {
         var durabilityValue = Durability * 1.5M;

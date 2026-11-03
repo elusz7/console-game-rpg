@@ -2,9 +2,15 @@
 
 namespace ConsoleGame.Menus;
 
-public class AdminMenu(IInputManager inputManager, IOutputManager outputManager,
-    PlayerMenu playerManager, InventoryMenu inventoryManager, RoomMenu roomManager,
-    MonsterMenu monsterManager, ArchetypeMenu archetypeManager, SkillMenu skillManager)
+public class AdminMenu(
+    IInputManager inputManager,
+    IOutputManager outputManager,
+    PlayerMenu playerManager,
+    InventoryMenu inventoryManager,
+    RoomMenu roomManager,
+    MonsterMenu monsterManager,
+    ArchetypeMenu archetypeManager,
+    SkillMenu skillManager)
 {
     private readonly IInputManager _inputManager = inputManager;
     private readonly IOutputManager _outputManager = outputManager;
@@ -23,12 +29,12 @@ public class AdminMenu(IInputManager inputManager, IOutputManager outputManager,
         {
             _outputManager.WriteLine("=== Administrator View ===", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. Player Management"
-                + "\n2. Inventory Management"
-                + "\n3. Room Management"
-                + "\n4. Monster Management"
-                + "\n5. Archetype Management"
-                + "\n6. Skill Management"
-                + "\n7. Return to Main Menu");
+                                     + "\n2. Inventory Management"
+                                     + "\n3. Room Management"
+                                     + "\n4. Monster Management"
+                                     + "\n5. Archetype Management"
+                                     + "\n6. Skill Management"
+                                     + "\n7. Return to Main Menu");
 
             var input = _inputManager.ReadMenuKey(7);
 

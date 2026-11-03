@@ -21,12 +21,11 @@ public class LootService
         finally
         {
             // Remove the same monster instance from the room.
-            session.Player.CurrentRoom?.Monsters.RemoveAll(
-                existingMonster => ReferenceEquals(existingMonster, monster));
+            session.Player.CurrentRoom?.Monsters.RemoveAll(existingMonster =>
+                ReferenceEquals(existingMonster, monster));
 
             // Keep the floor's monster collection synchronized.
-            session.CurrentFloor.Monsters.RemoveAll(
-                existingMonster => ReferenceEquals(existingMonster, monster));
+            session.CurrentFloor.Monsters.RemoveAll(existingMonster => ReferenceEquals(existingMonster, monster));
         }
     }
 }

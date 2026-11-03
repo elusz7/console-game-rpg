@@ -19,10 +19,10 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
         {
             _outputManager.WriteLine("Item Management Menu", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. Add Item"
-                + "\n2. Edit Item"
-                + "\n3. Remove Item"
-                + "\n4. Return to Inventory Main Menu");
-            
+                                     + "\n2. Edit Item"
+                                     + "\n3. Remove Item"
+                                     + "\n4. Return to Inventory Main Menu");
+
             var input = _inputManager.ReadMenuKey(4);
 
             switch (input)
@@ -42,6 +42,7 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
             }
         }
     }
+
     private void AddItem()
     {
         do
@@ -50,7 +51,10 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
 
             ItemType itemType = _inputManager.GetEnumChoice<ItemType>("Select item type to create");
 
-            var choice = _inputManager.ReadInt("\n1. Generate Stats Automatically By Level\n2. Manually Enter Stats\n3. Cancel\n\tChoose an option: ", 3);
+            var choice =
+                _inputManager.ReadInt(
+                    "\n1. Generate Stats Automatically By Level\n2. Manually Enter Stats\n3. Cancel\n\tChoose an option: ",
+                    3);
 
             Item item;
             switch (choice)
@@ -71,10 +75,11 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
             _itemDao.AddItem(item);
 
             _outputManager.WriteLine($"\nItem {item.Name} successfully created.\n", ConsoleColor.Green);
-
         } while (_inputManager.LoopAgain("add"));
+
         _outputManager.WriteLine();
     }
+
     private Item CreateItemByLevel(ItemType itemType)
     {
         string name = _inputManager.ReadString("\nEnter item name: ");
@@ -125,12 +130,14 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
 
         item.CalculateStatsByLevel();
         item.CalculateValue();
-        
-        _outputManager.WriteLine($"\nBased on the level provided, stats have been automatically generated.", ConsoleColor.Green);
+
+        _outputManager.WriteLine($"\nBased on the level provided, stats have been automatically generated.",
+            ConsoleColor.Green);
         _outputManager.WriteLine(ColorfulToStringHelper.ItemToString(item), ColorfulToStringHelper.GetItemColor(item));
 
         return item;
     }
+
     private Item CreateItemByStats(ItemType itemType)
     {
         string name = _inputManager.ReadString("\nEnter item name: ");
@@ -179,11 +186,13 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
 
         item.CalculateLevelByStats();
 
-        _outputManager.WriteLine($"\nBased on the stats provided, a level has been automatically generated.", ConsoleColor.Green);
+        _outputManager.WriteLine($"\nBased on the stats provided, a level has been automatically generated.",
+            ConsoleColor.Green);
         _outputManager.WriteLine(ColorfulToStringHelper.ItemToString(item), ColorfulToStringHelper.GetItemColor(item));
 
         return item;
     }
+
     private void EditItem()
     {
         var items = _itemDao.GetAllNonCoreItems();
@@ -194,7 +203,7 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
             return;
         }
 
-        Item? item = 
+        Item? item =
             _inputManager.Selector(
                 items,
                 i => ColorfulToStringHelper.ItemStatsString(i),
@@ -219,14 +228,17 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
 
         if (item is Armor a)
         {
-            propertyActions["Armor type"] = () => a.ArmorType = _inputManager.GetEnumChoice<ArmorType>("Select new armor type");
-            propertyActions["Defense power"] = () => a.DefensePower = _inputManager.ReadInt("\nEnter new defense power: ");
+            propertyActions["Armor type"] = () =>
+                a.ArmorType = _inputManager.GetEnumChoice<ArmorType>("Select new armor type");
+            propertyActions["Defense power"] =
+                () => a.DefensePower = _inputManager.ReadInt("\nEnter new defense power: ");
             propertyActions["Resistance"] = () => a.Resistance = _inputManager.ReadInt("\nEnter new resistance: ");
         }
 
         if (item is Weapon w)
         {
-            propertyActions["Damage type"] = () => w.DamageType = _inputManager.GetEnumChoice<DamageType>("Select new damage type");
+            propertyActions["Damage type"] = () =>
+                w.DamageType = _inputManager.GetEnumChoice<DamageType>("Select new damage type");
             propertyActions["Attack power"] = () => w.AttackPower = _inputManager.ReadInt("\nEnter new attack power: ");
         }
 
@@ -237,7 +249,8 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
         {
             _outputManager.Clear();
             _outputManager.WriteLine($"Editing item {item.Name}.", ConsoleColor.Cyan);
-            _outputManager.WriteLine(ColorfulToStringHelper.ItemToString(item), ColorfulToStringHelper.GetItemColor(item));
+            _outputManager.WriteLine(ColorfulToStringHelper.ItemToString(item),
+                ColorfulToStringHelper.GetItemColor(item));
             _outputManager.WriteLine();
 
             int option = _inputManager.DisplayEditMenu([.. propertyActions.Keys]);
@@ -245,7 +258,8 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
             if (option == propertyActions.Count + 1)
             {
                 _itemDao.UpdateItem(item);
-                _outputManager.WriteLine($"\nExiting. Any changes made have been successfully applied to {item.Name}\n", ConsoleColor.Green);
+                _outputManager.WriteLine($"\nExiting. Any changes made have been successfully applied to {item.Name}\n",
+                    ConsoleColor.Green);
                 return;
             }
 
@@ -253,6 +267,7 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
             propertyActions[selectedProperty].Invoke();
         }
     }
+
     private void DeleteItem()
     {
         do
@@ -263,7 +278,7 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
             {
                 _outputManager.WriteLine("\nNo items available to delete.\n", ConsoleColor.Red);
                 break;
-            } 
+            }
 
             Item? itemToDelete =
                 _inputManager.Selector(
@@ -274,23 +289,26 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
 
             if (itemToDelete == null)
             {
-                _outputManager.WriteLine($"\nItem Deletion Cancelled: No Items found or action cancelled.\n", ConsoleColor.Red);
+                _outputManager.WriteLine($"\nItem Deletion Cancelled: No Items found or action cancelled.\n",
+                    ConsoleColor.Red);
                 break;
             }
 
-            string confirm = _inputManager.ReadString($"\nPlease confirm deletion of {itemToDelete.Name} (y/n): ", ["y", "n"]).ToLower();
+            string confirm = _inputManager
+                .ReadString($"\nPlease confirm deletion of {itemToDelete.Name} (y/n): ", ["y", "n"]).ToLower();
 
             if (confirm == "n")
             {
-                _outputManager.WriteLine($"\nDeletion cancelled. Item [{itemToDelete.Name}] has not been deleted.", ConsoleColor.Red);
+                _outputManager.WriteLine($"\nDeletion cancelled. Item [{itemToDelete.Name}] has not been deleted.",
+                    ConsoleColor.Red);
                 break;
             }
 
             _itemDao.DeleteItem(itemToDelete);
 
             _outputManager.WriteLine("\nItem has been deleted successfully!\n", ConsoleColor.Green);
-
         } while (_inputManager.LoopAgain("delete"));
+
         _outputManager.WriteLine();
     }
 }

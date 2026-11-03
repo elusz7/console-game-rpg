@@ -8,7 +8,8 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Items;
 [TestClass]
 public class ArmorTests
 {
-    private static Armor CreateArmor(decimal value = 100, int requiredLevel = 1, int defensePower = 10, int resistancePower = 10, int durability = 10)
+    private static Armor CreateArmor(decimal value = 100, int requiredLevel = 1, int defensePower = 10,
+        int resistancePower = 10, int durability = 10)
     {
         return new Armor
         {
@@ -184,6 +185,7 @@ public class ArmorTests
         armor.CalculateLevelByStats();
         Assert.AreEqual(12, armor.RequiredLevel);
     }
+
     [TestMethod]
     public void GetReforgePrice_ReturnsOneThirdValue()
     {

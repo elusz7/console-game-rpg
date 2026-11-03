@@ -34,7 +34,8 @@ public class EliteStrategyTests
         monster.Attack(player);
 
         Assert.IsTrue(ultimateSkill.Activated, "Ultimate skill should be activated");
-        Assert.IsFalse(fallbackStrategy.AttackExecuted, "Fallback strategy should NOT execute when ultimate skill is used");
+        Assert.IsFalse(fallbackStrategy.AttackExecuted,
+            "Fallback strategy should NOT execute when ultimate skill is used");
     }
 
     [TestMethod]

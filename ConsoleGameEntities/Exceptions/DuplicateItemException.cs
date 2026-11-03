@@ -2,6 +2,11 @@
 
 public class DuplicateItemException : InventoryException
 {
-    public DuplicateItemException() :base() { }
-    public DuplicateItemException(string message) : base(message) { }
+    public DuplicateItemException() : base()
+    {
+    }
+
+    public DuplicateItemException(string message) : base(message)
+    {
+    }
 }

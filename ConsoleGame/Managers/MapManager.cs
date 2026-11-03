@@ -55,12 +55,15 @@ public class MapManager(IOutputManager outputManager, IInputManager inputManager
 
             _outputManager.WriteLine("");
         }
+
         _outputManager.Display();
     }
+
     public void UpdateCurrentRoom(Room currentRoom)
     {
         _currentRoom = currentRoom;
     }
+
     private void PlaceRoom(Room room, int row, int col, HashSet<Room> visitedRooms)
     {
         if (visitedRooms.Contains(room))
@@ -98,6 +101,7 @@ public class MapManager(IOutputManager outputManager, IInputManager inputManager
             PlaceRoom(room.West, row, col - 2, visitedRooms);
         }
     }
+
     public void TraverseMap(Room currentRoom)
     {
         _outputManager.Clear();
@@ -109,7 +113,6 @@ public class MapManager(IOutputManager outputManager, IInputManager inputManager
 
         while (true)
         {
-
             ConsoleKeyInfo key = _inputManager.ReadKey();
 
             if (key.Key == ConsoleKey.UpArrow)
@@ -120,7 +123,8 @@ public class MapManager(IOutputManager outputManager, IInputManager inputManager
                     _outputManager.Clear();
                     UpdateCurrentRoom(_currentRoom);
                     DisplayMap();
-                    _outputManager.WriteLine("\nPress direction keys to change room or any other key to return to the menu.");
+                    _outputManager.WriteLine(
+                        "\nPress direction keys to change room or any other key to return to the menu.");
                     _outputManager.Display();
                 }
                 else
@@ -137,7 +141,8 @@ public class MapManager(IOutputManager outputManager, IInputManager inputManager
                     _outputManager.Clear();
                     UpdateCurrentRoom(_currentRoom);
                     DisplayMap();
-                    _outputManager.WriteLine("\nPress direction keys to change room or any other key to return to the menu.");
+                    _outputManager.WriteLine(
+                        "\nPress direction keys to change room or any other key to return to the menu.");
                     _outputManager.Display();
                 }
                 else
@@ -154,7 +159,8 @@ public class MapManager(IOutputManager outputManager, IInputManager inputManager
                     _outputManager.Clear();
                     UpdateCurrentRoom(_currentRoom);
                     DisplayMap();
-                    _outputManager.WriteLine("\nPress direction keys to change room or any other key to return to the menu.");
+                    _outputManager.WriteLine(
+                        "\nPress direction keys to change room or any other key to return to the menu.");
                     _outputManager.Display();
                 }
                 else
@@ -171,7 +177,8 @@ public class MapManager(IOutputManager outputManager, IInputManager inputManager
                     _outputManager.Clear();
                     UpdateCurrentRoom(_currentRoom);
                     DisplayMap();
-                    _outputManager.WriteLine("\nPress direction keys to change room or any other key to return to the menu.");
+                    _outputManager.WriteLine(
+                        "\nPress direction keys to change room or any other key to return to the menu.");
                     _outputManager.Display();
                 }
                 else

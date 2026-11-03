@@ -32,8 +32,11 @@ public class UltimateSkillTests
 
     private Player GetPlayerCaster(int level = 5, int resource = 50)
     {
-        var archetype = new Archetype { CurrentResource = resource, MaxResource = resource,
-                                            DefenseBonus = 0, ResistanceBonus = 0};
+        var archetype = new Archetype
+        {
+            CurrentResource = resource, MaxResource = resource,
+            DefenseBonus = 0, ResistanceBonus = 0
+        };
         return new Player
         {
             Level = level,
@@ -109,7 +112,7 @@ public class UltimateSkillTests
             Assert.IsTrue(target.ActionItems.Values.Any(a => a.Contains("dodged")));
             return;
         }
-        
+
         Assert.IsTrue(target.CurrentHealth < 100);
         Assert.IsTrue(player.Archetype is Archetype a && a.CurrentResource < 50);
     }

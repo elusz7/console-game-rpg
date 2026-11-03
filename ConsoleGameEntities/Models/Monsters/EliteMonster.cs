@@ -13,7 +13,10 @@ namespace ConsoleGameEntities.Models.Monsters;
 
 public class EliteMonster : Monster
 {
-    public EliteMonster() { }
+    public EliteMonster()
+    {
+    }
+
     public EliteMonster(IMonsterSkillSelector skillSelector, MonsterBehaviorType behavior)
     {
         Strategy = new EliteStrategy(skillSelector, behavior);

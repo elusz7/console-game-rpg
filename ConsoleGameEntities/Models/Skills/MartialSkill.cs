@@ -8,9 +8,10 @@ namespace ConsoleGameEntities.Models.Skills;
 
 public class MartialSkill : DamageSkill
 {
-    public override void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
+    public override void Activate(ITargetable caster, ITargetable? singleEnemy = null,
+        List<ITargetable>? multipleEnemies = null)
     {
-        if (IsOnCooldown) 
+        if (IsOnCooldown)
             throw new SkillCooldownException();
 
         switch (TargetType)
@@ -37,7 +38,10 @@ public class MartialSkill : DamageSkill
             {
                 player.Archetype.UseResource(Cost);
             }
-            catch (InvalidOperationException) { throw new SkillResourceException($"You don't have enough {player.Archetype.ResourceName}."); }
+            catch (InvalidOperationException)
+            {
+                throw new SkillResourceException($"You don't have enough {player.Archetype.ResourceName}.");
+            }
 
             player.AddActionItem(this);
 
@@ -61,6 +65,7 @@ public class MartialSkill : DamageSkill
                             monsterDeath = true;
                         }
                     }
+
                     break;
             }
 
@@ -80,6 +85,7 @@ public class MartialSkill : DamageSkill
             Reset();
         }
     }
+
     public override Skill Clone()
     {
         return new MartialSkill

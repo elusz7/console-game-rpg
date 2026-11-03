@@ -26,6 +26,7 @@ public class MonsterTests
             MaxHealth = 200
         };
     }
+
     private static Item CreateItem()
     {
         return new Item
@@ -99,6 +100,7 @@ public class MonsterTests
             Assert.IsTrue(monster.ActionItems.Values.Any(a => a.Contains("dodged the attack")));
         }
     }
+
     [TestMethod]
     public void TakeDamage_MartialDamage_DefenseGreaterThanDamage()
     {
@@ -119,6 +121,7 @@ public class MonsterTests
             Assert.IsTrue(monster.ActionItems.Values.Any(a => a.Contains("dodged the attack")));
         }
     }
+
     [TestMethod]
     public void TakeDamage_MagicalDamage_ReducesHealth()
     {
@@ -160,6 +163,7 @@ public class MonsterTests
             Assert.IsTrue(monster.ActionItems.Values.Any(a => a.Contains("dodged the attack")));
         }
     }
+
     [TestMethod]
     public void TakeDamage_MagicalDamage_ResistanceGreaterThanDamage()
     {
@@ -187,7 +191,7 @@ public class MonsterTests
         var monster = CreateMonster();
         monster.CurrentHealth = 1;
 
-        Assert.ThrowsException<MonsterDeathException>(() =>  monster.TakeDamage(1000, DamageType.Magical));
+        Assert.ThrowsException<MonsterDeathException>(() => monster.TakeDamage(1000, DamageType.Magical));
     }
 
     [TestMethod]
@@ -211,6 +215,7 @@ public class MonsterTests
 
         Assert.AreEqual(monster.MaxHealth, monster.CurrentHealth);
     }
+
     [TestMethod]
     public void GetStat_ReturnsCorrectStat()
     {
@@ -229,6 +234,7 @@ public class MonsterTests
 
         Assert.ThrowsException<StatTypeException>(() => monster.GetStat((StatType)999));
     }
+
     [TestMethod]
     public void ModifyStat_Health_Heals()
     {
@@ -260,6 +266,7 @@ public class MonsterTests
 
         Assert.ThrowsException<StatTypeException>(() => monster.ModifyStat((StatType)999, 5));
     }
+
     [TestMethod]
     public void ClearActionItems_RemovesAll()
     {
@@ -291,6 +298,7 @@ public class MonsterTests
         monster.AddActionItem(skill);
         Assert.IsTrue(monster.ActionItems.Values.Any(a => a.Contains("uses Fireball")));
     }
+
     [TestMethod]
     public void Loot_NoLoot()
     {

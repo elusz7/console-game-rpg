@@ -6,8 +6,12 @@ using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class PlayerManagement(IInputManager inputManager, IOutputManager outputManager, 
-    IPlayerDao playerDao, IArchetypeDao archetypeDao, InventoryManagement inventoryManagement)
+public class PlayerManagement(
+    IInputManager inputManager,
+    IOutputManager outputManager,
+    IPlayerDao playerDao,
+    IArchetypeDao archetypeDao,
+    InventoryManagement inventoryManagement)
 {
     private readonly IInputManager _inputManager = inputManager;
     private readonly IOutputManager _outputManager = outputManager;
@@ -22,9 +26,9 @@ public class PlayerManagement(IInputManager inputManager, IOutputManager outputM
         {
             _outputManager.WriteLine("Player Management Menu", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. Add Player"
-                + "\n2. Edit Player"
-                + "\n3. Remove Player"
-                + "\n4. Return to Player Main Menu");
+                                     + "\n2. Edit Player"
+                                     + "\n3. Remove Player"
+                                     + "\n4. Return to Player Main Menu");
 
             var choice = _inputManager.ReadMenuKey(4);
 
@@ -45,13 +49,14 @@ public class PlayerManagement(IInputManager inputManager, IOutputManager outputM
             }
         }
     }
+
     private void AddPlayer()
     {
         do
         {
             CreatePlayer();
-
         } while (_inputManager.LoopAgain("create"));
+
         _outputManager.WriteLine();
     }
 
@@ -62,11 +67,11 @@ public class PlayerManagement(IInputManager inputManager, IOutputManager outputM
 
         _outputManager.WriteLine();
         var archetype = _inputManager.Selector(
-                    _archetypeDao.GetAllArchetypes(),
-                    a => ColorfulToStringHelper.ArchetypeToString(a),
-                    "Select archetype for new player",
-                    b => ColorfulToStringHelper.GetArchetypeColor(b)
-                );
+            _archetypeDao.GetAllArchetypes(),
+            a => ColorfulToStringHelper.ArchetypeToString(a),
+            "Select archetype for new player",
+            b => ColorfulToStringHelper.GetArchetypeColor(b)
+        );
 
         if (archetype == null)
         {
@@ -98,7 +103,8 @@ public class PlayerManagement(IInputManager inputManager, IOutputManager outputM
 
         _playerDao.AddPlayer(newPlayer);
 
-        string assignItems = _inputManager.ReadString($"\nWould you like to assign {name} some starting items? (y/n) ", ["y", "n"]).ToLower();
+        string assignItems = _inputManager
+            .ReadString($"\nWould you like to assign {name} some starting items? (y/n) ", ["y", "n"]).ToLower();
         if (assignItems == "y")
             _inventoryManagement.Menu(newPlayer);
         else
@@ -106,6 +112,7 @@ public class PlayerManagement(IInputManager inputManager, IOutputManager outputM
 
         _outputManager.WriteLine($"New Player [{name}] added successfully!\n", ConsoleColor.Green);
     }
+
     private void EditPlayer()
     {
         var players = _playerDao.GetAllPlayers();
@@ -135,26 +142,31 @@ public class PlayerManagement(IInputManager inputManager, IOutputManager outputM
             { "Name", () => player.Name = _inputManager.ReadString("\nEnter new value for Name: ") },
             { "Health", () => player.MaxHealth = _inputManager.ReadInt("\nEnter new value for Health: ") },
             { "Level", () => player.Level = _inputManager.ReadInt("\nEnter new value for Level: ") },
-            { "Archetype", () => {
-
-                var archetype = _inputManager.Selector(
-                    _archetypeDao.GetAllArchetypes(),
-                    a => a.Name,
-                    "Select a new archetype",
-                    b => ColorfulToStringHelper.GetArchetypeColor(b)
-                );
-
-                if (archetype == null)
+            {
+                "Archetype", () =>
                 {
-                    _outputManager.WriteLine("\nArchetype not selected.\n", ConsoleColor.Red);
-                    return;
-                }
+                    var archetype = _inputManager.Selector(
+                        _archetypeDao.GetAllArchetypes(),
+                        a => a.Name,
+                        "Select a new archetype",
+                        b => ColorfulToStringHelper.GetArchetypeColor(b)
+                    );
 
-                player.ArchetypeId = archetype.Id;
-                player.Archetype = archetype;
-                } },
+                    if (archetype == null)
+                    {
+                        _outputManager.WriteLine("\nArchetype not selected.\n", ConsoleColor.Red);
+                        return;
+                    }
+
+                    player.ArchetypeId = archetype.Id;
+                    player.Archetype = archetype;
+                }
+            },
             { "Gold", () => player.Inventory.Gold = _inputManager.ReadInt("\nEnter new value for Gold: ") },
-            { "Capacity", () => player.Inventory.Capacity = _inputManager.ReadDecimal("\nEnter new value for Capacity: ") }
+            {
+                "Capacity",
+                () => player.Inventory.Capacity = _inputManager.ReadDecimal("\nEnter new value for Capacity: ")
+            }
         };
 
         while (true)
@@ -167,7 +179,8 @@ public class PlayerManagement(IInputManager inputManager, IOutputManager outputM
             if (option == propertyActions.Count + 1)
             {
                 _playerDao.UpdatePlayer(player);
-                _outputManager.WriteLine($"\nExiting. Any changes made have been successfully saved to {player.Name}\n", ConsoleColor.Green);
+                _outputManager.WriteLine($"\nExiting. Any changes made have been successfully saved to {player.Name}\n",
+                    ConsoleColor.Green);
                 return;
             }
 
@@ -175,6 +188,7 @@ public class PlayerManagement(IInputManager inputManager, IOutputManager outputM
             propertyActions[selectedProperty].Invoke();
         }
     }
+
     private void DeletePlayer()
     {
         do
@@ -188,7 +202,7 @@ public class PlayerManagement(IInputManager inputManager, IOutputManager outputM
             }
 
             _outputManager.WriteLine();
-            var playerToDelete = 
+            var playerToDelete =
                 _inputManager.Selector(
                     players,
                     p => ColorfulToStringHelper.PlayerToString(p),
@@ -204,7 +218,8 @@ public class PlayerManagement(IInputManager inputManager, IOutputManager outputM
 
             if (!_inputManager.ConfirmAction("delete"))
             {
-                _outputManager.WriteLine($"\nDeletion cancelled. Character [{playerToDelete.Name}] has not been deleted.", ConsoleColor.Red);
+                _outputManager.WriteLine(
+                    $"\nDeletion cancelled. Character [{playerToDelete.Name}] has not been deleted.", ConsoleColor.Red);
                 break;
             }
 
@@ -212,6 +227,7 @@ public class PlayerManagement(IInputManager inputManager, IOutputManager outputM
 
             _outputManager.WriteLine("\nCharacter has been deleted successfully!\n", ConsoleColor.Green);
         } while (_inputManager.LoopAgain("delete"));
+
         _outputManager.WriteLine();
     }
 }

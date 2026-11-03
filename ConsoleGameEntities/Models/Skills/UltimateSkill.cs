@@ -12,8 +12,7 @@ public class UltimateSkill : DamageSkill
 {
     // "Cooldown" here means the charge-up time before the ultimate can be used again.
     // ElapsedTime must meet or exceed Cooldown.
-    [NotMapped]
-    public bool IsReady => ElapsedTime >= Cooldown;
+    [NotMapped] public bool IsReady => ElapsedTime >= Cooldown;
     private int previousScaledLevel;
 
     public override void InitializeSkill(int level)
@@ -22,7 +21,9 @@ public class UltimateSkill : DamageSkill
         Reset();
         ScalePowerWithLevel(level);
     }
-    public override void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
+
+    public override void Activate(ITargetable caster, ITargetable? singleEnemy = null,
+        List<ITargetable>? multipleEnemies = null)
     {
         if (!IsReady) throw new SkillCooldownException();
 
@@ -52,9 +53,12 @@ public class UltimateSkill : DamageSkill
             {
                 player.Archetype.UseResource(Cost);
             }
-            catch (InvalidOperationException) { throw new SkillResourceException("Ultimate"); }
+            catch (InvalidOperationException)
+            {
+                throw new SkillResourceException("Ultimate");
+            }
 
-            player.AddActionItem(this);            
+            player.AddActionItem(this);
 
             switch (TargetType)
             {
@@ -71,8 +75,12 @@ public class UltimateSkill : DamageSkill
                         {
                             tar.TakeDamage(Power, DamageType);
                         }
-                        catch (MonsterDeathException) { monsterDeath = true; }
+                        catch (MonsterDeathException)
+                        {
+                            monsterDeath = true;
+                        }
                     }
+
                     break;
             }
         }
@@ -96,6 +104,7 @@ public class UltimateSkill : DamageSkill
             throw new MonsterDeathException();
         }
     }
+
     public void ScalePowerWithLevel(int level)
     {
         if (level != previousScaledLevel)
@@ -108,6 +117,7 @@ public class UltimateSkill : DamageSkill
             previousScaledLevel = level;
         }
     }
+
     public override Skill Clone()
     {
         return new UltimateSkill

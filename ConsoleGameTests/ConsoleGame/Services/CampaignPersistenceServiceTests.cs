@@ -1,5 +1,4 @@
-﻿
-using ConsoleGame.GameDao.Interfaces;
+﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers;
 using ConsoleGame.Managers.Interfaces;
 using ConsoleGame.Models;
@@ -146,6 +145,29 @@ public class CampaignPersistenceServiceTests
 
         // Assert
         // A regular adventure should never trigger a database operation.
+        _playerDaoMock.Verify(
+            dao => dao.GetPlayerByName(It.IsAny<string>()),
+            Times.Never);
+
+        _playerDaoMock.Verify(
+            dao => dao.AddPlayer(It.IsAny<Player>()),
+            Times.Never);
+
+        _playerDaoMock.Verify(
+            dao => dao.UpdatePlayer(It.IsAny<Player>()),
+            Times.Never);
+    }
+    [TestMethod]
+    public void SaveIfCampaign_ActiveCampaign_DoesNotSavePlayer()
+    {
+        // Arrange
+        var player = CreatePlayer();
+        var session = new GameSession(player, new Floor(), true);
+
+        // Act: the campaign has not ended.
+        _service.SaveIfCampaign(session);
+
+        // Assert: no persistence operations should occur.
         _playerDaoMock.Verify(
             dao => dao.GetPlayerByName(It.IsAny<string>()),
             Times.Never);

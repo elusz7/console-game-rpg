@@ -2,6 +2,11 @@
 
 public class ItemDurabilityException : InventoryException
 {
-    public ItemDurabilityException() :base() { }
-    public ItemDurabilityException(string message) : base(message) { }
+    public ItemDurabilityException() : base()
+    {
+    }
+
+    public ItemDurabilityException(string message) : base(message)
+    {
+    }
 }

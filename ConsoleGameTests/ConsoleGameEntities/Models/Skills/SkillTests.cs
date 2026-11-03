@@ -23,7 +23,8 @@ public class SkillTests
     {
         public bool EffectApplied { get; private set; }
 
-        public override void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
+        public override void Activate(ITargetable caster, ITargetable? singleEnemy = null,
+            List<ITargetable>? multipleEnemies = null)
         {
             EffectApplied = true;
             Reset();
@@ -39,7 +40,7 @@ public class SkillTests
         var ex = Assert.ThrowsException<SkillCooldownException>(() => skill.Activate(caster));
         StringAssert.Contains(ex.Message, "on cooldown");
     }
-    
+
     [TestMethod]
     public void Activate_Throws_WhenCasterLevelTooLow()
     {
@@ -50,7 +51,7 @@ public class SkillTests
         var ex = Assert.ThrowsException<InvalidSkillLevelException>(() => skill.Activate(caster));
         StringAssert.Contains(ex.Message, "does not meet the required level");
     }
-    
+
     [TestMethod]
     public void Activate_Throws_WhenTargetMissing_ForSingleEnemy()
     {
@@ -67,7 +68,7 @@ public class SkillTests
     {
         var archetype = new Archetype() { CurrentResource = 10, MaxResource = 12 };
 
-        var player = new Player() { Level= 3, Archetype = archetype };
+        var player = new Player() { Level = 3, Archetype = archetype };
 
         var skill = new Skill { RequiredLevel = 1, Cost = 5, ElapsedTime = 10 };
 
@@ -82,7 +83,7 @@ public class SkillTests
     {
         var archetypeMock = new Mock<Archetype>();
         archetypeMock.Setup(a => a.UseResource(It.IsAny<int>()))
-                        .Throws(new InvalidOperationException("Not enough resource"));
+            .Throws(new InvalidOperationException("Not enough resource"));
 
         var player = new Player() { Level = 3, Archetype = archetypeMock.Object };
 
@@ -98,7 +99,7 @@ public class SkillTests
         var archetype = new Archetype() { CurrentResource = 10, MaxResource = 12 };
         var player = new Player() { Level = 3, Archetype = archetype };
         var skill = new TestSkill { RequiredLevel = 1, ElapsedTime = 10 };
-        
+
 
         skill.Activate(player);
 

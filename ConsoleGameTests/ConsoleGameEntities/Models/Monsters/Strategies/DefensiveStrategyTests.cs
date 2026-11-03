@@ -1,5 +1,4 @@
-﻿
-using ConsoleGameEntities.Interfaces;
+﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Monsters.Strategies;
 using static ConsoleGameTests.TestHelpers.StrategyHelper;
 

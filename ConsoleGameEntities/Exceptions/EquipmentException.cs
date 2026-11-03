@@ -2,6 +2,11 @@
 
 public class EquipmentException : Exception
 {
-    public EquipmentException() :base() { }
-    public EquipmentException(string message) : base(message) { }
+    public EquipmentException() : base()
+    {
+    }
+
+    public EquipmentException(string message) : base(message)
+    {
+    }
 }

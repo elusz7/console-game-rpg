@@ -2,6 +2,7 @@
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
+
 namespace ConsoleGameEntities.Models.Items;
 
 public class Consumable : Item
@@ -9,10 +10,12 @@ public class Consumable : Item
     private static readonly Random _rng = Random.Shared;
     public int Power { get; set; }
     public ConsumableType ConsumableType { get; set; }
+
     public override void Use()
     {
         throw new InvalidTargetException("You need something to use this consumable on.");
     }
+
     public void UseOn(Item item)
     {
         if (ConsumableType != ConsumableType.Durability)
@@ -28,6 +31,7 @@ public class Consumable : Item
             Inventory?.RemoveItem(this);
         }
     }
+
     public void UseOn(Player player)
     {
         switch (ConsumableType)
@@ -48,7 +52,7 @@ public class Consumable : Item
         Durability--;
 
         if (Durability < 1)
-        { 
+        {
             player.AddActionItem($"{Name} has been used up.");
             Inventory?.RemoveItem(this);
         }
@@ -66,6 +70,7 @@ public class Consumable : Item
 
         Value = Math.Round(calculation, 2);
     }
+
     public override void CalculateStatsByLevel()
     {
         Durability = 3;
@@ -74,9 +79,10 @@ public class Consumable : Item
             ConsumableType.Health => _rng.Next(RequiredLevel * 3, RequiredLevel * 5),
             ConsumableType.Durability => _rng.Next(RequiredLevel, RequiredLevel * 2),
             ConsumableType.Resource => _rng.Next(RequiredLevel * 2, RequiredLevel * 4),
-            _ => RequiredLevel * 2,// fallback value
+            _ => RequiredLevel * 2, // fallback value
         };
     }
+
     public override void CalculateLevelByStats()
     {
         var estimatedLevel = ConsumableType switch

@@ -18,8 +18,8 @@ public class ArchetypeDisplay(IInputManager inputManager, IOutputManager outputM
         {
             _outputManager.WriteLine("=== Archetype Display Menu ===");
             _outputManager.WriteLine("1. List All Archetypes"
-                + "\n2. List Archetypes By Type"
-                + "\n3. Return to Archetype Main Menu");
+                                     + "\n2. List Archetypes By Type"
+                                     + "\n3. Return to Archetype Main Menu");
 
             var choice = _inputManager.ReadMenuKey(3);
 
@@ -41,7 +41,7 @@ public class ArchetypeDisplay(IInputManager inputManager, IOutputManager outputM
     private void ListArchetypes(string? criteria = null)
     {
         var archetypes = new List<Archetype>();
-        
+
         switch (criteria)
         {
             case "Type":
@@ -60,6 +60,7 @@ public class ArchetypeDisplay(IInputManager inputManager, IOutputManager outputM
             return;
         }
 
-        _inputManager.Viewer(archetypes, a => ColorfulToStringHelper.ArchetypeToString(a), "", a => ColorfulToStringHelper.GetArchetypeColor(a));
+        _inputManager.Viewer(archetypes, a => ColorfulToStringHelper.ArchetypeToString(a), "",
+            a => ColorfulToStringHelper.GetArchetypeColor(a));
     }
 }

@@ -4,7 +4,11 @@ using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame.Menus;
 
-public class PlayerMenu(IInputManager inputManager, IOutputManager outputManager, PlayerDisplay playerDisplayMenu, PlayerManagement playerManagementMenu)
+public class PlayerMenu(
+    IInputManager inputManager,
+    IOutputManager outputManager,
+    PlayerDisplay playerDisplayMenu,
+    PlayerManagement playerManagementMenu)
 {
     private readonly IInputManager _inputManager = inputManager;
     private readonly IOutputManager _outputManager = outputManager;
@@ -18,11 +22,11 @@ public class PlayerMenu(IInputManager inputManager, IOutputManager outputManager
         {
             _outputManager.WriteLine("=== Player Main Menu ===", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. View Players"
-                + "\n2. Manage Players"
-                + "\n3. Return to Admin Menu");
-            
+                                     + "\n2. Manage Players"
+                                     + "\n3. Return to Admin Menu");
+
             var choice = _inputManager.ReadMenuKey(3);
-            
+
             switch (choice)
             {
                 case 1:
@@ -36,5 +40,5 @@ public class PlayerMenu(IInputManager inputManager, IOutputManager outputManager
                     return;
             }
         }
-    }    
+    }
 }

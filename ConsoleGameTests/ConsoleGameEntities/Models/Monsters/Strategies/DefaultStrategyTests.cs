@@ -108,7 +108,7 @@ public class DefaultStrategyTests
             Strategy = new DefaultStrategy() // no selector passed
         };
 
-        var ex = Assert.ThrowsException<InvalidOperationException>( () => monster.Attack(player));
+        var ex = Assert.ThrowsException<InvalidOperationException>(() => monster.Attack(player));
         StringAssert.Contains(ex.Message, "Skill selector is null");
     }
 }

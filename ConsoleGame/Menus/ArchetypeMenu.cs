@@ -4,7 +4,11 @@ using ConsoleGame.Helpers.CrudHelpers;
 
 namespace ConsoleGame.Menus;
 
-public class ArchetypeMenu(IInputManager inputManager, IOutputManager outputManager, ArchetypeDisplay archetypeDisplay, ArchetypeManagement archetypeManagement)
+public class ArchetypeMenu(
+    IInputManager inputManager,
+    IOutputManager outputManager,
+    ArchetypeDisplay archetypeDisplay,
+    ArchetypeManagement archetypeManagement)
 {
     private readonly IInputManager _inputManager = inputManager;
     private readonly IOutputManager _outputManager = outputManager;
@@ -18,8 +22,8 @@ public class ArchetypeMenu(IInputManager inputManager, IOutputManager outputMana
         {
             _outputManager.WriteLine("=== Archetype Main Menu ===");
             _outputManager.WriteLine("1. View Archetypes"
-                + "\n2. Manage Archetypes"
-                + "\n3. Return to Admin Menu");
+                                     + "\n2. Manage Archetypes"
+                                     + "\n3. Return to Admin Menu");
 
             var choice = _inputManager.ReadMenuKey(3);
 

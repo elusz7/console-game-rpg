@@ -1,5 +1,4 @@
-﻿
-using ConsoleGame.Factories.Interfaces;
+﻿using ConsoleGame.Factories.Interfaces;
 using ConsoleGame.Models;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Entities;
@@ -18,7 +17,7 @@ public class FloorProgressionService(IFloorFactory floorFactory)
     {
         //Ensure that session exists
         ArgumentNullException.ThrowIfNull(session);
-        
+
         // Keep a reference to the current player and floor.
         var player = session.Player;
         var currentFloor = session.CurrentFloor;
@@ -47,12 +46,13 @@ public class FloorProgressionService(IFloorFactory floorFactory)
 
         // Place the player at the entrance of the new floor.
         player.CurrentRoom = nextFloor.GetEntrance();
-        
+
         // Return collected loot to the caller for display.
         return collectedItems;
     }
-    
-    private static List<Item> AutomaticLoot(Player player, Floor floor) {
+
+    private static List<Item> AutomaticLoot(Player player, Floor floor)
+    {
         // Only collect monsters that still have treasure.
         var monstersWithLoot = floor.Monsters
             .Where(monster => monster.Treasure != null)

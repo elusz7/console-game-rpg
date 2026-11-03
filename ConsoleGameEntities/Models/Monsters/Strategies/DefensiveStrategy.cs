@@ -20,7 +20,6 @@ public class DefensiveStrategy : DefaultStrategy
      */
     public override void ExecuteAttack(IMonster monster, IPlayer target)
     {
-
         // 1. Prioritize healing if below max HP
         if (monster.CurrentHealth < monster.MaxHealth)
         {
@@ -55,4 +54,3 @@ public class DefensiveStrategy : DefaultStrategy
         target.TakeDamage(decreasedDamage, monster.DamageType);
     }
 }
-

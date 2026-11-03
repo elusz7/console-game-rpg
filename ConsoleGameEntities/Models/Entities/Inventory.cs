@@ -43,13 +43,15 @@ public class Inventory : IInventory
         }
         else if (item.Weight > wiggleRoom)
         {
-            throw new OverweightException($"You cannot add {item.Name} to your inventory. Will exceed carrying capacity.");
+            throw new OverweightException(
+                $"You cannot add {item.Name} to your inventory. Will exceed carrying capacity.");
         }
         else
         {
             throw new InventoryException($"An error has occured trying to add {item.Name} to your inventory.");
         }
     }
+
     public virtual void RemoveItem(Item item)
     {
         if (Items.Contains(item))
@@ -61,6 +63,7 @@ public class Inventory : IInventory
             throw new ItemNotFoundException($"You do not have {item.Name} in your inventory.");
         }
     }
+
     private void AddConsumable(Item item)
     {
         var cap = Math.Max(3m, Capacity * 0.10m);
@@ -80,27 +83,32 @@ public class Inventory : IInventory
             }
             else
             {
-                throw new InventoryException($"You cannot carry more than {consumableCap} {consumable.ConsumableType} consumables.");
+                throw new InventoryException(
+                    $"You cannot carry more than {consumableCap} {consumable.ConsumableType} consumables.");
             }
         }
     }
+
     public decimal GetCarryingWeight()
     {
         return Items
             .Where(i => i is Weapon || i is Armor)
             .Sum(i => i.Weight);
     }
+
     public bool ContainsConsumables()
     {
         return Items
             .OfType<Consumable>()
             .Any();
     }
+
     public void Sell(Item item)
     {
         Gold += (int)Math.Round(item.GetSellPrice());
         RemoveItem(item);
     }
+
     public void Buy(Item item)
     {
         var price = (int)Math.Round(item.GetBuyPrice());

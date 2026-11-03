@@ -17,7 +17,7 @@ public class PlayerDao(GameContext context) : IPlayerDao
 
     public void UpdatePlayer(Player player)
     {
-        _context.Players!.Update(player);
+        // Save changes to the player and related entities already tracked by EF Core.
         _context.SaveChanges();
     }
 
@@ -29,18 +29,23 @@ public class PlayerDao(GameContext context) : IPlayerDao
 
     public Player? GetPlayerByName(string name)
     {
-        return _context.Players!.FirstOrDefault(p => p.Name.ToLower() == name.ToLower());
+        // Load the player together with its inventory and items.
+        // EF Core tracks these entities so their changes can be saved.
+        return _context.Players!
+            .Include(p => p.Inventory)
+            .ThenInclude(i => i.Items)
+            .FirstOrDefault(p => p.Name.ToLower() == name.ToLower());
     }
 
     public Player GetPlayerNoTracking(Player player)
     {
         var loadedPlayer = _context.Players!
             .Include(p => p.Inventory)
-                .ThenInclude(i => i.Items)
+            .ThenInclude(i => i.Items)
             .Include(p => p.Archetype)
-                .ThenInclude(a => a.Skills)
+            .ThenInclude(a => a.Skills)
             .Include(p => p.CurrentRoom)
-                .ThenInclude(r => r!.Monsters)
+            .ThenInclude(r => r!.Monsters)
             .First(p => p.Id == player.Id);
 
         // Detach the root entity and all its related entities
@@ -104,30 +109,45 @@ public class PlayerDao(GameContext context) : IPlayerDao
 
     public List<Player> GetAllPlayers(string name)
     {
-        return [.. _context.Players!
-            .ToList()
-            .Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase))];
+        return
+        [
+            .. _context.Players!
+                .ToList()
+                .Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
+        ];
     }
+
     public List<Player> GetAllPlayers()
     {
-            return [.. _context.Players!];
+        return [.. _context.Players!];
     }
+
     public List<Archetype> GetAllPlayerArchetypes()
     {
-        return [.. _context.Players!
-            .Where(p => p.Archetype != null)
-            .Select(p => p.Archetype!)
-            .Distinct()];
+        return
+        [
+            .. _context.Players!
+                .Where(p => p.Archetype != null)
+                .Select(p => p.Archetype!)
+                .Distinct()
+        ];
     }
+
     public List<Player> GetAllPlayersByArchetype(Archetype archetype)
     {
-        return [.. _context.Players!.ToList()
-            .Where(p => p.Archetype == archetype)];
+        return
+        [
+            .. _context.Players!.ToList()
+                .Where(p => p.Archetype == archetype)
+        ];
     }
 
     public List<Player> GetAllPlayersByLevel(int level)
     {
-        return [.. _context.Players!
-            .Where(p => p.Level == level)];
+        return
+        [
+            .. _context.Players!
+                .Where(p => p.Level == level)
+        ];
     }
 }

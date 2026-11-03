@@ -5,7 +5,11 @@ using ConsoleGame.Helpers.CrudHelpers;
 
 namespace ConsoleGame.Menus;
 
-public class MonsterMenu(IInputManager inputManager, IOutputManager outputManager, MonsterDisplay monsterDisplay, MonsterManagement monsterManagement)
+public class MonsterMenu(
+    IInputManager inputManager,
+    IOutputManager outputManager,
+    MonsterDisplay monsterDisplay,
+    MonsterManagement monsterManagement)
 {
     private readonly IInputManager _inputManager = inputManager;
     private readonly IOutputManager _outputManager = outputManager;
@@ -19,8 +23,8 @@ public class MonsterMenu(IInputManager inputManager, IOutputManager outputManage
         {
             _outputManager.WriteLine("=== Monster Main Menu ===", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. View Monsters"
-                + "\n2. Manage Monsters"
-                + "\n3. Return to Admin Menu");
+                                     + "\n2. Manage Monsters"
+                                     + "\n3. Return to Admin Menu");
             var input = _inputManager.ReadMenuKey(3);
             switch (input)
             {

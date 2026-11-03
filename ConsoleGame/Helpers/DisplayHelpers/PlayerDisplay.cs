@@ -9,6 +9,7 @@ public class PlayerDisplay(IInputManager inputManager, IOutputManager outputMana
     private readonly IInputManager _inputManager = inputManager;
     private readonly IOutputManager _outputManager = outputManager;
     private readonly IPlayerDao _playerDao = playerDao;
+
     public void Menu()
     {
         _outputManager.Clear();
@@ -16,10 +17,10 @@ public class PlayerDisplay(IInputManager inputManager, IOutputManager outputMana
         {
             _outputManager.WriteLine("Player Display Menu", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. Search Player By Name"
-                + "\n2. List All Players"
-                + "\n3. List Players By Archetype"
-                + "\n4. List Players By Level"
-                + "\n5. Return to Player Main Menu");
+                                     + "\n2. List All Players"
+                                     + "\n3. List Players By Archetype"
+                                     + "\n4. List Players By Level"
+                                     + "\n5. Return to Player Main Menu");
 
             var choice = _inputManager.ReadMenuKey(5);
 
@@ -29,7 +30,7 @@ public class PlayerDisplay(IInputManager inputManager, IOutputManager outputMana
                     ListPlayers("Search");
                     break;
                 case 2:
-                    ListPlayers(); 
+                    ListPlayers();
                     break;
                 case 3:
                     ListPlayers("Archetype");
@@ -43,6 +44,7 @@ public class PlayerDisplay(IInputManager inputManager, IOutputManager outputMana
             }
         }
     }
+
     private void ListPlayers(string? criteria = null)
     {
         var players = new List<Player>();
@@ -65,9 +67,9 @@ public class PlayerDisplay(IInputManager inputManager, IOutputManager outputMana
 
                 _outputManager.WriteLine();
                 var archetype = _inputManager.Selector(
-                    archetypes, 
-                    a => ColorfulToStringHelper.ArchetypeToString(a), 
-                    "Select an Archetype", 
+                    archetypes,
+                    a => ColorfulToStringHelper.ArchetypeToString(a),
+                    "Select an Archetype",
                     a => ColorfulToStringHelper.GetArchetypeColor(a));
 
                 if (archetype == null)
@@ -95,7 +97,7 @@ public class PlayerDisplay(IInputManager inputManager, IOutputManager outputMana
 
         _outputManager.WriteLine();
         _inputManager.Viewer(
-            players, 
+            players,
             p => ColorfulToStringHelper.PlayerToString(p),
             "",
             p => ColorfulToStringHelper.GetArchetypeColor(p.Archetype));

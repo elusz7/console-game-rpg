@@ -3,7 +3,8 @@ using ConsoleGame.Models;
 
 namespace ConsoleGame.Factories;
 
-public class FloorFactory(IMapFactory mapFactory, IMonsterFactory monsterFactory, IItemFactory itemFactory) : IFloorFactory
+public class FloorFactory(IMapFactory mapFactory, IMonsterFactory monsterFactory, IItemFactory itemFactory)
+    : IFloorFactory
 {
     private readonly IMapFactory _mapFactory = mapFactory;
     private readonly IMonsterFactory _monsterFactory = monsterFactory;

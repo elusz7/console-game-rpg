@@ -22,7 +22,7 @@ public class BerserkerStrategy : DefaultStrategy
 
     /*
      *  Use a damage skill if available; otherwise, strike once with 1.5× base attack
-    */
+     */
     public override void ExecuteAttack(IMonster monster, IPlayer target)
     {
         var damageSkill = _skillSelector.GetHighestDamageSkill(monster);
@@ -32,11 +32,9 @@ public class BerserkerStrategy : DefaultStrategy
             damageSkill.Activate(monster, target);
             return;
         }
-        
+
         int boostedDamage = (int)Math.Ceiling(monster.GetStat(StatType.Attack) * 1.5);
         monster.AddActionItem($"{monster.Name} attacks for {boostedDamage} damage!");
         target.TakeDamage(boostedDamage, monster.DamageType);
-        
     }
 }
-

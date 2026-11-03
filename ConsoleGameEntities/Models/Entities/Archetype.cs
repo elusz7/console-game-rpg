@@ -25,8 +25,7 @@ public class Archetype : IArchetype
     public virtual ICollection<Skill> Skills { get; set; } = new List<Skill>();
 
     public string ResourceName { get; set; }
-    [NotMapped]
-    public int CurrentResource { get; set; }
+    [NotMapped] public int CurrentResource { get; set; }
     public int MaxResource { get; set; }
     public int RecoveryRate { get; set; }
     public decimal AttackMultiplier { get; set; }
@@ -48,10 +47,12 @@ public class Archetype : IArchetype
             throw new InvalidOperationException("Not enough resource.");
         }
     }
+
     public virtual void RecoverResource()
     {
         CurrentResource = Math.Min(CurrentResource + RecoveryRate, MaxResource);
     }
+
     public virtual void RecoverResource(int recoveryPower)
     {
         var recoverableAmount = MaxResource - CurrentResource;
@@ -59,6 +60,7 @@ public class Archetype : IArchetype
 
         CurrentResource += recoveredResource;
     }
+
     public virtual int LevelUp(int newLevel)
     {
         if (ArchetypeType == ArchetypeType.Martial)

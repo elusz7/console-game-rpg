@@ -19,7 +19,7 @@ public class OffensiveStrategy : DefaultStrategy
      *  Use damage skill if can
      *  use buff or healing skill if can
      *  basic attack with a slightly higher power
-    */
+     */
     public override void ExecuteAttack(IMonster monster, IPlayer target)
     {
         var damageSkill = _skillSelector.GetHighestDamageSkill(monster);
@@ -31,7 +31,7 @@ public class OffensiveStrategy : DefaultStrategy
 
         var buffSkill = _skillSelector.GetBuffSkill(monster);
         if (buffSkill != null)
-        { 
+        {
             buffSkill.Activate(monster);
             MakeAttack(monster, target);
             return;
@@ -45,7 +45,7 @@ public class OffensiveStrategy : DefaultStrategy
             _skillSelector.GetHealingSkill(monster, healthLost)?.Activate(monster);
         }
 
-        MakeAttack(monster, target);        
+        MakeAttack(monster, target);
     }
 
     private static void MakeAttack(IMonster monster, IPlayer target)

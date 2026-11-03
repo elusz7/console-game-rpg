@@ -51,7 +51,8 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
         CalculateValue();
 
         Inventory.Gold -= price;
-    }  
+    }
+
     public virtual void Purify()
     {
         if (!Cursed)
@@ -81,12 +82,14 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
 
         Value = Math.Round(calculation, 2);
     }
+
     public override void CalculateStatsByLevel()
     {
         Durability = _rng.Next(3, 9);
 
         AttackPower = _rng.Next(RequiredLevel * 6, RequiredLevel * 9);
     }
+
     public override void CalculateLevelByStats()
     {
         var estimatedLevel = (int)Math.Round(AttackPower / 9.5M);

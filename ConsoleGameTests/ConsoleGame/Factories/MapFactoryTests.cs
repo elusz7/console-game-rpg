@@ -37,12 +37,12 @@ public class MapFactoryTests
         // Simulate cloning behavior (if needed)
         _roomDaoMock.Setup(d => d.GetAllRooms()).Returns(clonedRooms);
         _mapHelperMock.Setup(h => h.CreateCampaignMap(It.IsAny<int>(), It.IsAny<Room>(), It.IsAny<List<Room>>()))
-                      .Returns(clonedRooms);
+            .Returns(clonedRooms);
 
         _roomDaoMock.Setup(d => d.GetAllRooms()).Returns(clonedRooms);
 
         _mapHelperMock.Setup(h => h.FindUnconnectedRooms(It.IsAny<Room>(), It.IsAny<List<Room>>()))
-                      .Returns([hall]);
+            .Returns([hall]);
     }
 
     [TestMethod]
@@ -54,8 +54,9 @@ public class MapFactoryTests
         var rooms = new List<Room> { entrance, chamber };
 
         _roomDaoMock.Setup(d => d.GetAllRooms()).Returns(rooms);
-        _mapHelperMock.Setup(h => h.CreateCampaignMap(It.IsAny<int>(), It.Is<Room>(r => r.Name == "Entrance"), It.IsAny<List<Room>>()))
-                      .Returns(rooms);
+        _mapHelperMock.Setup(h =>
+                h.CreateCampaignMap(It.IsAny<int>(), It.Is<Room>(r => r.Name == "Entrance"), It.IsAny<List<Room>>()))
+            .Returns(rooms);
 
         // Act
         var result = _mapFactory.GenerateMap(level: 1, campaign: true, randomMap: false);
@@ -101,6 +102,7 @@ public class MapFactoryTests
         _roomDaoMock.Setup(d => d.GetAllRooms()).Returns(rooms);
 
         // Act
-        Assert.ThrowsException<InvalidOperationException>(() =>_mapFactory.GenerateMap(level: 1, campaign: false, randomMap: false));
+        Assert.ThrowsException<InvalidOperationException>(() =>
+            _mapFactory.GenerateMap(level: 1, campaign: false, randomMap: false));
     }
 }

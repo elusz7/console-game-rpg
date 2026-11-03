@@ -21,9 +21,9 @@ public class CunningStrategy : DefaultStrategy
      * - If no buff, use damage skill.
      * - If no damage, heal if low
      * - Else, fallback to basic attack.
-    */
+     */
     public override void ExecuteAttack(IMonster monster, IPlayer target)
-    {        
+    {
         var healthLost = monster.MaxHealth - monster.CurrentHealth;
         var emergencyHealThreshold = monster.MaxHealth * 0.25;
 
@@ -40,8 +40,8 @@ public class CunningStrategy : DefaultStrategy
 
         // Step 1: Try a debuff based on the type of damage received more
         StatType? targetStatToDebuff = monster.MoreMartialDamageTaken()
-                ? StatType.Attack
-                : StatType.Magic;
+            ? StatType.Attack
+            : StatType.Magic;
 
         var debuffSkill = _skillSelector.GetDebuffSkill(monster, targetStatToDebuff);
         if (debuffSkill != null)
@@ -53,8 +53,8 @@ public class CunningStrategy : DefaultStrategy
 
         // Step 2: If no debuff used, try buffing own attack stat
         StatType selfBuffStat = monster.DamageType == DamageType.Magical
-                ? StatType.Magic
-                : StatType.Attack;
+            ? StatType.Magic
+            : StatType.Attack;
 
         var buffSkill = _skillSelector.GetBuffSkill(monster, selfBuffStat);
         if (buffSkill != null)

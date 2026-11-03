@@ -1,5 +1,4 @@
-﻿
-using ConsoleGame.Models;
+﻿using ConsoleGame.Models;
 using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Services;
@@ -12,7 +11,7 @@ public class RoomNavigationService
         // Ensure the session and direction are valid before attempting movement.
         ArgumentNullException.ThrowIfNull(session);
         ArgumentException.ThrowIfNullOrWhiteSpace(direction);
-        
+
         // Resolve the destination before changing the player's current room.
         var room = GetRoom(session, direction);
 
@@ -50,7 +49,7 @@ public class RoomNavigationService
     {
         // Ensure a valid session was provided.
         ArgumentNullException.ThrowIfNull(session);
-        
+
         var currentRoom = session.Player.CurrentRoom;
 
         if (currentRoom?.Monsters == null)

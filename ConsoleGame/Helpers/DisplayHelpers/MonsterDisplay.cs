@@ -18,11 +18,11 @@ public class MonsterDisplay(IOutputManager outputManager, IInputManager inputMan
         {
             _outputManager.WriteLine("=== Monster Display Menu ===", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. List All Monsters"
-                + "\n2. List Monsters By Threat"
-                + "\n3. List Monsters By Damage Type"
-                + "\n4. Search For Monster By Name"
-                + "\n5. Return to Monster Menu");
-            
+                                     + "\n2. List Monsters By Threat"
+                                     + "\n3. List Monsters By Damage Type"
+                                     + "\n4. Search For Monster By Name"
+                                     + "\n5. Return to Monster Menu");
+
             var input = _inputManager.ReadMenuKey(5);
             switch (input)
             {
@@ -77,6 +77,7 @@ public class MonsterDisplay(IOutputManager outputManager, IInputManager inputMan
             return;
         }
 
-        _inputManager.Viewer(monsters, m => ColorfulToStringHelper.MonsterToString(m), "", m => ColorfulToStringHelper.GetMonsterColor(m));
+        _inputManager.Viewer(monsters, m => ColorfulToStringHelper.MonsterToString(m), "",
+            m => ColorfulToStringHelper.GetMonsterColor(m));
     }
 }

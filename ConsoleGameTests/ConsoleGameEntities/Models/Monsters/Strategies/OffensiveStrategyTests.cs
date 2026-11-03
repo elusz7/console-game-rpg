@@ -55,7 +55,7 @@ public class OffensiveStrategyTests
         var player = new DummyPlayer();
         var monster = new DummyMonster
         {
-            CurrentHealth = 40,  // Below 67% of 100 max health (67)
+            CurrentHealth = 40, // Below 67% of 100 max health (67)
             Strategy = new OffensiveStrategy(selector)
         };
 
@@ -74,13 +74,14 @@ public class OffensiveStrategyTests
         var player = new DummyPlayer();
         var monster = new DummyMonster
         {
-            CurrentHealth = 70,  // Above 67 threshold
+            CurrentHealth = 70, // Above 67 threshold
             Strategy = new OffensiveStrategy(selector)
         };
 
         monster.Attack(player);
 
-        Assert.IsFalse(healingSkill.Activated, "Healing skill should NOT activate when health is at or above threshold");
+        Assert.IsFalse(healingSkill.Activated,
+            "Healing skill should NOT activate when health is at or above threshold");
         var expectedDamage = (int)Math.Ceiling(monster.AttackPower * 1.2);
         Assert.AreEqual(expectedDamage, player.DamageTaken);
     }

@@ -32,6 +32,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
 
         return (loot, numberOfCursedItems);
     }
+
     private static Item CreateItem(Item itemBase)
     {
         Item newItem = itemBase switch
@@ -61,6 +62,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
 
         return newItem;
     }
+
     private static T SetBaseProperties<T>(T item, Item itemBase) where T : Item
     {
         item.Name = itemBase.Name;
@@ -70,9 +72,10 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         item.ItemType = itemBase.ItemType;
         return item;
     }
+
     private static decimal CalculateLootValue(int level, int numMonsters, bool campaign)
     {
-        decimal baseGold = 0.75M * level * level + 14.25M; 
+        decimal baseGold = 0.75M * level * level + 14.25M;
 
         decimal monsterBonus = numMonsters * (3M + (level * 0.3M)); // More monsters, more gold
 
@@ -86,8 +89,9 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         if (campaign)
             total *= 1.2M;
 
-        return Math.Max(total, numMonsters); 
+        return Math.Max(total, numMonsters);
     }
+
     private static void TryRemoveLowestValue(List<Item> loot, List<Valuable> valuables, decimal lootMaxValue)
     {
         var itemToRemove = loot.OfType<Valuable>().OrderBy(i => i.Value).FirstOrDefault();
@@ -105,9 +109,9 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
 
             // if no item found in ideal range, find the best one
             jackpot ??= valuables
-                    .Where(v => v.Value <= (lootMaxValue - newValue))
-                    .OrderByDescending(v => v.Value)
-                    .FirstOrDefault();
+                .Where(v => v.Value <= (lootMaxValue - newValue))
+                .OrderByDescending(v => v.Value)
+                .FirstOrDefault();
 
             if (jackpot != null)
             {
@@ -119,10 +123,11 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
             }
         }
     }
+
     private static List<Item> GatherTribute(decimal lootMaxValue, List<Item> availableItems, int numMonsters)
     {
         var loot = new List<Item>();
-        
+
         decimal currentValue = 0.0M;
 
         var valuables = availableItems.OfType<Valuable>().ToList();
@@ -164,8 +169,10 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
             loot.Add(item);
             currentValue += itemTrueValue;
         }
+
         return loot;
     }
+
     private static int ALittlePoisonNeverHurtNoOne(int lootCount, bool campaign, List<Item> loot)
     {
         var curseChance = campaign ? 0.05 : 0.01;
@@ -175,6 +182,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
 
         return Math.Min(estimatedCurseCount, eligibleItemCount);
     }
+
     private static decimal CalculateItemTrueValue(Item item)
     {
         decimal value = item.Value;
@@ -186,6 +194,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
             value += (c.Power * 0.5M) + (c.Durability * 0.2M) + (c.RequiredLevel * 0.5M);
         return value;
     }
+
     public List<Item> CreateMerchantItems(int level)
     {
         var merchantItems = new List<Item>();
@@ -245,6 +254,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
 
         return merchantItems;
     }
+
     public List<Item> GetMerchantGifts(ArchetypeType type, int level)
     {
         var availableItems = _itemDao.GetItemsByMaxLevel(level).ToList();

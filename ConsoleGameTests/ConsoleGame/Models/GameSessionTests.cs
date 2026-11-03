@@ -70,8 +70,8 @@ public class GameSessionTests
         // Assert
         Assert.IsTrue(isFloorCleared);
     }
-    
-    
+
+
     [TestMethod]
     public void Constructor_SetsInitialStatusToRunning()
     {
@@ -120,11 +120,8 @@ public class GameSessionTests
         var session = new GameSession(CreatePlayer(), new Floor(), false);
 
         // Act and Assert
-        Assert.ThrowsException<ArgumentException>(
-            () => session.End(AdventureStatus.Running));
+        Assert.ThrowsException<ArgumentException>(() => session.End(AdventureStatus.Running));
 
-        Assert.ThrowsException<ArgumentException>(
-            () => session.End(AdventureStatus.NotStarted));
+        Assert.ThrowsException<ArgumentException>(() => session.End(AdventureStatus.NotStarted));
     }
-
 }

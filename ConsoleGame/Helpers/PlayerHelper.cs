@@ -7,8 +7,11 @@ using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGame.Helpers;
 
-public class PlayerHelper(IInputManager inputManager, IOutputManager outputManager, 
-    IPlayerDao playerDao, IArchetypeDao archetypeDao)
+public class PlayerHelper(
+    IInputManager inputManager,
+    IOutputManager outputManager,
+    IPlayerDao playerDao,
+    IArchetypeDao archetypeDao)
 {
     private readonly IInputManager _inputManager = inputManager;
     private readonly IOutputManager _outputManager = outputManager;
@@ -26,6 +29,7 @@ public class PlayerHelper(IInputManager inputManager, IOutputManager outputManag
             return SelectCharacter();
         }
     }
+
     private Player? CreateCharacter()
     {
         var name = _inputManager.ReadString("\nWhat is the name of your character? ");
@@ -34,9 +38,9 @@ public class PlayerHelper(IInputManager inputManager, IOutputManager outputManag
         var archetypes = _archetypeDao.GetAllArchetypes();
 
         var archetype = _inputManager.Selector(
-            archetypes, 
-            a => ColorfulToStringHelper.ArchetypeToString(a), 
-            $"Select the archetype of {name}", 
+            archetypes,
+            a => ColorfulToStringHelper.ArchetypeToString(a),
+            $"Select the archetype of {name}",
             a => ColorfulToStringHelper.GetArchetypeColor(a));
 
         if (archetype == null)
@@ -55,6 +59,7 @@ public class PlayerHelper(IInputManager inputManager, IOutputManager outputManag
 
         return player;
     }
+
     private Player? SelectCharacter()
     {
         /*var availableCharacters = _playerDao.GetAllPlayers();
@@ -70,10 +75,11 @@ public class PlayerHelper(IInputManager inputManager, IOutputManager outputManag
         {
             return null;
         }
-        
+
         var player = _playerDao.GetPlayerNoTracking(selection);*/
 
-        var dbPlayer = _playerDao.GetPlayerByName("Kaenji Stormleaf") ?? throw new InvalidDataException("No player found");
+        var dbPlayer = _playerDao.GetPlayerByName("Kaenji Stormleaf") ??
+                       throw new InvalidDataException("No player found");
         var player = _playerDao.GetPlayerNoTracking(dbPlayer);
 
         LevelUpPlayer(player);
@@ -90,6 +96,7 @@ public class PlayerHelper(IInputManager inputManager, IOutputManager outputManag
             i => ColorfulToStringHelper.GetArchetypeColor(i.Archetype)
         );
     }
+
     private static void LevelUpPlayer(Player player)
     {
         if (player.Level > 1)
@@ -109,41 +116,64 @@ public class PlayerHelper(IInputManager inputManager, IOutputManager outputManag
 
     public void SavePlayer(Player player)
     {
+        // Find the existing player, including their tracked inventory and items.
         var dbPlayer = _playerDao.GetPlayerByName(player.Name);
-        
-        SellInventory(player);
-        player.RoomId = null;
-        player.CurrentRoom = null;
 
+        // If this is a new player, insert the complete player graph.
         if (dbPlayer == null)
         {
-            
             _playerDao.AddPlayer(player);
+            return;
         }
-        else
-        {
-            dbPlayer.Level = player.Level;
-            dbPlayer.Inventory.Capacity = player.Inventory.Capacity;
-            dbPlayer.Inventory.Gold = player.Inventory.Gold;
-            dbPlayer.MaxHealth = player.MaxHealth;
-            dbPlayer.Inventory.Items.Clear();
 
-            _playerDao.UpdatePlayer(dbPlayer);
-        }
-    }
+        // Copy the player's current progression and stats.
+        dbPlayer.Level = player.Level;
+        dbPlayer.MaxHealth = player.MaxHealth;
 
-    private static void SellInventory(Player player)
-    {
-        var equipment = player.Equipment.OfType<Item>().ToList();
-        foreach (var equippedItem in equipment)
+        // Synchronize inventory properties.
+        dbPlayer.Inventory.Capacity = player.Inventory.Capacity;
+        dbPlayer.Inventory.Gold = player.Inventory.Gold;
+
+        // Remove saved items that are no longer in the current inventory.
+        var itemsToRemove = dbPlayer.Inventory.Items
+            .Where(savedItem => !player.Inventory.Items.Any(currentItem => currentItem.Id == savedItem.Id))
+            .ToList();
+
+        foreach (var item in itemsToRemove)
         {
-            player.Unequip(equippedItem);
+            dbPlayer.Inventory.Items.Remove(item);
         }
-        
-        var inventory = player.Inventory.Items.ToList();
-        foreach (var item in inventory)
+
+        // Add new items and retain existing items.
+        foreach (var currentItem in player.Inventory.Items)
         {
-            player.Sell(item);
+            // Only match items that already have a database ID.
+            // New items have ID 0 until EF Core inserts them.
+            var savedItem = currentItem.Id > 0
+                ? dbPlayer.Inventory.Items
+                    .FirstOrDefault(item => item.Id == currentItem.Id)
+                : null;
+
+            if (savedItem == null)
+            {
+                // New items are added to the existing tracked inventory.
+                currentItem.Inventory = dbPlayer.Inventory;
+                currentItem.InventoryId = dbPlayer.Inventory.Id;
+                dbPlayer.Inventory.Items.Add(currentItem);
+            }
+            else
+            {
+                // Copy gameplay changes to the existing tracked item.
+                savedItem.Name = currentItem.Name;
+                savedItem.Value = currentItem.Value;
+                savedItem.Description = currentItem.Description;
+                savedItem.Durability = currentItem.Durability;
+                savedItem.Weight = currentItem.Weight;
+                savedItem.RequiredLevel = currentItem.RequiredLevel;
+            }
         }
+
+        // Persist the updated tracked player graph.
+        _playerDao.UpdatePlayer(dbPlayer);
     }
 }

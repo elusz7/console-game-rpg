@@ -31,18 +31,18 @@ public class ArchetypeManagementTests
     {
         // Arrange
         _inputManagerMock.SetupSequence(m => m.ReadInt(It.IsAny<string>(), null, false))
-            .Returns(1)   // Martial
-            .Returns(10)  // Damage bonus
+            .Returns(1) // Martial
+            .Returns(10) // Damage bonus
             .Returns(100) // Health
-            .Returns(5)   // Defense
-            .Returns(3)   // Resistance
-            .Returns(7)   // Speed
+            .Returns(5) // Defense
+            .Returns(3) // Resistance
+            .Returns(7) // Speed
             .Returns(20); // Max Resource
 
         _inputManagerMock.SetupSequence(m => m.ReadString(It.IsAny<string>(), null))
             .Returns("1,2,3,4,5,6") // Stat priorities
-            .Returns("Test")       // Archetype name
-            .Returns("Test");      // Archetype description
+            .Returns("Test") // Archetype name
+            .Returns("Test"); // Archetype description
 
         _inputManagerMock.Setup(m => m.LoopAgain("create")).Returns(false);
 
@@ -50,13 +50,16 @@ public class ArchetypeManagementTests
 
         // Act
         var addArchetypeMethod = typeof(ArchetypeManagement)
-                                     .GetMethod("AddArchetype", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                                     .GetMethod("AddArchetype",
+                                         System.Reflection.BindingFlags.NonPublic |
+                                         System.Reflection.BindingFlags.Instance)
                                  ?? throw new InvalidOperationException("AddArchetype method not found.");
         addArchetypeMethod.Invoke(_archetypeManagement, null);
 
         // Assert
         _archetypeDaoMock.Verify(m => m.AddArchetype(It.IsAny<Archetype>()), Times.Once);
-        _outputManagerMock.Verify(m => m.WriteLine(It.Is<string>(s => s.Contains("created successfully")), ConsoleColor.Green), Times.Once);
+        _outputManagerMock.Verify(
+            m => m.WriteLine(It.Is<string>(s => s.Contains("created successfully")), ConsoleColor.Green), Times.Once);
     }
 
     [TestMethod]
@@ -67,7 +70,9 @@ public class ArchetypeManagementTests
 
         // Act
         var editArchetypeMethod = typeof(ArchetypeManagement)
-                                      .GetMethod("EditArchetype", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                                      .GetMethod("EditArchetype",
+                                          System.Reflection.BindingFlags.NonPublic |
+                                          System.Reflection.BindingFlags.Instance)
                                   ?? throw new InvalidOperationException("EditArchetype method not found.");
         editArchetypeMethod.Invoke(_archetypeManagement, null);
 
@@ -83,7 +88,9 @@ public class ArchetypeManagementTests
 
         // Act
         var deleteArchetypeMethod = typeof(ArchetypeManagement)
-                                        .GetMethod("DeleteArchetype", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                                        .GetMethod("DeleteArchetype",
+                                            System.Reflection.BindingFlags.NonPublic |
+                                            System.Reflection.BindingFlags.Instance)
                                     ?? throw new InvalidOperationException("DeleteArchetype method not found.");
         deleteArchetypeMethod.Invoke(_archetypeManagement, null);
 

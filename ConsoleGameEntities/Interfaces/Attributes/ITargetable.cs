@@ -1,5 +1,6 @@
 ﻿using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
+
 namespace ConsoleGameEntities.Interfaces.Attributes;
 
 public interface ITargetable

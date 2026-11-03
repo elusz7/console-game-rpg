@@ -18,10 +18,10 @@ public class ItemDisplay(IInputManager inputManager, IOutputManager outputManage
         {
             _outputManager.WriteLine("Item Display Menu", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. List All Items"
-                + "\n2. Search For Item(s) By Name"
-                + "\n3. List Items By Type"
-                + $"\n4. Change Sort Order (currently: {_itemDao.SortOrder})"
-                + "\n5. Return To Inventory Main Menu");
+                                     + "\n2. Search For Item(s) By Name"
+                                     + "\n3. List Items By Type"
+                                     + $"\n4. Change Sort Order (currently: {_itemDao.SortOrder})"
+                                     + "\n5. Return To Inventory Main Menu");
 
             var input = _inputManager.ReadMenuKey(5);
 
@@ -46,6 +46,7 @@ public class ItemDisplay(IInputManager inputManager, IOutputManager outputManage
             }
         }
     }
+
     private void ListItems(string? criteria = null)
     {
         var items = new List<Item>();
@@ -71,6 +72,7 @@ public class ItemDisplay(IInputManager inputManager, IOutputManager outputManage
             return;
         }
 
-        _inputManager.Viewer(items, i => ColorfulToStringHelper.ItemToString(i), "", i => ColorfulToStringHelper.GetItemColor(i));
+        _inputManager.Viewer(items, i => ColorfulToStringHelper.ItemToString(i), "",
+            i => ColorfulToStringHelper.GetItemColor(i));
     }
 }

@@ -2,6 +2,11 @@
 
 public class SkillResourceException : Exception
 {
-    public SkillResourceException() : base() { }
-    public SkillResourceException(string message) : base(message) { }
+    public SkillResourceException() : base()
+    {
+    }
+
+    public SkillResourceException(string message) : base(message)
+    {
+    }
 }

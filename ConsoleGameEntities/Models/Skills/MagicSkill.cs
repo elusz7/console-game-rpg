@@ -8,7 +8,8 @@ namespace ConsoleGameEntities.Models.Skills;
 
 public class MagicSkill : DamageSkill
 {
-    public override void Activate(ITargetable? caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
+    public override void Activate(ITargetable? caster, ITargetable? singleEnemy = null,
+        List<ITargetable>? multipleEnemies = null)
     {
         bool monsterDeath = false;
 
@@ -30,7 +31,8 @@ public class MagicSkill : DamageSkill
                 }
                 catch (InvalidOperationException)
                 {
-                    throw new SkillResourceException($"Not enough {player.Archetype.ResourceName} available to use this skill.");
+                    throw new SkillResourceException(
+                        $"Not enough {player.Archetype.ResourceName} available to use this skill.");
                 }
 
                 player.AddActionItem(this);
@@ -53,6 +55,7 @@ public class MagicSkill : DamageSkill
                                 monsterDeath = true;
                             }
                         }
+
                         break;
                 }
 

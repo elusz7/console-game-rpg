@@ -2,6 +2,11 @@
 
 public class MonsterDeathException : Exception
 {
-    public MonsterDeathException() :base() { }
-    public MonsterDeathException(string message) : base(message) { }
+    public MonsterDeathException() : base()
+    {
+    }
+
+    public MonsterDeathException(string message) : base(message)
+    {
+    }
 }

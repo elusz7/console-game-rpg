@@ -13,16 +13,12 @@ namespace ConsoleGameEntities.Models.Entities;
 
 public class Player : IPlayer
 {
-    [NotMapped]
-    public Dictionary<long, string> ActionItems { get; } = new();
-    [NotMapped]
-
-    private static readonly Random _rng = Random.Shared;
+    [NotMapped] public Dictionary<long, string> ActionItems { get; } = new();
+    [NotMapped] private static readonly Random _rng = Random.Shared;
     public int Level { get; set; }
     public int Id { get; set; }
     public string Name { get; set; }
-    [NotMapped]
-    public int CurrentHealth { get; set; }
+    [NotMapped] public int CurrentHealth { get; set; }
     public double DodgeChance { get; set; } = 0.01;
     public int MaxHealth { get; set; }
     public int ArchetypeId { get; set; }
@@ -30,10 +26,9 @@ public class Player : IPlayer
     public virtual Inventory Inventory { get; set; }
     public int? RoomId { get; set; }
     public virtual Room? CurrentRoom { get; set; }
-    [NotMapped]
-    public List<IEquippable> Equipment { get; set; } = new();
-    [NotMapped]
-    private readonly Dictionary<StatType, int> ActiveEffects = new()
+    [NotMapped] public List<IEquippable> Equipment { get; set; } = new();
+
+    [NotMapped] private readonly Dictionary<StatType, int> ActiveEffects = new()
     {
         { StatType.Defense, 0 },
         { StatType.Resistance, 0 },
@@ -41,19 +36,21 @@ public class Player : IPlayer
         { StatType.Attack, 0 },
         { StatType.Magic, 0 },
     };
+
     public void Attack(ITargetable target)
     {
         var weapon = EquippedWeapon() ?? throw new EquipmentException("You need to equip a weapon before attacking.");
 
-        var damage = Archetype.ArchetypeType == ArchetypeType.Martial ?
-            GetStat(StatType.Attack) :
-            GetStat(StatType.Magic);
-        
+        var damage = Archetype.ArchetypeType == ArchetypeType.Martial
+            ? GetStat(StatType.Attack)
+            : GetStat(StatType.Magic);
+
         AddActionItem($"You attack with {weapon.Name} for {damage} damage!");
         target.TakeDamage(damage, DamageType.Martial);
-        
+
         CheckWeaponDurability();
     }
+
     public virtual void TakeDamage(int damage, DamageType? damageType)
     {
         var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
@@ -69,11 +66,12 @@ public class Player : IPlayer
         {
             DamageType.Martial => Math.Max(1, damage - GetStat(StatType.Defense)),
             DamageType.Magical => Math.Max(1, damage - GetStat(StatType.Resistance)),
-            DamageType.Hybrid => Math.Max(1, damage - (Math.Max(GetStat(StatType.Defense), GetStat(StatType.Resistance)) / 2)),
+            DamageType.Hybrid => Math.Max(1,
+                damage - (Math.Max(GetStat(StatType.Defense), GetStat(StatType.Resistance)) / 2)),
             _ => damage
         };
 
-        
+
         CurrentHealth -= damageTaken;
         AddActionItem($"You've taken {damageTaken} damage! [{CurrentHealth} / {MaxHealth}]");
 
@@ -82,6 +80,7 @@ public class Player : IPlayer
 
         CheckArmorDurability(damageType);
     }
+
     public virtual void Heal(int regainedHealth)
     {
         int healedAmount;
@@ -95,8 +94,10 @@ public class Player : IPlayer
             healedAmount = regainedHealth;
             CurrentHealth += regainedHealth;
         }
+
         AddActionItem($"You healed for {healedAmount} health! [{CurrentHealth} / {MaxHealth}]");
     }
+
     public void LevelUp()
     {
         Level++;
@@ -105,7 +106,7 @@ public class Player : IPlayer
         MaxHealth += boost;
         CurrentHealth = MaxHealth;
 
-        Inventory.Gold += (Level * _rng.Next(8,13));
+        Inventory.Gold += (Level * _rng.Next(8, 13));
         Inventory.Capacity += Math.Round(boost * 0.8M, 2);
         DodgeChance += 0.003;
 
@@ -115,19 +116,23 @@ public class Player : IPlayer
             ActiveEffects[key] = 0;
         }
     }
+
     public int GetStat(StatType stat)
     {
         return stat switch
         {
-            StatType.Defense => Math.Max(0, EquippedDefense() + Archetype.DefenseBonus + ActiveEffects[StatType.Defense]),
+            StatType.Defense => Math.Max(0,
+                EquippedDefense() + Archetype.DefenseBonus + ActiveEffects[StatType.Defense]),
             StatType.Speed => Math.Max(0, Archetype.Speed + ActiveEffects[StatType.Speed]),
             StatType.Attack => Math.Max(0, EquippedAttack() + Archetype.AttackBonus + ActiveEffects[StatType.Attack]),
-            StatType.Resistance => Math.Max(0, EquippedResistance() + Archetype.ResistanceBonus + ActiveEffects[StatType.Resistance]),
+            StatType.Resistance => Math.Max(0,
+                EquippedResistance() + Archetype.ResistanceBonus + ActiveEffects[StatType.Resistance]),
             StatType.Health => CurrentHealth,
             StatType.Magic => Math.Max(0, EquippedAttack() + Archetype.MagicBonus + ActiveEffects[StatType.Magic]),
             _ => throw new StatTypeException("Monster Get Stat")
         };
     }
+
     public void Equip(Item item)
     {
         if (item.Inventory?.Player != this)
@@ -182,6 +187,7 @@ public class Player : IPlayer
         if (item is ICursable c && c.IsCursed())
             EnactCursedEffect(c);
     }
+
     private void EnactCursedEffect(ICursable cursedItem)
     {
         var cursedDeduction = Math.Max(1, (int)Math.Floor(MaxHealth * 0.1));
@@ -193,6 +199,7 @@ public class Player : IPlayer
 
         cursedItem.TargetCursed();
     }
+
     public void ModifyStat(StatType stat, int amount)
     {
         if (stat == StatType.Health)
@@ -205,6 +212,7 @@ public class Player : IPlayer
         else
             throw new StatTypeException("Invalid stat to modify");
     }
+
     private int EquippedDefense()
     {
         var equippedArmor = EquippedArmor();
@@ -217,6 +225,7 @@ public class Player : IPlayer
 
         return averageDefense;
     }
+
     private int EquippedResistance()
     {
         var equippedArmor = EquippedArmor();
@@ -229,32 +238,35 @@ public class Player : IPlayer
 
         return averageResistance;
     }
+
     private List<Armor> EquippedArmor()
     {
         return Equipment.OfType<Armor>().ToList() ?? new List<Armor>();
     }
+
     private int EquippedAttack()
     {
         return EquippedWeapon()?.AttackPower ?? 0;
     }
+
     private Weapon? EquippedWeapon()
     {
         return Equipment.OfType<Weapon>().FirstOrDefault();
     }
+
     public void Loot(IMonster monster)
     {
-        
         if (monster.CurrentHealth >= 1)
         {
-            throw new TreasureException($"You think it might be better to defeat {monster.Name} before trying to take its treasure.");
+            throw new TreasureException(
+                $"You think it might be better to defeat {monster.Name} before trying to take its treasure.");
         }
 
         Item loot = monster.Loot() ?? throw new TreasureException($"{monster.Name} has no treasure to loot.");
-        
+
         try
         {
             Inventory.AddItem(loot);
-            
         }
         catch (Exception ex)
         {
@@ -264,6 +276,7 @@ public class Player : IPlayer
 
         AddActionItem($"You found {loot.Name} on {monster.Name}!");
     }
+
     public void Unequip(Item item)
     {
         if (item is IEquippable equippableItem && Equipment.Contains(equippableItem))
@@ -273,11 +286,12 @@ public class Player : IPlayer
             AddActionItem($"You unequipped {item.Name}.");
         }
     }
+
     private void CheckArmorDurability(DamageType? damageType)
     {
         //randomly select an armor piece to use durability
-        var damagedArmor = damageType == DamageType.Martial ? 
-            Equipment.OfType<Armor>().Where(a => a.DefensePower > 0).OrderBy(_ => _rng.Next()).FirstOrDefault()
+        var damagedArmor = damageType == DamageType.Martial
+            ? Equipment.OfType<Armor>().Where(a => a.DefensePower > 0).OrderBy(_ => _rng.Next()).FirstOrDefault()
             : Equipment.OfType<Armor>().Where(a => a.Resistance > 0).OrderBy(_ => _rng.Next()).FirstOrDefault();
 
         if (damagedArmor != null)
@@ -294,6 +308,7 @@ public class Player : IPlayer
             }
         }
     }
+
     private void CheckWeaponDurability()
     {
         var weapon = Equipment.OfType<Weapon>().FirstOrDefault();
@@ -311,10 +326,12 @@ public class Player : IPlayer
             }
         }
     }
+
     public void ClearActionItems()
     {
         ActionItems.Clear();
     }
+
     public virtual void AddActionItem(string action)
     {
         long key = DateTime.Now.Ticks;
@@ -322,6 +339,7 @@ public class Player : IPlayer
 
         ActionItems.Add(key, action);
     }
+
     public void AddActionItem(Skill skill)
     {
         long key = DateTime.Now.Ticks;
@@ -329,6 +347,7 @@ public class Player : IPlayer
 
         ActionItems.Add(key, $"You use {skill.Name}!");
     }
+
     public virtual void Sell(Item item)
     {
         if (item is IEquippable e && e.IsEquipped())
@@ -336,10 +355,12 @@ public class Player : IPlayer
 
         Inventory.Sell(item);
     }
+
     public virtual void Buy(Item item)
     {
         Inventory.Buy(item);
     }
+
     public virtual void Initialize()
     {
         Level = 1;
@@ -361,6 +382,7 @@ public class Player : IPlayer
         CurrentHealth = MaxHealth;
         Archetype.CurrentResource = Archetype.MaxResource;
     }
+
     public virtual void RecoverResource(int recoveryPower)
     {
         Archetype.RecoverResource(recoveryPower);

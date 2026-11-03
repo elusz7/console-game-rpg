@@ -8,7 +8,8 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Factories;
 
-public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonsterSkillSelector skillSelector) : IMonsterFactory
+public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonsterSkillSelector skillSelector)
+    : IMonsterFactory
 {
     private static readonly Random _rng = Random.Shared;
     private readonly IMonsterDao _monsterDao = monsterDao;
@@ -16,12 +17,12 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
     private readonly IMonsterSkillSelector _skillSelector = skillSelector;
 
     private static readonly Dictionary<ThreatLevel, double> _monsterThreatWeights = new()
-        {
-            { ThreatLevel.Low, 0.5 },
-            { ThreatLevel.Medium, 1.0 },
-            { ThreatLevel.High, 1.5 },
-            { ThreatLevel.Elite, 2.5 }
-        };
+    {
+        { ThreatLevel.Low, 0.5 },
+        { ThreatLevel.Medium, 1.0 },
+        { ThreatLevel.High, 1.5 },
+        { ThreatLevel.Elite, 2.5 }
+    };
 
     // Dictionary to hold the number of monsters for each threat level in each campaign level
     private readonly Dictionary<int, Dictionary<ThreatLevel, int>> _campaignMonsters = Enumerable.Range(1, 20)
@@ -45,10 +46,12 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
                     for (int i = 0; i < monsterCount; i++)
                     {
                         // Select a random monster and create a fresh instance
-                        var availableMonsters = _monsterDao.GetMonstersByMaxLevelAndThreatLevel(level, (int)threatLevel);
+                        var availableMonsters =
+                            _monsterDao.GetMonstersByMaxLevelAndThreatLevel(level, (int)threatLevel);
 
                         if (availableMonsters.Count == 0)
-                            throw new InvalidOperationException("No available monsters found for the given level and threat.");
+                            throw new InvalidOperationException(
+                                "No available monsters found for the given level and threat.");
 
                         var randomMonsterBase = availableMonsters[_rng.Next(availableMonsters.Count)];
                         var randomMonster = CreateMonster(randomMonsterBase, level);
@@ -72,7 +75,7 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
             {
                 // Select a random monster and create a fresh instance
                 var randomMonsterBase = availableMonsters[_rng.Next(availableMonsters.Count)];
-                var randomMonster = CreateMonster(randomMonsterBase, level);                
+                var randomMonster = CreateMonster(randomMonsterBase, level);
 
                 // Calculate weight based on monster threat level and relative level to player
                 var weight = CalculateMonsterWeight(randomMonster, level);
@@ -82,7 +85,7 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
                 currentCount += (int)Math.Round(weight);
             }
         }
-        
+
         SetMonsterSkills(level, selectedMonsters);
 
         if (selectedMonsters.Count == 0) throw new InvalidOperationException("No monsters selected for combat");
@@ -96,7 +99,8 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
         {
             BossMonster => SetBaseProperties(new BossMonster(_skillSelector), monsterBase),
 
-            EliteMonster => SetBaseProperties(new EliteMonster(_skillSelector, (MonsterBehaviorType)_rng.Next(1, 6)), monsterBase),
+            EliteMonster => SetBaseProperties(new EliteMonster(_skillSelector, (MonsterBehaviorType)_rng.Next(1, 6)),
+                monsterBase),
 
             _ => SetBaseProperties(new Monster
             {
@@ -131,9 +135,9 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
         string[] modifiers =
         [
             "Fierce", "Arcane", "Twisted", "Burning", "Rotting",
-        "Grizzled", "Cackling", "Frostbitten", "Shadowed", "Lucky",
-        "Silent", "Enraged", "Giggling", "Eldritch", "Cracked",
-        "Slippery", "Vicious", "Bloody", "Ancient", "Frantic"
+            "Grizzled", "Cackling", "Frostbitten", "Shadowed", "Lucky",
+            "Silent", "Enraged", "Giggling", "Eldritch", "Cracked",
+            "Slippery", "Vicious", "Bloody", "Ancient", "Frantic"
         ];
 
         // Ensure we always start at 1
@@ -156,20 +160,20 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
 
         var romanNumerals = new[]
         {
-        (1000, "M"),
-        (900, "CM"),
-        (500, "D"),
-        (400, "CD"),
-        (100, "C"),
-        (90, "XC"),
-        (50, "L"),
-        (40, "XL"),
-        (10, "X"),
-        (9, "IX"),
-        (5, "V"),
-        (4, "IV"),
-        (1, "I")
-    };
+            (1000, "M"),
+            (900, "CM"),
+            (500, "D"),
+            (400, "CD"),
+            (100, "C"),
+            (90, "XC"),
+            (50, "L"),
+            (40, "XL"),
+            (10, "X"),
+            (9, "IX"),
+            (5, "V"),
+            (4, "IV"),
+            (1, "I")
+        };
 
         var result = new StringBuilder();
 
@@ -184,6 +188,7 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
 
         return result.ToString();
     }
+
     private void SetMonsterSkills(int level, List<Monster> monsters)
     {
         var allSkills = _skillDao.GetUnassignedSkillsByMaxLevel(level);
@@ -206,11 +211,19 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
             int supportSkillDeficit = supportSkillCount - currentSupportSkillCount;
 
             // Filter skills not already assigned to this monster
-            var martialSkills = allSkills.Where(s => s is MartialSkill && s.RequiredLevel <= monster.Level && !monster.Skills.Any(ms => ms.Name == s.Name)).ToList();
-            var magicSkills = allSkills.Where(s => s is MagicSkill && s.RequiredLevel <= monster.Level && !monster.Skills.Any(ms => ms.Name == s.Name)).ToList();
-            var supportSkills = allSkills.OfType<SupportSkill>().Where(s => s.RequiredLevel <= monster.Level && !monster.Skills.Any(ms => ms.Name == s.Name)).ToList();
-            var ultimateSkills = allSkills.OfType<UltimateSkill>().Where(s => s.RequiredLevel <= monster.Level && !monster.Skills.Any(ms => ms.Name == s.Name)).ToList();
-            var bossSkills = allSkills.OfType<BossSkill>().Where(s => s.RequiredLevel <= monster.Level && !monster.Skills.Any(ms => ms.Name == s.Name)).ToList();
+            var martialSkills = allSkills.Where(s =>
+                    s is MartialSkill && s.RequiredLevel <= monster.Level &&
+                    !monster.Skills.Any(ms => ms.Name == s.Name))
+                .ToList();
+            var magicSkills = allSkills.Where(s =>
+                    s is MagicSkill && s.RequiredLevel <= monster.Level && !monster.Skills.Any(ms => ms.Name == s.Name))
+                .ToList();
+            var supportSkills = allSkills.OfType<SupportSkill>().Where(s =>
+                s.RequiredLevel <= monster.Level && !monster.Skills.Any(ms => ms.Name == s.Name)).ToList();
+            var ultimateSkills = allSkills.OfType<UltimateSkill>().Where(s =>
+                s.RequiredLevel <= monster.Level && !monster.Skills.Any(ms => ms.Name == s.Name)).ToList();
+            var bossSkills = allSkills.OfType<BossSkill>().Where(s =>
+                s.RequiredLevel <= monster.Level && !monster.Skills.Any(ms => ms.Name == s.Name)).ToList();
 
             if (monster is BossMonster)
             {
@@ -288,17 +301,18 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
         }
         else
         {
-            result[ThreatLevel.Low] = 10 - Math.Min(5, (level - 10) / 2);  // taper off
+            result[ThreatLevel.Low] = 10 - Math.Min(5, (level - 10) / 2); // taper off
             result[ThreatLevel.Medium] = 2 + (level - 10) / 3;
             result[ThreatLevel.High] = 1 + (level - 10) / 3;
             result[ThreatLevel.Elite] = 1 + (level - 10) / 4;
-            result[ThreatLevel.Boss] = (level % 5 == 0) ? 1 : 0;  // Boss every 5 levels
+            result[ThreatLevel.Boss] = (level % 5 == 0) ? 1 : 0; // Boss every 5 levels
         }
 
         // Remove zero entries for cleanliness
         return result.Where(kv => kv.Value > 0)
-                     .ToDictionary(kv => kv.Key, kv => kv.Value);
+            .ToDictionary(kv => kv.Key, kv => kv.Value);
     }
+
     private static double CalculateMonsterWeight(Monster monster, int level)
     {
         double threatWeight = _monsterThreatWeights[monster.ThreatLevel];
@@ -307,4 +321,3 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
         return threatWeight * levelRatio;
     }
 }
-

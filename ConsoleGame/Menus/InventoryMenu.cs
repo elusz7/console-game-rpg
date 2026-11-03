@@ -4,7 +4,12 @@ using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame.Menus;
 
-public class InventoryMenu(IInputManager inputManager, IOutputManager outputManager, ItemDisplay itemDisplay, ItemManagement itemManagement, InventoryManagement inventoryManagement)
+public class InventoryMenu(
+    IInputManager inputManager,
+    IOutputManager outputManager,
+    ItemDisplay itemDisplay,
+    ItemManagement itemManagement,
+    InventoryManagement inventoryManagement)
 {
     private readonly IInputManager _inputManager = inputManager;
     private readonly IOutputManager _outputManager = outputManager;
@@ -19,9 +24,9 @@ public class InventoryMenu(IInputManager inputManager, IOutputManager outputMana
         {
             _outputManager.WriteLine("=== Inventory Main Menu ===", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. View Items"
-                + "\n2. Manage Items"
-                + "\n3. Manage Character's Inventory"
-                + $"\n4. Return to Admin Menu");
+                                     + "\n2. Manage Items"
+                                     + "\n3. Manage Character's Inventory"
+                                     + $"\n4. Return to Admin Menu");
 
             var input = _inputManager.ReadMenuKey(4);
 
@@ -41,5 +46,5 @@ public class InventoryMenu(IInputManager inputManager, IOutputManager outputMana
                     return;
             }
         }
-    } 
+    }
 }

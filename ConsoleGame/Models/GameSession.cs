@@ -8,7 +8,7 @@ public class GameSession
     public Floor CurrentFloor { get; private set; }
     public bool IsCampaign { get; }
     public AdventureStatus Status { get; private set; }
-    
+
     // A floor is cleared when no monsters on it are still alive.
     public bool IsFloorCleared =>
         !CurrentFloor.Monsters.Any(monster => monster.CurrentHealth > 0);

@@ -19,6 +19,7 @@ public class MonsterSkillSelector : IMonsterSkillSelector
             .Where(s => s is not UltimateSkill && s is not BossSkill && !s.IsOnCooldown)
             .ToList() ?? new List<Skill>();
     }
+
     public virtual Skill? GetHighestDamageSkill(IMonster monster)
     {
         return GetAvailableSkills(monster)
@@ -27,6 +28,7 @@ public class MonsterSkillSelector : IMonsterSkillSelector
             .OrderByDescending(s => s.Power)
             .FirstOrDefault();
     }
+
     public virtual BossSkill? GetStrongestBossSkill(IMonster monster)
     {
         return monster.Skills.OfType<BossSkill>()
@@ -36,8 +38,8 @@ public class MonsterSkillSelector : IMonsterSkillSelector
 
     public virtual List<SupportSkill> GetSupportSkills(IMonster monster)
     {
-        return GetAvailableSkills(monster).OfType<SupportSkill>().ToList() 
-            ?? new List<SupportSkill>();
+        return GetAvailableSkills(monster).OfType<SupportSkill>().ToList()
+               ?? new List<SupportSkill>();
     }
 
     public virtual SupportSkill? GetDebuffSkill(IMonster monster, StatType? affectedStat = null)
@@ -48,6 +50,7 @@ public class MonsterSkillSelector : IMonsterSkillSelector
             .OrderByDescending(s => s.Power)
             .FirstOrDefault();
     }
+
     public virtual SupportSkill? GetHealingSkill(IMonster monster, int desiredHealingPower)
     {
         return GetSupportSkills(monster)
@@ -55,6 +58,7 @@ public class MonsterSkillSelector : IMonsterSkillSelector
             .OrderBy(skill => Math.Abs(skill.Power - desiredHealingPower))
             .FirstOrDefault();
     }
+
     public virtual SupportSkill? GetBuffSkill(IMonster monster, StatType? affectedStat = null)
     {
         return GetSupportSkills(monster)
@@ -62,6 +66,7 @@ public class MonsterSkillSelector : IMonsterSkillSelector
             .Where(s => s.TargetType == TargetType.Self)
             .OrderByDescending(s => s.Power).FirstOrDefault();
     }
+
     public virtual UltimateSkill? GetUltimateSkill(IMonster monster)
     {
         return monster.Skills.OfType<UltimateSkill>()

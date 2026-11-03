@@ -18,7 +18,7 @@ public class BossMonsterTests
 {
     private static BossMonster CreateBoss()
     {
-        return new BossMonster (new MonsterSkillSelector())
+        return new BossMonster(new MonsterSkillSelector())
         {
             Name = "Boss",
             Level = 1,
@@ -115,7 +115,7 @@ public class BossMonsterTests
         boss.CurrentHealth = boss.MaxHealth;
 
         boss.TakeDamage(10, DamageType.Hybrid);
-        
+
         if (boss.CurrentHealth < boss.MaxHealth)
         {
             Assert.AreEqual(boss.MaxHealth - 6, boss.CurrentHealth);
@@ -125,7 +125,7 @@ public class BossMonsterTests
         {
             Assert.AreEqual(boss.CurrentHealth, boss.MaxHealth);
             Assert.IsTrue(boss.ActionItems.Values.Any(a => a.Contains("dodged the attack")));
-        }        
+        }
     }
 
     [TestMethod]
@@ -148,7 +148,7 @@ public class BossMonsterTests
         Assert.IsTrue(boss.DefensePower > 10);
         Assert.IsTrue(boss.Resistance > 5);
         Assert.IsTrue(boss.AttackPower < 50); // scaled down
-        Assert.IsTrue(boss.MaxHealth < 100);  // scaled down
+        Assert.IsTrue(boss.MaxHealth < 100); // scaled down
     }
 
     [TestMethod]
@@ -157,7 +157,7 @@ public class BossMonsterTests
         var boss = CreateBoss();
         boss.DefensePower = 0;
         boss.DodgeChance = 0;
-        
+
         boss.CurrentHealth = 10;
         boss.TakeDamage(100, DamageType.Martial); //should set phase to 2
 

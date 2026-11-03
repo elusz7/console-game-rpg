@@ -3,7 +3,12 @@ using ConsoleGame.Menus;
 
 namespace ConsoleGame.Services;
 
-public class GameEngine(StartMenu startMenu, AdminMenu adminMenu, IInputManager inputManager, IOutputManager outputManager, AdventureService adventureService)
+public class GameEngine(
+    StartMenu startMenu,
+    AdminMenu adminMenu,
+    IInputManager inputManager,
+    IOutputManager outputManager,
+    AdventureService adventureService)
 {
     private readonly StartMenu _startMenu = startMenu;
     private readonly AdminMenu _adminMenu = adminMenu;
@@ -18,6 +23,7 @@ public class GameEngine(StartMenu startMenu, AdminMenu adminMenu, IInputManager 
             GameLoop();
         }
     }
+
     private void GameLoop()
     {
         _outputManager.Clear();
@@ -26,9 +32,9 @@ public class GameEngine(StartMenu startMenu, AdminMenu adminMenu, IInputManager 
         {
             _outputManager.WriteLine("Main Menu:", ConsoleColor.Cyan);
             _outputManager.WriteLine("1. Administrator View"
-                + "\n2. Adventure"
-                + "\n3. Campaign"
-                + "\n4. Quit");
+                                     + "\n2. Adventure"
+                                     + "\n3. Campaign"
+                                     + "\n4. Quit");
 
             var input = _inputManager.ReadMenuKey(4);
 
@@ -45,6 +51,7 @@ public class GameEngine(StartMenu startMenu, AdminMenu adminMenu, IInputManager 
                         _inputManager.ReadKey();
                         _adventureService.Adventure();
                     }
+
                     break;
                 case 3:
                     if (_adventureService.SetUpCampaign())
@@ -54,6 +61,7 @@ public class GameEngine(StartMenu startMenu, AdminMenu adminMenu, IInputManager 
                         _inputManager.ReadKey();
                         _adventureService.Adventure();
                     }
+
                     break;
                 case 4:
                     _outputManager.WriteLine("Until next time, intrepid adventurer...", ConsoleColor.Red);

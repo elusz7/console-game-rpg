@@ -32,11 +32,16 @@ public class SkillDao(GameContext context) : ISkillDao
     {
         return [.. _context.Skills];
     }
+
     public List<Skill> GetSkillsByName(string name)
     {
-        return [.. _context.Skills.ToList()
-            .Where(s => s.Name.Contains(name, StringComparison.OrdinalIgnoreCase))];
+        return
+        [
+            .. _context.Skills.ToList()
+                .Where(s => s.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
+        ];
     }
+
     public List<Skill> GetAllNonCoreSkills()
     {
         return [.. _context.Skills.Where(s => s.Id > 212)];
@@ -44,60 +49,88 @@ public class SkillDao(GameContext context) : ISkillDao
 
     public List<Archetype> GetArchetypes()
     {
-        return [.. _context.Skills
-            .Where(s => s.Archetype != null)
-            .Select(s => s.Archetype!)
-            .Distinct()];
+        return
+        [
+            .. _context.Skills
+                .Where(s => s.Archetype != null)
+                .Select(s => s.Archetype!)
+                .Distinct()
+        ];
     }
 
     public List<Monster> GetMonsters()
     {
-        return [.. _context.Skills
-            .Where(s => s.Monster != null)
-            .Select(s => s.Monster!)
-            .Distinct()];
+        return
+        [
+            .. _context.Skills
+                .Where(s => s.Monster != null)
+                .Select(s => s.Monster!)
+                .Distinct()
+        ];
     }
 
     public List<Skill> GetSkillsByLevel(int level)
     {
-        return [.. _context.Skills
-            .Where(s => s.RequiredLevel == level)];
+        return
+        [
+            .. _context.Skills
+                .Where(s => s.RequiredLevel == level)
+        ];
     }
 
     public List<Skill> GetSkillsByArchetype(Archetype archetype)
     {
-        return [.. _context.Skills
-            .Where(s => s.ArchetypeId == archetype.Id)];
+        return
+        [
+            .. _context.Skills
+                .Where(s => s.ArchetypeId == archetype.Id)
+        ];
     }
 
     public List<Skill> GetSkillsByMonster(Monster monster)
     {
-        return [.. _context.Skills
-            .Where(s => s.MonsterId == monster.Id)];
+        return
+        [
+            .. _context.Skills
+                .Where(s => s.MonsterId == monster.Id)
+        ];
     }
 
     public List<Skill> GetUnassignedSkills()
     {
-        return [.. _context.Skills
-            .Where(s => s.ArchetypeId == null && s.MonsterId == null)];
+        return
+        [
+            .. _context.Skills
+                .Where(s => s.ArchetypeId == null && s.MonsterId == null)
+        ];
     }
 
     public List<Skill> GetUnassignedNonCoreSkills()
     {
-        return [.. _context.Skills
-            .Where(s => s.ArchetypeId == null && s.MonsterId == null)
-            .Where(s => s.Id > 212)];
+        return
+        [
+            .. _context.Skills
+                .Where(s => s.ArchetypeId == null && s.MonsterId == null)
+                .Where(s => s.Id > 212)
+        ];
     }
 
     public List<Skill> GetAllAssignedNonCoreSkills()
     {
-        return [.. _context.Skills
-            .Where(s => s.ArchetypeId != null || s.MonsterId != null)
-            .Where(s => s.Id > 212)];
+        return
+        [
+            .. _context.Skills
+                .Where(s => s.ArchetypeId != null || s.MonsterId != null)
+                .Where(s => s.Id > 212)
+        ];
     }
+
     public List<Skill> GetUnassignedSkillsByMaxLevel(int level)
     {
-        return [.. _context.Skills
-            .Where(s => s.RequiredLevel <= level && s.ArchetypeId == null && s.MonsterId == null)];
+        return
+        [
+            .. _context.Skills
+                .Where(s => s.RequiredLevel <= level && s.ArchetypeId == null && s.MonsterId == null)
+        ];
     }
 }

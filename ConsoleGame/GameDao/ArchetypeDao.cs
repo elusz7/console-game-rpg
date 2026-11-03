@@ -14,11 +14,13 @@ public class ArchetypeDao(GameContext context) : IArchetypeDao
         _context.Archetypes.Add(archetype);
         _context.SaveChanges();
     }
+
     public void UpdateArchetype(Archetype archetype)
     {
         _context.Archetypes.Update(archetype);
         _context.SaveChanges();
     }
+
     public void DeleteArchetype(Archetype archetype)
     {
         _context.Archetypes.Remove(archetype);
@@ -40,8 +42,11 @@ public class ArchetypeDao(GameContext context) : IArchetypeDao
 
     public List<Archetype> GetArchetypesByType(ArchetypeType archetypeType)
     {
-        return [.. _context.Archetypes
-            .Where(a => a.ArchetypeType == archetypeType)];
+        return
+        [
+            .. _context.Archetypes
+                .Where(a => a.ArchetypeType == archetypeType)
+        ];
     }
 
     public List<Archetype> GetAllArchetypes()

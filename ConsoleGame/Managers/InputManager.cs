@@ -4,6 +4,7 @@ using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame.Managers;
+
 public class InputManager(IOutputManager outputManager) : IInputManager
 {
     private readonly IOutputManager _outputManager = outputManager;
@@ -12,6 +13,7 @@ public class InputManager(IOutputManager outputManager) : IInputManager
     {
         return Console.ReadKey(intercept: true);
     }
+
     public int ReadMenuKey(int maxValue)
     {
         _outputManager.Display();
@@ -27,10 +29,12 @@ public class InputManager(IOutputManager outputManager) : IInputManager
                 }
             }
 
-            _outputManager.WriteLine($"\nInvalid selection. Please enter a number between 1 and {maxValue}.", ConsoleColor.Red);
+            _outputManager.WriteLine($"\nInvalid selection. Please enter a number between 1 and {maxValue}.",
+                ConsoleColor.Red);
             _outputManager.Display();
         }
     }
+
     public int ReadInt(string prompt, int? max = null, bool cancel = false)
     {
         _outputManager.Write(prompt);
@@ -57,6 +61,7 @@ public class InputManager(IOutputManager outputManager) : IInputManager
 
         return result;
     }
+
     public decimal ReadDecimal(string prompt)
     {
         do
@@ -70,9 +75,9 @@ public class InputManager(IOutputManager outputManager) : IInputManager
                 return result;
 
             prompt = "Invalid input. Please enter a valid, positive decimal number: ";
-        }
-        while (true);
+        } while (true);
     }
+
     public string ReadString(string prompt, string[]? validation = null)
     {
         do
@@ -82,14 +87,17 @@ public class InputManager(IOutputManager outputManager) : IInputManager
 
             var input = Console.ReadLine()?.Trim() ?? "";
 
-            if (!string.IsNullOrEmpty(input) && (validation == null || validation.Any(v => string.Equals(v, input, StringComparison.OrdinalIgnoreCase))))
+            if (!string.IsNullOrEmpty(input) && (validation == null ||
+                                                 validation.Any(v =>
+                                                     string.Equals(v, input, StringComparison.OrdinalIgnoreCase))))
                 return input;
 
             prompt = "Invalid input. Please try again: ";
-        }
-        while (true);
+        } while (true);
     }
-    private T? PaginateWithFunction<T>(List<T> list, Func<T, string> displayTextSelector, string prompt, Func<T, ConsoleColor>? colorSelector = null, bool allowSelection = false)
+
+    private T? PaginateWithFunction<T>(List<T> list, Func<T, string> displayTextSelector, string prompt,
+        Func<T, ConsoleColor>? colorSelector = null, bool allowSelection = false)
     {
         const int pageSize = 9;
         int currentPage = 0;
@@ -115,6 +123,7 @@ public class InputManager(IOutputManager outputManager) : IInputManager
                 if (currentPage > 0) pageInfo = "<-- " + pageInfo;
                 if (currentPage < totalPages - 1) pageInfo += " -->";
             }
+
             _outputManager.WriteLine($"\n{pageInfo}", ConsoleColor.DarkGreen);
 
             string navigationPrompt = "\n";
@@ -131,7 +140,8 @@ public class InputManager(IOutputManager outputManager) : IInputManager
             {
                 var key = ReadKey();
 
-                if ((key.Key == ConsoleKey.RightArrow || key.Key == ConsoleKey.DownArrow) && currentPage < totalPages - 1)
+                if ((key.Key == ConsoleKey.RightArrow || key.Key == ConsoleKey.DownArrow) &&
+                    currentPage < totalPages - 1)
                 {
                     currentPage++;
                     break;
@@ -164,7 +174,9 @@ public class InputManager(IOutputManager outputManager) : IInputManager
             _outputManager.Clear();
         }
     }
-    private T? SelectFromList<T>(List<T> items, Func<T, string> displayTextSelector, string prompt, Func<T, ConsoleColor>? colorSelector = null, bool allowSelection = false)
+
+    private T? SelectFromList<T>(List<T> items, Func<T, string> displayTextSelector, string prompt,
+        Func<T, ConsoleColor>? colorSelector = null, bool allowSelection = false)
     {
         for (int i = 0; i < items.Count; i++)
         {
@@ -173,6 +185,7 @@ public class InputManager(IOutputManager outputManager) : IInputManager
             var color = colorSelector?.Invoke(item) ?? ConsoleColor.White;
             _outputManager.WriteLine(display, color);
         }
+
         if (!allowSelection)
         {
             _outputManager.WriteLine();
@@ -184,16 +197,21 @@ public class InputManager(IOutputManager outputManager) : IInputManager
 
         return choice == -1 ? default : items[choice - 1];
     }
-    public T? Selector<T>(List<T> items, Func<T, string> displayTextSelector, string prompt, Func<T, ConsoleColor>? colorSelector = null)
-     => items.Count < 13 ?
-            SelectFromList(items, displayTextSelector, prompt, colorSelector, true)
+
+    public T? Selector<T>(List<T> items, Func<T, string> displayTextSelector, string prompt,
+        Func<T, ConsoleColor>? colorSelector = null)
+        => items.Count < 13
+            ? SelectFromList(items, displayTextSelector, prompt, colorSelector, true)
             : PaginateWithFunction(items, displayTextSelector, prompt, colorSelector, true);
-    public T? Viewer<T>(List<T> items, Func<T, string> displayTextSelector, string prompt, Func<T, ConsoleColor>? colorSelector = null)
+
+    public T? Viewer<T>(List<T> items, Func<T, string> displayTextSelector, string prompt,
+        Func<T, ConsoleColor>? colorSelector = null)
     {
-        return items.Count < 13 ?
-            SelectFromList(items, displayTextSelector, prompt, colorSelector)
+        return items.Count < 13
+            ? SelectFromList(items, displayTextSelector, prompt, colorSelector)
             : PaginateWithFunction(items, displayTextSelector, prompt, colorSelector);
     }
+
     public Item? SelectItem(string prompt, List<Item> items, string? purpose = null)
     {
         return Selector(
@@ -216,16 +234,19 @@ public class InputManager(IOutputManager outputManager) : IInputManager
             i => ColorfulToStringHelper.GetItemColor(i)
         );
     }
+
     public bool LoopAgain(string action)
     {
         string again = ReadString($"Would you like to {action} another? (y/n): ", ["y", "n"]).ToLower();
         return again == "y";
     }
+
     public bool ConfirmAction(string action)
     {
         string confirm = ReadString($"\nPlease confirm {action} (y/n): ", ["y", "n"]).ToLower();
         return confirm == "y";
     }
+
     public T GetEnumChoice<T>(string prompt) where T : Enum
     {
         var values = Enum.GetValues(typeof(T)).Cast<T>().ToList();
@@ -238,12 +259,14 @@ public class InputManager(IOutputManager outputManager) : IInputManager
         var choice = ReadInt($"\n{prompt}: ", values.Count);
         return values[choice - 1];
     }
+
     public int DisplayEditMenu(List<string> properties)
     {
         for (int i = 0; i < properties.Count; i++)
         {
             _outputManager.WriteLine($"{i + 1}. Change {properties[i]}");
         }
+
         _outputManager.WriteLine($"{properties.Count + 1}. Exit", ConsoleColor.Red);
 
         return ReadInt("\nWhat property would you like to edit? ", properties.Count + 1);
