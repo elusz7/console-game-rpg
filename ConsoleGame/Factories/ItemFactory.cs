@@ -115,7 +115,10 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
 
             if (jackpot != null)
             {
-                loot.Add(jackpot); // Add the jackpot item
+                var retainValue = jackpot.Value; //we want the original value, since it was used for calculations
+                var newJackpot = CreateItem(jackpot);
+                newJackpot.Value = retainValue;
+                loot.Add(newJackpot); // Add the jackpot item
             }
             else
             {

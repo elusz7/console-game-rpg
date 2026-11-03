@@ -20,7 +20,7 @@ public class CombatHelperTests
     private EquipmentHelper _equipmentHelper = null!;
     private CombatTurnScheduler _turnScheduler = null!;
     private CombatRoundCoordinator _roundCoordinator = null!;
-    private CombatSkillHelper _skillHelper = null;
+    private CombatSkillHelper _skillHelper = null!;
     private CombatHelper _combatHelper = null!;
 
     [TestInitialize]

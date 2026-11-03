@@ -64,7 +64,8 @@ public class UltimateSkillTests
         {
             CurrentHealth = hp,
             MaxHealth = hp,
-            Archetype = archetype
+            Archetype = archetype,
+            DodgeChance = 0
         };
     }
 

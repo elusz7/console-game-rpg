@@ -15,6 +15,21 @@ public class Inventory : IInventory
 
     public virtual void AddItem(Item item)
     {
+        // Check for the same item reference already in this inventory first.
+        if (Items.Contains(item))
+        {
+            throw new DuplicateItemException(
+                $"You already have {item.Name} in your inventory.");
+        }
+
+        // Reject items that still belong to another inventory or monster.
+        if (item.Inventory != null || item.Monster != null)
+        {
+            throw new InventoryException(
+                $"You cannot add {item.Name} because it already belongs to another owner.");
+        }
+
+        // Keep the existing consumable, valuable, and regular-item logic below.
         if (item is Consumable)
         {
             AddConsumable(item);
@@ -52,16 +67,22 @@ public class Inventory : IInventory
         }
     }
 
+    /// <summary>
+    /// Removes an item from the inventory and clears its ownership relationship.
+    /// </summary>
     public virtual void RemoveItem(Item item)
     {
-        if (Items.Contains(item))
+        if (!Items.Contains(item))
         {
-            Items.Remove(item);
+            throw new ItemNotFoundException(
+                $"You do not have {item.Name} in your inventory.");
         }
-        else
-        {
-            throw new ItemNotFoundException($"You do not have {item.Name} in your inventory.");
-        }
+
+        Items.Remove(item);
+
+        // Clear the item's inventory ownership after removal.
+        item.Inventory = null;
+        item.InventoryId = null;
     }
 
     private void AddConsumable(Item item)
@@ -103,10 +124,16 @@ public class Inventory : IInventory
             .Any();
     }
 
+    /// <summary>
+    /// Sells an item from the inventory and credits the sale proceeds.
+    /// </summary>
     public void Sell(Item item)
     {
-        Gold += (int)Math.Round(item.GetSellPrice());
+        // RemoveItem validates ownership and clears the item's inventory references.
         RemoveItem(item);
+
+        // Only credit gold after the item has been successfully removed.
+        Gold += (int)Math.Round(item.GetSellPrice());
     }
 
     public void Buy(Item item)

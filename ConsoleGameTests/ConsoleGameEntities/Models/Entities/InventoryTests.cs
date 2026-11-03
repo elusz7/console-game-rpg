@@ -76,20 +76,101 @@ public class InventoryTests
 
         Assert.ThrowsException<OverweightException>(() => inventory.AddItem(item));
     }
+    
+    [TestMethod]
+    public void AddItem_ThrowsException_WhenItemBelongsToAnotherInventory()
+    {
+        // Arrange
+        var firstInventory = CreateInventory();
+        var secondInventory = new Inventory
+        {
+            Id = 2,
+            Gold = 100,
+            Capacity = 100M,
+            Items = []
+        };
+
+        var item = CreateItem();
+        firstInventory.AddItem(item);
+
+        // Act / Assert
+        Assert.ThrowsException<InventoryException>(
+            () => secondInventory.AddItem(item));
+
+        Assert.IsTrue(firstInventory.Items.Contains(item));
+        Assert.IsFalse(secondInventory.Items.Contains(item));
+        Assert.AreSame(firstInventory, item.Inventory);
+    }
+    
+    [TestMethod]
+    public void AddItem_ThrowsException_WhenItemAlreadyExists()
+    {
+        // Arrange
+        var inventory = CreateInventory();
+        var item = CreateConsumable();
+
+        inventory.AddItem(item);
+
+        // Act / Assert
+        Assert.ThrowsException<DuplicateItemException>(
+            () => inventory.AddItem(item));
+
+        Assert.AreEqual(1, inventory.Items.Count);
+    }
 
     [TestMethod]
-    public void RemoveItem_RemovesItemFromInventory()
+    public void RemoveItem_RemovesItemAndClearsOwnership()
     {
         // Arrange
         var inventory = CreateInventory();
         var item = CreateItem();
-        inventory.Items.Add(item);
+
+        inventory.AddItem(item);
+
+        Assert.AreSame(inventory, item.Inventory);
+        Assert.AreEqual(inventory.Id, item.InventoryId);
 
         // Act
         inventory.RemoveItem(item);
 
         // Assert
         Assert.IsFalse(inventory.Items.Contains(item));
+        Assert.IsNull(item.Inventory);
+        Assert.IsNull(item.InventoryId);
+    }
+    
+    [TestMethod]
+    public void Sell_RemovesItemAndClearsOwnership()
+    {
+        // Arrange
+        var inventory = CreateInventory();
+        var item = CreateValuable();
+
+        inventory.AddItem(item);
+
+        // Act
+        inventory.Sell(item);
+
+        // Assert
+        Assert.IsFalse(inventory.Items.Contains(item));
+        Assert.IsNull(item.Inventory);
+        Assert.IsNull(item.InventoryId);
+    }
+    
+    [TestMethod]
+    public void Sell_ThrowsException_WhenItemNotInInventory_DoesNotAddGold()
+    {
+        // Arrange
+        var inventory = CreateInventory(gold: 100);
+        var item = CreateValuable();
+        var originalGold = inventory.Gold;
+
+        // Act
+        Assert.ThrowsException<ItemNotFoundException>(
+            () => inventory.Sell(item));
+
+        // Assert
+        Assert.AreEqual(originalGold, inventory.Gold);
     }
 
     [TestMethod]
@@ -174,6 +255,25 @@ public class InventoryTests
         var ex = Assert.ThrowsException<ItemPurchaseException>(() => inventory.Buy(item));
 
         StringAssert.Contains(ex.Message, "Will exceed carrying capacity");
+    }
+    
+    [TestMethod]
+    public void Buy_InsufficientCapacity_DoesNotDeductGoldOrAssignOwnership()
+    {
+        // Arrange
+        var inventory = CreateInventory(gold: 100, capacity: 5M);
+        var item = CreateItem(value: 25M, weight: 10M);
+        var originalGold = inventory.Gold;
+
+        // Act
+        Assert.ThrowsException<ItemPurchaseException>(
+            () => inventory.Buy(item));
+
+        // Assert
+        Assert.AreEqual(originalGold, inventory.Gold);
+        Assert.IsFalse(inventory.Items.Contains(item));
+        Assert.IsNull(item.Inventory);
+        Assert.IsNull(item.InventoryId);
     }
 
     [TestMethod]

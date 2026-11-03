@@ -310,8 +310,7 @@ public class PlayerPersistenceIntegrationTests
             Weight = 4M,
             RequiredLevel = 2,
             AttackPower = 12,
-            DamageType = ModelEnums.DamageType.Martial,
-            Inventory = player.Inventory
+            DamageType = ModelEnums.DamageType.Martial
         };
 
         player.Inventory.AddItem(newWeapon);

@@ -206,4 +206,39 @@ public class ConsumableTests
 
         Assert.AreEqual(expectedLevel, consumable.RequiredLevel);
     }
+    
+    [TestMethod]
+    public void UseOn_Item_AtMaximumDurability_DoesNotExceedMaximum()
+    {
+        var item = new Item { Name = "Sword", Durability = 100 };
+        var consumable = new Consumable
+        {
+            Name = "Repair Kit",
+            Power = 10,
+            Durability = 2,
+            ConsumableType = ConsumableType.Durability
+        };
+
+        consumable.UseOn(item);
+
+        Assert.AreEqual(100, item.Durability);
+        Assert.AreEqual(1, consumable.Durability);
+    }
+    
+    [TestMethod]
+    public void UseOn_Item_WithWrongType_DoesNotConsumeConsumable()
+    {
+        var item = new Item();
+        var consumable = new Consumable
+        {
+            Name = "Health Potion",
+            Durability = 2,
+            ConsumableType = ConsumableType.Health
+        };
+
+        Assert.ThrowsException<InvalidTargetException>(
+            () => consumable.UseOn(item));
+
+        Assert.AreEqual(2, consumable.Durability);
+    }   
 }

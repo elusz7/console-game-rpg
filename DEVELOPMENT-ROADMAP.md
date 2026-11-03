@@ -89,19 +89,24 @@ Deferred: Persisting Weapon.Cursed across game sessions.
 
 **Goal:** Separate combat responsibilities and make the combat system easier to extend.
 
-- [ ] Review CombatHelper and existing combat-related classes.
-- [ ] Identify responsibilities currently combined in CombatHelper.
-- [ ] Extract a combat turn scheduler.
-- [ ] Extract a combat-round coordinator.
-- [ ] Introduce explicit combat action representations.
-- [ ] Introduce explicit combat result representations.
-- [ ] Separate combat decisions from console output.
-- [ ] Review player and monster turn ordering.
-- [ ] Review speed ties and speed changes during combat.
-- [ ] Review cooldown and resource recovery timing.
-- [ ] Add focused combat architecture tests.
+- [x] Review CombatHelper and existing combat-related classes.
+- [x] Identify responsibilities currently combined in CombatHelper.
+- [x] Extract a combat turn scheduler.
+- [x] Extract a combat-round coordinator.
+- [x] Introduce explicit combat action representations.
+- [x] Introduce explicit combat result representations.
+- [x] Separate combat decisions from console output.
+- [x] Review player and monster turn ordering.
+- [x] Review speed ties and speed changes during combat.
+- [x] Review cooldown and resource recovery timing.
+- [x] Add focused combat architecture tests.
 
 **Completion criteria:** Combat turn processing is separated into understandable components with testable responsibilities.
+
+Deferred improvements
+These are intentionally outside Step 5:
+1. Replace EquipmentHelper.UseConsumable()'s Boolean result with a more expressive result type.
+2. Refine combat exception handling to distinguish expected gameplay failures from unexpected programming errors.
 
 ## Step 6 — Extract and Improve Equipment Architecture
 
@@ -117,6 +122,12 @@ Deferred: Persisting Weapon.Cursed across game sessions.
 - [ ] Ensure equipment behavior is consistent across game modes.
 
 **Completion criteria:** Equipment changes are handled independently and produce predictable character statistics.
+
+Deferred: 
+- Equipment persistence: Save and restore equipped weapon and armor state across sessions. Revisit if players later need to resume directly in combat or preserve equipment state on load.
+- Cursed equipment cannot be unequipped. The player must purify it to remove it.
+- Cursed equipment doesn't lose durability. It remains usable until purified, so the player isn't punished by having it break and effectively escape the curse.
+
 
 ## Step 7 — Correct Damage Calculation and Death Handling
 
