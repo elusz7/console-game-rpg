@@ -15,12 +15,18 @@ public class CombatHelper(
     IInputManager inputManager,
     IOutputManager outputManager,
     EquipmentHelper equipmentHelper,
-    CombatRoundCoordinator roundCoordinator)
+    CombatRoundCoordinator roundCoordinator,
+    CombatActionDisplayHelper actionDisplayHelper,
+    CombatMenuDisplayHelper menuDisplayHelper,
+    CombatSkillHelper combatSkillHelper)
 {
     private readonly IInputManager _inputManager = inputManager;
     private readonly IOutputManager _outputManager = outputManager;
     private readonly EquipmentHelper _equipmentHelper = equipmentHelper;
     private readonly CombatRoundCoordinator _roundCoordinator = roundCoordinator;
+    private readonly CombatActionDisplayHelper _actionDisplayHelper = actionDisplayHelper;
+    private readonly CombatMenuDisplayHelper _menuDisplayHelper = menuDisplayHelper;
+    private readonly CombatSkillHelper _skillHelper = combatSkillHelper;
 
     public void CombatRunner(Player player, List<Monster> monsters)
     {
@@ -57,15 +63,15 @@ public class CombatHelper(
                     },
 
                     // Display and clear pending combat action messages.
-                    () => OutputActionItems(player, aliveMonsters)
+                    () => _actionDisplayHelper.DisplayActionItems(player, aliveMonsters)
                 );
             }
 
-            OutputActionItems(player, monsters);
+            _actionDisplayHelper.DisplayActionItems(player, monsters);
         }
         catch (PlayerDeathException)
         {
-            OutputActionItems(player, monsters);
+            _actionDisplayHelper.DisplayActionItems(player, monsters);
             _outputManager.Display();
         }
     }
@@ -83,7 +89,7 @@ public class CombatHelper(
         {
             var action = SelectCombatAction(player, validTargets);
 
-            // A null action means the player cancelled or could not select an action.
+            // A null action means the player canceled or could not select an action.
             if (action == null)
                 continue;
 
@@ -96,7 +102,7 @@ public class CombatHelper(
     
     /// <summary>
     /// Displays the combat menu and creates the action selected by the player.
-    /// Returns null when the selection is cancelled or unavailable.
+    /// Returns null when the selection is canceled or unavailable.
     /// </summary>
     private CombatAction? SelectCombatAction(Player player, List<Monster> validTargets)
     {
@@ -111,12 +117,7 @@ public class CombatHelper(
 
         options["Skip Turn"] = CombatOptions.SkipTurn;
 
-        var index = 1;
-        foreach (var option in options)
-        {
-            _outputManager.WriteLine($"{index}. {option.Key}", ConsoleColor.Yellow);
-            index++;
-        }
+        _menuDisplayHelper.DisplayOptions(options.Keys);
 
         var choice = options.ElementAt(
             _inputManager.ReadInt("\tSelect an option: ", options.Count) - 1);
@@ -152,29 +153,10 @@ public class CombatHelper(
     /// </summary>
     private CombatAction? SelectSkillAction(Player player, List<Monster> targets)
     {
-        var allSkills = player.Archetype.Skills
-            .Where(s => s.RequiredLevel <= player.Level)
-            .ToList();
+        var availability = _skillHelper.GetAvailableSkills(player);
 
-        var usableSkills = allSkills
-            .Where(s => s.Cost <= player.Archetype.CurrentResource)
-            .Where(s => !s.IsOnCooldown)
-            .Where(s => s is not UltimateSkill)
-            .ToList();
-
-        usableSkills.AddRange(
-            allSkills.Where(s => s is UltimateSkill ult && ult.IsReady)
-                .Where(s => s.Cost <= player.Archetype.CurrentResource));
-
-        var waitingSkills = allSkills
-            .Where(s =>
-                (s.Cost > player.Archetype.CurrentResource || s.IsOnCooldown) &&
-                s.Cost <= player.Archetype.MaxResource &&
-                s is not UltimateSkill)
-            .ToList();
-
-        waitingSkills.AddRange(
-            allSkills.Where(s => s is UltimateSkill ult && !ult.IsReady));
+        var usableSkills = availability.UsableSkills;
+        var waitingSkills = availability.WaitingSkills;
 
         if (usableSkills.Count == 0)
         {
@@ -247,45 +229,6 @@ public class CombatHelper(
                     $"Unsupported combat action: {action.GetType().Name}");
         }
     }
-
-    /// <summary>
-    /// Collects, orders, and displays pending combat messages from the player
-    /// and monsters, then clears their action message collections.
-    /// </summary>
-    private void OutputActionItems(Player player, List<Monster> monsters)
-    {
-        // SortedList auto-orders by key and avoids Dictionary's duplicate key issue
-        var actions = new SortedList<long, string>();
-
-        // Add player actions
-        foreach (var kvp in player.ActionItems)
-        {
-            long key = kvp.Key;
-            while (!actions.TryAdd(key, kvp.Value)) key++;
-        }
-
-        // Add monster actions
-        foreach (var monster in monsters ?? [])
-        {
-            foreach (var kvp in monster.ActionItems)
-            {
-                long key = kvp.Key;
-                while (!actions.TryAdd(key, kvp.Value)) key++;
-            }
-        }
-
-        // Output ordered actions
-        foreach (var action in actions)
-        {
-            _outputManager.WriteLine(action.Value, ConsoleColor.Cyan);
-        }
-
-        player.ClearActionItems();
-        foreach (var monster in monsters ?? [])
-        {
-            monster.ClearActionItems();
-        }
-    }
     
     /// <summary>
     /// Executes an attack against a previously selected target.
@@ -340,7 +283,7 @@ public class CombatHelper(
                     break;
 
                 case TargetType.AllEnemies:
-                    List<ITargetable> enemyTargets = [.. targets.Cast<ITargetable>()];
+                    List<ITargetable> enemyTargets = [.. targets];
                     skill.Activate(player, multipleEnemies: enemyTargets);
                     break;
             }
@@ -359,18 +302,7 @@ public class CombatHelper(
         }
 
         if (skill.SkillCategory == SkillCategory.Support)
-        {
-            bool wantsToAttack =
-                _inputManager.ReadString(
-                    "\nYou may also make an attack if you wish (y/n): ",
-                    ["y", "n"]) == "y";
-
-            if (wantsToAttack)
-            {
-                // The skill already consumed the turn, regardless of the follow-up attack.
-                Attack(player, targets);
-            }
-        }
+            OfferFollowUpAttack(player, targets);
 
         return CombatActionResult.Success();
     }
@@ -402,16 +334,7 @@ public class CombatHelper(
         if (!used)
             return CombatActionResult.Failed();
 
-        bool wantsToAttack =
-            _inputManager.ReadString(
-                "\nYou may also make an attack if you wish (y/n): ",
-                ["y", "n"]) == "y";
-
-        if (wantsToAttack)
-        {
-            // Using the consumable already consumed the turn.
-            Attack(player, validTargets);
-        }
+        OfferFollowUpAttack(player, validTargets);
 
         return CombatActionResult.Success();
     }
@@ -441,9 +364,10 @@ public class CombatHelper(
                 ColorfulToStringHelper.GetSkillColor(usableSkills[i]));
         }
 
-        for (int k = 0; k < waitingSkills.Count; k++)
+        
+        foreach (var waitingSkill in waitingSkills)
         {
-            _outputManager.WriteLine($"---{ColorfulToStringHelper.SkillStatsString(player, waitingSkills[k])}",
+            _outputManager.WriteLine($"---{ColorfulToStringHelper.SkillStatsString(player, waitingSkill)}",
                 ConsoleColor.DarkRed);
         }
 
@@ -453,5 +377,24 @@ public class CombatHelper(
             return null;
 
         return usableSkills[index];
+    }
+    
+    /// <summary>
+    /// Offers the player an optional follow-up attack after using
+    /// a support skill or consumable.
+    /// </summary>
+    private void OfferFollowUpAttack(Player player, List<Monster> targets)
+    {
+        bool wantsToAttack =
+            _inputManager.ReadString(
+                "\nYou may also make an attack if you wish (y/n): ",
+                ["y", "n"]) == "y";
+
+        if (wantsToAttack)
+        {
+            // The preceding action already consumed the player's turn.
+            // The follow-up attack does not change that outcome.
+            Attack(player, targets);
+        }
     }
 }

@@ -156,8 +156,11 @@ public class EquipmentHelper(IInputManager inputManager, IOutputManager outputMa
 
                     if (items.Count == 0)
                     {
-                        _outputManager.WriteLine($"\nNo items available to use {consumable.Name} on.",
+                        _outputManager.WriteLine(
+                            $"\nNo items available to use {consumable.Name} on.",
                             ConsoleColor.Red);
+
+                        return false;
                     }
 
                     _outputManager.WriteLine();

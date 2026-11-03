@@ -1,12 +1,8 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
-using System.Collections.Generic;
-using System;
 using ConsoleGameEntities.Exceptions;
 
-namespace ConsoleGameEntities.Tests.Models.Entities;
+namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities;
 
 [TestClass]
 public class InventoryTests

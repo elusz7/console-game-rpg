@@ -20,6 +20,7 @@ public class CombatHelperTests
     private EquipmentHelper _equipmentHelper = null!;
     private CombatTurnScheduler _turnScheduler = null!;
     private CombatRoundCoordinator _roundCoordinator = null!;
+    private CombatSkillHelper _skillHelper = null;
     private CombatHelper _combatHelper = null!;
 
     [TestInitialize]
@@ -28,6 +29,8 @@ public class CombatHelperTests
         // Create mocks for console input and output.
         _inputManagerMock = new Mock<IInputManager>();
         _outputManagerMock = new Mock<IOutputManager>();
+        var combatActionDisplayHelper = new CombatActionDisplayHelper(_outputManagerMock.Object);
+        var combatMenuDisplayHelper = new CombatMenuDisplayHelper(_outputManagerMock.Object);
 
         // Create the helpers required by CombatHelper.
         _equipmentHelper = new EquipmentHelper(
@@ -36,12 +39,16 @@ public class CombatHelperTests
 
         _turnScheduler = new CombatTurnScheduler();
         _roundCoordinator = new CombatRoundCoordinator(_turnScheduler);
+        _skillHelper = new CombatSkillHelper();
 
         _combatHelper = new CombatHelper(
             _inputManagerMock.Object,
             _outputManagerMock.Object,
             _equipmentHelper,
-            _roundCoordinator);
+            _roundCoordinator,
+            combatActionDisplayHelper,
+            combatMenuDisplayHelper,
+            _skillHelper);
     }
 
     /// <summary>

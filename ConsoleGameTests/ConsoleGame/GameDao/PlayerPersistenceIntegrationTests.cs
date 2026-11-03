@@ -7,8 +7,9 @@ using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+
+namespace ConsoleGameTests.ConsoleGame.GameDao;
 
 [TestClass]
 public class PlayerPersistenceIntegrationTests

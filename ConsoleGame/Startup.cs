@@ -117,8 +117,11 @@ public static class Startup
         // Handles saving campaign progress when a campaign ends.
         services.AddTransient<CampaignPersistenceService>();
         
+        services.AddScoped<CombatActionDisplayHelper>();
+        services.AddScoped<CombatMenuDisplayHelper>();
         services.AddTransient<CombatTurnScheduler>();
         services.AddTransient<CombatRoundCoordinator>();
+        services.AddTransient<CombatSkillHelper>();
         services.AddTransient<CombatHelper>();
         
         services.AddTransient<MerchantHelper>();

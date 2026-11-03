@@ -5,7 +5,7 @@ using ConsoleGameEntities.Models.Skills;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
-namespace ConsoleGameTests.Helpers.CombatHelpers;
+namespace ConsoleGameTests.ConsoleGame.Helpers.CombatHelpers;
 
 [TestClass]
 public class CombatRoundCoordinatorTests
