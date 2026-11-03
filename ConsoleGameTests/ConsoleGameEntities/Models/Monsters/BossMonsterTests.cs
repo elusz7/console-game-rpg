@@ -28,6 +28,7 @@ public class BossMonsterTests
             AggressionLevel = 5,
             MaxHealth = 300,
             CurrentHealth = 300,
+            DodgeChance = 0,
             DamageType = DamageType.Martial,
             Skills = []
         };

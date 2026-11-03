@@ -23,7 +23,8 @@ public class MonsterTests
             DefensePower = 50,
             Resistance = 30,
             AggressionLevel = 10,
-            MaxHealth = 200
+            MaxHealth = 200,
+            DodgeChance = 0
         };
     }
 

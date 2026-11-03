@@ -72,51 +72,180 @@ public class CombatHelper(
         }
     }
 
+    /// <summary>
+    /// Runs the player's combat menu until an action successfully consumes the turn.
+    /// </summary>
     private void PlayerCombatTurn(Player player, List<Monster> validTargets)
     {
         _outputManager.WriteLine(
             $"\nYour turn! You have {player.CurrentHealth} health and {player.Archetype.CurrentResource} {player.Archetype.ResourceName}.\n",
             ConsoleColor.Green);
+
         while (true)
         {
-            var options = new Dictionary<string, CombatOptions>
+            var action = SelectCombatAction(player, validTargets);
+
+            // A null action means the player cancelled or could not select an action.
+            if (action == null)
+                continue;
+
+            if (ExecuteCombatAction(player, action, validTargets))
+                return;
+        }
+    }
+    
+    /// <summary>
+    /// Displays the combat menu and creates the action selected by the player.
+    /// Returns null when the selection is cancelled or unavailable.
+    /// </summary>
+    private CombatAction? SelectCombatAction(Player player, List<Monster> validTargets)
+    {
+        var options = new Dictionary<string, CombatOptions>
+        {
+            ["Attack"] = CombatOptions.Attack,
+            ["Use Skill"] = CombatOptions.UseSkill
+        };
+
+        if (player.Inventory.ContainsConsumables())
+            options["Use Consumable"] = CombatOptions.UseConsumable;
+
+        options["Skip Turn"] = CombatOptions.SkipTurn;
+
+        var index = 1;
+        foreach (var option in options)
+        {
+            _outputManager.WriteLine($"{index}. {option.Key}", ConsoleColor.Yellow);
+            index++;
+        }
+
+        var choice = options.ElementAt(
+            _inputManager.ReadInt("\tSelect an option: ", options.Count) - 1);
+
+        switch (choice.Value)
+        {
+            case CombatOptions.Attack:
             {
-                ["Attack"] = CombatOptions.Attack,
-                ["Use Skill"] = CombatOptions.UseSkill
-            };
+                var target = validTargets.Count == 1
+                    ? validTargets[0]
+                    : SelectTarget(validTargets, "attack");
 
-            if (player.Inventory.ContainsConsumables())
-                options["Use Consumable"] = CombatOptions.UseConsumable;
-
-            options["Skip Turn"] = CombatOptions.SkipTurn;
-
-            var index = 1;
-            foreach (var option in options)
-            {
-                _outputManager.WriteLine($"{index}. {option.Key}", ConsoleColor.Yellow);
-                index++;
+                return target == null ? null : new AttackAction(target);
             }
 
-            var choice = options.ElementAt(_inputManager.ReadInt("\tSelect an option: ", options.Count) - 1);
+            case CombatOptions.UseSkill:
+                return SelectSkillAction(player, validTargets);
 
-            switch (choice.Value)
+            case CombatOptions.UseConsumable:
+                return new UseConsumableAction();
+
+            case CombatOptions.SkipTurn:
+                return new SkipTurnAction();
+
+            default:
+                _outputManager.WriteLine("Invalid choice. Please try again.", ConsoleColor.Red);
+                return null;
+        }
+    }
+    
+    /// <summary>
+    /// Determines which skills are available and creates the selected skill action.
+    /// </summary>
+    private CombatAction? SelectSkillAction(Player player, List<Monster> targets)
+    {
+        var allSkills = player.Archetype.Skills
+            .Where(s => s.RequiredLevel <= player.Level)
+            .ToList();
+
+        var usableSkills = allSkills
+            .Where(s => s.Cost <= player.Archetype.CurrentResource)
+            .Where(s => !s.IsOnCooldown)
+            .Where(s => s is not UltimateSkill)
+            .ToList();
+
+        usableSkills.AddRange(
+            allSkills.Where(s => s is UltimateSkill ult && ult.IsReady)
+                .Where(s => s.Cost <= player.Archetype.CurrentResource));
+
+        var waitingSkills = allSkills
+            .Where(s =>
+                (s.Cost > player.Archetype.CurrentResource || s.IsOnCooldown) &&
+                s.Cost <= player.Archetype.MaxResource &&
+                s is not UltimateSkill)
+            .ToList();
+
+        waitingSkills.AddRange(
+            allSkills.Where(s => s is UltimateSkill ult && !ult.IsReady));
+
+        if (usableSkills.Count == 0)
+        {
+            if (waitingSkills.Count != 0)
             {
-                case CombatOptions.Attack:
-                    if (Attack(player, validTargets)) return;
-                    break;
-                case CombatOptions.UseSkill:
-                    if (UseSkill(player, validTargets)) return;
-                    break;
-                case CombatOptions.UseConsumable:
-                    if (UseConsumable(player, validTargets)) return;
-                    break;
-                case CombatOptions.SkipTurn:
-                    _outputManager.WriteLine("\nSkipping Turn...", ConsoleColor.DarkRed);
-                    return;
-                default:
-                    _outputManager.WriteLine("Invalid choice. Please try again.", ConsoleColor.Red);
-                    break;
+                _inputManager.Viewer(
+                    waitingSkills,
+                    s => ColorfulToStringHelper.SkillStatsString(player, s),
+                    "",
+                    _ => ConsoleColor.DarkRed);
             }
+
+            _outputManager.WriteLine("No skills available to use currently.", ConsoleColor.Red);
+            return null;
+        }
+
+        var skill = SelectSkill(player, usableSkills, waitingSkills);
+
+        if (skill == null)
+        {
+            _outputManager.WriteLine("Skill selection cancelled.");
+            return null;
+        }
+
+        Monster? target = null;
+
+        if (skill.TargetType == TargetType.SingleEnemy)
+        {
+            _outputManager.WriteLine();
+
+            target = targets.Count == 1
+                ? targets[0]
+                : SelectTarget(targets, $"use {skill.Name} on");
+
+            if (target == null)
+            {
+                _outputManager.WriteLine("\nSkill use cancelled.\n", ConsoleColor.Red);
+                return null;
+            }
+        }
+
+        return new UseSkillAction(skill, target);
+    }
+    
+    /// <summary>
+    /// Executes a selected combat action.
+    /// Returns true when the action consumes the player's turn.
+    /// </summary>
+    private bool ExecuteCombatAction(
+        Player player,
+        CombatAction action,
+        List<Monster> targets)
+    {
+        switch (action)
+        {
+            case AttackAction attack:
+                return ExecuteAttack(player, attack.Target);
+    
+            case UseSkillAction skill:
+                return ExecuteSkill(player, skill, targets);
+    
+            case UseConsumableAction:
+                return UseConsumable(player, targets);
+    
+            case SkipTurnAction:
+                _outputManager.WriteLine("\nSkipping Turn...", ConsoleColor.DarkRed);
+                return true;
+    
+            default:
+                throw new InvalidOperationException(
+                    $"Unsupported combat action: {action.GetType().Name}");
         }
     }
 
@@ -154,47 +283,12 @@ public class CombatHelper(
             monster.ClearActionItems();
         }
     }
-
-    private static void ElapseTime(Player player, List<Monster> monsters)
+    
+    /// <summary>
+    /// Executes an attack against a previously selected target.
+    /// </summary>
+    private bool ExecuteAttack(Player player, Monster target)
     {
-        foreach (var monster in monsters)
-        {
-            foreach (var skill in monster.Skills ?? [])
-            {
-                skill.UpdateElapsedTime();
-            }
-        }
-
-        foreach (var skill in player.Archetype.Skills ?? [])
-        {
-            skill.UpdateElapsedTime();
-        }
-
-        player.Archetype.RecoverResource();
-    }
-
-    private static void ResetSupportSkills(List<Monster> monsters)
-    {
-        foreach (var monster in monsters)
-        {
-            if (monster.CurrentHealth <= 0)
-            {
-                foreach (var skill in monster.Skills?.OfType<SupportSkill>().ToList() ?? [])
-                {
-                    skill.Reset();
-                }
-            }
-        }
-    }
-
-    private bool Attack(Player player, List<Monster> targets)
-    {
-        var target = targets.Count == 1
-            ? targets[0]
-            : SelectTarget(targets, "attack");
-
-        if (target == null) return false;
-
         try
         {
             player.Attack(target);
@@ -207,54 +301,25 @@ public class CombatHelper(
         }
         catch (EquipmentException)
         {
-            _outputManager.WriteLine("\nYou cannot attack with your bare hands!", ConsoleColor.Red);
+            _outputManager.WriteLine(
+                "\nYou cannot attack with your bare hands!",
+                ConsoleColor.Red);
 
             _equipmentHelper.EquipItem(player, true);
             _outputManager.WriteLine();
             return false;
         }
     }
-
-    private bool UseSkill(Player player, List<Monster> targets)
+    
+    /// <summary>
+    /// Activates a selected skill and handles any optional follow-up attack.
+    /// </summary>
+    private bool ExecuteSkill(
+        Player player,
+        UseSkillAction action,
+        List<Monster> targets)
     {
-        var allSkills = player.Archetype.Skills
-            .Where(s => s.RequiredLevel <= player.Level)
-            .ToList() ?? [];
-
-        var usableSkills = allSkills
-            .Where(s => s.Cost <= player.Archetype.CurrentResource)
-            .Where(s => !s.IsOnCooldown)
-            .Where(s => s is not UltimateSkill).ToList();
-        usableSkills.AddRange(allSkills.Where(s => s is UltimateSkill ult && ult.IsReady)
-            .Where(s => s.Cost <= player.Archetype.CurrentResource));
-
-        var waitingSkills = allSkills
-            .Where(s =>
-                (s.Cost > player.Archetype.CurrentResource || s.IsOnCooldown) &&
-                s.Cost <= player.Archetype.MaxResource &&
-                s is not UltimateSkill)
-            .ToList();
-        waitingSkills.AddRange(allSkills.Where(s => s is UltimateSkill ult && !ult.IsReady));
-
-        if (usableSkills.Count == 0)
-        {
-            if (waitingSkills.Count != 0)
-            {
-                _inputManager.Viewer(waitingSkills, s => ColorfulToStringHelper.SkillStatsString(player, s), "",
-                    _ => ConsoleColor.DarkRed);
-            }
-
-            _outputManager.WriteLine("No skills available to use currently.", ConsoleColor.Red);
-            return false;
-        }
-
-        var skill = SelectSkill(player, usableSkills, waitingSkills);
-
-        if (skill == null)
-        {
-            _outputManager.WriteLine("Skill selection cancelled.");
-            return false;
-        }
+        var skill = action.Skill;
 
         try
         {
@@ -263,20 +328,11 @@ public class CombatHelper(
                 case TargetType.Self:
                     skill.Activate(player);
                     break;
+
                 case TargetType.SingleEnemy:
-                    _outputManager.WriteLine();
-                    var target = targets.Count == 1
-                        ? targets[0]
-                        : SelectTarget(targets, $"use {skill.Name} on");
-
-                    if (target == null)
-                    {
-                        _outputManager.WriteLine("\nSkill use cancelled.\n", ConsoleColor.Red);
-                        return false;
-                    }
-
-                    skill.Activate(player, singleEnemy: target);
+                    skill.Activate(player, singleEnemy: action.Target);
                     break;
+
                 case TargetType.AllEnemies:
                     List<ITargetable> enemyTargets = [.. targets.Cast<ITargetable>()];
                     skill.Activate(player, multipleEnemies: enemyTargets);
@@ -285,7 +341,7 @@ public class CombatHelper(
         }
         catch (MonsterDeathException)
         {
-            skill.Reset(); //if monster died, the skill was still used
+            skill.Reset();
             return true;
         }
         catch (Exception ex)
@@ -297,15 +353,27 @@ public class CombatHelper(
         if (skill.SkillCategory == SkillCategory.Support)
         {
             bool wantsToAttack =
-                _inputManager.ReadString("\nYou may also make an attack if you wish (y/n): ", ["y", "n"]) == "y";
+                _inputManager.ReadString(
+                    "\nYou may also make an attack if you wish (y/n): ",
+                    ["y", "n"]) == "y";
+
             if (wantsToAttack)
-            {
                 Attack(player, targets);
-                return true;
-            }
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Selects a target and executes a follow-up or standalone attack.
+    /// </summary>
+    private bool Attack(Player player, List<Monster> targets)
+    {
+        var target = targets.Count == 1
+            ? targets[0]
+            : SelectTarget(targets, "attack");
+
+        return target != null && ExecuteAttack(player, target);
     }
 
     private bool UseConsumable(Player player, List<Monster> validTargets)

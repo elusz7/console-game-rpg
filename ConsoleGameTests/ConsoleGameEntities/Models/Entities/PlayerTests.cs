@@ -17,7 +17,8 @@ namespace ConsoleGameTests.ConsoleGameEntities.Models.Entities
             var player = new Player
             {
                 CurrentHealth = 100,
-                MaxHealth = 100
+                MaxHealth = 100,
+                DodgeChance = 0
             };
 
             var archetype = new Archetype
