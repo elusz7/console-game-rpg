@@ -15,13 +15,11 @@ public class CombatHelper(
     IInputManager inputManager,
     IOutputManager outputManager,
     EquipmentHelper equipmentHelper,
-    CombatTurnScheduler turnScheduler,
     CombatRoundCoordinator roundCoordinator)
 {
     private readonly IInputManager _inputManager = inputManager;
     private readonly IOutputManager _outputManager = outputManager;
     private readonly EquipmentHelper _equipmentHelper = equipmentHelper;
-    private readonly CombatTurnScheduler _turnScheduler = turnScheduler;
     private readonly CombatRoundCoordinator _roundCoordinator = roundCoordinator;
 
     public void CombatRunner(Player player, List<Monster> monsters)
@@ -89,7 +87,9 @@ public class CombatHelper(
             if (action == null)
                 continue;
 
-            if (ExecuteCombatAction(player, action, validTargets))
+            var result = ExecuteCombatAction(player, action, validTargets);
+
+            if (result.TurnConsumed)
                 return;
         }
     }
@@ -220,10 +220,9 @@ public class CombatHelper(
     }
     
     /// <summary>
-    /// Executes a selected combat action.
-    /// Returns true when the action consumes the player's turn.
+    /// Executes a selected combat action and returns its outcome.
     /// </summary>
-    private bool ExecuteCombatAction(
+    private CombatActionResult ExecuteCombatAction(
         Player player,
         CombatAction action,
         List<Monster> targets)
@@ -235,13 +234,13 @@ public class CombatHelper(
     
             case UseSkillAction skill:
                 return ExecuteSkill(player, skill, targets);
-    
+
             case UseConsumableAction:
                 return UseConsumable(player, targets);
-    
+
             case SkipTurnAction:
                 _outputManager.WriteLine("\nSkipping Turn...", ConsoleColor.DarkRed);
-                return true;
+                return CombatActionResult.Skipped();
     
             default:
                 throw new InvalidOperationException(
@@ -249,6 +248,10 @@ public class CombatHelper(
         }
     }
 
+    /// <summary>
+    /// Collects, orders, and displays pending combat messages from the player
+    /// and monsters, then clears their action message collections.
+    /// </summary>
     private void OutputActionItems(Player player, List<Monster> monsters)
     {
         // SortedList auto-orders by key and avoids Dictionary's duplicate key issue
@@ -287,17 +290,18 @@ public class CombatHelper(
     /// <summary>
     /// Executes an attack against a previously selected target.
     /// </summary>
-    private bool ExecuteAttack(Player player, Monster target)
+    private CombatActionResult ExecuteAttack(Player player, Monster target)
     {
         try
         {
             player.Attack(target);
             _outputManager.WriteLine();
-            return true;
+            return CombatActionResult.Success();
         }
         catch (MonsterDeathException)
         {
-            return true;
+            // The attack succeeded even though the target was defeated.
+            return CombatActionResult.Success();
         }
         catch (EquipmentException)
         {
@@ -307,14 +311,16 @@ public class CombatHelper(
 
             _equipmentHelper.EquipItem(player, true);
             _outputManager.WriteLine();
-            return false;
+
+            // Equipping a weapon does not consume the player's turn.
+            return CombatActionResult.Failed();
         }
     }
     
     /// <summary>
     /// Activates a selected skill and handles any optional follow-up attack.
     /// </summary>
-    private bool ExecuteSkill(
+    private CombatActionResult ExecuteSkill(
         Player player,
         UseSkillAction action,
         List<Monster> targets)
@@ -342,12 +348,14 @@ public class CombatHelper(
         catch (MonsterDeathException)
         {
             skill.Reset();
-            return true;
+
+            // The skill was successfully used even though it defeated a monster.
+            return CombatActionResult.Success();
         }
         catch (Exception ex)
         {
             _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
-            return false;
+            return CombatActionResult.Failed();
         }
 
         if (skill.SkillCategory == SkillCategory.Support)
@@ -358,43 +366,59 @@ public class CombatHelper(
                     ["y", "n"]) == "y";
 
             if (wantsToAttack)
+            {
+                // The skill already consumed the turn, regardless of the follow-up attack.
                 Attack(player, targets);
+            }
         }
 
-        return true;
+        return CombatActionResult.Success();
     }
 
     /// <summary>
     /// Selects a target and executes a follow-up or standalone attack.
     /// </summary>
-    private bool Attack(Player player, List<Monster> targets)
+    private CombatActionResult Attack(Player player, List<Monster> targets)
     {
         var target = targets.Count == 1
             ? targets[0]
             : SelectTarget(targets, "attack");
 
-        return target != null && ExecuteAttack(player, target);
+        if (target == null)
+            return CombatActionResult.Cancelled();
+
+        return ExecuteAttack(player, target);
     }
 
-    private bool UseConsumable(Player player, List<Monster> validTargets)
+    /// <summary>
+    /// Uses a consumable and handles any optional follow-up attack.
+    /// </summary>
+    private CombatActionResult UseConsumable(
+        Player player,
+        List<Monster> validTargets)
     {
         var used = _equipmentHelper.UseConsumable(player);
 
-        if (used)
+        if (!used)
+            return CombatActionResult.Failed();
+
+        bool wantsToAttack =
+            _inputManager.ReadString(
+                "\nYou may also make an attack if you wish (y/n): ",
+                ["y", "n"]) == "y";
+
+        if (wantsToAttack)
         {
-            bool wantsToAttack =
-                _inputManager.ReadString("\nYou may also make an attack if you wish (y/n): ", ["y", "n"]) == "y";
-            if (wantsToAttack)
-            {
-                Attack(player, validTargets);
-                return used;
-            }
+            // Using the consumable already consumed the turn.
+            Attack(player, validTargets);
         }
 
-
-        return used;
+        return CombatActionResult.Success();
     }
 
+    /// <summary>
+    /// Prompts the player to select a monster for a combat action.
+    /// </summary>
     private Monster? SelectTarget(List<Monster> validTargets, string purpose)
     {
         return _inputManager.Selector(
@@ -405,6 +429,9 @@ public class CombatHelper(
         );
     }
 
+    /// <summary>
+    /// Displays available skills and prompts the player to select one.
+    /// </summary>
     private Skill? SelectSkill(Player player, List<Skill> usableSkills, List<Skill> waitingSkills)
     {
         _outputManager.WriteLine();
