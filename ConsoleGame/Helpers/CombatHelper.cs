@@ -1,4 +1,5 @@
-﻿using ConsoleGame.Helpers.DisplayHelpers;
+﻿using ConsoleGame.Helpers.CombatHelpers;
+using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Managers.Interfaces;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.Attributes;
@@ -10,11 +11,18 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers;
 
-public class CombatHelper(IInputManager inputManager, IOutputManager outputManager, EquipmentHelper equipmentHelper)
+public class CombatHelper(
+    IInputManager inputManager,
+    IOutputManager outputManager,
+    EquipmentHelper equipmentHelper,
+    CombatTurnScheduler turnScheduler,
+    CombatRoundCoordinator roundCoordinator)
 {
     private readonly IInputManager _inputManager = inputManager;
     private readonly IOutputManager _outputManager = outputManager;
     private readonly EquipmentHelper _equipmentHelper = equipmentHelper;
+    private readonly CombatTurnScheduler _turnScheduler = turnScheduler;
+    private readonly CombatRoundCoordinator _roundCoordinator = roundCoordinator;
 
     public void CombatRunner(Player player, List<Monster> monsters)
     {
@@ -22,51 +30,37 @@ public class CombatHelper(IInputManager inputManager, IOutputManager outputManag
         {
             while (true)
             {
+                // Get the living monsters for this round.
                 var aliveMonsters = monsters
                     .Where(m => m.CurrentHealth > 0)
-                    .OrderByDescending(m => m.GetStat(StatType.Speed))
                     .ToList();
 
                 if (aliveMonsters.Count == 0)
                     break;
 
-                bool playerTurnTaken = false;
+                // Delegate round execution to the coordinator.
+                _roundCoordinator.ExecuteRound(
+                    player,
+                    aliveMonsters,
 
-                foreach (var monster in aliveMonsters)
-                {
-                    System.Diagnostics.Debug.WriteLine(
-                        $"[{monster.Name}] ({monster.CurrentHealth}/{monster.MaxHealth}) {monster.DamageType}: {monster.GetStat(StatType.Attack)}, DEF: {monster.GetStat(StatType.Defense)}, RES: {monster.GetStat(StatType.Resistance)}");
-
-                    if (player.GetStat(StatType.Speed) > monster.GetStat(StatType.Speed) && !playerTurnTaken)
+                    // Execute the player's turn and preserve the display behavior.
+                    () =>
                     {
                         _outputManager.Display();
                         PlayerCombatTurn(player, aliveMonsters);
                         _outputManager.Clear();
-                        OutputActionItems(player, aliveMonsters);
-                        playerTurnTaken = true;
-                    }
+                    },
 
-                    ResetSupportSkills(aliveMonsters);
-
-                    if (monster.CurrentHealth > 0)
+                    // Display monster information before its scheduled turn.
+                    monster =>
                     {
-                        monster.Attack(player);
+                        System.Diagnostics.Debug.WriteLine(
+                            $"[{monster.Name}] ({monster.CurrentHealth}/{monster.MaxHealth}) {monster.DamageType}: {monster.GetStat(StatType.Attack)}, DEF: {monster.GetStat(StatType.Defense)}, RES: {monster.GetStat(StatType.Resistance)}");
+                    },
 
-                        OutputActionItems(player, aliveMonsters);
-                    }
-                }
-
-                if (!playerTurnTaken)
-                {
-                    var stillAlive = aliveMonsters.Where(m => m.CurrentHealth > 0).ToList();
-                    PlayerCombatTurn(player, stillAlive);
-                    OutputActionItems(player, aliveMonsters);
-                }
-
-                ResetSupportSkills(aliveMonsters.Where(m => m.CurrentHealth <= 0).ToList());
-
-                ElapseTime(player, aliveMonsters);
-                OutputActionItems(player, aliveMonsters);
+                    // Display and clear pending combat action messages.
+                    () => OutputActionItems(player, aliveMonsters)
+                );
             }
 
             OutputActionItems(player, monsters);

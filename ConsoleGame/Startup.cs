@@ -17,6 +17,7 @@ using ConsoleGameEntities.Models.Monsters.Strategies;
 using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers.Interfaces;
 using ConsoleGame.Factories.Interfaces;
+using ConsoleGame.Helpers.CombatHelpers;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGame.Managers.Interfaces;
 
@@ -115,7 +116,11 @@ public static class Startup
         services.AddTransient<LootService>();
         // Handles saving campaign progress when a campaign ends.
         services.AddTransient<CampaignPersistenceService>();
+        
+        services.AddTransient<CombatTurnScheduler>();
+        services.AddTransient<CombatRoundCoordinator>();
         services.AddTransient<CombatHelper>();
+        
         services.AddTransient<MerchantHelper>();
         services.AddTransient<EquipmentHelper>();
         services.AddTransient<PlayerHelper>();
