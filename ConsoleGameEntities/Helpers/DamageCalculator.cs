@@ -16,15 +16,7 @@ public static class DamageCalculator
         int defense,
         int resistance)
     {
-        if (incomingDamage <= 0)
-            throw new ArgumentOutOfRangeException(
-                nameof(incomingDamage),
-                "Incoming damage must be greater than zero.");
-
-        if (damageType is null || !Enum.IsDefined(damageType.Value))
-            throw new ArgumentOutOfRangeException(
-                nameof(damageType),
-                "A valid damage type is required.");
+        ValidateInputs(incomingDamage, damageType);
 
         return damageType.Value switch
         {
@@ -40,5 +32,21 @@ public static class DamageCalculator
 
             _ => throw new ArgumentOutOfRangeException(nameof(damageType))
         };
+    }
+    
+    /// <summary>
+    /// Validates incoming damage and its damage type.
+    /// </summary>
+    public static void ValidateInputs(int incomingDamage, DamageType? damageType)
+    {
+        if (incomingDamage <= 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(incomingDamage),
+                "Incoming damage must be greater than zero.");
+
+        if (damageType is null || !Enum.IsDefined(damageType.Value))
+            throw new ArgumentOutOfRangeException(
+                nameof(damageType),
+                "A valid damage type is required.");
     }
 }

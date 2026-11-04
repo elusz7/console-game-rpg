@@ -15,6 +15,7 @@ namespace ConsoleGameEntities.Models.Monsters;
 public class Monster : IMonster
 {
     private static readonly Random _rng = Random.Shared;
+    [NotMapped] private static readonly DamageResolver _damageResolver = new();
     [NotMapped] public Dictionary<long, string> ActionItems { get; } = new();
     public int Id { get; set; }
     public string Name { get; set; }
@@ -163,28 +164,27 @@ public class Monster : IMonster
 
     public virtual void TakeDamage(int damage, DamageType? damageType)
     {
-        var damageTaken = DamageCalculator.CalculateDamage(
-            damage, 
-            damageType, 
+        var result = _damageResolver.ResolveDamage(
+            damage,
+            damageType,
             GetStat(StatType.Defense),
-            GetStat(StatType.Resistance));
-        
-        var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
-        var dodged = _rng.NextDouble() * 100 < chance;
+            GetStat(StatType.Resistance),
+            DodgeChance + (GetStat(StatType.Speed) * 0.01));
 
-        if (dodged)
+        if (result.IsDodged)
         {
             AddActionItem($"{Name} dodged the attack and took no damage!");
             return;
         }
-        
-        if (damageType == DamageType.Martial)
+
+        // Preserve damage tracking for successful Martial and Magical hits.
+        if (result.DamageType == DamageType.Martial)
             DamageRecord[DamageType.Martial] += 1;
-        else if (damageType == DamageType.Magical)
+        else if (result.DamageType == DamageType.Magical)
             DamageRecord[DamageType.Magical] += 1;
 
-        AddActionItem($"{Name} takes {damageTaken} damage!");
-        CurrentHealth -= damageTaken;
+        AddActionItem($"{Name} takes {result.FinalDamage} damage!");
+        CurrentHealth -= result.FinalDamage;
 
         if (CurrentHealth <= 0)
         {

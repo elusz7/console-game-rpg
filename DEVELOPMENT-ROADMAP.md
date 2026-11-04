@@ -152,16 +152,16 @@ Deferred/Feature Implementation: Critical Hits
 
 **Goal:** Avoid duplicating damage-resolution rules across players, monsters, skills, and elemental attacks.
 
-- [ ] Identify common damage calculation responsibilities.
-- [ ] Design a shared damage calculation abstraction.
-- [ ] Separate damage calculation from applying damage.
-- [ ] Support damage types and resistance modifiers.
-- [ ] Support critical hits and dodge calculations where appropriate.
-- [ ] Support elemental modifiers.
-- [ ] Return explicit damage calculation results.
-- [ ] Integrate the system with player combat.
-- [ ] Integrate the system with monster combat.
-- [ ] Add comprehensive damage calculation tests.
+- [x] Identify common damage calculation responsibilities.
+- [x] Design a shared damage calculation abstraction.
+- [x] Separate damage calculation from applying damage.
+- [x] Support damage types and resistance modifiers.
+- [Partial/Deferred] Support critical hits and dodge calculations where appropriate.
+- [Deferred - New Feature Implementation] Support elemental modifiers.
+- [x] Return explicit damage calculation results.
+- [x] Integrate the system with player combat.
+- [x] Integrate the system with monster combat.
+- [x] Add comprehensive damage calculation tests.
 
 **Completion criteria:** Physical, magical, and elemental damage use a consistent, extensible calculation model.
 

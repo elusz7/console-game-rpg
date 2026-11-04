@@ -16,6 +16,7 @@ public class Player : IPlayer
 {
     [NotMapped] public Dictionary<long, string> ActionItems { get; } = new();
     [NotMapped] private static readonly Random _rng = Random.Shared;
+    [NotMapped] private static readonly DamageResolver _damageResolver = new();
     public int Level { get; set; }
     public int Id { get; set; }
     public string Name { get; set; }
@@ -54,28 +55,27 @@ public class Player : IPlayer
 
     public virtual void TakeDamage(int damage, DamageType? damageType)
     {
-        var damageTaken = DamageCalculator.CalculateDamage(
-            damage, 
-            damageType, 
+        var result = _damageResolver.ResolveDamage(
+            damage,
+            damageType,
             GetStat(StatType.Defense),
-            GetStat(StatType.Resistance));
-        
-        var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
-        var dodged = _rng.NextDouble() * 100 < chance;
+            GetStat(StatType.Resistance),
+            DodgeChance + (GetStat(StatType.Speed) * 0.01));
 
-        if (dodged)
+        if (result.IsDodged)
         {
-            AddActionItem($"You dodged the attack and took no damage!");
+            AddActionItem("You dodged the attack and took no damage!");
             return;
         }
 
-        CurrentHealth -= damageTaken;
-        AddActionItem($"You've taken {damageTaken} damage! [{CurrentHealth} / {MaxHealth}]");
+        CurrentHealth -= result.FinalDamage;
+        AddActionItem(
+            $"You've taken {result.FinalDamage} damage! [{CurrentHealth} / {MaxHealth}]");
 
         if (CurrentHealth <= 0)
             throw new PlayerDeathException();
 
-        CheckArmorDurability(damageType);
+        CheckArmorDurability(result.DamageType);
     }
 
     public virtual void Heal(int regainedHealth)

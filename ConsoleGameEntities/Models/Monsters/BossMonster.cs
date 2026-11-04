@@ -11,12 +11,13 @@ namespace ConsoleGameEntities.Models.Monsters;
 
 public class BossMonster : Monster
 {
-    private static readonly Random _rng = Random.Shared;
+    [NotMapped]
+    private static readonly DamageResolver DamageResolver = new();
 
-    private int CurrentPhase = 1;
+    private int _currentPhase = 1;
     private const int MaxPhases = 3;
-    private int BaseHealth = 0;
-    private int BaseAttack = 0;
+    private int _baseHealth;
+    private int _baseAttack;
     public override double DodgeChance { get; set; } = 0.01;
 
     [NotMapped] public override IMonsterStrategy Strategy { get; set; }
@@ -37,27 +38,27 @@ public class BossMonster : Monster
 
     private void CheckPhaseChange()
     {
-        if (BaseHealth == 0)
-            BaseHealth = MaxHealth;
+        if (_baseHealth == 0)
+            _baseHealth = MaxHealth;
 
-        if (BaseAttack == 0)
-            BaseAttack = AttackPower;
+        if (_baseAttack == 0)
+            _baseAttack = AttackPower;
 
-        CurrentPhase++;
-        if (CurrentPhase > MaxPhases)
+        _currentPhase++;
+        if (_currentPhase > MaxPhases)
             throw new MonsterDeathException();
 
         foreach (var skill in Skills.OfType<BossSkill>())
-            skill.Phase = CurrentPhase;
+            skill.Phase = _currentPhase;
 
-        var scale = CurrentPhase switch
+        var scale = _currentPhase switch
         {
             1 => 1.0,
             2 => 0.75,
             _ => 0.50
         };
-        MaxHealth = (int)(BaseHealth * scale);
-        AttackPower = (int)(BaseAttack * scale);
+        MaxHealth = (int)(_baseHealth * scale);
+        AttackPower = (int)(_baseAttack * scale);
         CurrentHealth = MaxHealth;
 
         AggressionLevel += 5;
@@ -72,29 +73,26 @@ public class BossMonster : Monster
             Resistance += 2;
         }
 
-        AddActionItem($"Boss [{Name}] has entered phase {CurrentPhase}!");
+        AddActionItem($"Boss [{Name}] has entered phase {_currentPhase}!");
     }
 
     public override void TakeDamage(int damage, DamageType? damageType)
     {
-        // Validate and calculate damage before the dodge check.
-        var damageTaken = DamageCalculator.CalculateDamage(
+        var result = DamageResolver.ResolveDamage(
             damage,
             damageType,
             GetStat(StatType.Defense),
-            GetStat(StatType.Resistance));
+            GetStat(StatType.Resistance),
+            DodgeChance + (GetStat(StatType.Speed) * 0.01));
 
-        var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01));
-        var dodged = _rng.NextDouble() * 100 < chance;
-
-        if (dodged)
+        if (result.IsDodged)
         {
             AddActionItem($"{Name} dodged the attack!");
             return;
         }
 
-        AddActionItem($"{Name} takes {damageTaken} damage!");
-        CurrentHealth -= damageTaken;
+        AddActionItem($"{Name} takes {result.FinalDamage} damage!");
+        CurrentHealth -= result.FinalDamage;
 
         // Bosses transition phases instead of dying immediately.
         if (CurrentHealth <= 0)
@@ -103,7 +101,7 @@ public class BossMonster : Monster
 
     public override void SetLevel(int newLevel)
     {
-        CurrentPhase = 1;
+        _currentPhase = 1;
         base.SetLevel(newLevel);
     }
 }
