@@ -1,15 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Models.Entities;
-using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Monsters.Strategies;
-using ConsoleGameEntities.Models.Skills;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
-using System.Threading;
 
 namespace ConsoleGameTests.ConsoleGameEntities.Models.Monsters;
 
@@ -151,21 +143,59 @@ public class BossMonsterTests
         Assert.IsTrue(boss.AttackPower < 50); // scaled down
         Assert.IsTrue(boss.MaxHealth < 100); // scaled down
     }
-
+    
     [TestMethod]
-    public void TakeDamage_PhaseChange_ThrowsOnFinalPhase()
+    public void TakeDamage_FirstLethalHit_TransitionsToPhaseTwo()
     {
         var boss = CreateBoss();
-        boss.DefensePower = 0;
-        boss.DodgeChance = 0;
+        var originalMaxHealth = boss.MaxHealth;
 
-        boss.CurrentHealth = 10;
-        boss.TakeDamage(100, DamageType.Martial); //should set phase to 2
+        boss.TakeDamage(10000, DamageType.Martial);
 
-        boss.CurrentHealth = 10;
-        boss.TakeDamage(100, DamageType.Martial); //should set phase to 3
+        Assert.AreEqual((int)(originalMaxHealth * 0.75), boss.MaxHealth);
+        Assert.AreEqual(boss.MaxHealth, boss.CurrentHealth);
+        Assert.IsTrue(
+            boss.ActionItems.Values.Any(a => a.Contains("entered phase 2")));
+    }
 
-        boss.CurrentHealth = 10;
-        Assert.ThrowsException<MonsterDeathException>(() => boss.TakeDamage(100, DamageType.Martial));
+    [TestMethod]
+    public void TakeDamage_SecondLethalHit_TransitionsToPhaseThree()
+    {
+        var boss = CreateBoss();
+        var originalMaxHealth = boss.MaxHealth;
+
+        // First lethal hit transitions to phase two.
+        boss.TakeDamage(10000, DamageType.Martial);
+
+        // Prevent the phase-two Speed increase from affecting the dodge roll.
+        boss.AggressionLevel = 0;
+        boss.TakeDamage(10000, DamageType.Martial);
+
+        Assert.AreEqual((int)(originalMaxHealth * 0.50), boss.MaxHealth);
+        Assert.AreEqual(boss.MaxHealth, boss.CurrentHealth);
+        Assert.IsTrue(
+            boss.ActionItems.Values.Any(a => a.Contains("entered phase 3")));
+    }
+
+    [TestMethod]
+    public void TakeDamage_ThirdLethalHit_ThrowsMonsterDeathException()
+    {
+        var boss = CreateBoss();
+
+        // Enter phase two.
+        boss.TakeDamage(10000, DamageType.Martial);
+
+        boss.AggressionLevel = 0;
+
+        // Enter phase three.
+        boss.TakeDamage(10000, DamageType.Martial);
+
+        boss.AggressionLevel = 0;
+
+        // Final lethal hit should defeat the boss.
+        Assert.ThrowsException<MonsterDeathException>(
+            () => boss.TakeDamage(10000, DamageType.Martial));
+
+        Assert.IsTrue(boss.CurrentHealth <= 0);
     }
 }

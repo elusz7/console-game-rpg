@@ -362,25 +362,6 @@ public class PlayerTests
     }
 
     [TestMethod]
-    public void Equip_CursedItem()
-    {
-        var player = CreatePlayer();
-        var weapon = CreateWeapon();
-        weapon.RequiredLevel = player.Level;
-        weapon.Curse();
-        player.Inventory.AddItem(weapon);
-
-        var oldCurrentHealth = player.CurrentHealth;
-        var oldMaxHealth = player.MaxHealth;
-
-        player.Equip(weapon);
-
-        Assert.IsTrue(player.CurrentHealth < oldCurrentHealth);
-        Assert.IsTrue(player.MaxHealth < oldMaxHealth);
-        Assert.IsFalse(weapon.IsCursed());
-    }
-
-    [TestMethod]
     public void Equip_ItemNotInInventory_Throws()
     {
         var player = CreatePlayer();
@@ -858,5 +839,156 @@ public class PlayerTests
         Assert.AreEqual(1, player.Equipment.OfType<Weapon>().Count());
         Assert.IsTrue(player.Equipment.Contains(weapon));
         Assert.IsTrue(weapon.IsEquipped());
+    }
+    
+    [TestMethod]
+    public void Equip_CursedItem_DoesNotKillPlayer()
+    {
+        var player = CreatePlayer();
+        var weapon = CreateWeapon();
+        weapon.RequiredLevel = player.Level;
+        weapon.Curse();
+        player.Inventory.AddItem(weapon);
+
+        player.Equip(weapon);
+
+        Assert.AreEqual(90, player.CurrentHealth);
+        Assert.AreEqual(90, player.MaxHealth);
+        Assert.IsFalse(weapon.IsCursed());
+    }
+    
+    [TestMethod]
+    public void Equip_CursedItem_LethalCurse_ThrowsPlayerDeathException()
+    {
+        var player = CreatePlayer();
+        player.CurrentHealth = 5;
+
+        var weapon = CreateWeapon();
+        weapon.RequiredLevel = player.Level;
+        weapon.Curse();
+        player.Inventory.AddItem(weapon);
+
+        Assert.ThrowsException<PlayerDeathException>(
+            () => player.Equip(weapon));
+
+        Assert.IsTrue(player.CurrentHealth <= 0);
+        Assert.IsFalse(weapon.IsCursed());
+    }
+    
+    [TestMethod]
+    public void TakeDamage_Hybrid_DefenseHigher_DamagesDefenseArmor()
+    {
+        var player = CreatePlayer();
+        player.Archetype.Speed = 0;
+        player.Archetype.DefenseBonus = 0;
+        player.Archetype.ResistanceBonus = 0;
+
+        var headArmor = new Armor
+        {
+            Name = "Head Armor",
+            ArmorType = ArmorType.Head,
+            Durability = 5,
+            DefensePower = 10,
+            RequiredLevel = player.Level
+        };
+
+        var chestArmor = new Armor
+        {
+            Name = "Chest Armor",
+            ArmorType = ArmorType.Chest,
+            Durability = 5,
+            Resistance = 5,
+            RequiredLevel = player.Level
+        };
+
+        player.Inventory.AddItem(headArmor);
+        player.Inventory.AddItem(chestArmor);
+
+        player.Equip(headArmor);
+        player.Equip(chestArmor);
+
+        player.TakeDamage(20, DamageType.Hybrid);
+
+        Assert.AreEqual(4, headArmor.Durability);
+        Assert.AreEqual(5, chestArmor.Durability);
+    }
+
+    [TestMethod]
+    public void TakeDamage_Hybrid_ResistanceHigher_DamagesResistanceArmor()
+    {
+        var player = CreatePlayer();
+        player.Archetype.Speed = 0;
+        player.Archetype.DefenseBonus = 0;
+        player.Archetype.ResistanceBonus = 0;
+
+        var headArmor = new Armor
+        {
+            Name = "Head Armor",
+            ArmorType = ArmorType.Head,
+            Durability = 5,
+            DefensePower = 5,
+            RequiredLevel = player.Level
+        };
+
+        var chestArmor = new Armor
+        {
+            Name = "Chest Armor",
+            ArmorType = ArmorType.Chest,
+            Durability = 5,
+            Resistance = 10,
+            RequiredLevel = player.Level
+        };
+
+        player.Inventory.AddItem(headArmor);
+        player.Inventory.AddItem(chestArmor);
+
+        player.Equip(headArmor);
+        player.Equip(chestArmor);
+
+        player.TakeDamage(20, DamageType.Hybrid);
+
+        Assert.AreEqual(5, headArmor.Durability);
+        Assert.AreEqual(4, chestArmor.Durability);
+    }
+
+    [TestMethod]
+    public void TakeDamage_Hybrid_StatsEqual_DamagesEitherArmorType()
+    {
+        var player = CreatePlayer();
+        player.Archetype.Speed = 0;
+        player.Archetype.DefenseBonus = 0;
+        player.Archetype.ResistanceBonus = 0;
+
+        var headArmor = new Armor
+        {
+            Name = "Head Armor",
+            ArmorType = ArmorType.Head,
+            Durability = 5,
+            DefensePower = 10,
+            RequiredLevel = player.Level
+        };
+
+        var chestArmor = new Armor
+        {
+            Name = "Chest Armor",
+            ArmorType = ArmorType.Chest,
+            Durability = 5,
+            Resistance = 10,
+            RequiredLevel = player.Level
+        };
+
+        player.Inventory.AddItem(headArmor);
+        player.Inventory.AddItem(chestArmor);
+
+        player.Equip(headArmor);
+        player.Equip(chestArmor);
+
+        player.TakeDamage(20, DamageType.Hybrid);
+
+        var headDamaged = headArmor.Durability == 4;
+        var chestDamaged = chestArmor.Durability == 4;
+
+        Assert.IsTrue(headDamaged ^ chestDamaged,
+            "Exactly one armor piece should lose durability.");
     }
 }

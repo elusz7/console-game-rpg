@@ -133,18 +133,20 @@ Deferred:
 
 **Goal:** Make damage resolution consistent and ensure death is handled correctly.
 
-- [ ] Review physical and magical damage calculations.
-- [ ] Review player damage handling.
-- [ ] Review monster damage handling.
-- [ ] Review elemental damage handling.
-- [ ] Correct damage-type inconsistencies.
-- [ ] Ensure player death is detected consistently.
-- [ ] Ensure monster death is detected consistently.
-- [ ] Review damage mitigation and resistance calculations.
-- [ ] Review dodge and critical-hit interactions.
-- [ ] Add tests for damage boundaries and death conditions.
+- [x] Review physical and magical damage calculations.
+- [x] Review player damage handling.
+- [x] Review monster damage handling.
+- [x] Review elemental damage handling.
+- [x] Correct damage-type inconsistencies.
+- [x] Ensure player death is detected consistently.
+- [x] Ensure monster death is detected consistently.
+- [x] Review damage mitigation and resistance calculations.
+- [x] Review dodge and critical-hit interactions.
+- [x] Add tests for damage boundaries and death conditions.
 
 **Completion criteria:** All damage paths resolve consistently, and death handling cannot be bypassed by an individual attack type.
+
+Deferred/Feature Implementation: Critical Hits
 
 ## Step 8 — Introduce a Reusable Damage Calculation System
 

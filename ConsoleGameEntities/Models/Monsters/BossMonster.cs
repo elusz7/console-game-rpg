@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Helpers;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Monsters.Strategies;
@@ -49,7 +50,12 @@ public class BossMonster : Monster
         foreach (var skill in Skills.OfType<BossSkill>())
             skill.Phase = CurrentPhase;
 
-        double scale = Math.Pow(0.75, CurrentPhase - 1);
+        var scale = CurrentPhase switch
+        {
+            1 => 1.0,
+            2 => 0.75,
+            _ => 0.50
+        };
         MaxHealth = (int)(BaseHealth * scale);
         AttackPower = (int)(BaseAttack * scale);
         CurrentHealth = MaxHealth;
@@ -71,8 +77,15 @@ public class BossMonster : Monster
 
     public override void TakeDamage(int damage, DamageType? damageType)
     {
-        var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
-        bool dodged = _rng.Next(0, 100) < chance;
+        // Validate and calculate damage before the dodge check.
+        var damageTaken = DamageCalculator.CalculateDamage(
+            damage,
+            damageType,
+            GetStat(StatType.Defense),
+            GetStat(StatType.Resistance));
+
+        var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01));
+        var dodged = _rng.NextDouble() * 100 < chance;
 
         if (dodged)
         {
@@ -80,18 +93,10 @@ public class BossMonster : Monster
             return;
         }
 
-        int damageTaken = damageType switch
-        {
-            DamageType.Martial => Math.Max(1, damage - GetStat(StatType.Defense)),
-            DamageType.Magical => Math.Max(1, damage - GetStat(StatType.Resistance)),
-            DamageType.Hybrid => Math.Max(1,
-                damage - (Math.Max(GetStat(StatType.Defense), GetStat(StatType.Resistance)) / 2)),
-            _ => damage
-        };
-
-        CurrentHealth -= damageTaken;
         AddActionItem($"{Name} takes {damageTaken} damage!");
+        CurrentHealth -= damageTaken;
 
+        // Bosses transition phases instead of dying immediately.
         if (CurrentHealth <= 0)
             CheckPhaseChange();
     }

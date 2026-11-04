@@ -7,6 +7,7 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using System.ComponentModel.DataAnnotations.Schema;
 using ConsoleGameEntities.Models.Items;
 using System.Numerics;
+using ConsoleGameEntities.Helpers;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
 
 namespace ConsoleGameEntities.Models.Entities;
@@ -53,24 +54,20 @@ public class Player : IPlayer
 
     public virtual void TakeDamage(int damage, DamageType? damageType)
     {
+        var damageTaken = DamageCalculator.CalculateDamage(
+            damage, 
+            damageType, 
+            GetStat(StatType.Defense),
+            GetStat(StatType.Resistance));
+        
         var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
-        bool dodged = _rng.Next(0, 100) < chance;
+        var dodged = _rng.NextDouble() * 100 < chance;
 
         if (dodged)
         {
             AddActionItem($"You dodged the attack and took no damage!");
             return;
         }
-
-        int damageTaken = damageType switch
-        {
-            DamageType.Martial => Math.Max(1, damage - GetStat(StatType.Defense)),
-            DamageType.Magical => Math.Max(1, damage - GetStat(StatType.Resistance)),
-            DamageType.Hybrid => Math.Max(1,
-                damage - (Math.Max(GetStat(StatType.Defense), GetStat(StatType.Resistance)) / 2)),
-            _ => damage
-        };
-
 
         CurrentHealth -= damageTaken;
         AddActionItem($"You've taken {damageTaken} damage! [{CurrentHealth} / {MaxHealth}]");
@@ -83,6 +80,11 @@ public class Player : IPlayer
 
     public virtual void Heal(int regainedHealth)
     {
+        if (regainedHealth < 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(regainedHealth),
+                "Healing amount cannot be negative.");
+        
         int healedAmount;
         if (CurrentHealth + regainedHealth > MaxHealth)
         {
@@ -198,6 +200,9 @@ public class Player : IPlayer
         AddActionItem($"You have been cursed! Your max health has been lowered by {cursedDeduction}!");
 
         cursedItem.TargetCursed();
+        
+        if (CurrentHealth <= 0)
+            throw new PlayerDeathException();
     }
 
     public void ModifyStat(StatType stat, int amount)
@@ -289,10 +294,24 @@ public class Player : IPlayer
 
     private void CheckArmorDurability(DamageType? damageType)
     {
-        //randomly select an armor piece to use durability
-        var damagedArmor = damageType == DamageType.Martial
-            ? Equipment.OfType<Armor>().Where(a => a.DefensePower > 0).OrderBy(_ => _rng.Next()).FirstOrDefault()
-            : Equipment.OfType<Armor>().Where(a => a.Resistance > 0).OrderBy(_ => _rng.Next()).FirstOrDefault();
+        var armor = Equipment.OfType<Armor>();
+
+        var damagedArmor = damageType switch
+        {
+            DamageType.Martial => armor
+                .Where(a => a.DefensePower > 0)
+                .OrderBy(_ => _rng.Next())
+                .FirstOrDefault(),
+
+            DamageType.Magical => armor
+                .Where(a => a.Resistance > 0)
+                .OrderBy(_ => _rng.Next())
+                .FirstOrDefault(),
+
+            DamageType.Hybrid => GetHybridDamageArmor(armor),
+
+            _ => null
+        };
 
         if (damagedArmor != null)
         {
@@ -307,6 +326,26 @@ public class Player : IPlayer
                 AddActionItem($"Your {damagedArmor.Name} broke and can't be used anymore.");
             }
         }
+    }
+    
+    /// <summary>
+    /// Selects armor that contributes to the higher defense or resistance
+    /// value used when mitigating hybrid damage.
+    /// </summary>
+    private Armor? GetHybridDamageArmor(IEnumerable<Armor> armor)
+    {
+        var defense = GetStat(StatType.Defense);
+        var resistance = GetStat(StatType.Resistance);
+
+        var relevantArmor = defense > resistance
+            ? armor.Where(a => a.DefensePower > 0)
+            : resistance > defense
+                ? armor.Where(a => a.Resistance > 0)
+                : armor.Where(a => a.DefensePower > 0 || a.Resistance > 0);
+
+        return relevantArmor
+            .OrderBy(_ => _rng.Next())
+            .FirstOrDefault();
     }
 
     private void CheckWeaponDurability()

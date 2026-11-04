@@ -21,7 +21,10 @@ public class BossSkill : DamageSkill
     {
         if (!IsReady) throw new SkillCooldownException("This skill is still on cooldown.");
 
-        double multiplier = Phase switch
+        // Start the cooldown when the skill is activated.
+        Reset();
+        
+        var multiplier = Phase switch
         {
             1 => 1.0,
             2 => 1.5,
@@ -31,7 +34,7 @@ public class BossSkill : DamageSkill
 
         caster.AddActionItem(this);
 
-        int damage = (int)(Power * multiplier);
+        var damage = (int)(Power * multiplier);
         singleEnemy?.TakeDamage(damage, DamageType);
     }
 

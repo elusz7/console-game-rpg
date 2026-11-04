@@ -8,6 +8,7 @@ using ConsoleGameEntities.Models.Monsters.Strategies;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Models.Items;
 using System.Text;
+using ConsoleGameEntities.Helpers;
 
 namespace ConsoleGameEntities.Models.Monsters;
 
@@ -162,31 +163,25 @@ public class Monster : IMonster
 
     public virtual void TakeDamage(int damage, DamageType? damageType)
     {
+        var damageTaken = DamageCalculator.CalculateDamage(
+            damage, 
+            damageType, 
+            GetStat(StatType.Defense),
+            GetStat(StatType.Resistance));
+        
         var chance = Math.Min(33, DodgeChance + (GetStat(StatType.Speed) * 0.01)); //cap of 33% dodge chance
-        bool dodged = _rng.Next(0, 100) < chance;
+        var dodged = _rng.NextDouble() * 100 < chance;
 
         if (dodged)
         {
             AddActionItem($"{Name} dodged the attack and took no damage!");
             return;
         }
-
-        int damageTaken = 0;
-        switch (damageType)
-        {
-            case DamageType.Martial:
-                damageTaken = Math.Max(1, damage - GetStat(StatType.Defense));
-                DamageRecord[DamageType.Martial] += 1;
-                break;
-            case DamageType.Magical:
-                damageTaken = Math.Max(1, damage - GetStat(StatType.Resistance));
-                DamageRecord[DamageType.Magical] += 1;
-                break;
-            case DamageType.Hybrid:
-                damageTaken = Math.Max(1,
-                    damage - (Math.Max(GetStat(StatType.Defense), GetStat(StatType.Resistance)) / 2));
-                break;
-        }
+        
+        if (damageType == DamageType.Martial)
+            DamageRecord[DamageType.Martial] += 1;
+        else if (damageType == DamageType.Magical)
+            DamageRecord[DamageType.Magical] += 1;
 
         AddActionItem($"{Name} takes {damageTaken} damage!");
         CurrentHealth -= damageTaken;
@@ -200,6 +195,11 @@ public class Monster : IMonster
 
     public virtual void Heal(int regainedHealth)
     {
+        if (regainedHealth < 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(regainedHealth),
+                "Healing amount cannot be negative.");
+        
         if (CurrentHealth + regainedHealth > MaxHealth)
         {
             AddActionItem($"{Name} heals for {MaxHealth - CurrentHealth} health!");

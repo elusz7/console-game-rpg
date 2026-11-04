@@ -1,7 +1,9 @@
 ﻿using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
+using Moq;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameTests.ConsoleGameEntities.Models.Skills;
@@ -122,5 +124,28 @@ public class BossSkillTests
         skill.Activate(monster, target);
 
         Assert.IsTrue(monster.ActionItems.Values.Any(a => a.Contains($"uses {skill.Name}")));
+    }
+    
+    [TestMethod]
+    public void Activate_ReadySkill_StartsCooldown()
+    {
+        var skill = new BossSkill
+        {
+            Name = "Boss Strike",
+            Power = 20,
+            Cooldown = 3,
+            DamageType = DamageType.Martial,
+            ElapsedTime = 3
+        };
+
+        var caster = new Mock<ITargetable>();
+        var target = new Mock<ITargetable>();
+
+        skill.Activate(caster.Object, target.Object);
+
+        Assert.AreEqual(0, skill.ElapsedTime);
+        target.Verify(
+            t => t.TakeDamage(20, DamageType.Martial),
+            Times.Once);
     }
 }
