@@ -1,9 +1,9 @@
-﻿using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
-
-namespace ConsoleGameEntities.Models.Entities;
+﻿﻿namespace ConsoleGameEntities.Models.Entities;
 
 public class ModelEnums
 {
+    public record StatusRecord(StatusRecordType Source, int Type, int Duration, int Power);
+
     public enum ItemType
     {
         Weapon = 0,
@@ -14,9 +14,9 @@ public class ModelEnums
 
     public enum TargetType
     {
-        Self = 0, // Buffs, heals yourself
-        SingleEnemy = 1, // Single-target attacks, debuffs
-        AllEnemies = 2 // AoE attacks, mass debuff
+        Self = 0,            // Buffs, heals yourself
+        SingleEnemy = 1,     // Single-target attacks, debuffs
+        AllEnemies = 2     // AoE attacks, mass debuff
     }
 
     public enum ArchetypeType
@@ -111,5 +111,59 @@ public class ModelEnums
         Health = 0,
         Durability = 1,
         Resource = 2
+    }
+
+    public enum ElementType
+    {
+        Fire = 0,
+        Lightning = 1,
+        Ice = 2,
+        Nature = 3,
+        Radiance = 4,
+        Abyssal = 5
+    }
+
+    public enum RarityLevel
+    {
+        Common = 0,
+        Uncommon = 1,
+        Rare = 2,
+        Epic = 3,
+        Legendary = 4,
+        Mythic = 5
+    }
+
+    public enum ElementDamageType
+    {
+        Burning = 0,
+        Static = 1,
+        Frostbite = 2,
+        Poisoned = 3,
+        Weakened = 4,
+        Despair = 5
+    }
+
+    public enum ElementalStatusEffectType
+    {
+        Charred = 0,
+        Shocked = 1,
+        Frozen = 2,
+        Snared = 3,
+        Blinded = 4,
+        Corrupted = 5
+    }
+
+    public enum ComponentType
+    {
+        Core = 0,
+        Essence = 1,
+        MonsterPart = 2
+    }
+
+    public enum StatusRecordType
+    {
+        Skill = 0,
+        ElementalStatus = 1,
+        ElementalDamage = 2
     }
 }

@@ -10,6 +10,7 @@ namespace ConsoleGameEntities.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql("SET IDENTITY_INSERT Rooms ON;");
+            migrationBuilder.Sql("ALTER TABLE Rooms NOCHECK CONSTRAINT ALL;");
             migrationBuilder.InsertData(
                 table: "Rooms",
                 columns: new[] { "Id", "Name", "Description", "NorthId", "SouthId", "EastId", "WestId" },
@@ -33,7 +34,7 @@ namespace ConsoleGameEntities.Migrations
                 {16, "Chapel", "Pews are overturned and the altar shattered, yet a strange hush still clings to the air.", null, 54, 57, null},
                 {17, "Council Chamber", "Chairs are askew around a dust-covered table where silence reigns over forgotten councils.", null, 49, null, 58},
                 {18, "Counting House", "Ledger books lay open in moldy decay, their ink run into unreadable trails.", null, 33, null, 9},
-                {19, "Cursed Hall", "The air is colder here, and your footsteps echo too loudly, as if watched by unseen eyes.", null, (int)ArmorType.Arms, null, null},
+                {19, "Cursed Hall", "The air is colder here, and your footsteps echo too loudly, as if watched by unseen eyes.", null, 2, null, null},
                 {20, "Divination Room", "Cracked crystal balls and scattered cards suggest omens too dark to bear.", 60, 59, null, 13},
                 {21, "Dungeon", "Chains hang loosely from the damp, mossy walls of cells that remember every scream.", 52, 36, 15, 5},
                 {22, "Gallery of Heroes", "Portraits gaze blankly, their faces faded and cracked beneath centuries of dust.", 28, null, 30, null},
@@ -43,7 +44,7 @@ namespace ConsoleGameEntities.Migrations
                 {26, "Guardroom", "Empty weapon racks and a stale odor linger where sentries once gathered.", null, 3, null, 64},
                 {27, "Hall of Mirrors", "Most mirrors are shattered, reflecting only fragments of those who dare pass through.", 29, null, 41, 14},
                 {28, "Hall of Tapestries", "Moths feast on decaying fabric, the heroic scenes now just silhouettes and dust.", 6, 22, null, null},
-                {29, "Kennels", "Cracked bones and rotting leashes remain in these empty cages.", null, 27, 53, (int)ConsumableType.Durability},
+                {29, "Kennels", "Cracked bones and rotting leashes remain in these empty cages.", null, 27, 53, 1},
                 {30, "Kitchen", "The hearth is cold, and overturned pots lie like silent witnesses to a hasty departure.", null, null, 40, 22},
                 {31, "Lady's Chamber", "Perfume bottles sit empty on a dust-coated vanity beneath a broken mirror.", null, null, 6, 54},
                 {32, "Larder", "Only cobwebs and gnawed bones remain in the rotted shelving of this dark pantry.", 34, 53, 63, null},
@@ -80,6 +81,7 @@ namespace ConsoleGameEntities.Migrations
                 {63, "Workshop", "Tools hang untouched on rusted hooks, each one a memory of the craftsman who left.", null, 9, null, 32},
                 {64, "Greenhouse", "Overgrowth has claimed every inch, broken glass letting in weeds and wildflowers alike.", null, null, 26, null}
                 });
+            migrationBuilder.Sql("ALTER TABLE Rooms CHECK CONSTRAINT ALL;");
             migrationBuilder.Sql("SET IDENTITY_INSERT Rooms OFF;");
 
             migrationBuilder.Sql("SET IDENTITY_INSERT Archetypes ON;");

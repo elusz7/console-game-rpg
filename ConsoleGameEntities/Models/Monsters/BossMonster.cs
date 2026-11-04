@@ -18,7 +18,7 @@ public class BossMonster : Monster
     private const int MaxPhases = 3;
     private int _baseHealth;
     private int _baseAttack;
-    public override double DodgeChance { get; set; } = 0.01;
+    [NotMapped] public override double DodgeChance { get; set; } = 0.01;
 
     [NotMapped] public override IMonsterStrategy Strategy { get; set; }
 

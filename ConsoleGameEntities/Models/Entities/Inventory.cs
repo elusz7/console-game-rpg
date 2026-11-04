@@ -1,5 +1,6 @@
 ﻿using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces;
+using ConsoleGameEntities.Models.Entities.Inventories;
 using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGameEntities.Models.Entities;
@@ -11,7 +12,9 @@ public class Inventory : IInventory
     public decimal Capacity { get; set; }
     public int PlayerId { get; set; }
     public virtual Player Player { get; set; }
-    public virtual List<Item> Items { get; set; } = new();
+    public virtual List<Item> Items { get; set; } = [];
+    public virtual List<InventoryRune> Runes { get; set; } = [];
+    public virtual List<InventoryIngredient> Ingredients { get; set; } = [];
 
     public virtual void AddItem(Item item)
     {
@@ -44,13 +47,9 @@ public class Inventory : IInventory
             return;
         }
 
-        decimal wiggleRoom = Capacity - GetCarryingWeight();
+        var wiggleRoom = Capacity - GetCarryingWeight();
 
-        if (Items.Contains(item))
-        {
-            throw new DuplicateItemException($"You already have {item.Name} in your inventory.");
-        }
-        else if (item.Weight <= wiggleRoom)
+        if (item.Weight <= wiggleRoom)
         {
             Items.Add(item);
             item.InventoryId = Id;

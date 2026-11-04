@@ -35,7 +35,7 @@ public class Monster : IMonster
     public int MaxHealth { get; set; }
     public ThreatLevel ThreatLevel { get; set; }
     public int AggressionLevel { get; set; }
-    public virtual double DodgeChance { get; set; } = 0.01;
+    [NotMapped] public virtual double DodgeChance { get; set; } = 0.01;
     public string MonsterType { get; set; }
     public virtual List<Skill> Skills { get; set; } = new List<Skill>();
     public int? RoomId { get; set; }

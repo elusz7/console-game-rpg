@@ -229,7 +229,9 @@ into a single branch, then implement reliable persistence for
 player-owned runes and ingredients, including crafting, fusion, and
 equipment integration.
 
-### Phase 1 --- Create the Integration Branch
+### Phase 1 — Integrate models and update mappings
+
+Bring over the needed models from `elemental-damage` (Rune, WeaponRune, ArmorRune, Ingredient, Recipe, RecipeIngredient, InventoryRune, InventoryIngredient, etc.) and update all EF Core mappings and relationships between them.
 
 -   [x] Verify `architecture-refactor` is committed and pushed.
 -   [x] Verify `elemental-damage` is committed and pushed.
@@ -238,156 +240,61 @@ equipment integration.
     crafting changes to bring over.
 -   [ ] Integrate elemental functionality from `elemental-damage`.
 -   [ ] Reconcile overlapping classes and resolve integration conflicts.
+-   [ ] Add ownership entities and navigation properties (InventoryRune,
+    InventoryIngredient).
+-   [ ] Configure all EF Core relationships (Inventory-to-ownership,
+    ownership-to-definition, equipment-to-owned-rune).
+-   [ ] Define cascade and restrict delete behaviors.
 -   [ ] Build and test after each logical integration.
 -   [ ] Verify existing architecture and gameplay functionality.
 
-**Completion criteria:** `elemental-refactor` contains the stable
-architecture and existing elemental damage, rune, ingredient, recipe,
-and crafting functionality.
+**Completion criteria:** `elemental-refactor` contains all models,
+entities, and EF Core mappings for runes, ingredients, recipes, and
+ownership — with the project building successfully.
 
-### Phase 2 --- Review Existing Rune and Ingredient Architecture
+### Phase 2 — Establish migrations and seed data
 
--   [ ] Review the Inventory model.
--   [ ] Review Rune, WeaponRune, ArmorRune, and Ingredient models.
--   [ ] Review Weapon and Armor rune relationships.
--   [ ] Review Player and EquipmentManager responsibilities.
--   [ ] Review CraftingHelper, Recipe, RecipeIngredient, and related
-    DAOs.
--   [ ] Review existing EF Core mappings and migrations.
--   [ ] Identify shared database definitions versus player-owned
-    instances.
--   [ ] Identify existing gameplay behavior that must be preserved.
+Create and apply EF Core migrations for the new ownership entities, verify the database schema, and add seed data for shared Rune and Ingredient definitions.
 
-**Completion criteria:** The existing rune and ingredient architecture,
-including its persistence gaps and gameplay dependencies, is fully
-understood.
-
-### Phase 3 --- Design Persistent Ownership
-
--   [ ] Design the `InventoryRune` ownership entity.
--   [ ] Design the `InventoryIngredient` ownership entity.
--   [ ] Define rune identity using database Rune IDs.
--   [ ] Define player-specific rune tier progression.
--   [ ] Define ingredient and rune quantity rules.
--   [ ] Define rune stacking and uniqueness constraints.
--   [ ] Define equipment references to owned rune records.
--   [ ] Define how equipped runes reserve inventory quantities.
--   [ ] Define ownership and deletion constraints.
--   [ ] Ensure shared Rune and Ingredient definitions cannot be mutated
-    by player progression.
-
-**Completion criteria:** A reviewed ownership model supports persistent
-quantities, player-specific rune progression, and equipped rune tracking
-without modifying shared definitions.
-
-### Phase 4 --- Implement EF Core Persistence
-
--   [ ] Add ownership entities and navigation properties.
--   [ ] Configure Inventory-to-InventoryRune relationships.
--   [ ] Configure Inventory-to-InventoryIngredient relationships.
--   [ ] Configure ownership-to-definition relationships.
--   [ ] Configure equipment-to-owned-rune relationships.
--   [ ] Define appropriate cascade and restrict delete behaviors.
 -   [ ] Create and review EF Core migrations.
 -   [ ] Verify generated database schema and indexes.
+-   [ ] Add seed data for shared Rune definitions.
+-   [ ] Add seed data for shared Ingredient definitions.
+-   [ ] Add seed data for Recipe and RecipeIngredient definitions.
 -   [ ] Test saving and loading rune inventories.
 -   [ ] Test saving and loading ingredient inventories.
 -   [ ] Test inventory updates and deletion.
 
-**Completion criteria:** Rune and ingredient ownership persists
-correctly through EF Core, with appropriate relationship and deletion
-constraints.
+**Completion criteria:** Rune and ingredient ownership persists correctly
+through EF Core, with appropriate relationship constraints and seed data
+for shared definitions.
 
-### Phase 5 --- Update Inventory Operations
+### Phase 3 — Implement crafting, fusion, destruction, and progression gameplay
+
+Replace in-memory dictionaries with persistent ownership operations, then wire up all crafting and rune progression gameplay.
 
 -   [ ] Replace the `[NotMapped]` rune dictionary with persistent
     ownership operations.
 -   [ ] Replace the `[NotMapped]` ingredient dictionary with persistent
     ownership operations.
--   [ ] Implement adding and removing rune quantities.
--   [ ] Implement adding and removing ingredient quantities.
--   [ ] Validate positive quantities.
--   [ ] Prevent negative quantities and invalid ownership changes.
--   [ ] Preserve existing rune and ingredient stacking behavior where
-    appropriate.
--   [ ] Update fuseable, destroyable, and transmutable inventory
-    queries.
+-   [ ] Implement adding and removing rune and ingredient quantities.
+-   [ ] Validate positive quantities and prevent invalid ownership
+    changes.
+-   [ ] Update fuseable, destroyable, and transmutable inventory queries.
 -   [ ] Ensure equipped rune quantities cannot be consumed or destroyed.
-
-**Completion criteria:** Inventory operations consistently maintain
-persistent ownership and valid quantities.
-
-### Phase 6 --- Update Crafting and Rune Progression
-
--   [ ] Update rune crafting to consume persistent ingredient
-    quantities.
+-   [ ] Update rune crafting to consume persistent ingredient quantities.
 -   [ ] Update rune fusion to consume four available copies.
--   [ ] Implement player-specific tier progression.
--   [ ] Implement rarity evolution without modifying shared Rune
-    definitions.
+-   [ ] Implement player-specific tier progression and rarity evolution.
 -   [ ] Update rune destruction to return recovered ingredients.
 -   [ ] Update essence transmutation to consume and award persistent
     quantities.
--   [ ] Preserve existing recipe requirements and crafting rules.
 -   [ ] Ensure multi-record crafting operations are atomic.
+-   [ ] Preserve existing recipe requirements and crafting rules.
 -   [ ] Add focused crafting and progression tests.
 
-**Completion criteria:** Crafting, fusion, destruction, and
-transmutation correctly update persistent player-owned resources.
-
-### Phase 7 --- Update Equipment and Rune Application
-
--   [ ] Update Weapon and Armor to reference owned rune records.
--   [ ] Preserve access to shared rune definitions.
--   [ ] Update EquipmentManager rune application.
--   [ ] Update rune replacement behavior.
--   [ ] Preserve the existing rule that replacing a rune destroys it and
-    returns its ingredients, rather than returning the rune itself.
--   [ ] Validate rune compatibility with equipment.
--   [ ] Validate equipment ownership before rune application.
--   [ ] Prevent equipping more copies than the player owns.
--   [ ] Release reserved rune quantities when equipment is changed or
-    removed.
--   [ ] Ensure equipment and inventory changes are atomic.
-
-**Completion criteria:** Rune application and replacement consistently
-respect player ownership, equipped quantities, and existing gameplay
-rules.
-
-### Phase 8 --- Update Combat Integration
-
--   [ ] Update WeaponRune effects to use the owned rune's tier.
--   [ ] Update ArmorRune effects to use the owned rune's tier.
--   [ ] Preserve existing elemental damage and status-effect
-    calculations.
--   [ ] Verify rune effects remain correct after saving and loading.
--   [ ] Ensure shared Rune definitions remain unchanged during combat.
--   [ ] Add tests for equipped rune effects and player-specific tiers.
-
-**Completion criteria:** Equipped rune effects use the correct
-player-owned rune progression and remain consistent across game
-sessions.
-
-### Phase 9 --- Final Integration and Verification
-
--   [ ] Add SQLite or appropriate database integration tests for rune
-    ownership.
--   [ ] Add integration tests for ingredient ownership.
--   [ ] Test crafting, fusion, destruction, and transmutation
-    persistence.
--   [ ] Test applying, replacing, and removing equipped runes.
--   [ ] Test saving and reloading equipped rune relationships.
--   [ ] Verify multiple players cannot affect each other's rune or
-    ingredient quantities.
--   [ ] Run the full Release build.
--   [ ] Run the full test suite.
--   [ ] Review migrations and database schema.
--   [ ] Commit and push the completed work.
-
-**Completion criteria:** The consolidated architecture supports
-persistent runes, ingredients, crafting, progression, and equipment
-integration without shared-definition mutation or ownership
-inconsistencies.
+**Completion criteria:** All crafting, fusion, destruction, and
+transmutation operations work with persistent ownership while preserving
+existing recipe rules and gameplay behavior.
 
 ------------------------------------------------------------------------
 

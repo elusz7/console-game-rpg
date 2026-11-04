@@ -21,7 +21,7 @@ public class Player : IPlayer
     public int Id { get; set; }
     public string Name { get; set; }
     [NotMapped] public int CurrentHealth { get; set; }
-    public double DodgeChance { get; set; } = 0.01;
+    [NotMapped] public double DodgeChance { get; set; } = 0.01;
     public int MaxHealth { get; set; }
     public int ArchetypeId { get; set; }
     public virtual Archetype Archetype { get; set; }

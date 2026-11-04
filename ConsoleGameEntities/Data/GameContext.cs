@@ -3,6 +3,9 @@ using ConsoleGameEntities.Models.Monsters;
 using Microsoft.EntityFrameworkCore;
 using ConsoleGameEntities.Models.Skills;
 using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Entities.Inventories;
+using ConsoleGameEntities.Models.Runes;
+using ConsoleGameEntities.Models.Runes.Recipes;
 
 namespace ConsoleGameEntities.Data
 {
@@ -15,6 +18,14 @@ namespace ConsoleGameEntities.Data
         public DbSet<Inventory>? Inventories { get; set; }
         public DbSet<Room>? Rooms { get; set; }
         public DbSet<Archetype> Archetypes { get; set; }
+        public DbSet<InventoryRune> InventoryRunes { get; set; }
+        public DbSet<InventoryIngredient> InventoryIngredients { get; set; }
+        public DbSet<Rune> Runes { get; set; }
+        public DbSet<Ingredient> Ingredients { get; set; }
+        public DbSet<Recipe> Recipes { get; set; }
+        public DbSet<RecipeIngredient> RecipeIngredients { get; set; }
+        public DbSet<MonsterDrop> MonsterDrops { get; set; }
+        public DbSet<EquippedRune> EquippedRunes { get; set; }
 
         public GameContext(DbContextOptions<GameContext> options) : base(options)
         {
@@ -81,7 +92,116 @@ namespace ConsoleGameEntities.Data
                 .HasMany(i => i.Items)
                 .WithOne(item => item.Inventory)
                 .HasForeignKey(item => item.InventoryId);
+            
+            // Configure persistent rune inventory.
+            modelBuilder.Entity<InventoryRune>()
+                .HasKey(ir => new { ir.InventoryId, ir.RuneId, ir.Tier });
 
+            modelBuilder.Entity<InventoryRune>()
+                .HasOne(ir => ir.Inventory)
+                .WithMany(i => i.Runes)
+                .HasForeignKey(ir => ir.InventoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<InventoryRune>()
+                .HasOne(ir => ir.Rune)
+                .WithMany()
+                .HasForeignKey(ir => ir.RuneId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InventoryRune>()
+                .Property(ir => ir.Quantity)
+                .IsRequired();
+
+            // Configure persistent ingredient inventory.
+            modelBuilder.Entity<InventoryIngredient>()
+                .HasKey(ii => new { ii.InventoryId, ii.IngredientId });
+
+            modelBuilder.Entity<InventoryIngredient>()
+                .HasOne(ii => ii.Inventory)
+                .WithMany(i => i.Ingredients)
+                .HasForeignKey(ii => ii.InventoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<InventoryIngredient>()
+                .HasOne(ii => ii.Ingredient)
+                .WithMany()
+                .HasForeignKey(ii => ii.IngredientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InventoryIngredient>()
+                .Property(ii => ii.Quantity)
+                .IsRequired();
+            
+            // Configure rune inheritance.
+            modelBuilder.Entity<Rune>()
+                .HasDiscriminator<string>(r => r.RuneType)
+                .HasValue<WeaponRune>("WeaponRune")
+                .HasValue<ArmorRune>("ArmorRune");
+
+// Configure Recipe-to-Rune relationship.
+            modelBuilder.Entity<Recipe>()
+                .HasOne(r => r.Rune)
+                .WithOne(r => r.Recipe)
+                .HasForeignKey<Recipe>(r => r.RuneId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+// Configure RecipeIngredient relationships.
+            modelBuilder.Entity<RecipeIngredient>()
+                .HasOne(ri => ri.Recipe)
+                .WithMany(r => r.Ingredients)
+                .HasForeignKey(ri => ri.RecipeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RecipeIngredient>()
+                .HasOne(ri => ri.Ingredient)
+                .WithMany()
+                .HasForeignKey(ri => ri.IngredientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Prevent duplicate ingredient entries within a recipe.
+            modelBuilder.Entity<RecipeIngredient>()
+                .HasIndex(ri => new { ri.RecipeId, ri.IngredientId })
+                .IsUnique();
+
+            // Configure MonsterDrop composite key and ingredient relationship.
+            modelBuilder.Entity<MonsterDrop>()
+                .HasKey(md => new
+                {
+                    md.Element,
+                    md.ThreatLevel,
+                    md.IngredientId
+                });
+
+            modelBuilder.Entity<MonsterDrop>()
+                .HasOne(md => md.Ingredient)
+                .WithMany()
+                .HasForeignKey(md => md.IngredientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure drop rate precision.
+            modelBuilder.Entity<MonsterDrop>()
+                .Property(md => md.DropRate)
+                .HasColumnType("decimal(5,2)");
+            
+            // Configure EquippedRune relationships
+            modelBuilder.Entity<EquippedRune>()
+                .HasOne(e => e.Item)
+                .WithOne(i => i.EquippedRune)
+                .HasForeignKey<EquippedRune>(e => e.ItemId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<EquippedRune>()
+                .HasOne(e => e.InventoryRune)
+                .WithMany(ir => ir.EquippedRunes)
+                .HasForeignKey(e => new { e.InventoryId, e.RuneId, e.Tier })
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            modelBuilder.Entity<EquippedRune>()
+                .HasIndex(e => new { e.InventoryId, e.RuneId, e.Tier })
+                .IsUnique();
+
+            //configure room relationships
             modelBuilder.Entity<Room>()
                 .Property(r => r.Name)
                 .IsRequired()

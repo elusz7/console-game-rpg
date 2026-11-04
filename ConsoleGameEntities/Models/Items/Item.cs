@@ -4,6 +4,7 @@ using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Models.Runes;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Items;
@@ -24,6 +25,8 @@ public class Item : IItem
     public virtual Inventory? Inventory { get; set; }
     public int? MonsterId { get; set; }
     public virtual Monster? Monster { get; set; }
+    
+    public virtual EquippedRune? EquippedRune { get; set; }
 
     public virtual void Use()
     {

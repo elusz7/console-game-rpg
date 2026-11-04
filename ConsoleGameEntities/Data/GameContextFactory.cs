@@ -10,7 +10,9 @@ namespace ConsoleGameEntities.Data
         public GameContext CreateDbContext(string[] args)
         {
             // Build configuration
-            var configuration = ConfigurationHelper.GetConfiguration();
+            var basePath = Directory.GetCurrentDirectory();
+
+            var configuration = ConfigurationHelper.GetConfiguration(basePath);
 
             // Get connection string
             var connectionString = configuration.GetConnectionString("DefaultConnection")
