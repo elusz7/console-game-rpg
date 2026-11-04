@@ -368,6 +368,7 @@ FodyWeavers.xsd
 
 # Local AI tooling configuration
 .ai/
+.junie/
 
 # Local environment configuration
 **/appsettings.Development.json

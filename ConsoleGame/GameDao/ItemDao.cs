@@ -66,7 +66,7 @@ public class ItemDao(GameContext context) : IItemDao
         if (_context.Items == null)
             throw new InvalidOperationException("Items collection is null.");
 
-        IQueryable<Item> query = type switch
+        var query = type switch
         {
             ItemType.Weapon => _context.Items.OfType<Weapon>(),
             ItemType.Armor => _context.Items.OfType<Armor>(),

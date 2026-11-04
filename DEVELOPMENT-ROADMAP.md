@@ -220,81 +220,75 @@ interactions.
 
 # D. Branch Integration, Inventory, Runes, and Crafting
 
-## Step 9 --- Integrate Elemental Systems and Implement Persistent Rune and Ingredient Inventory
+# Step 9 — Integrate Elemental Systems and Implement Persistent Rune and Ingredient Inventory
 
-**Status: Not started**
+**Status: In Progress**
 
-**Goal:** Consolidate the stable architecture and elemental gameplay
-into a single branch, then implement reliable persistence for
-player-owned runes and ingredients, including crafting, fusion, and
-equipment integration.
+**Working branch:** `elemental-refactor`
 
-### Phase 1 — Integrate models and update mappings
+**Goal:** Consolidate the stable architecture and elemental gameplay into a single branch, establish reliable persistence for player-owned runes and ingredients, and integrate crafting, fusion, destruction, transmutation, and equipment interactions with the persistent ownership system.
 
-Bring over the needed models from `elemental-damage` (Rune, WeaponRune, ArmorRune, Ingredient, Recipe, RecipeIngredient, InventoryRune, InventoryIngredient, etc.) and update all EF Core mappings and relationships between them.
+### Phase 1 — Integrate Models and Update Mappings
 
--   [x] Verify `architecture-refactor` is committed and pushed.
--   [x] Verify `elemental-damage` is committed and pushed.
--   [x] Create `elemental-refactor` from `architecture-refactor`.
--   [ ] Identify the elemental damage, rune, ingredient, recipe, and
-    crafting changes to bring over.
--   [ ] Integrate elemental functionality from `elemental-damage`.
--   [ ] Reconcile overlapping classes and resolve integration conflicts.
--   [ ] Add ownership entities and navigation properties (InventoryRune,
-    InventoryIngredient).
--   [ ] Configure all EF Core relationships (Inventory-to-ownership,
-    ownership-to-definition, equipment-to-owned-rune).
--   [ ] Define cascade and restrict delete behaviors.
--   [ ] Build and test after each logical integration.
--   [ ] Verify existing architecture and gameplay functionality.
+Bring the required models and elemental functionality from `elemental-damage` into `elemental-refactor`. Reconcile overlapping classes and establish explicit EF Core relationships for rune and ingredient ownership.
 
-**Completion criteria:** `elemental-refactor` contains all models,
-entities, and EF Core mappings for runes, ingredients, recipes, and
-ownership — with the project building successfully.
+- [x] Verify `architecture-refactor` is committed and pushed.
+- [x] Verify `elemental-damage` is committed and pushed.
+- [x] Create `elemental-refactor` from `architecture-refactor`.
+- [x] Identify the elemental damage, rune, ingredient, recipe, and crafting changes to bring over.
+- [x] Integrate elemental functionality from `elemental-damage`.
+- [x] Reconcile overlapping classes and resolve integration conflicts.
+- [x] Add ownership entities and navigation properties (`InventoryRune`, `InventoryIngredient`).
+- [x] Configure all EF Core relationships (Inventory-to-ownership, ownership-to-definition, equipment-to-owned-rune).
+- [x] Define cascade and restrict delete behaviors.
+- [x] Build and test after each logical integration.
+- [x] Verify existing architecture and gameplay functionality.
 
-### Phase 2 — Establish migrations and seed data
+**Completion criteria:** `elemental-refactor` contains all required models, entities, and EF Core mappings for elemental damage, runes, ingredients, recipes, and ownership. The solution builds successfully and existing functionality remains intact.
 
-Create and apply EF Core migrations for the new ownership entities, verify the database schema, and add seed data for shared Rune and Ingredient definitions.
+### Phase 2 — Establish Migrations, Seed Data, and Verify Persistence
 
--   [ ] Create and review EF Core migrations.
--   [ ] Verify generated database schema and indexes.
--   [ ] Add seed data for shared Rune definitions.
--   [ ] Add seed data for shared Ingredient definitions.
--   [ ] Add seed data for Recipe and RecipeIngredient definitions.
--   [ ] Test saving and loading rune inventories.
--   [ ] Test saving and loading ingredient inventories.
--   [ ] Test inventory updates and deletion.
+Create and apply EF Core migrations for the new ownership entities. Establish shared definition data for runes, ingredients, and recipes, then verify that player-owned inventory data persists correctly.
 
-**Completion criteria:** Rune and ingredient ownership persists correctly
-through EF Core, with appropriate relationship constraints and seed data
-for shared definitions.
+- [x] Create and review EF Core migrations.
+- [x] Verify generated database schema and indexes.
+- [x] Add seed data for shared Rune definitions.
+- [x] Add seed data for shared Ingredient definitions.
+- [x] Add seed data for Recipe and RecipeIngredient definitions.
+- [ ] Test saving and loading rune inventories.
+- [ ] Test saving and loading ingredient inventories.
+- [ ] Test inventory updates and deletion.
+- [ ] Verify ownership quantities remain correct after database reload.
+- [ ] Verify equipped rune relationships persist correctly.
+- [ ] Verify deleting or modifying ownership records does not unintentionally delete shared definitions.
+- [ ] Add persistence integration tests covering new and existing players.
 
-### Phase 3 — Implement crafting, fusion, destruction, and progression gameplay
+**Completion criteria:** Rune and ingredient ownership persists correctly through EF Core. Shared definitions are seeded, ownership relationships behave as intended, and persistence operations are covered by integration tests.
 
-Replace in-memory dictionaries with persistent ownership operations, then wire up all crafting and rune progression gameplay.
+### Phase 3 — Implement Persistent Crafting, Fusion, Destruction, and Progression
 
--   [ ] Replace the `[NotMapped]` rune dictionary with persistent
-    ownership operations.
--   [ ] Replace the `[NotMapped]` ingredient dictionary with persistent
-    ownership operations.
--   [ ] Implement adding and removing rune and ingredient quantities.
--   [ ] Validate positive quantities and prevent invalid ownership
-    changes.
--   [ ] Update fuseable, destroyable, and transmutable inventory queries.
--   [ ] Ensure equipped rune quantities cannot be consumed or destroyed.
--   [ ] Update rune crafting to consume persistent ingredient quantities.
--   [ ] Update rune fusion to consume four available copies.
--   [ ] Implement player-specific tier progression and rarity evolution.
--   [ ] Update rune destruction to return recovered ingredients.
--   [ ] Update essence transmutation to consume and award persistent
-    quantities.
--   [ ] Ensure multi-record crafting operations are atomic.
--   [ ] Preserve existing recipe requirements and crafting rules.
--   [ ] Add focused crafting and progression tests.
+Replace the existing in-memory inventory implementations with persistent ownership operations. Update all rune and ingredient gameplay systems to use the new persistence architecture while preserving existing crafting and progression rules.
 
-**Completion criteria:** All crafting, fusion, destruction, and
-transmutation operations work with persistent ownership while preserving
-existing recipe rules and gameplay behavior.
+- [ ] Replace the `[NotMapped]` rune dictionary with persistent ownership operations.
+- [ ] Replace the `[NotMapped]` ingredient dictionary with persistent ownership operations.
+- [ ] Implement adding and removing rune and ingredient quantities.
+- [ ] Validate positive quantities and prevent invalid ownership changes.
+- [ ] Prevent negative inventory quantities and remove or clean up empty ownership records consistently.
+- [ ] Update fuseable, destroyable, and transmutable inventory queries.
+- [ ] Ensure equipped rune quantities cannot be consumed or destroyed.
+- [ ] Update rune crafting to consume persistent ingredient quantities.
+- [ ] Update rune fusion to consume four available copies.
+- [ ] Implement player-specific tier progression and rarity evolution.
+- [ ] Update rune destruction to return recovered ingredients.
+- [ ] Update essence transmutation to consume and award persistent quantities.
+- [ ] Ensure multi-record crafting operations are atomic.
+- [ ] Preserve existing recipe requirements and crafting rules.
+- [ ] Add focused crafting and progression tests.
+- [ ] Verify crafting, fusion, destruction, and transmutation against database-reloaded inventories.
+
+**Completion criteria:** All rune and ingredient inventory operations use persistent ownership. Crafting, fusion, destruction, and transmutation correctly update player-owned quantities, preserve equipped runes, enforce existing gameplay rules, and maintain data integrity through atomic operations and automated tests.
+
+**Step 9 Completion criteria:** The elemental systems are integrated into `elemental-refactor`, database persistence is verified, and all rune and ingredient gameplay operates through the persistent ownership architecture.
 
 ------------------------------------------------------------------------
 
