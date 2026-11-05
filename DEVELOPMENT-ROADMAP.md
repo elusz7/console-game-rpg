@@ -255,12 +255,12 @@ Create and apply EF Core migrations for the new ownership entities. Establish sh
 - [x] Add seed data for shared Rune definitions.
 - [x] Add seed data for shared Ingredient definitions.
 - [x] Add seed data for Recipe and RecipeIngredient definitions.
-- [ ] Test saving and loading rune inventories.
-- [ ] Test saving and loading ingredient inventories.
-- [ ] Test inventory updates and deletion.
-- [ ] Verify ownership quantities remain correct after database reload.
+- [x] Test saving and loading rune inventories.
+- [x] Test saving and loading ingredient inventories.
+- [x] Test inventory updates and deletion.
+- [x] Verify ownership quantities remain correct after database reload.
 - [ ] Verify equipped rune relationships persist correctly.
-- [ ] Verify deleting or modifying ownership records does not unintentionally delete shared definitions.
+- [x] Verify deleting or modifying ownership records does not unintentionally delete shared definitions.
 - [ ] Add persistence integration tests covering new and existing players.
 
 **Completion criteria:** Rune and ingredient ownership persists correctly through EF Core. Shared definitions are seeded, ownership relationships behave as intended, and persistence operations are covered by integration tests.

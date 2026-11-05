@@ -71,6 +71,8 @@ public static class Startup
         services.AddScoped<ISkillDao, SkillDao>();
         services.AddScoped<IRuneDao, RuneDao>();
         services.AddScoped<IIngredientDao, IngredientDao>();
+        services.AddScoped<IRecipeDao, RecipeDao>();
+        services.AddScoped<IMonsterDropDao, MonsterDropDao>();
 
         services.AddTransient<GameEngine>();
         services.AddTransient<StartMenu>();
