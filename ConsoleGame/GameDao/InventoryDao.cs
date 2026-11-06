@@ -10,20 +10,15 @@ public class InventoryDao(GameContext context) : IInventoryDao
 {
     private readonly GameContext _context = context;
 
-    public List<Player> GetAllPlayers()
-    {
-        return _context.Players?.ToList() ?? [];
-    }
-
     public void UpdateInventory(Inventory inventory)
     {
         _context.Inventories?.Update(inventory);
         _context.SaveChanges();
     }
 
-    public List<Item> GetEquippableItems(Player player)
+    public List<Item> GetAvailableItems(Player player)
     {
-        decimal availableCapacity = player.Inventory.Capacity - player.Inventory.GetCarryingWeight();
+        var availableCapacity = player.Inventory.Capacity - player.Inventory.GetCarryingWeight();
 
         return _context.Items?
             .Where(i => i.Weight <= availableCapacity)

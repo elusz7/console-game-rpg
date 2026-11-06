@@ -12,9 +12,7 @@ namespace ConsoleGame.GameDao.Interfaces;
 
 public interface IInventoryDao
 {
-    List<Player> GetAllPlayers();
-
     void UpdateInventory(Inventory inventory);
 
-    List<Item> GetEquippableItems(Player player);
+    List<Item> GetAvailableItems(Player player);
 }

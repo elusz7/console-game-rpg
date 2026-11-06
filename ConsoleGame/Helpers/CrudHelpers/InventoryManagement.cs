@@ -6,10 +6,15 @@ using ConsoleGame.Managers.Interfaces;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class InventoryManagement(IInputManager inputManager, IOutputManager outputManager, IInventoryDao inventoryDao)
+public class InventoryManagement(
+    IInputManager inputManager, 
+    IOutputManager outputManager, 
+    IPlayerDao playerDao,
+    IInventoryDao inventoryDao)
 {
     private readonly IInputManager _inputManager = inputManager;
     private readonly IOutputManager _outputManager = outputManager;
+    private readonly IPlayerDao _playerDao = playerDao;
     private readonly IInventoryDao _inventoryDao = inventoryDao;
     private Player? _player;
 
@@ -64,7 +69,7 @@ public class InventoryManagement(IInputManager inputManager, IOutputManager outp
 
     private bool SelectPlayer()
     {
-        List<Player> players = _inventoryDao.GetAllPlayers();
+        var players = _playerDao.GetAllPlayers();
 
         if (players.Count == 0)
         {
@@ -91,20 +96,20 @@ public class InventoryManagement(IInputManager inputManager, IOutputManager outp
     {
         do
         {
-            var equippableItems = _inventoryDao.GetEquippableItems(_player!);
+            var availableItems = _inventoryDao.GetAvailableItems(_player!);
 
             _outputManager.WriteLine(
                 $"\nCapacity: {_player!.Inventory.GetCarryingWeight()} / {_player.Inventory.Capacity}");
 
-            if (equippableItems.Count == 0)
+            if (availableItems.Count == 0)
             {
-                _outputManager.WriteLine("\nNo equippable items available.\n");
+                _outputManager.WriteLine("\nNo items available to add to inventory.\n");
                 break;
             }
 
-            Item? itemToAdd =
+            var itemToAdd =
                 _inputManager.Selector(
-                    equippableItems,
+                    availableItems,
                     i => ColorfulToStringHelper.ItemToString(i),
                     "Select an item to add to inventory",
                     j => ColorfulToStringHelper.GetItemColor(j)
@@ -143,7 +148,7 @@ public class InventoryManagement(IInputManager inputManager, IOutputManager outp
                 break;
             }
 
-            Item? itemToRemove =
+            var itemToRemove =
                 _inputManager.Selector(
                     inventory,
                     i => ColorfulToStringHelper.ItemToString(i),

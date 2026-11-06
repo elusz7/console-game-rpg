@@ -17,6 +17,7 @@ public interface IItem
     int Durability { get; set; }
     decimal Weight { get; set; }
     int RequiredLevel { get; set; }
+    bool IsCore { get; set; }
 
     Inventory? Inventory { get; set; }
     Monster? Monster { get; set; }

@@ -25,7 +25,7 @@ public class ItemDao(GameContext context) : IItemDao
 
     public void DeleteItem(Item item)
     {
-        if (item.Id <= 178)
+        if (item.IsCore)
             throw new InvalidOperationException("Core game items cannot be deleted.");
 
         _context.Items?.Remove(item);
@@ -34,12 +34,11 @@ public class ItemDao(GameContext context) : IItemDao
 
     public List<Item> GetItemsByName(string name)
     {
-        var matchingItems = 
-            _context.Items?
-                .Include(i => i.Inventory)
-                .ThenInclude(i => i!.Player).ToList()
-            .Where(i => i.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
-            .ToList() ?? [];
+        var matchingItems = _context.Items!
+            .Where(i => EF.Functions.Like(i.Name, $"%{name}%"))
+            .Include(i => i.Inventory)
+            .ThenInclude(i => i!.Player)
+            .ToList();
 
         return SortOrder switch
         {
@@ -64,7 +63,22 @@ public class ItemDao(GameContext context) : IItemDao
     public List<Item> GetAllNonCoreItems()
     {
         if (_context.Items == null) throw new InvalidOperationException("Items collection is null.");
-        return [.. _context.Items.Include(i => i.Inventory).ThenInclude(i => i!.Player).Where(i => i.Id > 178)];
+        var query = _context.Items
+            .Where(i => !i.IsCore);
+
+        query = SortOrder switch
+        {
+            "ASC" => query.OrderBy(i => i.Name),
+            "DESC" => query.OrderByDescending(i => i.Name),
+            _ => query
+        };
+
+        return
+        [
+            .. query
+                .Include(i => i.Inventory)
+                .ThenInclude(i => i!.Player)
+        ];
     }
 
     public List<Item> GetItemsByType(ItemType type)
@@ -72,30 +86,27 @@ public class ItemDao(GameContext context) : IItemDao
         if (_context.Items == null)
             throw new InvalidOperationException("Items collection is null.");
 
+        var ascending = SortOrder == "ASC";
+
         var query = type switch
         {
-            ItemType.Weapon => _context.Items.OfType<Weapon>(),
-            ItemType.Armor => _context.Items.OfType<Armor>(),
-            ItemType.Valuable => _context.Items.OfType<Valuable>(),
-            ItemType.Consumable => _context.Items.OfType<Consumable>(),
-            _ => Enumerable.Empty<Item>().AsQueryable()
-        };
+            ItemType.Weapon => ascending
+                ? _context.Items.OfType<Weapon>().OrderBy(w => w.AttackPower)
+                : _context.Items.OfType<Weapon>().OrderByDescending(w => w.AttackPower),
 
-        query = type switch
-        {
-            ItemType.Weapon => SortOrder == "ASC"
-                ? query.Cast<Weapon>().OrderBy(w => w.AttackPower)
-                : query.Cast<Weapon>().OrderByDescending(w => w.AttackPower),
-            ItemType.Armor => SortOrder == "ASC"
-                ? query.Cast<Armor>().OrderBy(a => a.DefensePower)
-                : query.Cast<Armor>().OrderByDescending(a => a.DefensePower),
-            ItemType.Valuable => SortOrder == "ASC"
-                ? query.Cast<Valuable>().OrderBy(v => v.Value)
-                : query.Cast<Valuable>().OrderByDescending(v => v.Value),
-            ItemType.Consumable => SortOrder == "ASC"
-                ? query.Cast<Consumable>().OrderBy(c => c.Power)
-                : query.Cast<Consumable>().OrderByDescending(c => c.Power),
-            _ => query
+            ItemType.Armor => ascending
+                ? _context.Items.OfType<Armor>().OrderBy(a => a.DefensePower)
+                : _context.Items.OfType<Armor>().OrderByDescending(a => a.DefensePower),
+
+            ItemType.Valuable => ascending
+                ? _context.Items.OfType<Valuable>().OrderBy(v => v.Value)
+                : _context.Items.OfType<Valuable>().OrderByDescending(v => v.Value),
+
+            ItemType.Consumable => ascending
+                ? _context.Items.OfType<Consumable>().OrderBy(c => c.Power)
+                : _context.Items.OfType<Consumable>().OrderByDescending(c => c.Power),
+
+            _ => Enumerable.Empty<Item>().AsQueryable()
         };
 
         return
@@ -106,7 +117,7 @@ public class ItemDao(GameContext context) : IItemDao
         ];
     }
 
-    public List<Item> GetItemsByMaxLevel(int level)
+    public List<Item> GetItemsAvailableAtLevel(int level)
     {
         return _context.Items?
             .Where(i => i.RequiredLevel <= level)

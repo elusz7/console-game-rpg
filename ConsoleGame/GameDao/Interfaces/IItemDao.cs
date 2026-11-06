@@ -20,5 +20,5 @@ public interface IItemDao
     List<Item> GetAllItems();
     List<Item> GetAllNonCoreItems();
     List<Item> GetItemsByType(ItemType type);
-    List<Item> GetItemsByMaxLevel(int level);
+    List<Item> GetItemsAvailableAtLevel(int level);
 }

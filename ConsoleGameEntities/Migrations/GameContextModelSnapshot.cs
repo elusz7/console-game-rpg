@@ -255,6 +255,9 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int?>("InventoryId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsCore")
+                        .HasColumnType("bit");
+
                     b.Property<string>("ItemType")
                         .IsRequired()
                         .HasMaxLength(13)

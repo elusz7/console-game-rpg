@@ -14,7 +14,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
     {
         var lootMaxValue = CalculateLootValue(level, numMonsters, campaign);
 
-        var availableItems = _itemDao.GetItemsByMaxLevel(level)
+        var availableItems = _itemDao.GetItemsAvailableAtLevel(level)
             .Where(i => i.Value < (lootMaxValue / 2.0M)).ToList();
 
         var loot = GatherTribute(lootMaxValue, availableItems, numMonsters);
@@ -201,7 +201,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
     public List<Item> CreateMerchantItems(int level)
     {
         var merchantItems = new List<Item>();
-        var availableItems = _itemDao.GetItemsByMaxLevel(level).ToList();
+        var availableItems = _itemDao.GetItemsAvailableAtLevel(level).ToList();
 
         var consumables = availableItems.OfType<Consumable>().ToList();
         var weapons = availableItems.OfType<Weapon>().ToList();
@@ -260,7 +260,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
 
     public List<Item> GetMerchantGifts(ArchetypeType type, int level)
     {
-        var availableItems = _itemDao.GetItemsByMaxLevel(level).ToList();
+        var availableItems = _itemDao.GetItemsAvailableAtLevel(level).ToList();
 
         var weapons = availableItems
             .OfType<Weapon>()

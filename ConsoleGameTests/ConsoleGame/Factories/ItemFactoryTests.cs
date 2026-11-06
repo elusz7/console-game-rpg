@@ -42,7 +42,7 @@ public class ItemFactoryTests
                 Durability = 1
             }
         };
-        _itemDaoMock.Setup(d => d.GetItemsByMaxLevel(It.IsAny<int>())).Returns(items);
+        _itemDaoMock.Setup(d => d.GetItemsAvailableAtLevel(It.IsAny<int>())).Returns(items);
 
         var (loot, curseCount) = _factory.GenerateLoot(1, 2, false);
 
@@ -76,7 +76,7 @@ public class ItemFactoryTests
                 Resistance = 2, Durability = 5
             }
         };
-        _itemDaoMock.Setup(d => d.GetItemsByMaxLevel(It.IsAny<int>())).Returns(items);
+        _itemDaoMock.Setup(d => d.GetItemsAvailableAtLevel(It.IsAny<int>())).Returns(items);
 
         var merchantItems = _factory.CreateMerchantItems(1);
 
@@ -105,7 +105,7 @@ public class ItemFactoryTests
                 Durability = 1
             }
         };
-        _itemDaoMock.Setup(d => d.GetItemsByMaxLevel(It.IsAny<int>())).Returns(items);
+        _itemDaoMock.Setup(d => d.GetItemsAvailableAtLevel(It.IsAny<int>())).Returns(items);
 
         var gifts = _factory.GetMerchantGifts(ArchetypeType.Martial, 1);
 

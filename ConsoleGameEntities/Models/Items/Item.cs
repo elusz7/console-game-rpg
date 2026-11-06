@@ -20,6 +20,7 @@ public class Item : IItem
     public decimal Weight { get; set; }
     public int RequiredLevel { get; set; }
     public string ItemType { get; set; }
+    public bool IsCore { get; set; }
 
     public int? InventoryId { get; set; }
     public virtual Inventory? Inventory { get; set; }
