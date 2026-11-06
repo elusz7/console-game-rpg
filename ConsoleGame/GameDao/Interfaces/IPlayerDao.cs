@@ -14,10 +14,10 @@ public interface IPlayerDao
     void UpdatePlayer(Player player);
     void DeletePlayer(Player player);
     Player? GetPlayerByName(string name);
-    Player GetPlayerNoTracking(Player player);
+    Player? GetPlayerByIdNoTracking(int playerId);
     List<Player> GetAllPlayers(string name);
     List<Player> GetAllPlayers();
-    List<Archetype> GetAllPlayerArchetypes();
-    List<Player> GetAllPlayersByArchetype(Archetype archetype);
-    List<Player> GetAllPlayersByLevel(int level);
+    List<Archetype> GetDistinctPlayerArchetypes();
+    List<Player> GetPlayersByArchetypeId(int archetypeId);
+    List<Player> GetPlayersByLevel(int level);
 }

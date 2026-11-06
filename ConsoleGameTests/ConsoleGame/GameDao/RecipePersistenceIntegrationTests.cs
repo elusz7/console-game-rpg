@@ -1,5 +1,6 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGameEntities.Data;
+using static ConsoleGameTests.TestHelpers.ModelCreationHelper;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Models.Runes;
 using ConsoleGameEntities.Models.Runes.Recipes;
@@ -55,9 +56,9 @@ public class RecipePersistenceIntegrationTests
     [TestMethod]
     public void GetRecipeById_ReturnsRecipe_WhenFound()
     {
-        var ingredient1 = CreateIngredient("Test");
-        var ingredient2 = CreateIngredient("Sample");
-        var rune = CreateRune("Wisp");
+        var ingredient1 = CreateIngredient("Test", ComponentType.MonsterPart);
+        var ingredient2 = CreateIngredient("Sample", ComponentType.Essence);
+        var rune = CreateRune("Wisp", 3, ElementType.Fire, RarityLevel.Common, TestRuneType.Armor);
 
         var recipe = GetRecipe("No Thanks", ingredient1, ingredient2, rune);
         
@@ -78,9 +79,9 @@ public class RecipePersistenceIntegrationTests
     [TestMethod]
     public void GetRecipeByRuneId_ReturnsRecipe_WhenFound()
     {
-        var ingredient1 = CreateIngredient("Test");
-        var ingredient2 = CreateIngredient("Sample");
-        var rune =  CreateRune("Wisp");
+        var ingredient1 = CreateIngredient("Test", ComponentType.MonsterPart);
+        var ingredient2 = CreateIngredient("Sample", ComponentType.Core);
+        var rune = CreateRune("Wisp", 3, ElementType.Fire, RarityLevel.Common, TestRuneType.Weapon);
         
         var recipe = GetRecipe("Try This", ingredient1, ingredient2, rune);
         
@@ -101,21 +102,14 @@ public class RecipePersistenceIntegrationTests
     [TestMethod]
     public void GetAllRecipes_ReturnsAllRecipes_WithRelatedEntities()
     {
-        var ingredient1 = CreateIngredient("Test");
-        var ingredient2 = CreateIngredient("Sample");
-        var rune1 =  CreateRune("Wisp");
+        var ingredient1 = CreateIngredient("Test", ComponentType.Essence);
+        var ingredient2 = CreateIngredient("Sample", ComponentType.MonsterPart);
+        var rune1 = CreateRune("Wisp", 3, ElementType.Fire, RarityLevel.Common, TestRuneType.Armor);
         var recipe1 = GetRecipe("Test1", ingredient1, ingredient2, rune1);
         
-        var ingredient3 = CreateIngredient("Test");
-        var ingredient4 = CreateIngredient("Sample");
-        var rune2 =  new WeaponRune
-        {
-            Name = "Windy",
-            Power = 5,
-            Element = ElementType.Ice,
-            Rarity = RarityLevel.Epic,
-            Duration = 1
-        };
+        var ingredient3 = CreateIngredient("Test", ComponentType.MonsterPart);
+        var ingredient4 = CreateIngredient("Sample", ComponentType.Core);
+        var rune2 = CreateRune("Stormy", 4, ElementType.Lightning, RarityLevel.Uncommon, TestRuneType.Weapon);
         var recipe2 = GetRecipe("Test2", ingredient3, ingredient4, rune2);
 
         var recipes = _recipeDao.GetAllRecipes();
@@ -132,7 +126,7 @@ public class RecipePersistenceIntegrationTests
     [TestMethod]
     public void GetRecipesByIngredientId_ReturnsEmptyList_WhenNoRecipesMatch()
     {
-        var ingredient = CreateIngredient("Unused");
+        var ingredient = CreateIngredient("Unused", ComponentType.MonsterPart);
         _context.Ingredients.Add(ingredient);
         _context.SaveChanges();
 
@@ -147,31 +141,17 @@ public class RecipePersistenceIntegrationTests
     [TestMethod]
     public void GetRecipesByIngredientId_ReturnsMatchingRecipes_WithRelatedEntities()
     {
-        var ingredient1 = CreateIngredient("Test");
-        var ingredient2 = CreateIngredient("Sample");
-        var rune1 =  CreateRune("Wisp");
+        var ingredient1 = CreateIngredient("Test", ComponentType.MonsterPart);
+        var ingredient2 = CreateIngredient("Sample", ComponentType.Essence);
+        var rune1 = CreateRune("Wisp", 3, ElementType.Fire, RarityLevel.Common, TestRuneType.Weapon);
         var recipe1 = GetRecipe("Test1", ingredient1, ingredient2, rune1);
         
-        var ingredient3 = CreateIngredient("Test");
-        var rune2 =  new WeaponRune
-        {
-            Name = "Windy",
-            Power = 5,
-            Element = ElementType.Ice,
-            Rarity = RarityLevel.Epic,
-            Duration = 1
-        };
+        var ingredient3 = CreateIngredient("Test", ComponentType.Core);
+        var rune2 = CreateRune("Stormy", 4, ElementType.Lightning, RarityLevel.Uncommon, TestRuneType.Weapon);
         var recipe2 = GetRecipe("Test2", ingredient2, ingredient3, rune2);
         
-        var ingredient4 = CreateIngredient("Sample");
-        var rune3 =  new WeaponRune
-        {
-            Name = "Stormy",
-            Power = 1,
-            Element = ElementType.Lightning,
-            Rarity = RarityLevel.Uncommon,
-            Duration = 15
-        };
+        var ingredient4 = CreateIngredient("Sample", ComponentType.MonsterPart);
+        var rune3 = CreateRune("Windy", 5, ElementType.Ice, RarityLevel.Epic, TestRuneType.Armor);
         var recipe3 = GetRecipe("Test2", ingredient3, ingredient4, rune3);
 
         var recipes = _recipeDao.GetRecipesByIngredientId(ingredient2.Id);
@@ -185,30 +165,8 @@ public class RecipePersistenceIntegrationTests
         AssertRecipeMatches(ingredient1, ingredient2, rune1, recipe1, resultRecipe1);
         AssertRecipeMatches(ingredient2, ingredient3, rune2, recipe2, resultRecipe2);
     }
-    
-    
-    private static Ingredient CreateIngredient(string name)
-    {
-        return new Ingredient()
-        {
-            Name = name,
-            ComponentType = ComponentType.Essence
-        };
-    }
-    
-    private static WeaponRune CreateRune(string name)
-    {
-        return new WeaponRune
-        {
-            Name = name,
-            Power = 2,
-            Element = ElementType.Fire,
-            Rarity = RarityLevel.Common,
-            Duration = 3
-        };
-    }
 
-    private Recipe GetRecipe(string name, Ingredient ingredient1, Ingredient ingredient2, WeaponRune rune)
+    private Recipe GetRecipe(string name, Ingredient ingredient1, Ingredient ingredient2, Rune rune)
     {
         if (ingredient1.Id != 0)
             _context.Ingredients.Attach(ingredient1);
@@ -242,18 +200,20 @@ public class RecipePersistenceIntegrationTests
     }
 
     private static void AssertRecipeMatches(Ingredient ingredient1, Ingredient ingredient2, 
-        WeaponRune rune, Recipe originalRecipe, Recipe resultRecipe)
+        Rune rune, Recipe originalRecipe, Recipe resultRecipe)
     {
         Assert.AreEqual(originalRecipe.Name, resultRecipe.Name);
 
-        var resultRune = resultRecipe.Rune as WeaponRune;
+        var resultRune = resultRecipe.Rune;
         Assert.IsNotNull(resultRune);
         Assert.AreEqual(rune.Id, resultRune.Id);
         Assert.AreEqual(rune.Name, resultRune.Name);
         Assert.AreEqual(rune.Power, resultRune.Power);
         Assert.AreEqual(rune.Element, resultRune.Element);
         Assert.AreEqual(rune.Rarity, resultRune.Rarity);
-        Assert.AreEqual(rune.Duration, resultRune.Duration);
+        
+        if (rune is WeaponRune wr1 && resultRune is WeaponRune wr2)
+            Assert.AreEqual(wr1.Duration, wr2.Duration);
         
         var resultIngredients = resultRecipe.Ingredients;
         Assert.AreEqual(2, resultIngredients.Count);

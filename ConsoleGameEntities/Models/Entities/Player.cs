@@ -15,8 +15,8 @@ namespace ConsoleGameEntities.Models.Entities;
 public class Player : IPlayer
 {
     [NotMapped] public Dictionary<long, string> ActionItems { get; } = new();
-    [NotMapped] private static readonly Random _rng = Random.Shared;
-    [NotMapped] private static readonly DamageResolver _damageResolver = new();
+    [NotMapped] private static readonly Random Random = Random.Shared;
+    [NotMapped] private static readonly DamageResolver DamageResolver = new();
     public int Level { get; set; }
     public int Id { get; set; }
     public string Name { get; set; }
@@ -28,9 +28,9 @@ public class Player : IPlayer
     public virtual Inventory Inventory { get; set; }
     public int? RoomId { get; set; }
     public virtual Room? CurrentRoom { get; set; }
-    [NotMapped] public List<IEquippable> Equipment { get; set; } = new();
+    [NotMapped] public List<IEquippable> Equipment { get; set; } = [];
 
-    [NotMapped] private readonly Dictionary<StatType, int> ActiveEffects = new()
+    [NotMapped] private readonly Dictionary<StatType, int> _activeEffects = new()
     {
         { StatType.Defense, 0 },
         { StatType.Resistance, 0 },
@@ -55,7 +55,7 @@ public class Player : IPlayer
 
     public virtual void TakeDamage(int damage, DamageType? damageType)
     {
-        var result = _damageResolver.ResolveDamage(
+        var result = DamageResolver.ResolveDamage(
             damage,
             damageType,
             GetStat(StatType.Defense),
@@ -108,14 +108,14 @@ public class Player : IPlayer
         MaxHealth += boost;
         CurrentHealth = MaxHealth;
 
-        Inventory.Gold += (Level * _rng.Next(8, 13));
+        Inventory.Gold += (Level * Random.Next(8, 13));
         Inventory.Capacity += Math.Round(boost * 0.8M, 2);
         DodgeChance += 0.003;
-
-        foreach (var kvp in ActiveEffects)
+        
+        foreach (var kvp in _activeEffects)
         {
             var key = kvp.Key;
-            ActiveEffects[key] = 0;
+            _activeEffects[key] = 0;
         }
     }
 
@@ -124,13 +124,13 @@ public class Player : IPlayer
         return stat switch
         {
             StatType.Defense => Math.Max(0,
-                EquippedDefense() + Archetype.DefenseBonus + ActiveEffects[StatType.Defense]),
-            StatType.Speed => Math.Max(0, Archetype.Speed + ActiveEffects[StatType.Speed]),
-            StatType.Attack => Math.Max(0, EquippedAttack() + Archetype.AttackBonus + ActiveEffects[StatType.Attack]),
+                EquippedDefense() + Archetype.DefenseBonus + _activeEffects[StatType.Defense]),
+            StatType.Speed => Math.Max(0, Archetype.Speed + _activeEffects[StatType.Speed]),
+            StatType.Attack => Math.Max(0, EquippedAttack() + Archetype.AttackBonus + _activeEffects[StatType.Attack]),
             StatType.Resistance => Math.Max(0,
-                EquippedResistance() + Archetype.ResistanceBonus + ActiveEffects[StatType.Resistance]),
+                EquippedResistance() + Archetype.ResistanceBonus + _activeEffects[StatType.Resistance]),
             StatType.Health => CurrentHealth,
-            StatType.Magic => Math.Max(0, EquippedAttack() + Archetype.MagicBonus + ActiveEffects[StatType.Magic]),
+            StatType.Magic => Math.Max(0, EquippedAttack() + Archetype.MagicBonus + _activeEffects[StatType.Magic]),
             _ => throw new StatTypeException("Monster Get Stat")
         };
     }
@@ -190,6 +190,16 @@ public class Player : IPlayer
             EnactCursedEffect(c);
     }
 
+    public void RebuildEquipment()
+    {
+        Equipment.Clear();
+
+        var equippedItems = Inventory.Items.OfType<IEquippable>()
+            .Where(i => i.IsEquipped());
+
+        Equipment.AddRange(equippedItems);
+    }
+
     private void EnactCursedEffect(ICursable cursedItem)
     {
         var cursedDeduction = Math.Max(1, (int)Math.Floor(MaxHealth * 0.1));
@@ -209,9 +219,9 @@ public class Player : IPlayer
     {
         if (stat == StatType.Health)
             Heal(amount);
-        else if (ActiveEffects.ContainsKey(stat))
+        else if (_activeEffects.ContainsKey(stat))
         {
-            ActiveEffects[stat] += amount;
+            _activeEffects[stat] += amount;
             AddActionItem($"Your {stat} has been modified by {amount}.");
         }
         else
@@ -246,7 +256,7 @@ public class Player : IPlayer
 
     private List<Armor> EquippedArmor()
     {
-        return Equipment.OfType<Armor>().ToList() ?? new List<Armor>();
+        return [..Equipment.OfType<Armor>()];
     }
 
     private int EquippedAttack()
@@ -267,7 +277,7 @@ public class Player : IPlayer
                 $"You think it might be better to defeat {monster.Name} before trying to take its treasure.");
         }
 
-        Item loot = monster.Loot() ?? throw new TreasureException($"{monster.Name} has no treasure to loot.");
+        var loot = monster.Loot() ?? throw new TreasureException($"{monster.Name} has no treasure to loot.");
 
         try
         {
@@ -300,12 +310,12 @@ public class Player : IPlayer
         {
             DamageType.Martial => armor
                 .Where(a => a.DefensePower > 0)
-                .OrderBy(_ => _rng.Next())
+                .OrderBy(_ => Random.Next())
                 .FirstOrDefault(),
 
             DamageType.Magical => armor
                 .Where(a => a.Resistance > 0)
-                .OrderBy(_ => _rng.Next())
+                .OrderBy(_ => Random.Next())
                 .FirstOrDefault(),
 
             DamageType.Hybrid => GetHybridDamageArmor(armor),
@@ -344,7 +354,7 @@ public class Player : IPlayer
                 : armor.Where(a => a.DefensePower > 0 || a.Resistance > 0);
 
         return relevantArmor
-            .OrderBy(_ => _rng.Next())
+            .OrderBy(_ => Random.Next())
             .FirstOrDefault();
     }
 
@@ -373,7 +383,7 @@ public class Player : IPlayer
 
     public virtual void AddActionItem(string action)
     {
-        long key = DateTime.Now.Ticks;
+        var key = DateTime.Now.Ticks;
         while (ActionItems.ContainsKey(key)) key++;
 
         ActionItems.Add(key, action);
@@ -381,7 +391,7 @@ public class Player : IPlayer
 
     public void AddActionItem(Skill skill)
     {
-        long key = DateTime.Now.Ticks;
+        var key = DateTime.Now.Ticks;
         while (ActionItems.ContainsKey(key)) key++;
 
         ActionItems.Add(key, $"You use {skill.Name}!");
@@ -407,9 +417,9 @@ public class Player : IPlayer
 
         Inventory = new Inventory
         {
-            Gold = _rng.Next(15, 24),
-            Capacity = (decimal)Math.Round((_rng.NextDouble() * 10 + 15), 2),
-            Items = new List<Item>(),
+            Gold = Random.Next(15, 24),
+            Capacity = (decimal)Math.Round((Random.NextDouble() * 10 + 15), 2),
+            Items = [],
             Player = this
         };
 

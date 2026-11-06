@@ -18,7 +18,7 @@ public static class DamageCalculator
     {
         ValidateInputs(incomingDamage, damageType);
 
-        return damageType.Value switch
+        return damageType!.Value switch //damageType is validated above
         {
             DamageType.Martial =>
                 Math.Max(1, incomingDamage - defense),
@@ -26,11 +26,9 @@ public static class DamageCalculator
             DamageType.Magical =>
                 Math.Max(1, incomingDamage - resistance),
 
-            DamageType.Hybrid =>
+            _ =>
                 Math.Max(1, incomingDamage -
-                            (Math.Max(defense, resistance) / 2)),
-
-            _ => throw new ArgumentOutOfRangeException(nameof(damageType))
+                            Math.Max(defense, resistance) / 2)
         };
     }
     

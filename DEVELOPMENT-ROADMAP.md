@@ -269,8 +269,9 @@ Create and apply EF Core migrations for the new ownership entities. Establish sh
 
 Replace the existing in-memory inventory implementations with persistent ownership operations. Update all rune and ingredient gameplay systems to use the new persistence architecture while preserving existing crafting and progression rules.
 
-- [ ] Replace the `[NotMapped]` rune dictionary with persistent ownership operations.
-- [ ] Replace the `[NotMapped]` ingredient dictionary with persistent ownership operations.
+- [ ] Implement persistent equipped weapon and armor relationships.
+- [ ] Update equipment operations to persist equipping and unequipping.
+- [ ] Verify equipped weapons and armor survive database reloads.
 - [ ] Implement adding and removing rune and ingredient quantities.
 - [ ] Validate positive quantities and prevent invalid ownership changes.
 - [ ] Prevent negative inventory quantities and remove or clean up empty ownership records consistently.

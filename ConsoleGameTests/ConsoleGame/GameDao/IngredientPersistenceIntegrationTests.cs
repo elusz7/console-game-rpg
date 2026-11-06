@@ -3,7 +3,7 @@ using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Entities.Inventories;
-using ConsoleGameEntities.Models.Runes.Recipes;
+using static ConsoleGameTests.TestHelpers.ModelCreationHelper;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -62,8 +62,8 @@ public class IngredientPersistenceIntegrationTests
     {
         var player = CreateAndSavePlayer("Test Player");
         var otherPlayer = CreateAndSavePlayer("Other Player");
-        var ingredient1 = CreateIngredient("Test Ingredient 1");
-        var ingredient2 = CreateIngredient("Test Ingredient 2");
+        var ingredient1 = CreateIngredient("Test Ingredient 1", ComponentType.Essence);
+        var ingredient2 = CreateIngredient("Test Ingredient 2", ComponentType.Core);
 
         _context.Ingredients.AddRange(ingredient1, ingredient2);
         _context.SaveChanges();
@@ -91,7 +91,7 @@ public class IngredientPersistenceIntegrationTests
         Assert.IsNotNull(ingredients);
         Assert.AreEqual(1, ingredients.Count);
 
-        var retrievedIngredient = ingredients.First().Ingredient;
+        var retrievedIngredient = ingredients[0].Ingredient;
 
         Assert.AreEqual(ingredient1.Id, retrievedIngredient.Id);
         Assert.AreEqual(ingredient1.Name, retrievedIngredient.Name);
@@ -109,7 +109,7 @@ public class IngredientPersistenceIntegrationTests
     [TestMethod]
     public void GetIngredientDefinitionById_ReturnsIngredient_WhenFound()
     {
-        var ingredient = CreateIngredient("Test Ingredient");
+        var ingredient = CreateIngredient("Test Ingredient", ComponentType.MonsterPart);
 
         _context.Ingredients.Add(ingredient);
         _context.SaveChanges();
@@ -128,8 +128,8 @@ public class IngredientPersistenceIntegrationTests
     [TestMethod]
     public void GetAllIngredients_ReturnsAllDefinitions()
     {
-        var ingredient1 = CreateIngredient("Sample");
-        var ingredient2 = CreateIngredient("Test");
+        var ingredient1 = CreateIngredient("Sample", ComponentType.MonsterPart);
+        var ingredient2 = CreateIngredient("Test", ComponentType.Core);
 
         _context.Ingredients.AddRange(ingredient1, ingredient2);
         _context.SaveChanges();
@@ -167,7 +167,7 @@ public class IngredientPersistenceIntegrationTests
     public void AddIngredientToPlayer_AddsIngredient_WhenPlayerDoesNotOwnIt()
     {
         var player = CreateAndSavePlayer("Test Player");
-        var ingredient = CreateIngredient("Test Ingredient");
+        var ingredient = CreateIngredient("Test Ingredient", ComponentType.MonsterPart);
 
         _context.Ingredients.Add(ingredient);
         _context.SaveChanges();
@@ -189,7 +189,7 @@ public class IngredientPersistenceIntegrationTests
     public void AddIngredientToPlayer_IncrementsQuantity_WhenPlayerAlreadyOwnsIngredient()
     {
         var player = CreateAndSavePlayer("Test Player");
-        var ingredient = CreateIngredient("Test Ingredient 1");
+        var ingredient = CreateIngredient("Test Ingredient 1", ComponentType.MonsterPart);
 
         _context.Ingredients.Add(ingredient);
         _context.SaveChanges();
@@ -219,7 +219,7 @@ public class IngredientPersistenceIntegrationTests
     [TestMethod]
     public void AddIngredientToPlayer_ThrowsInventoryException_WhenPlayerDoesNotExist()
     {
-        var ingredient = CreateIngredient("Sample");
+        var ingredient = CreateIngredient("Sample", ComponentType.MonsterPart);
         _context.Ingredients.Add(ingredient);
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
@@ -272,12 +272,5 @@ public class IngredientPersistenceIntegrationTests
         return player;
     }
     
-    private static Ingredient CreateIngredient(string name)
-    {
-        return new Ingredient()
-        {
-            Name = name,
-            ComponentType = ComponentType.Essence
-        };
-    }
+    
 }

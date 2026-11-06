@@ -4,6 +4,7 @@ using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
+using static ConsoleGameTests.TestHelpers.ModelCreationHelper;
 using ConsoleGameEntities.Models.Runes;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -68,8 +69,8 @@ public class RunePersistenceIntegrationTests
         var playerOne = CreateAndSavePlayer("Player One");
         var playerTwo = CreateAndSavePlayer("Player Two");
 
-        var runeOne = CreateRune("Ember Rune");
-        var runeTwo = CreateRune("Frost Rune");
+        var runeOne = CreateRune("Ember Rune", 5, ElementType.Fire, RarityLevel.Rare, TestRuneType.Weapon);
+        var runeTwo = CreateRune("Frost Rune", 2, ElementType.Ice, RarityLevel.Common, TestRuneType.Armor);
 
         _context.Runes.AddRange(runeOne, runeTwo);
         _context.SaveChanges();
@@ -127,7 +128,7 @@ public class RunePersistenceIntegrationTests
     public void GetRuneDefinitionById_WhenRuneExists_ReturnsRune()
     {
         // Arrange
-        var rune = CreateRune("Ember Rune");
+        var rune = CreateRune("Ember Rune", 5, ElementType.Fire, RarityLevel.Rare, TestRuneType.Weapon);
 
         _context.Runes.Add(rune);
         _context.SaveChanges();
@@ -176,7 +177,7 @@ public class RunePersistenceIntegrationTests
     {
         // Arrange
         var player = CreateAndSavePlayer("RuneTestPlayer");
-        var rune = CreateRune("Ember Rune");
+        var rune = CreateRune("Ember Rune", 5, ElementType.Fire, RarityLevel.Rare, TestRuneType.Armor);
 
         _context.Runes.Add(rune);
         _context.SaveChanges();
@@ -200,7 +201,7 @@ public class RunePersistenceIntegrationTests
     {
         // Arrange
         var player = CreateAndSavePlayer("RuneStackTestPlayer");
-        var rune = CreateRune("Ember Rune");
+        var rune = CreateRune("Ember Rune", 5, ElementType.Fire, RarityLevel.Rare, TestRuneType.Weapon);
 
         _context.Runes.Add(rune);
         _context.SaveChanges();
@@ -226,7 +227,7 @@ public class RunePersistenceIntegrationTests
     {
         // Arrange
         var player = CreateAndSavePlayer("RuneStackTestPlayer");
-        var rune = CreateRune("Ember Rune");
+        var rune = CreateRune("Ember Rune", 5, ElementType.Fire, RarityLevel.Rare, TestRuneType.Weapon);
 
         _context.Runes.Add(rune);
         _context.SaveChanges();
@@ -274,7 +275,7 @@ public class RunePersistenceIntegrationTests
     {
         // Arrange
         var player = CreateAndSavePlayer("RuneUpdateTestPlayer");
-        var rune = CreateRune("Ember Rune");
+        var rune = CreateRune("Ember Rune", 5, ElementType.Fire, RarityLevel.Rare, TestRuneType.Armor);
 
         _context.Runes.Add(rune);
         _context.SaveChanges();
@@ -289,7 +290,7 @@ public class RunePersistenceIntegrationTests
     {
         // Arrange
         var player = CreateAndSavePlayer("RuneUpdateTestPlayer");
-        var rune = CreateRune("Ember Rune");
+        var rune = CreateRune("Ember Rune", 5, ElementType.Fire, RarityLevel.Rare, TestRuneType.Armor);
 
         _context.Runes.Add(rune);
         _context.SaveChanges();
@@ -317,7 +318,7 @@ public class RunePersistenceIntegrationTests
     {
         // Arrange
         var player = CreateAndSavePlayer("RuneRemovalTestPlayer");
-        var rune = CreateRune("Ember Rune");
+        var rune = CreateRune("Ember Rune", 5, ElementType.Fire, RarityLevel.Rare, TestRuneType.Armor);
 
         _context.Runes.Add(rune);
         _context.SaveChanges();
@@ -332,7 +333,7 @@ public class RunePersistenceIntegrationTests
     {
         // Arrange
         var player = CreateAndSavePlayer("RuneRemovalTestPlayer");
-        var rune = CreateRune("Ember Rune");
+        var rune = CreateRune("Ember Rune", 5, ElementType.Fire, RarityLevel.Rare, TestRuneType.Weapon);
 
         _context.Runes.Add(rune);
         _context.SaveChanges();
@@ -385,17 +386,5 @@ public class RunePersistenceIntegrationTests
         _context.SaveChanges();
 
         return player;
-    }
-
-    private static WeaponRune CreateRune(string name)
-    {
-        return new WeaponRune
-        {
-            Name = name,
-            Power = 2,
-            Element = ElementType.Fire,
-            Rarity = RarityLevel.Common,
-            Duration = 3
-        };
     }
 }

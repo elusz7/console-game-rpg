@@ -58,7 +58,7 @@ public class PlayerDisplay(IInputManager inputManager, IOutputManager outputMana
                 _outputManager.WriteLine($"\nFound {players.Count} Player(s) matching [{playerName}]:");
                 break;
             case "Archetype":
-                var archetypes = _playerDao.GetAllPlayerArchetypes();
+                var archetypes = _playerDao.GetDistinctPlayerArchetypes();
                 if (archetypes.Count == 0)
                 {
                     _outputManager.WriteLine("\nNo Archetypes found.\n");
@@ -78,11 +78,11 @@ public class PlayerDisplay(IInputManager inputManager, IOutputManager outputMana
                     return;
                 }
 
-                players = _playerDao.GetAllPlayersByArchetype(archetype);
+                players = _playerDao.GetPlayersByArchetypeId(archetype.Id);
                 break;
             case "Level":
                 var level = _inputManager.ReadInt("\nEnter level of Players you wish to see: ");
-                players = _playerDao.GetAllPlayersByLevel(level);
+                players = _playerDao.GetPlayersByLevel(level);
                 break;
             default:
                 players = _playerDao.GetAllPlayers();

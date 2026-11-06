@@ -66,6 +66,14 @@ namespace ConsoleGameEntities.Data
             modelBuilder.Entity<Item>()
                 .Property(i => i.Weight)
                 .HasColumnType("decimal(18,2)");
+            
+            modelBuilder.Entity<Weapon>()
+                .Property<bool>("Equipped")
+                .HasColumnName("Equipped");
+
+            modelBuilder.Entity<Armor>()
+                .Property<bool>("Equipped")
+                .HasColumnName("Equipped");
 
             modelBuilder.Entity<Inventory>()
                 .Property(i => i.Capacity)
@@ -91,7 +99,8 @@ namespace ConsoleGameEntities.Data
             modelBuilder.Entity<Inventory>()
                 .HasMany(i => i.Items)
                 .WithOne(item => item.Inventory)
-                .HasForeignKey(item => item.InventoryId);
+                .HasForeignKey(item => item.InventoryId)
+                .OnDelete(DeleteBehavior.SetNull);
             
             // Configure persistent rune inventory.
             modelBuilder.Entity<InventoryRune>()

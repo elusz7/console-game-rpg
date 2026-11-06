@@ -62,29 +62,32 @@ public class PlayerHelper(
 
     private Player? SelectCharacter()
     {
-        /*var availableCharacters = _playerDao.GetAllPlayers();
+        var availableCharacters = _playerDao.GetAllPlayers();
 
-        if (availableCharacters.Count == 0)
-        {
-            throw new InvalidOperationException("No characters available for adventuring.");
-        }
-
-        var selection = SelectPlayer("Select a character to play with", availableCharacters);
+        var selection = SelectPlayer(
+            "Select a character to play with",
+            availableCharacters);
 
         if (selection == null)
-        {
             return null;
-        }
 
-        var player = _playerDao.GetPlayerNoTracking(selection);*/
+        var player = _playerDao.GetPlayerByIdNoTracking(selection.Id);
 
-        var dbPlayer = _playerDao.GetPlayerByName("Kaenji Stormleaf") ??
-                       throw new InvalidDataException("No player found");
-        var player = _playerDao.GetPlayerNoTracking(dbPlayer);
+        if (player == null)
+            return null;
 
+        player.RebuildEquipment();
         LevelUpPlayer(player);
 
         return player;
+
+        // var dbPlayer = _playerDao.GetPlayerByName("Kaenji Stormleaf") ??
+        //                throw new InvalidDataException("No player found");
+        // var player = _playerDao.GetPlayerByIdNoTracking(dbPlayer.Id);
+        //
+        // LevelUpPlayer(player);
+        //
+        // return player;
     }
 
     private Player? SelectPlayer(string prompt, List<Player> players)
@@ -99,10 +102,9 @@ public class PlayerHelper(
 
     private static void LevelUpPlayer(Player player)
     {
-        if (player.Level > 1)
+        for (var level = 2; level <= player.Level; level++)
         {
-            for (int i = 2; i <= player.Level; i++)
-                player.Archetype.LevelUp(i); //all archetypes start at a base of level 1
+            player.MaxHealth += player.Archetype.LevelUp(level);
         }
 
         foreach (var skill in player.Archetype.Skills)

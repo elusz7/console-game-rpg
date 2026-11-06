@@ -31,89 +31,43 @@ public class PlayerDao(GameContext context) : IPlayerDao
     {
         // Load the player together with its inventory and items.
         // EF Core tracks these entities so their changes can be saved.
-        return _context.Players!
+        var player = _context.Players!
             .Include(p => p.Inventory)
             .ThenInclude(i => i.Items)
             .FirstOrDefault(p => p.Name.ToLower() == name.ToLower());
+        
+        player?.RebuildEquipment();
+
+        return player;
     }
 
-    public Player GetPlayerNoTracking(Player player)
+    public Player? GetPlayerByIdNoTracking(int playerId)
     {
-        var loadedPlayer = _context.Players!
+        var player = _context.Players!
+            .AsNoTracking()
             .Include(p => p.Inventory)
             .ThenInclude(i => i.Items)
+            .Include(p => p.Inventory)
+                .ThenInclude(i => i.Runes)
+                    .ThenInclude(ir => ir.Rune)
+            .Include(p => p.Inventory)
+                .ThenInclude(i => i.Ingredients)
+                    .ThenInclude(ii => ii.Ingredient)
             .Include(p => p.Archetype)
-            .ThenInclude(a => a.Skills)
-            .Include(p => p.CurrentRoom)
-            .ThenInclude(r => r!.Monsters)
-            .First(p => p.Id == player.Id);
+                .ThenInclude(a => a.Skills)
+            .FirstOrDefault(p => p.Id == playerId);
 
-        // Detach the root entity and all its related entities
-        //DetachEntityGraph(loadedPlayer);
+        player?.RebuildEquipment();
 
-        return loadedPlayer;
+        return player;
     }
-
-    private void DetachEntityGraph(object entity)
-    {
-        var visited = new HashSet<object>();
-        var stack = new Stack<object>();
-        stack.Push(entity);
-
-        while (stack.Count > 0)
-        {
-            var current = stack.Pop();
-            if (current == null || visited.Contains(current))
-                continue;
-
-            visited.Add(current);
-
-            try
-            {
-                _context.Entry(current).State = EntityState.Detached;
-            }
-            catch (InvalidOperationException)
-            {
-                // Not an entity, just skip
-            }
-
-            var properties = current.GetType().GetProperties()
-                .Where(p =>
-                    p.GetMethod != null &&
-                    !p.PropertyType.IsPrimitive &&
-                    p.PropertyType != typeof(string) &&
-                    p.PropertyType != typeof(DateTime) &&
-                    !p.PropertyType.IsEnum &&
-                    !typeof(IDictionary<long, string>).IsAssignableFrom(p.PropertyType));
-
-            foreach (var prop in properties)
-            {
-                var value = prop.GetValue(current);
-
-                if (value is IEnumerable<object> collection && !(value is string))
-                {
-                    foreach (var item in collection)
-                    {
-                        if (item != null && !visited.Contains(item))
-                            stack.Push(item);
-                    }
-                }
-                else if (value != null && !visited.Contains(value))
-                {
-                    stack.Push(value);
-                }
-            }
-        }
-    }
-
 
     public List<Player> GetAllPlayers(string name)
     {
         return
         [
             .. _context.Players!
-                .ToList()
-                .Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
+                .Where(p => EF.Functions.Like(p.Name, $"%{name}%"))
         ];
     }
 
@@ -122,27 +76,26 @@ public class PlayerDao(GameContext context) : IPlayerDao
         return [.. _context.Players!];
     }
 
-    public List<Archetype> GetAllPlayerArchetypes()
+    public List<Archetype> GetDistinctPlayerArchetypes()
     {
         return
         [
             .. _context.Players!
-                .Where(p => p.Archetype != null)
-                .Select(p => p.Archetype!)
+                .Select(p => p.Archetype)
                 .Distinct()
         ];
     }
 
-    public List<Player> GetAllPlayersByArchetype(Archetype archetype)
+    public List<Player> GetPlayersByArchetypeId(int archetypeId)
     {
         return
         [
-            .. _context.Players!.ToList()
-                .Where(p => p.Archetype == archetype)
+            .. _context.Players!
+                .Where(p => p.ArchetypeId == archetypeId)
         ];
     }
 
-    public List<Player> GetAllPlayersByLevel(int level)
+    public List<Player> GetPlayersByLevel(int level)
     {
         return
         [

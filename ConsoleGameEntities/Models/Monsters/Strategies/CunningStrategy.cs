@@ -52,7 +52,7 @@ public class CunningStrategy : DefaultStrategy
         }
 
         // Step 2: If no debuff used, try buffing own attack stat
-        StatType selfBuffStat = monster.DamageType == DamageType.Magical
+        var selfBuffStat = monster.DamageType == DamageType.Magical
             ? StatType.Magic
             : StatType.Attack;
 

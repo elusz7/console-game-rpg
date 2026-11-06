@@ -1,7 +1,7 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGameEntities.Data;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
-using ConsoleGameEntities.Models.Runes;
+using static ConsoleGameTests.TestHelpers.ModelCreationHelper;
 using ConsoleGameEntities.Models.Runes.Recipes;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -103,10 +103,10 @@ public class MonsterDropPersistenceIntegrationTests
         Assert.IsNotNull(results);
         Assert.AreEqual(2, results.Count);
 
-        var dbAybssalDrop = results.Single(r => r.Element == ElementType.Abyssal);
+        var dbAbyssalDrop = results.Single(r => r.Element == ElementType.Abyssal);
         var dbFireDrop = results.Single(r => r.Element == ElementType.Fire);
         
-        AssertDropEquality(abyssalDrop, dbAybssalDrop);
+        AssertDropEquality(abyssalDrop, dbAbyssalDrop);
         AssertDropEquality(fireDrop, dbFireDrop);
     }
     
@@ -138,31 +138,11 @@ public class MonsterDropPersistenceIntegrationTests
         Assert.IsNotNull(results);
         Assert.AreEqual(2, results.Count);
 
-        var dbIceBossDrop = results.Single(r => r.DropRate == (decimal)15.0m);
-        var dbIceBossDrop2 = results.Single(r => r.DropRate == (decimal)35.0m);
+        var dbIceBossDrop = results.Single(r => r.DropRate == 15.0m);
+        var dbIceBossDrop2 = results.Single(r => r.DropRate == 35.0m);
         
         AssertDropEquality(iceBossDrop, dbIceBossDrop);
         AssertDropEquality(iceBossDrop2, dbIceBossDrop2);
-    }
-    
-    private static Ingredient CreateIngredient(string name, ComponentType component)
-    {
-        return new Ingredient()
-        {
-            Name = name,
-            ComponentType = component
-        };
-    }
-    private static MonsterDrop CreateMonsterDrop(ElementType element, ThreatLevel level, 
-        Ingredient ingredient, decimal rate)
-    {
-        return new MonsterDrop()
-        {
-            Element = element,
-            ThreatLevel = level,
-            Ingredient = ingredient,
-            DropRate = rate
-        };
     }
 
     private static void AssertDropEquality(MonsterDrop originalDrop, MonsterDrop databaseDrop)

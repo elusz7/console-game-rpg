@@ -580,6 +580,11 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("DefensePower")
                         .HasColumnType("int");
 
+                    b.Property<bool>("Equipped")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("bit")
+                        .HasColumnName("Equipped");
+
                     b.Property<int>("Resistance")
                         .HasColumnType("int");
 
@@ -615,6 +620,11 @@ namespace ConsoleGameEntities.Migrations
 
                     b.Property<int>("DamageType")
                         .HasColumnType("int");
+
+                    b.Property<bool>("Equipped")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("bit")
+                        .HasColumnName("Equipped");
 
                     b.HasDiscriminator().HasValue("Weapon");
                 });
@@ -812,7 +822,8 @@ namespace ConsoleGameEntities.Migrations
                 {
                     b.HasOne("ConsoleGameEntities.Models.Entities.Inventory", "Inventory")
                         .WithMany("Items")
-                        .HasForeignKey("InventoryId");
+                        .HasForeignKey("InventoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Inventory");
                 });

@@ -72,7 +72,7 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
         if (Inventory.Gold < price)
             throw new ItemEnchantmentException($"You are short by {price - Inventory.Gold} gold.");
 
-        double failureChance = Math.Min(0.02 * RequiredLevel, 0.6);
+        var failureChance = Math.Min(0.02 * RequiredLevel, 0.6);
         if (_rng.NextDouble() < failureChance)
         {
             Inventory.Gold -= price;

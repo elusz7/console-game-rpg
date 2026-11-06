@@ -25,13 +25,19 @@ public class ItemDao(GameContext context) : IItemDao
 
     public void DeleteItem(Item item)
     {
+        if (item.Id <= 178)
+            throw new InvalidOperationException("Core game items cannot be deleted.");
+
         _context.Items?.Remove(item);
         _context.SaveChanges();
     }
 
     public List<Item> GetItemsByName(string name)
     {
-        var matchingItems = _context.Items?.Include(i => i.Inventory).ThenInclude(i => i!.Player).ToList()
+        var matchingItems = 
+            _context.Items?
+                .Include(i => i.Inventory)
+                .ThenInclude(i => i!.Player).ToList()
             .Where(i => i.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
             .ToList() ?? [];
 
