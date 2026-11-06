@@ -11,21 +11,21 @@ namespace ConsoleGameEntities.Data
 {
     public class GameContext : DbContext
     {
-        public DbSet<Player>? Players { get; set; }
-        public DbSet<Monster>? Monsters { get; set; }
-        public DbSet<Skill> Skills { get; set; }
-        public DbSet<Item>? Items { get; set; }
-        public DbSet<Inventory>? Inventories { get; set; }
-        public DbSet<Room>? Rooms { get; set; }
-        public DbSet<Archetype> Archetypes { get; set; }
-        public DbSet<InventoryRune> InventoryRunes { get; set; }
-        public DbSet<InventoryIngredient> InventoryIngredients { get; set; }
-        public DbSet<Rune> Runes { get; set; }
-        public DbSet<Ingredient> Ingredients { get; set; }
-        public DbSet<Recipe> Recipes { get; set; }
-        public DbSet<RecipeIngredient> RecipeIngredients { get; set; }
-        public DbSet<MonsterDrop> MonsterDrops { get; set; }
-        public DbSet<EquippedRune> EquippedRunes { get; set; }
+        public DbSet<Player> Players { get; set; } = null!;
+        public DbSet<Monster> Monsters { get; set; } = null!;
+        public DbSet<Skill> Skills { get; set; } = null!;
+        public DbSet<Item> Items { get; set; } = null!;
+        public DbSet<Inventory> Inventories { get; set; } = null!;
+        public DbSet<Room> Rooms { get; set; } = null!;
+        public DbSet<Archetype> Archetypes { get; set; } = null!;
+        public DbSet<InventoryRune> InventoryRunes { get; set; } = null!;
+        public DbSet<InventoryIngredient> InventoryIngredients { get; set; } = null!;
+        public DbSet<Rune> Runes { get; set; } = null!;
+        public DbSet<Ingredient> Ingredients { get; set; } = null!;
+        public DbSet<Recipe> Recipes { get; set; } = null!;
+        public DbSet<RecipeIngredient> RecipeIngredients { get; set; } = null!;
+        public DbSet<MonsterDrop> MonsterDrops { get; set; } = null!;
+        public DbSet<EquippedRune> EquippedRunes { get; set; } = null!;
 
         public GameContext(DbContextOptions<GameContext> options) : base(options)
         {
@@ -47,7 +47,7 @@ namespace ConsoleGameEntities.Data
             modelBuilder.Entity<Monster>()
                 .HasOne(m => m.Treasure)
                 .WithOne(i => i.Monster)
-                .HasForeignKey<Monster>(m => m.ItemId)
+                .HasForeignKey<Item>(i => i.MonsterId)
                 .OnDelete(DeleteBehavior.SetNull);
 
 
@@ -263,12 +263,14 @@ namespace ConsoleGameEntities.Data
             modelBuilder.Entity<Skill>()
                 .HasOne(s => s.Archetype)
                 .WithMany(a => a.Skills)
-                .HasForeignKey(s => s.ArchetypeId);
+                .HasForeignKey(s => s.ArchetypeId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Skill>()
                 .HasOne(s => s.Monster)
                 .WithMany(m => m.Skills)
-                .HasForeignKey(s => s.MonsterId);
+                .HasForeignKey(s => s.MonsterId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Archetype>()
                 .Property("AttackMultiplier")

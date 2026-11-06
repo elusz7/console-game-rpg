@@ -37,10 +37,10 @@ public class Monster : IMonster
     public int AggressionLevel { get; set; }
     [NotMapped] public virtual double DodgeChance { get; set; } = 0.01;
     public string MonsterType { get; set; }
+    public bool IsCore {get; set;}
     public virtual List<Skill> Skills { get; set; } = new List<Skill>();
     public int? RoomId { get; set; }
     public virtual Room? Room { get; set; }
-    public int? ItemId { get; set; }
     public virtual Item? Treasure { get; set; }
     public int DefensePower { get; set; }
     public int AttackPower { get; set; } //base damage for all types
@@ -277,11 +277,10 @@ public class Monster : IMonster
         if (Treasure == null)
             return null;
 
-        Item loot = Treasure;
+        var loot = Treasure;
 
         loot.MonsterId = null; // Remove the item from the monster
         loot.Monster = null;
-        ItemId = null;
         Treasure = null;
 
         return loot;
@@ -291,7 +290,6 @@ public class Monster : IMonster
     {
         item.MonsterId = Id;
         item.Monster = this;
-        ItemId = item.Id;
         Treasure = item;
     }
 }

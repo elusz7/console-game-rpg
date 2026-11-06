@@ -29,5 +29,5 @@ public interface IMonsterDao
 
     List<Monster> GetNonBossMonstersByMaxLevel(int level);
 
-    List<Monster> GetMonstersByMaxLevelAndThreatLevel(int level, int threatLevel);
+    List<Monster> GetMonstersByMaxLevelAndThreatLevel(int level, ThreatLevel threatLevel);
 }

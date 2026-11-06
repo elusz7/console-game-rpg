@@ -47,7 +47,7 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
                     {
                         // Select a random monster and create a fresh instance
                         var availableMonsters =
-                            _monsterDao.GetMonstersByMaxLevelAndThreatLevel(level, (int)threatLevel);
+                            _monsterDao.GetMonstersByMaxLevelAndThreatLevel(level, threatLevel);
 
                         if (availableMonsters.Count == 0)
                             throw new InvalidOperationException(

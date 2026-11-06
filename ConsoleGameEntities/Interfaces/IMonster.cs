@@ -15,6 +15,7 @@ public interface IMonster : ITargetable
     int CurrentHealth { get; set; }
     int MaxHealth { get; set; }
     string MonsterType { get; set; }
+    bool IsCore {get; set;}
 
     int AggressionLevel { get; set; } //same as speed for player
     int DefensePower { get; set; } //defense power of monster

@@ -49,7 +49,8 @@ public class MonsterFactoryTests
         var level = 2;
         var threat = ThreatLevel.Low;
         var monster = CreateMonster("Goblin", level, threat);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, It.IsAny<int>()))
+        _monsterDaoMock
+            .Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level,  It.IsAny<ThreatLevel>()))
             .Returns([monster]);
         _skillDaoMock.Setup(s => s.GetUnassignedSkillsByMaxLevel(level)).Returns([]);
 
@@ -81,7 +82,7 @@ public class MonsterFactoryTests
             .Returns(availableMonsters);
 
         _skillDaoMock.Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
-            .Returns(new List<Skill>());
+            .Returns([]);
 
         var factory = CreateFactory(); // make sure this uses _monsterDaoMock.Object
 

@@ -2,6 +2,7 @@
 using ConsoleGameEntities.Models.Entities.Inventories;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Runes;
 using ConsoleGameEntities.Models.Runes.Recipes;
 using ConsoleGameEntities.Models.Skills;
@@ -17,13 +18,13 @@ public static class ModelCreationHelper
         Armor,
         Consumable
     }
-    
+
     public enum TestRuneType
     {
         Weapon,
         Armor
     }
-    
+
     public enum TestSkillType
     {
         Martial,
@@ -31,7 +32,14 @@ public static class ModelCreationHelper
         Ultimate,
         Support
     }
-    
+
+    public enum TestMonsterType
+    {
+        Common,
+        Elite,
+        Boss
+    }
+
     public static Inventory CreateInventory(int gold)
     {
         return new Inventory()
@@ -50,8 +58,8 @@ public static class ModelCreationHelper
             ComponentType = component
         };
     }
-    
-    public static MonsterDrop CreateMonsterDrop(ElementType element, ThreatLevel level, 
+
+    public static MonsterDrop CreateMonsterDrop(ElementType element, ThreatLevel level,
         Ingredient ingredient, decimal rate)
     {
         return new MonsterDrop()
@@ -174,7 +182,8 @@ public static class ModelCreationHelper
         };
     }
 
-    public static Item CreateItem(string name, int level, int power, TestItemType type, ArmorType armor = 0, ConsumableType consumable = 0)
+    public static Item CreateItem(string name, int level, int power, TestItemType type, ArmorType armor = 0,
+        ConsumableType consumable = 0)
     {
         return type switch
         {
@@ -217,5 +226,66 @@ public static class ModelCreationHelper
                 Durability = 3
             }
         };
+    }
+
+    public static Monster CreateMonster(string name, ThreatLevel level, DamageType damage, TestMonsterType type)
+    {
+        return type switch
+        {
+            TestMonsterType.Elite =>
+                new EliteMonster
+                {
+                    Name = name,
+                    Description = $"A description for {name}.",
+                    Level = 1,
+                    MaxHealth = 100,
+                    CurrentHealth = 100,
+                    ThreatLevel = level,
+                    AggressionLevel = 5,
+                    IsCore = false,
+                    DefensePower = 10,
+                    AttackPower = 15,
+                    DamageType = damage,
+                    Resistance = 5
+                },
+            TestMonsterType.Boss => new BossMonster
+            {
+                Name = name,
+                Description = $"A description for {name}.",
+                Level = 1,
+                MaxHealth = 100,
+                CurrentHealth = 100,
+                ThreatLevel = level,
+                AggressionLevel = 5,
+                IsCore = false,
+                DefensePower = 10,
+                AttackPower = 15,
+                DamageType = damage,
+                Resistance = 5
+            },
+            _ => new Monster
+            {
+                Name = name,
+                Description = $"A description for {name}.",
+                Level = 1,
+                MaxHealth = 100,
+                CurrentHealth = 100,
+                ThreatLevel = level,
+                AggressionLevel = 5,
+                IsCore = false,
+                DefensePower = 10,
+                AttackPower = 15,
+                DamageType = damage,
+                Resistance = 5
+            }
+        };
+    }
+
+    public static Room CreateRoom(string name = "Test Room")
+    {
+        return new Room(
+            name,
+            $"A description for {name}."
+        );
     }
 }

@@ -54,6 +54,9 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("HealthBase")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsCore")
+                        .HasColumnType("bit");
+
                     b.Property<int>("MagicBonus")
                         .HasColumnType("int");
 
@@ -283,6 +286,10 @@ namespace ConsoleGameEntities.Migrations
 
                     b.HasIndex("InventoryId");
 
+                    b.HasIndex("MonsterId")
+                        .IsUnique()
+                        .HasFilter("[MonsterId] IS NOT NULL");
+
                     b.ToTable("Items");
 
                     b.HasDiscriminator<string>("ItemType").HasValue("Item");
@@ -315,8 +322,8 @@ namespace ConsoleGameEntities.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("Description");
 
-                    b.Property<int?>("ItemId")
-                        .HasColumnType("int");
+                    b.Property<bool>("IsCore")
+                        .HasColumnType("bit");
 
                     b.Property<int>("Level")
                         .HasColumnType("int");
@@ -343,10 +350,6 @@ namespace ConsoleGameEntities.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ItemId")
-                        .IsUnique()
-                        .HasFilter("[ItemId] IS NOT NULL");
 
                     b.HasIndex("RoomId");
 
@@ -828,24 +831,24 @@ namespace ConsoleGameEntities.Migrations
                         .HasForeignKey("InventoryId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("ConsoleGameEntities.Models.Monsters.Monster", "Monster")
+                        .WithOne("Treasure")
+                        .HasForeignKey("ConsoleGameEntities.Models.Items.Item", "MonsterId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Inventory");
+
+                    b.Navigation("Monster");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Monsters.Monster", b =>
                 {
-                    b.HasOne("ConsoleGameEntities.Models.Items.Item", "Treasure")
-                        .WithOne("Monster")
-                        .HasForeignKey("ConsoleGameEntities.Models.Monsters.Monster", "ItemId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("ConsoleGameEntities.Models.Entities.Room", "Room")
                         .WithMany("Monsters")
                         .HasForeignKey("RoomId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Room");
-
-                    b.Navigation("Treasure");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Runes.EquippedRune", b =>
@@ -911,11 +914,13 @@ namespace ConsoleGameEntities.Migrations
                 {
                     b.HasOne("ConsoleGameEntities.Models.Entities.Archetype", "Archetype")
                         .WithMany("Skills")
-                        .HasForeignKey("ArchetypeId");
+                        .HasForeignKey("ArchetypeId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("ConsoleGameEntities.Models.Monsters.Monster", "Monster")
                         .WithMany("Skills")
-                        .HasForeignKey("MonsterId");
+                        .HasForeignKey("MonsterId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Archetype");
 
@@ -955,13 +960,13 @@ namespace ConsoleGameEntities.Migrations
             modelBuilder.Entity("ConsoleGameEntities.Models.Items.Item", b =>
                 {
                     b.Navigation("EquippedRune");
-
-                    b.Navigation("Monster");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Monsters.Monster", b =>
                 {
                     b.Navigation("Skills");
+
+                    b.Navigation("Treasure");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Runes.Recipes.Recipe", b =>

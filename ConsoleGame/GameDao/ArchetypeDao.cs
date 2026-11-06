@@ -23,22 +23,13 @@ public class ArchetypeDao(GameContext context) : IArchetypeDao
 
     public void DeleteArchetype(Archetype archetype)
     {
+        if (archetype.IsCore)
+            throw new InvalidOperationException("Core archetype can't be deleted");
+        
         _context.Archetypes.Remove(archetype);
         _context.SaveChanges();
     }
-
-    public int GetArchetypeId(string archetype)
-    {
-        return _context.Archetypes.ToList()
-            .Where(a => a.Name.Equals(archetype, StringComparison.OrdinalIgnoreCase))
-            .Select(a => a.Id)
-            .FirstOrDefault();
-    }
-
-    public List<string> GetArchetypeNames()
-    {
-        return [.. _context.Archetypes.ToList().Select(a => a.Name)];
-    }
+    
 
     public List<Archetype> GetArchetypesByType(ArchetypeType archetypeType)
     {
@@ -56,6 +47,6 @@ public class ArchetypeDao(GameContext context) : IArchetypeDao
 
     public List<Archetype> GetAllNonCoreArchetypes()
     {
-        return [.. _context.Archetypes.Where(a => a.Id > 5)];
+        return [.. _context.Archetypes.Where(a => !a.IsCore)];
     }
 }

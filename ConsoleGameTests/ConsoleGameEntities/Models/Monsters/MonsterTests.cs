@@ -324,7 +324,6 @@ public class MonsterTests
         Assert.AreSame(item, loot);
         Assert.IsNull(loot.Monster);
         Assert.IsNull(loot.MonsterId);
-        Assert.IsNull(monster.ItemId);
         Assert.IsNull(monster.Treasure);
     }
 
@@ -336,14 +335,12 @@ public class MonsterTests
 
         Assert.IsNull(loot.Monster);
         Assert.IsNull(loot.MonsterId);
-        Assert.IsNull(monster.ItemId);
         Assert.IsNull(monster.Treasure);
 
         monster.SetLoot(loot);
 
         Assert.IsNotNull(loot.Monster);
         Assert.IsNotNull(loot.MonsterId);
-        Assert.IsNotNull(monster.ItemId);
         Assert.IsNotNull(monster.Treasure);
     }
 }

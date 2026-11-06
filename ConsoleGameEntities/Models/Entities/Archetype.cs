@@ -13,6 +13,7 @@ public class Archetype : IArchetype
     public int Id { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
+    public bool IsCore {get;set;}
     public int HealthBase { get; set; } // health gained on level up
     public int AttackBonus { get; set; } //bonus damage to weapons
     public int MagicBonus { get; set; } //bonus damage to skills (spells)
