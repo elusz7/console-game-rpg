@@ -213,6 +213,9 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int?>("EastId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsCore")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
@@ -538,6 +541,9 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsCore")
+                        .HasColumnType("bit");
 
                     b.Property<int?>("MonsterId")
                         .HasColumnType("int");

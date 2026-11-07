@@ -13,13 +13,13 @@ public class ItemDao(GameContext context) : IItemDao
 
     public void AddItem(Item item)
     {
-        _context.Items?.Add(item);
+        _context.Items.Add(item);
         _context.SaveChanges();
     }
 
     public void UpdateItem(Item item)
     {
-        _context.Items?.Update(item);
+        _context.Items.Update(item);
         _context.SaveChanges();
     }
 
@@ -28,13 +28,13 @@ public class ItemDao(GameContext context) : IItemDao
         if (item.IsCore)
             throw new InvalidOperationException("Core game items cannot be deleted.");
 
-        _context.Items?.Remove(item);
+        _context.Items.Remove(item);
         _context.SaveChanges();
     }
 
     public List<Item> GetItemsByName(string name)
     {
-        var matchingItems = _context.Items!
+        var matchingItems = _context.Items
             .Where(i => EF.Functions.Like(i.Name, $"%{name}%"))
             .Include(i => i.Inventory)
             .ThenInclude(i => i!.Player)
@@ -50,7 +50,7 @@ public class ItemDao(GameContext context) : IItemDao
 
     public List<Item> GetAllItems()
     {
-        var items = _context.Items?.Include(i => i.Inventory).ThenInclude(i => i!.Player).ToList() ?? [];
+        var items = _context.Items.Include(i => i.Inventory).ThenInclude(i => i!.Player).ToList();
 
         return SortOrder switch
         {
@@ -119,8 +119,8 @@ public class ItemDao(GameContext context) : IItemDao
 
     public List<Item> GetItemsAvailableAtLevel(int level)
     {
-        return _context.Items?
+        return [.._context.Items
             .Where(i => i.RequiredLevel <= level)
-            .ToList() ?? [];
+            ];
     }
 }

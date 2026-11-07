@@ -12,6 +12,7 @@ public interface IRoom
     int Id { get; set; }
     string Name { get; set; }
     string Description { get; set; }
+    bool IsCore { get; set; }
     Room? North { get; set; }
     Room? South { get; set; }
     Room? West { get; set; }

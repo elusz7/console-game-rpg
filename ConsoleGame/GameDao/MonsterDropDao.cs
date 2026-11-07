@@ -1,6 +1,5 @@
 ﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGameEntities.Data;
-using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Models.Runes.Recipes;
 using Microsoft.EntityFrameworkCore;

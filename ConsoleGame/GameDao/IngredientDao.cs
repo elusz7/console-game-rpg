@@ -30,7 +30,7 @@ public class IngredientDao(GameContext context) : IIngredientDao
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(quantity);
         
-        var inventory = _context.Inventories!
+        var inventory = _context.Inventories
                             .FirstOrDefault(i => i.PlayerId == playerId)
                         ?? throw new InventoryException(
                             $"No inventory found for player {playerId}.");

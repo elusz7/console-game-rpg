@@ -3,6 +3,7 @@ using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
+using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.GameDao;
 
@@ -37,14 +38,14 @@ public class SkillDao(GameContext context) : ISkillDao
     {
         return
         [
-            .. _context.Skills.ToList()
-                .Where(s => s.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
+            .. _context.Skills
+                .Where(s => EF.Functions.Like(s.Name, $"%{name}%"))
         ];
     }
 
     public List<Skill> GetAllNonCoreSkills()
     {
-        return [.. _context.Skills.Where(s => s.Id > 212)];
+        return [.. _context.Skills.Where(s => !s.IsCore)];
     }
 
     public List<Archetype> GetArchetypes()
@@ -110,8 +111,8 @@ public class SkillDao(GameContext context) : ISkillDao
         return
         [
             .. _context.Skills
+                .Where(s => !s.IsCore)
                 .Where(s => s.ArchetypeId == null && s.MonsterId == null)
-                .Where(s => s.Id > 212)
         ];
     }
 
@@ -120,8 +121,8 @@ public class SkillDao(GameContext context) : ISkillDao
         return
         [
             .. _context.Skills
+                .Where(s => !s.IsCore)
                 .Where(s => s.ArchetypeId != null || s.MonsterId != null)
-                .Where(s => s.Id > 212)
         ];
     }
 

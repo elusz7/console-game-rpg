@@ -13,6 +13,7 @@ public class Skill : ISkill
     public int Id { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
+    public bool IsCore { get; set; }
     public int RequiredLevel { get; set; }
     public int Cost { get; set; }
     public int Power { get; set; }

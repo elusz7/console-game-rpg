@@ -33,13 +33,14 @@ public class BossSkillTests
         };
     }
 
-    private Monster GetMonsterCaster(int level = 5)
+    private static BossMonster GetMonsterCaster(int level = 5)
     {
         return new BossMonster
         {
             CurrentHealth = 10,
             Level = level, 
-            DodgeChance = 0
+            DodgeChance = 0,
+            AggressionLevel = 0
         };
     }
 

@@ -15,7 +15,7 @@ public class PlayerPersistenceIntegrationTests
     private SqliteConnection _connection = null!;
     private GameContext _context = null!;
 
-    private PlayerDao _playerDao = null;
+    private PlayerDao _playerDao;
 
     [TestInitialize]
     public void Initialize()
@@ -60,7 +60,7 @@ public class PlayerPersistenceIntegrationTests
         // Clear tracked entities to force a database reload.
         _context.ChangeTracker.Clear();
 
-        var result = _context.Players!
+        var result = _context.Players
             .Include(p => p.Inventory)
             .Single(p => p.Name == "TestPlayer");
 
@@ -94,7 +94,7 @@ public class PlayerPersistenceIntegrationTests
         // Clear tracked entities to force a database reload.
         _context.ChangeTracker.Clear();
 
-        var result = _context.Players!
+        var result = _context.Players
             .Include(p => p.Archetype)
             .Single(p => p.Name == "TestPlayer");
 
@@ -121,7 +121,7 @@ public class PlayerPersistenceIntegrationTests
         var playerId = player.Id;
 
         // Retrieve the tracked player.
-        var trackedPlayer = _context.Players!
+        var trackedPlayer = _context.Players
             .Single(p => p.Id == playerId);
 
         // Act
@@ -133,7 +133,7 @@ public class PlayerPersistenceIntegrationTests
         // Clear tracked entities to force a database reload.
         _context.ChangeTracker.Clear();
 
-        var result = _context.Players!
+        var result = _context.Players
             .Single(p => p.Id == playerId);
 
         // Assert
@@ -154,7 +154,7 @@ public class PlayerPersistenceIntegrationTests
         var playerId = player.Id;
 
         // Retrieve the tracked player and inventory.
-        var trackedPlayer = _context.Players!
+        var trackedPlayer = _context.Players
             .Include(p => p.Inventory)
             .Single(p => p.Id == playerId);
 
@@ -167,7 +167,7 @@ public class PlayerPersistenceIntegrationTests
         // Clear tracked entities to force a database reload.
         _context.ChangeTracker.Clear();
 
-        var result = _context.Players!
+        var result = _context.Players
             .Include(p => p.Inventory)
             .Single(p => p.Id == playerId);
 
@@ -193,7 +193,7 @@ public class PlayerPersistenceIntegrationTests
         var weaponId = weapon.Id;
 
         // Retrieve the tracked player, inventory, and items.
-        var trackedPlayer = _context.Players!
+        var trackedPlayer = _context.Players
             .Include(p => p.Inventory)
             .ThenInclude(i => i.Items)
             .Single(p => p.Id == playerId);
@@ -211,7 +211,7 @@ public class PlayerPersistenceIntegrationTests
         // Clear tracked entities to force a database reload.
         _context.ChangeTracker.Clear();
 
-        var result = _context.Players!
+        var result = _context.Players
             .Include(p => p.Inventory)
             .ThenInclude(i => i.Items)
             .Single(p => p.Id == playerId);
@@ -245,7 +245,7 @@ public class PlayerPersistenceIntegrationTests
         var archetypeId = archetype.Id;
 
         // Retrieve the tracked player.
-        var trackedPlayer = _context.Players!
+        var trackedPlayer = _context.Players
             .Single(p => p.Id == playerId);
 
         // Act
@@ -255,13 +255,13 @@ public class PlayerPersistenceIntegrationTests
         _context.ChangeTracker.Clear();
 
         // Assert
-        Assert.IsFalse(_context.Players!
+        Assert.IsFalse(_context.Players
             .Any(p => p.Id == playerId));
 
-        Assert.IsFalse(_context.Inventories!
+        Assert.IsFalse(_context.Inventories
             .Any(i => i.Id == inventoryId));
 
-        var resultWeapon = _context.Items!
+        var resultWeapon = _context.Items
             .OfType<Weapon>()
             .SingleOrDefault(i => i.Id == weaponId);
 
@@ -314,8 +314,8 @@ public class PlayerPersistenceIntegrationTests
         // Assert
         _context.ChangeTracker.Clear();
 
-        Assert.IsNull(_context.Players!.SingleOrDefault(p => p.Id == playerId));
-        Assert.IsNull(_context.Inventories!.SingleOrDefault(i => i.Id == inventoryId));
+        Assert.IsNull(_context.Players.SingleOrDefault(p => p.Id == playerId));
+        Assert.IsNull(_context.Inventories.SingleOrDefault(i => i.Id == inventoryId));
 
         Assert.AreEqual(0, _context.InventoryRunes
             .Count(ir => ir.InventoryId == inventoryId));
@@ -965,7 +965,7 @@ public class PlayerPersistenceIntegrationTests
         // Assert: database remains unchanged
         _context.ChangeTracker.Clear();
 
-        var savedPlayer = _context.Players!
+        var savedPlayer = _context.Players
             .AsNoTracking()
             .Include(p => p.Inventory)
             .ThenInclude(i => i.Items)

@@ -30,7 +30,8 @@ public static class ModelCreationHelper
         Martial,
         Magical,
         Ultimate,
-        Support
+        Support,
+        Boss
     }
 
     public enum TestMonsterType
@@ -141,7 +142,8 @@ public static class ModelCreationHelper
                     Power = 10,
                     Cost = 2,
                     TargetType = TargetType.SingleEnemy,
-                    DamageType = DamageType.Martial
+                    DamageType = DamageType.Martial,
+                    SkillCategory = SkillCategory.Basic
                 },
             TestSkillType.Magical =>
                 new MagicSkill
@@ -154,7 +156,8 @@ public static class ModelCreationHelper
                     Power = 10,
                     Cost = 2,
                     TargetType = TargetType.SingleEnemy,
-                    DamageType = DamageType.Magical
+                    DamageType = DamageType.Magical,
+                    SkillCategory = SkillCategory.Basic
                 },
             TestSkillType.Ultimate => new UltimateSkill()
             {
@@ -165,6 +168,18 @@ public static class ModelCreationHelper
                 ElapsedTime = 10,
                 Power = 10,
                 Cost = 2,
+                TargetType = TargetType.SingleEnemy,
+                DamageType = DamageType.Hybrid,
+                SkillCategory = SkillCategory.Ultimate
+            },
+            TestSkillType.Boss => new BossSkill
+            {
+                Name = name,
+                Description = $"Test description for {name}",
+                RequiredLevel = 10,
+                Cost = 10,
+                Power = 50,
+                Cooldown = 8,
                 TargetType = TargetType.SingleEnemy,
                 DamageType = DamageType.Hybrid
             },
@@ -177,7 +192,11 @@ public static class ModelCreationHelper
                 ElapsedTime = 10,
                 Power = 10,
                 Cost = 2,
-                TargetType = TargetType.Self
+                TargetType = TargetType.Self,
+                SkillCategory = SkillCategory.Support,
+                Duration = 4,
+                StatAffected = StatType.Resistance,
+                SupportEffect = 1
             }
         };
     }

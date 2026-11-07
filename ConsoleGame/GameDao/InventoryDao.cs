@@ -1,6 +1,5 @@
 ﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGameEntities.Data;
-using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 
@@ -12,7 +11,7 @@ public class InventoryDao(GameContext context) : IInventoryDao
 
     public void UpdateInventory(Inventory inventory)
     {
-        _context.Inventories?.Update(inventory);
+        _context.Inventories.Update(inventory);
         _context.SaveChanges();
     }
 
@@ -20,9 +19,9 @@ public class InventoryDao(GameContext context) : IInventoryDao
     {
         var availableCapacity = player.Inventory.Capacity - player.Inventory.GetCarryingWeight();
 
-        return _context.Items?
+        return [.._context.Items
             .Where(i => i.Weight <= availableCapacity)
             .Where(i => i.InventoryId == null)
-            .ToList() ?? [];
+            ];
     }
 }

@@ -32,7 +32,7 @@ public class RuneDao(GameContext context) : IRuneDao
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(quantity);
 
-        var inventory = _context.Inventories!
+        var inventory = _context.Inventories
                             .FirstOrDefault(i => i.PlayerId == playerId)
                         ?? throw new InventoryException(
                             $"No inventory found for player {playerId}.");
@@ -66,7 +66,7 @@ public class RuneDao(GameContext context) : IRuneDao
     }
 
     public void UpdatePlayerRuneQuantity(
-        int runeId, int playerId, int tier, int quantity)
+        int runeId, int playerId, int tier, int quantity = 1)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(quantity);
 
