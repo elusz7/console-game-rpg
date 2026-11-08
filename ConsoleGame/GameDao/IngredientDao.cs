@@ -4,6 +4,7 @@ using ConsoleGameEntities.Models.Runes.Recipes;
 using Microsoft.EntityFrameworkCore;
 using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Exceptions;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.GameDao;
 
@@ -24,6 +25,13 @@ public class IngredientDao(GameContext context) : IIngredientDao
     public Ingredient? GetIngredientDefinitionById(int ingredientId)
     {
         return _context.Ingredients.Find(ingredientId);
+    }
+    
+    public Ingredient? GetEssenceByRarity(RarityLevel rarity)
+    {
+        return _context.Ingredients.SingleOrDefault(i =>
+            i.ComponentType == ComponentType.Essence &&
+            i.EssenceRarity == rarity);
     }
 
     public void AddIngredientToPlayer(int ingredientId, int playerId, int quantity = 1)

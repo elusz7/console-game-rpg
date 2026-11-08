@@ -7,4 +7,5 @@ public class Ingredient
     public int Id { get; set; }
     public string Name { get; set; }
     public ComponentType ComponentType { get; set; }
+    public RarityLevel? EssenceRarity { get; set; }
 }

@@ -406,6 +406,9 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("ComponentType")
                         .HasColumnType("int");
 
+                    b.Property<int?>("EssenceRarity")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");

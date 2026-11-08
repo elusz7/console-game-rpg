@@ -1,8 +1,8 @@
 # Console Game RPG --- Updated Development Roadmap
 
-**Current working branch:** `architecture-refactor`\
+**Current working branch:** `elemental-refactor`\
 **Stable branch:** `master`\
-**Planned integration branch:** `elemental-refactor`
+**Previous branch:** ``architecture-refactor``
 
 **Purpose:** Improve the architecture, reliability, maintainability, and
 test coverage of the RPG, then consolidate the elemental, rune, and
@@ -201,7 +201,7 @@ monsters, skills, and elemental attacks.
 -   [x] Design a shared damage calculation abstraction.
 -   [x] Separate damage calculation from applying damage.
 -   [x] Support damage types and resistance modifiers.
--   \[\~\] Support critical hits and dodge calculations where
+-   [ ] Support critical hits and dodge calculations where
     appropriate.
 -   [ ] Support additional elemental modifiers.
 -   [x] Return explicit damage calculation results.
@@ -259,9 +259,9 @@ Create and apply EF Core migrations for the new ownership entities. Establish sh
 - [x] Test saving and loading ingredient inventories.
 - [x] Test inventory updates and deletion.
 - [x] Verify ownership quantities remain correct after database reload.
-- [ ] Verify equipped rune relationships persist correctly.
+- [x] Verify equipped rune relationships persist correctly.
 - [x] Verify deleting or modifying ownership records does not unintentionally delete shared definitions.
-- [ ] Add persistence integration tests covering new and existing players.
+- [x] Add persistence integration tests covering new and existing players.
 
 **Completion criteria:** Rune and ingredient ownership persists correctly through EF Core. Shared definitions are seeded, ownership relationships behave as intended, and persistence operations are covered by integration tests.
 
@@ -269,10 +269,10 @@ Create and apply EF Core migrations for the new ownership entities. Establish sh
 
 Replace the existing in-memory inventory implementations with persistent ownership operations. Update all rune and ingredient gameplay systems to use the new persistence architecture while preserving existing crafting and progression rules.
 
-- [ ] Implement persistent equipped weapon and armor relationships.
-- [ ] Update equipment operations to persist equipping and unequipping.
-- [ ] Verify equipped weapons and armor survive database reloads.
-- [ ] Implement adding and removing rune and ingredient quantities.
+- [x] Implement persistent equipped weapon and armor relationships.
+- [x] Update equipment operations to persist equipping and unequipping.
+- [x] Verify equipped weapons and armor survive database reloads.
+- [x] Implement adding and removing rune and ingredient quantities.
 - [ ] Validate positive quantities and prevent invalid ownership changes.
 - [ ] Prevent negative inventory quantities and remove or clean up empty ownership records consistently.
 - [ ] Update fuseable, destroyable, and transmutable inventory queries.

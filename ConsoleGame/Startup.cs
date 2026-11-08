@@ -20,6 +20,7 @@ using ConsoleGame.Factories.Interfaces;
 using ConsoleGame.Helpers.CombatHelpers;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGame.Managers.Interfaces;
+using ConsoleGame.Services.Interfaces;
 
 namespace ConsoleGame;
 
@@ -119,7 +120,12 @@ public static class Startup
         // Handles monster treasure collection and monster cleanup.
         services.AddTransient<LootService>();
         // Handles saving campaign progress when a campaign ends.
-        services.AddTransient<CampaignPersistenceService>();
+        services.AddTransient<CampaignService>();
+        
+        // Handles gameplay crafting mechanisms
+        services.AddScoped<ICraftingService, CraftingService>();
+        // Handles commits to the database
+        services.AddScoped<ITransactionManager, TransactionManager>();
         
         services.AddScoped<CombatActionDisplayHelper>();
         services.AddScoped<CombatMenuDisplayHelper>();

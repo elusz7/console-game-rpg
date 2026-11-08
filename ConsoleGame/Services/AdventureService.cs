@@ -20,7 +20,7 @@ public class AdventureService(
     FloorProgressionService floorProgressionService,
     RoomNavigationService roomNavigationService,
     LootService lootService,
-    CampaignPersistenceService campaignPersistenceService)
+    CampaignService campaignService)
 {
     private readonly IOutputManager _outputManager = outputManager;
     private readonly IInputManager _inputManager = inputManager;
@@ -42,7 +42,7 @@ public class AdventureService(
     private readonly LootService _lootService = lootService;
 
     // Handles persistence of player upon quit or death
-    private readonly CampaignPersistenceService _campaignPersistenceService = campaignPersistenceService;
+    private readonly CampaignService _campaignService = campaignService;
 
     // Holds the state for the current adventure or campaign.
     private GameSession? _session;
@@ -220,7 +220,7 @@ public class AdventureService(
                                 Session.End(AdventureStatus.Quit);
 
                                 _outputManager.WriteLine("\nThanks for playing!\n", ConsoleColor.Yellow);
-                                _campaignPersistenceService.SaveIfCampaign(Session);
+                                _campaignService.SaveIfCampaign(Session);
                                 return;
                             }
 
@@ -239,7 +239,7 @@ public class AdventureService(
                         _outputManager.WriteLine("Press any key to continue...", ConsoleColor.Gray);
                         _outputManager.Display();
 
-                        _campaignPersistenceService.SaveIfCampaign(Session);
+                        _campaignService.SaveIfCampaign(Session);
 
                         _inputManager.ReadKey();
                         _outputManager.Clear();

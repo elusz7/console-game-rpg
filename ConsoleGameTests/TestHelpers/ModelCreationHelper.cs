@@ -51,12 +51,16 @@ public static class ModelCreationHelper
         };
     }
 
-    public static Ingredient CreateIngredient(string name, ComponentType component)
+    public static Ingredient CreateIngredient(
+        string name,
+        ComponentType component,
+        RarityLevel? essenceRarity = null)
     {
-        return new Ingredient()
+        return new Ingredient
         {
             Name = name,
-            ComponentType = component
+            ComponentType = component,
+            EssenceRarity = essenceRarity
         };
     }
 
@@ -306,5 +310,29 @@ public static class ModelCreationHelper
             name,
             $"A description for {name}."
         );
+    }
+    
+    public static Recipe CreateRecipe(
+        string name,
+        Rune rune,
+        List<RecipeIngredient> ingredients)
+    {
+        return new Recipe
+        {
+            Name = name,
+            Rune = rune,
+            Ingredients = ingredients
+        };
+    }
+    
+    public static RecipeIngredient CreateRecipeIngredient(
+        Ingredient ingredient,
+        int quantity)
+    {
+        return new RecipeIngredient
+        {
+            Ingredient = ingredient,
+            Quantity = quantity
+        };
     }
 }

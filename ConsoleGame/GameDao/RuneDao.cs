@@ -4,6 +4,7 @@ using ConsoleGameEntities.Models.Runes;
 using Microsoft.EntityFrameworkCore;
 using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Exceptions;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.GameDao;
 
@@ -11,7 +12,15 @@ namespace ConsoleGame.GameDao;
 public class RuneDao(GameContext context) : IRuneDao
 {
     private readonly GameContext _context = context;
-    
+
+    public Rune? FindRune(ElementType element, RarityLevel rarity, string type)
+    {
+        return _context.Runes
+                .SingleOrDefault(r => r.Element == element 
+                                      && r.Rarity == rarity
+                                      && r.RuneType == type);
+    }
+
     public List<InventoryRune> GetRunesByPlayerId(int playerId)
     {
         return 
@@ -19,6 +28,7 @@ public class RuneDao(GameContext context) : IRuneDao
             .. _context.InventoryRunes
                 .Include(ir => ir.Inventory)
                 .Include(ir => ir.Rune)
+                .Include(ir => ir.EquippedRunes)
                 .Where(ir => ir.Inventory.PlayerId == playerId)
         ];
     }
