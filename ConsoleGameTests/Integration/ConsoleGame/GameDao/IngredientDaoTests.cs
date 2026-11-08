@@ -341,4 +341,202 @@ public class IngredientDaoTests
         // Assert
         Assert.IsNull(result);
     }
+
+    [TestMethod]
+    public void UpdatePlayerIngredientQuantity_ZeroQuantity_RemovesOwnershipRecord()
+    {
+        // Arrange
+        var player = CreateAndSavePlayer("IngredientUpdateTestPlayer");
+        var ingredient = CreateIngredient(
+            "Test Ingredient", ComponentType.MonsterPart);
+
+        _context.Ingredients.Add(ingredient);
+        _context.SaveChanges();
+
+        _ingredientDao.AddIngredientToPlayer(ingredient.Id, player.Id, 5);
+
+        // Act
+        _ingredientDao.UpdatePlayerIngredientQuantity(
+            ingredient.Id, player.Id, 0);
+
+        // Assert
+        _context.ChangeTracker.Clear();
+
+        var inventoryIngredient = _context.InventoryIngredients
+            .SingleOrDefault(ii =>
+                ii.Inventory.PlayerId == player.Id &&
+                ii.IngredientId == ingredient.Id);
+
+        Assert.IsNull(inventoryIngredient);
+    }
+
+    [TestMethod]
+    public void UpdatePlayerIngredientQuantity_IngredientNotOwned_ThrowsInventoryException()
+    {
+        // Arrange
+        var player = CreateAndSavePlayer("IngredientUpdateTestPlayer");
+        var ingredient = CreateIngredient(
+            "Test Ingredient", ComponentType.MonsterPart);
+
+        _context.Ingredients.Add(ingredient);
+        _context.SaveChanges();
+
+        // Act & Assert
+        Assert.ThrowsException<InventoryException>(() => _ingredientDao.UpdatePlayerIngredientQuantity(
+            ingredient.Id, player.Id, 5));
+    }
+
+    [TestMethod]
+    public void UpdatePlayerIngredientQuantity_NegativeQuantity_ThrowsArgumentOutOfRangeException()
+    {
+        // Act & Assert
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _ingredientDao.UpdatePlayerIngredientQuantity(
+            1, 1, -5));
+    }
+
+    [TestMethod]
+    public void GetTransmutableEssencesByPlayerId_ReturnsEmptyList_WhenPlayerHasNoIngredients()
+    {
+        var player = CreateAndSavePlayer("Test Player");
+
+        var result = _ingredientDao.GetTransmutableEssencesByPlayerId(player.Id);
+
+        Assert.IsNotNull(result);
+        Assert.AreEqual(0, result.Count);
+    }
+
+    [TestMethod]
+    public void GetTransmutableEssencesByPlayerId_ReturnsEssence_WhenPlayerHasEnoughQuantity()
+    {
+        var player = CreateAndSavePlayer("Test Player");
+
+        var essence = CreateIngredient(
+            "Common Essence", ComponentType.Essence, RarityLevel.Common);
+        var nextEssence = CreateIngredient(
+            "Uncommon Essence", ComponentType.Essence, RarityLevel.Uncommon);
+
+        _context.Ingredients.AddRange(essence, nextEssence);
+        _context.SaveChanges();
+
+        _ingredientDao.AddIngredientToPlayer(essence.Id, player.Id, 5);
+
+        var result = _ingredientDao.GetTransmutableEssencesByPlayerId(player.Id);
+
+        Assert.AreEqual(1, result.Count);
+        Assert.AreEqual(essence.Id, result.Single().IngredientId);
+        Assert.AreEqual(5, result.Single().Quantity);
+    }
+
+    [TestMethod]
+    public void GetTransmutableEssencesByPlayerId_ExcludesEssence_WhenQuantityIsInsufficient()
+    {
+        var player = CreateAndSavePlayer("Test Player");
+
+        var essence = CreateIngredient(
+            "Common Essence", ComponentType.Essence, RarityLevel.Common);
+        var nextEssence = CreateIngredient(
+            "Uncommon Essence", ComponentType.Essence, RarityLevel.Uncommon);
+
+        _context.Ingredients.AddRange(essence, nextEssence);
+        _context.SaveChanges();
+
+        _ingredientDao.AddIngredientToPlayer(essence.Id, player.Id, 4);
+
+        var result = _ingredientDao.GetTransmutableEssencesByPlayerId(player.Id);
+
+        Assert.AreEqual(0, result.Count);
+    }
+
+    [TestMethod]
+    public void GetTransmutableEssencesByPlayerId_ExcludesNonEssenceIngredients()
+    {
+        var player = CreateAndSavePlayer("Test Player");
+
+        var ingredient = CreateIngredient("Monster Part", ComponentType.MonsterPart);
+
+        _context.Ingredients.Add(ingredient);
+        _context.SaveChanges();
+
+        _ingredientDao.AddIngredientToPlayer(ingredient.Id, player.Id, 10);
+
+        var result = _ingredientDao.GetTransmutableEssencesByPlayerId(player.Id);
+
+        Assert.AreEqual(0, result.Count);
+    }
+
+    [TestMethod]
+    public void GetTransmutableEssencesByPlayerId_ExcludesEssenceWithNullRarity()
+    {
+        var player = CreateAndSavePlayer("Test Player");
+
+        var essence = CreateIngredient("Unknown Essence", ComponentType.Essence);
+
+        _context.Ingredients.Add(essence);
+        _context.SaveChanges();
+
+        _ingredientDao.AddIngredientToPlayer(essence.Id, player.Id, 10);
+
+        var result = _ingredientDao.GetTransmutableEssencesByPlayerId(player.Id);
+
+        Assert.AreEqual(0, result.Count);
+    }
+
+    [TestMethod]
+    public void GetTransmutableEssencesByPlayerId_ExcludesMythicEssence()
+    {
+        var player = CreateAndSavePlayer("Test Player");
+
+        var essence = CreateIngredient(
+            "Mythic Essence", ComponentType.Essence, RarityLevel.Mythic);
+
+        _context.Ingredients.Add(essence);
+        _context.SaveChanges();
+
+        _ingredientDao.AddIngredientToPlayer(essence.Id, player.Id, 10);
+
+        var result = _ingredientDao.GetTransmutableEssencesByPlayerId(player.Id);
+
+        Assert.AreEqual(0, result.Count);
+    }
+
+    [TestMethod]
+    public void GetTransmutableEssencesByPlayerId_ExcludesEssence_WhenNextRarityDoesNotExist()
+    {
+        var player = CreateAndSavePlayer("Test Player");
+
+        var essence = CreateIngredient(
+            "Common Essence", ComponentType.Essence, RarityLevel.Common);
+
+        _context.Ingredients.Add(essence);
+        _context.SaveChanges();
+
+        _ingredientDao.AddIngredientToPlayer(essence.Id, player.Id, 10);
+
+        var result = _ingredientDao.GetTransmutableEssencesByPlayerId(player.Id);
+
+        Assert.AreEqual(0, result.Count);
+    }
+
+    [TestMethod]
+    public void GetTransmutableEssencesByPlayerId_ReturnsOnlyPlayersEssences()
+    {
+        var player = CreateAndSavePlayer("Test Player");
+        var otherPlayer = CreateAndSavePlayer("Other Player");
+
+        var essence = CreateIngredient(
+            "Common Essence", ComponentType.Essence, RarityLevel.Common);
+        var nextEssence = CreateIngredient(
+            "Uncommon Essence", ComponentType.Essence, RarityLevel.Uncommon);
+
+        _context.Ingredients.AddRange(essence, nextEssence);
+        _context.SaveChanges();
+
+        _ingredientDao.AddIngredientToPlayer(essence.Id, player.Id, 10);
+        _ingredientDao.AddIngredientToPlayer(essence.Id, otherPlayer.Id, 10);
+
+        var result = _ingredientDao.GetTransmutableEssencesByPlayerId(player.Id);
+
+        Assert.AreEqual(1, result.Count);
+        Assert.AreEqual(essence.Id, result.Single().IngredientId);
+    }
 }

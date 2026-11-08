@@ -1,5 +1,7 @@
 ﻿using ConsoleGame.GameDao;
 using ConsoleGameEntities.Data;
+using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Entities.Inventories;
 using ConsoleGameEntities.Models.Runes;
 using ConsoleGameEntities.Models.Runes.Recipes;
 using Microsoft.Data.Sqlite;
@@ -37,7 +39,7 @@ public class RecipeDaoTests
         // Use the real DAO
         _recipeDao = new RecipeDao(_context);
     }
-    
+
     [TestCleanup]
     public void Cleanup()
     {
@@ -48,8 +50,8 @@ public class RecipeDaoTests
     [TestMethod]
     public void GetRecipeById_ReturnsNull_WhenNotFound()
     {
-        var recipe =  _recipeDao.GetRecipeById(1);
-        
+        var recipe = _recipeDao.GetRecipeById(1);
+
         Assert.IsNull(recipe);
     }
 
@@ -61,18 +63,18 @@ public class RecipeDaoTests
         var rune = CreateRune("Wisp", 3, ElementType.Fire, RarityLevel.Common, TestRuneType.Armor);
 
         var recipe = GetRecipe("No Thanks", ingredient1, ingredient2, rune);
-        
+
         var resultRecipe = _recipeDao.GetRecipeById(recipe.Id);
         Assert.IsNotNull(resultRecipe);
-        
+
         AssertRecipeMatches(ingredient1, ingredient2, rune, recipe, resultRecipe);
     }
-    
+
     [TestMethod]
     public void GetRecipeByRuneId_ReturnsNull_WhenNotFound()
     {
-        var recipe =  _recipeDao.GetRecipeByRuneId(1);
-        
+        var recipe = _recipeDao.GetRecipeByRuneId(1);
+
         Assert.IsNull(recipe);
     }
 
@@ -82,12 +84,12 @@ public class RecipeDaoTests
         var ingredient1 = CreateIngredient("Test", ComponentType.MonsterPart);
         var ingredient2 = CreateIngredient("Sample", ComponentType.Core);
         var rune = CreateRune("Wisp", 3, ElementType.Fire, RarityLevel.Common, TestRuneType.Weapon);
-        
+
         var recipe = GetRecipe("Try This", ingredient1, ingredient2, rune);
-        
+
         var resultRecipe = _recipeDao.GetRecipeByRuneId(rune.Id);
         Assert.IsNotNull(resultRecipe);
-        
+
         AssertRecipeMatches(ingredient1, ingredient2, rune, recipe, resultRecipe);
     }
 
@@ -106,7 +108,7 @@ public class RecipeDaoTests
         var ingredient2 = CreateIngredient("Sample", ComponentType.MonsterPart);
         var rune1 = CreateRune("Wisp", 3, ElementType.Fire, RarityLevel.Common, TestRuneType.Armor);
         var recipe1 = GetRecipe("Test1", ingredient1, ingredient2, rune1);
-        
+
         var ingredient3 = CreateIngredient("Test", ComponentType.MonsterPart);
         var ingredient4 = CreateIngredient("Sample", ComponentType.Core);
         var rune2 = CreateRune("Stormy", 4, ElementType.Lightning, RarityLevel.Uncommon, TestRuneType.Weapon);
@@ -118,11 +120,11 @@ public class RecipeDaoTests
 
         var resultRecipe1 = recipes.Single(r => r.Id == recipe1.Id);
         var resultRecipe2 = recipes.Single(r => r.Id == recipe2.Id);
-        
+
         AssertRecipeMatches(ingredient1, ingredient2, rune1, recipe1, resultRecipe1);
         AssertRecipeMatches(ingredient3, ingredient4, rune2, recipe2, resultRecipe2);
     }
-    
+
     [TestMethod]
     public void GetRecipesByIngredientId_ReturnsEmptyList_WhenNoRecipesMatch()
     {
@@ -145,11 +147,11 @@ public class RecipeDaoTests
         var ingredient2 = CreateIngredient("Sample", ComponentType.Essence);
         var rune1 = CreateRune("Wisp", 3, ElementType.Fire, RarityLevel.Common, TestRuneType.Weapon);
         var recipe1 = GetRecipe("Test1", ingredient1, ingredient2, rune1);
-        
+
         var ingredient3 = CreateIngredient("Test", ComponentType.Core);
         var rune2 = CreateRune("Stormy", 4, ElementType.Lightning, RarityLevel.Uncommon, TestRuneType.Weapon);
         var recipe2 = GetRecipe("Test2", ingredient2, ingredient3, rune2);
-        
+
         var ingredient4 = CreateIngredient("Sample", ComponentType.MonsterPart);
         var rune3 = CreateRune("Windy", 5, ElementType.Ice, RarityLevel.Epic, TestRuneType.Armor);
         var recipe3 = GetRecipe("Test2", ingredient3, ingredient4, rune3);
@@ -158,10 +160,10 @@ public class RecipeDaoTests
         Assert.IsNotNull(recipes);
         Assert.AreEqual(2, recipes.Count);
         Assert.IsFalse(recipes.Any(r => r.Id == recipe3.Id));
-        
+
         var resultRecipe1 = recipes.Single(r => r.Id == recipe1.Id);
         var resultRecipe2 = recipes.Single(r => r.Id == recipe2.Id);
-        
+
         AssertRecipeMatches(ingredient1, ingredient2, rune1, recipe1, resultRecipe1);
         AssertRecipeMatches(ingredient2, ingredient3, rune2, recipe2, resultRecipe2);
     }
@@ -173,7 +175,7 @@ public class RecipeDaoTests
 
         if (ingredient2.Id != 0 && ingredient2.Id != ingredient1.Id)
             _context.Ingredients.Attach(ingredient2);
-        
+
         var recipe = new Recipe
         {
             Name = name,
@@ -199,7 +201,7 @@ public class RecipeDaoTests
         return recipe;
     }
 
-    private static void AssertRecipeMatches(Ingredient ingredient1, Ingredient ingredient2, 
+    private static void AssertRecipeMatches(Ingredient ingredient1, Ingredient ingredient2,
         Rune rune, Recipe originalRecipe, Recipe resultRecipe)
     {
         Assert.AreEqual(originalRecipe.Name, resultRecipe.Name);
@@ -211,19 +213,19 @@ public class RecipeDaoTests
         Assert.AreEqual(rune.Power, resultRune.Power);
         Assert.AreEqual(rune.Element, resultRune.Element);
         Assert.AreEqual(rune.Rarity, resultRune.Rarity);
-        
+
         if (rune is WeaponRune wr1 && resultRune is WeaponRune wr2)
             Assert.AreEqual(wr1.Duration, wr2.Duration);
-        
+
         var resultIngredients = resultRecipe.Ingredients;
         Assert.AreEqual(2, resultIngredients.Count);
-        
+
         var resultIngredient1 = resultIngredients
             .Single(ri => ri.IngredientId == ingredient1.Id);
 
         var resultIngredient2 = resultIngredients
             .Single(ri => ri.IngredientId == ingredient2.Id);
-        
+
         Assert.AreEqual(ingredient1.Name, resultIngredient1.Ingredient.Name);
         Assert.AreEqual(ingredient1.ComponentType, resultIngredient1.Ingredient.ComponentType);
         Assert.AreEqual(5, resultIngredient1.Quantity);
@@ -231,5 +233,172 @@ public class RecipeDaoTests
         Assert.AreEqual(ingredient2.Name, resultIngredient2.Ingredient.Name);
         Assert.AreEqual(ingredient2.ComponentType, resultIngredient2.Ingredient.ComponentType);
         Assert.AreEqual(10, resultIngredient2.Quantity);
+    }
+
+    [TestMethod]
+    public void GetCraftableRecipesByPlayerId_ReturnsEmptyList_WhenPlayerHasNoIngredients()
+    {
+        var player = CreateAndSavePlayer("Player1");
+
+        var ingredient1 = CreateIngredient("Test", ComponentType.MonsterPart);
+        var ingredient2 = CreateIngredient("Sample", ComponentType.Essence);
+        var rune = CreateRune("Wisp", 3, ElementType.Fire, RarityLevel.Common, TestRuneType.Armor);
+        GetRecipe("TestRecipe", ingredient1, ingredient2, rune);
+
+        var recipes = _recipeDao.GetCraftableRecipesByPlayerId(player.Id);
+
+        Assert.IsNotNull(recipes);
+        Assert.AreEqual(0, recipes.Count);
+    }
+
+    [TestMethod]
+    public void GetCraftableRecipesByPlayerId_ReturnsRecipe_WhenPlayerHasEnoughOfEveryIngredient()
+    {
+        var player = CreateAndSavePlayer("Player1");
+
+        var ingredient1 = CreateIngredient("Test", ComponentType.MonsterPart);
+        var ingredient2 = CreateIngredient("Sample", ComponentType.Essence);
+        var rune = CreateRune("Wisp", 3, ElementType.Fire, RarityLevel.Common, TestRuneType.Armor);
+        var recipe = GetRecipe("TestRecipe", ingredient1, ingredient2, rune);
+
+        AddIngredientToPlayer(player, ingredient1, 5);
+        AddIngredientToPlayer(player, ingredient2, 10);
+
+        var recipes = _recipeDao.GetCraftableRecipesByPlayerId(player.Id);
+
+        Assert.AreEqual(1, recipes.Count);
+
+        var result = recipes.Single();
+        Assert.AreEqual(recipe.Id, result.Id);
+        Assert.AreEqual(rune.Id, result.Rune.Id);
+        Assert.AreEqual(2, result.Ingredients.Count);
+    }
+
+    [TestMethod]
+    public void GetCraftableRecipesByPlayerId_ExcludesRecipe_WhenPlayerIsMissingOneIngredient()
+    {
+        var player = CreateAndSavePlayer("Player1");
+
+        var ingredient1 = CreateIngredient("Test", ComponentType.MonsterPart);
+        var ingredient2 = CreateIngredient("Sample", ComponentType.Essence);
+        var rune = CreateRune("Wisp", 3, ElementType.Fire, RarityLevel.Common, TestRuneType.Armor);
+        GetRecipe("TestRecipe", ingredient1, ingredient2, rune);
+
+        AddIngredientToPlayer(player, ingredient1, 5);
+
+        var recipes = _recipeDao.GetCraftableRecipesByPlayerId(player.Id);
+
+        Assert.AreEqual(0, recipes.Count);
+    }
+
+    [TestMethod]
+    public void GetCraftableRecipesByPlayerId_ExcludesRecipe_WhenIngredientQuantityIsInsufficient()
+    {
+        var player = CreateAndSavePlayer("Player1");
+
+        var ingredient1 = CreateIngredient("Test", ComponentType.MonsterPart);
+        var ingredient2 = CreateIngredient("Sample", ComponentType.Essence);
+        var rune = CreateRune("Wisp", 3, ElementType.Fire, RarityLevel.Common, TestRuneType.Armor);
+        GetRecipe("TestRecipe", ingredient1, ingredient2, rune);
+
+        AddIngredientToPlayer(player, ingredient1, 5);
+        AddIngredientToPlayer(player, ingredient2, 9);
+
+        var recipes = _recipeDao.GetCraftableRecipesByPlayerId(player.Id);
+
+        Assert.AreEqual(0, recipes.Count);
+    }
+
+    [TestMethod]
+    public void GetCraftableRecipesByPlayerId_ReturnsRecipe_WhenPlayerHasMultipleIngredients()
+    {
+        var player = CreateAndSavePlayer("Player1");
+
+        var ingredient1 = CreateIngredient("Test", ComponentType.MonsterPart);
+        var ingredient2 = CreateIngredient("Sample", ComponentType.Essence);
+        var rune = CreateRune("Wisp", 3, ElementType.Fire, RarityLevel.Common, TestRuneType.Armor);
+        var recipe = GetRecipe("TestRecipe", ingredient1, ingredient2, rune);
+
+        AddIngredientToPlayer(player, ingredient1, 8);
+        AddIngredientToPlayer(player, ingredient2, 12);
+
+        var recipes = _recipeDao.GetCraftableRecipesByPlayerId(player.Id);
+
+        Assert.AreEqual(1, recipes.Count);
+        Assert.AreEqual(recipe.Id, recipes.Single().Id);
+    }
+
+    [TestMethod]
+    public void GetCraftableRecipesByPlayerId_ExcludesRecipesWithoutIngredients()
+    {
+        var player = CreateAndSavePlayer("Player1");
+
+        var rune = CreateRune("Wisp", 3, ElementType.Fire, RarityLevel.Common, TestRuneType.Armor);
+
+        var recipe = new Recipe
+        {
+            Name = "FreeRecipe",
+            Rune = rune,
+            Ingredients = []
+        };
+
+        _context.Recipes.Add(recipe);
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+
+        var recipes = _recipeDao.GetCraftableRecipesByPlayerId(player.Id);
+
+        Assert.IsFalse(recipes.Any(r => r.Id == recipe.Id));
+    }
+
+    [TestMethod]
+    public void GetCraftableRecipesByPlayerId_ReturnsOnlyPlayersCraftableRecipes()
+    {
+        var player1 = CreateAndSavePlayer("Player1");
+        var player2 = CreateAndSavePlayer("Player2");
+
+        var ingredient1 = CreateIngredient("Test", ComponentType.MonsterPart);
+        var ingredient2 = CreateIngredient("Sample", ComponentType.Essence);
+        var rune = CreateRune("Wisp", 3, ElementType.Fire, RarityLevel.Common, TestRuneType.Armor);
+        var recipe = GetRecipe("TestRecipe", ingredient1, ingredient2, rune);
+
+        AddIngredientToPlayer(player1, ingredient1, 5);
+        AddIngredientToPlayer(player1, ingredient2, 10);
+
+        var recipes = _recipeDao.GetCraftableRecipesByPlayerId(player2.Id);
+
+        Assert.AreEqual(0, recipes.Count);
+
+        recipes = _recipeDao.GetCraftableRecipesByPlayerId(player1.Id);
+
+        Assert.AreEqual(1, recipes.Count);
+        Assert.AreEqual(recipe.Id, recipes.Single().Id);
+    }
+    
+    private Player CreateAndSavePlayer(string name)
+    {
+        var archetype = CreateArchetype(name + " Archetype", ArchetypeType.Martial);
+        var player = CreatePlayer(name, archetype, CreateInventory(100));
+
+        player.Initialize();
+
+        _context.Players.Add(player);
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+
+        return player;
+    }
+
+    private void AddIngredientToPlayer(Player player, Ingredient ingredient, int quantity)
+    {
+        _context.InventoryIngredients.Add(new InventoryIngredient
+        {
+            InventoryId = player.Inventory.Id,
+            IngredientId = ingredient.Id,
+            Quantity = quantity
+        });
+
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
     }
 }

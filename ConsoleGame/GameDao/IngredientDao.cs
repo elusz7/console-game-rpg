@@ -21,6 +21,23 @@ public class IngredientDao(GameContext context) : IIngredientDao
                 .Where(ii => ii.Inventory.PlayerId == playerId)
         ];
     }
+    
+    public List<InventoryIngredient> GetTransmutableEssencesByPlayerId(int playerId)
+    {
+        return [
+            .. _context.InventoryIngredients
+                .Include(ii => ii.Ingredient)
+                .Where(ii => ii.Inventory.PlayerId == playerId)
+                .Where(ii => ii.Quantity >= 5)
+                .Where(ii => ii.Ingredient.ComponentType == ComponentType.Essence)
+                .Where(ii => ii.Ingredient.EssenceRarity != null)
+                .Where(ii => ii.Ingredient.EssenceRarity != RarityLevel.Mythic)
+                .Where(ii => _context.Ingredients.Any(next =>
+                    next.ComponentType == ComponentType.Essence &&
+                    (int?)next.EssenceRarity ==
+                    (int?)ii.Ingredient.EssenceRarity + 1))
+        ];
+    }
 
     public Ingredient? GetIngredientDefinitionById(int ingredientId)
     {
@@ -69,7 +86,7 @@ public class IngredientDao(GameContext context) : IIngredientDao
 
     public void UpdatePlayerIngredientQuantity(int ingredientId, int playerId, int quantity)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(quantity);
+        ArgumentOutOfRangeException.ThrowIfNegative(quantity);
 
         var inventoryIngredient = _context.InventoryIngredients
                                       .FirstOrDefault(ii =>
@@ -78,7 +95,11 @@ public class IngredientDao(GameContext context) : IIngredientDao
                                   ?? throw new InventoryException(
                                       $"Player {playerId} does not own ingredient {ingredientId}.");
 
-        inventoryIngredient.Quantity = quantity;
+        if (quantity == 0)
+            _context.InventoryIngredients.Remove(inventoryIngredient);
+        else
+            inventoryIngredient.Quantity = quantity;
+
         _context.SaveChanges();
     }
 

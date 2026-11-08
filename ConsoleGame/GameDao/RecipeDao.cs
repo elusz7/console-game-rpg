@@ -17,6 +17,22 @@ public class RecipeDao(GameContext context) : IRecipeDao
                 .ThenInclude(ri => ri.Ingredient)
             .FirstOrDefault(r => r.Id == recipeId);
     }
+    
+    public List<Recipe> GetCraftableRecipesByPlayerId(int playerId)
+    {
+        return [
+            .. _context.Recipes
+                .Include(r => r.Rune)
+                .Include(r => r.Ingredients)
+                .ThenInclude(ri => ri.Ingredient)
+                .Where(r => r.Ingredients.Any())
+                .Where(r => r.Ingredients.All(ri =>
+                    _context.InventoryIngredients.Any(ii =>
+                        ii.Inventory.PlayerId == playerId &&
+                        ii.IngredientId == ri.IngredientId &&
+                        ii.Quantity >= ri.Quantity)))
+        ];
+    }
 
     public Recipe? GetRecipeByRuneId(int runeId)
     {

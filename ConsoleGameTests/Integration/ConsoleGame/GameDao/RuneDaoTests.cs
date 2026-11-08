@@ -171,6 +171,24 @@ public class RuneDaoTests
     }
     
     [TestMethod]
+    public void AddRuneToPlayer_InvalidTier_ThrowsArgumentOutOfRangeException()
+    {
+        // Arrange
+        var player = CreateAndSavePlayer("InvalidTierTestPlayer");
+        var rune = CreateRune(
+            "Ember Rune", 5,
+            ElementType.Fire, RarityLevel.Rare,
+            TestRuneType.Weapon);
+
+        _context.Runes.Add(rune);
+        _context.SaveChanges();
+
+        // Act & Assert
+        Assert.ThrowsException<ArgumentOutOfRangeException>(
+            () => _runeDao.AddRuneToPlayer(rune.Id, player.Id, 0));
+    }
+    
+    [TestMethod]
     public void AddRuneToPlayer_DefaultQuantity_AddsRuneToInventory()
     {
         // Arrange
@@ -253,11 +271,33 @@ public class RuneDaoTests
     }
     
     [TestMethod]
-    public void UpdatePlayerRuneQuantity_ZeroQuantity_ThrowsArgumentOutOfRangeException()
+    public void UpdatePlayerRuneQuantity_ZeroQuantity_RemovesOwnershipRecord()
     {
-        // Act & Assert
-        Assert.ThrowsException<ArgumentOutOfRangeException>(
-            () => _runeDao.UpdatePlayerRuneQuantity(1, 1, 1, 0));
+        // Arrange
+        var archetype = CreateArchetype("Test Archetype", ArchetypeType.Magical);
+        var inventory = CreateInventory(250);
+        var player = CreatePlayer("Test", archetype, inventory);
+        var rune = CreateRune("Test Rune", 3, ElementType.Nature, RarityLevel.Rare, TestRuneType.Armor);
+        _context.Players.Add(player);
+        _context.Runes.Add(rune);
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+        
+        _runeDao.AddRuneToPlayer(rune.Id, player.Id, 1, 2);
+
+        // Act
+        _runeDao.UpdatePlayerRuneQuantity(rune.Id, player.Id, 1, 0);
+
+        // Assert
+        _context.ChangeTracker.Clear();
+
+        var inventoryRune = _context.InventoryRunes
+            .SingleOrDefault(ir =>
+                ir.Inventory.PlayerId == player.Id &&
+                ir.RuneId == rune.Id &&
+                ir.Tier == 1);
+
+        Assert.IsNull(inventoryRune);
     }
     
     [TestMethod]
@@ -281,6 +321,40 @@ public class RuneDaoTests
         // Act & Assert
         Assert.ThrowsException<InventoryException>(
             () => _runeDao.UpdatePlayerRuneQuantity(rune.Id, player.Id, 1, 5));
+    }
+    
+    [TestMethod]
+    public void UpdatePlayerRuneQuantity_BelowEquippedQuantity_ThrowsInventoryException()
+    {
+        // Arrange
+        var player = CreateAndSavePlayer("EquippedRuneTestPlayer");
+        var rune = CreateRune(
+            "Ember Rune", 5,
+            ElementType.Fire, RarityLevel.Rare,
+            TestRuneType.Weapon);
+
+        _context.Runes.Add(rune);
+        _context.SaveChanges();
+
+        _runeDao.AddRuneToPlayer(rune.Id, player.Id, 1, 3);
+
+        var inventoryRune = _context.InventoryRunes
+            .Single(ir =>
+                ir.RuneId == rune.Id &&
+                ir.Inventory.PlayerId == player.Id);
+
+        _context.EquippedRunes.Add(new EquippedRune
+        {
+            InventoryId = inventoryRune.InventoryId,
+            RuneId = rune.Id,
+            Tier = 1
+        });
+
+        _context.SaveChanges();
+
+        // Act & Assert
+        Assert.ThrowsException<InventoryException>(
+            () => _runeDao.UpdatePlayerRuneQuantity(rune.Id, player.Id, 1, 0));
     }
     
     [TestMethod]
@@ -319,6 +393,40 @@ public class RuneDaoTests
         var rune = CreateRune("Ember Rune", 5, ElementType.Fire, RarityLevel.Rare, TestRuneType.Armor);
 
         _context.Runes.Add(rune);
+        _context.SaveChanges();
+
+        // Act & Assert
+        Assert.ThrowsException<InventoryException>(
+            () => _runeDao.RemoveRuneFromPlayer(rune.Id, player.Id, 1));
+    }
+    
+    [TestMethod]
+    public void RemoveRuneFromPlayer_WhenRuneHasEquippedCopies_ThrowsInventoryException()
+    {
+        // Arrange
+        var player = CreateAndSavePlayer("EquippedRuneRemovalTestPlayer");
+        var rune = CreateRune(
+            "Ember Rune", 5,
+            ElementType.Fire, RarityLevel.Rare,
+            TestRuneType.Weapon);
+
+        _context.Runes.Add(rune);
+        _context.SaveChanges();
+
+        _runeDao.AddRuneToPlayer(rune.Id, player.Id, 1, 2);
+
+        var inventoryRune = _context.InventoryRunes
+            .Single(ir =>
+                ir.RuneId == rune.Id &&
+                ir.Inventory.PlayerId == player.Id);
+
+        _context.EquippedRunes.Add(new EquippedRune
+        {
+            InventoryId = inventoryRune.InventoryId,
+            RuneId = rune.Id,
+            Tier = 1
+        });
+
         _context.SaveChanges();
 
         // Act & Assert
@@ -444,5 +552,326 @@ public class RuneDaoTests
         Assert.IsNull(result);
     }
     
+    [TestMethod]
+    public void GetFuseableRunesByPlayerId_WhenPlayerHasNoFuseableRunes_ReturnsEmptyList()
+    {
+        var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
+        var inventory = CreateInventory(250);
+        var player = CreatePlayer("Test Player", archetype, inventory);
+        var rune = CreateRune(
+            "Test Rune",
+            10,
+            ElementType.Fire,
+            RarityLevel.Common,
+            TestRuneType.Weapon);
+        
+        _context.Players.Add(player);
+        _context.Runes.Add(rune);
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+
+        _runeDao.AddRuneToPlayer(rune.Id, player.Id, 1, 2);
+        _context.ChangeTracker.Clear();
+
+        var result = _runeDao.GetFuseableRunesByPlayerId(player.Id);
+
+        Assert.AreEqual(0, result.Count);
+    }
     
+    [TestMethod]
+    public void GetFuseableRunesByPlayerId_WhenPlayerHasThreeAvailableCopies_ReturnsRune()
+    {
+        var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
+        var inventory = CreateInventory(250);
+        var player = CreatePlayer("Test Player", archetype, inventory);
+        var rune = CreateRune(
+            "Test Rune",
+            10,
+            ElementType.Fire,
+            RarityLevel.Common,
+            TestRuneType.Weapon);
+        
+        _context.Players.Add(player);
+        _context.Runes.Add(rune);
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+
+        _runeDao.AddRuneToPlayer(rune.Id, player.Id, 1, 3);
+        _context.ChangeTracker.Clear();
+
+        var result = _runeDao.GetFuseableRunesByPlayerId(player.Id);
+
+        Assert.AreEqual(1, result.Count);
+        Assert.AreEqual(rune.Id, result[0].RuneId);
+        Assert.AreEqual(1, result[0].Tier);
+        Assert.AreEqual(3, result[0].Quantity);
+    }
+    
+    [TestMethod]
+    public void GetFuseableRunesByPlayerId_WhenPlayerHasOnlyTwoAvailableCopies_ReturnsEmptyList()
+    {
+        // Arrange
+        var player = CreateAndSavePlayer("Test Player");
+        var rune = CreateRune(
+            "Test Rune",
+            10,
+            ElementType.Fire,
+            RarityLevel.Common,
+            TestRuneType.Weapon);
+
+        _context.Runes.Add(rune);
+        _context.SaveChanges();
+
+        _runeDao.AddRuneToPlayer(rune.Id, player.Id, 1, 2);
+
+        // Act
+        var result = _runeDao.GetFuseableRunesByPlayerId(player.Id);
+
+        // Assert
+        Assert.AreEqual(0, result.Count);
+    }
+    
+    [TestMethod]
+    public void GetFuseableRunesByPlayerId_WhenSomeCopiesAreEquipped_ExcludesEquippedCopies()
+    {
+        var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
+        var inventory = CreateInventory(250);
+        var player = CreatePlayer("Test Player", archetype, inventory);
+        var rune = CreateRune(
+            "Test Rune",
+            10,
+            ElementType.Fire,
+            RarityLevel.Common,
+            TestRuneType.Weapon);
+        
+        _context.Players.Add(player);
+        _context.Runes.Add(rune);
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+
+        _runeDao.AddRuneToPlayer(rune.Id, player.Id, 1, 3);
+
+        var inventoryRune = _context.InventoryRunes.Single(
+            ir => ir.RuneId == rune.Id &&
+                  ir.Inventory.PlayerId == player.Id);
+
+        _context.EquippedRunes.Add(new EquippedRune
+        {
+            InventoryId = inventoryRune.InventoryId,
+            RuneId = inventoryRune.RuneId,
+            Tier = inventoryRune.Tier
+        });
+
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+
+        var result = _runeDao.GetFuseableRunesByPlayerId(player.Id);
+
+        Assert.AreEqual(0, result.Count);
+    }
+    
+    [TestMethod]
+    public void GetFuseableRunesByPlayerId_WhenRuneIsMythicTierThree_ReturnsEmptyList()
+    {
+        var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
+        var inventory = CreateInventory(250);
+        var player = CreatePlayer("Test Player", archetype, inventory);
+        var rune = CreateRune(
+            "Test Rune",
+            10,
+            ElementType.Fire,
+            RarityLevel.Mythic,
+            TestRuneType.Weapon);
+        
+        _context.Players.Add(player);
+        _context.Runes.Add(rune);
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+
+        _runeDao.AddRuneToPlayer(rune.Id, player.Id, 3, 3);
+        _context.ChangeTracker.Clear();
+
+        var result = _runeDao.GetFuseableRunesByPlayerId(player.Id);
+
+        Assert.AreEqual(0, result.Count);
+    }
+    
+    [TestMethod]
+    public void GetFuseableRunesByPlayerId_ReturnsOnlyPlayersRunes()
+    {
+        var playerOne = CreateAndSavePlayer("Test Player One");
+        var playerTwo = CreateAndSavePlayer("Test Player Two");
+        var rune = CreateRune(
+            "Test Rune",
+            10,
+            ElementType.Fire,
+            RarityLevel.Common,
+            TestRuneType.Weapon);
+ 
+        _context.Runes.Add(rune);
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+
+        _runeDao.AddRuneToPlayer(rune.Id, playerOne.Id, 1, 3);
+        _runeDao.AddRuneToPlayer(rune.Id, playerTwo.Id, 1, 3);
+        _context.ChangeTracker.Clear();
+
+        var result = _runeDao.GetFuseableRunesByPlayerId(playerOne.Id);
+
+        Assert.AreEqual(1, result.Count);
+        Assert.AreEqual(playerOne.Id, result[0].Inventory.PlayerId);
+    }
+    
+    [TestMethod]
+    public void GetDestroyableRunesByPlayerId_WhenPlayerHasNoDestroyableRunes_ReturnsEmptyList()
+    {
+        // Arrange
+        var player = CreateAndSavePlayer("Test Player");
+
+        // Act
+        var result = _runeDao.GetDestroyableRunesByPlayerId(player.Id);
+
+        // Assert
+        Assert.IsNotNull(result);
+        Assert.AreEqual(0, result.Count);
+    }
+    
+    [TestMethod]
+    public void GetDestroyableRunesByPlayerId_WhenPlayerHasOneAvailableCopy_ReturnsRune()
+    {
+        // Arrange
+        var player = CreateAndSavePlayer("Test Player");
+        var rune = CreateRune(
+            "Test Rune",
+            10,
+            ElementType.Fire,
+            RarityLevel.Common,
+            TestRuneType.Weapon);
+
+        _context.Runes.Add(rune);
+        _context.SaveChanges();
+
+        _runeDao.AddRuneToPlayer(rune.Id, player.Id, 1);
+
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = _runeDao.GetDestroyableRunesByPlayerId(player.Id);
+
+        // Assert
+        Assert.AreEqual(1, result.Count);
+        Assert.AreEqual(rune.Id, result[0].RuneId);
+        Assert.AreEqual(1, result[0].Tier);
+        Assert.AreEqual(1, result[0].Quantity);
+    }
+    
+    [TestMethod]
+    public void GetDestroyableRunesByPlayerId_WhenAllCopiesAreEquipped_ReturnsEmptyList()
+    {
+        // Arrange
+        var player = CreateAndSavePlayer("Test Player");
+        var rune = CreateRune(
+            "Test Rune",
+            10,
+            ElementType.Fire,
+            RarityLevel.Common,
+            TestRuneType.Weapon);
+
+        _context.Runes.Add(rune);
+        _context.SaveChanges();
+
+        _runeDao.AddRuneToPlayer(rune.Id, player.Id, 1);
+
+        var inventoryRune = _context.InventoryRunes.Single(
+            ir => ir.RuneId == rune.Id &&
+                  ir.Inventory.PlayerId == player.Id);
+
+        _context.EquippedRunes.Add(new EquippedRune
+        {
+            InventoryId = inventoryRune.InventoryId,
+            RuneId = inventoryRune.RuneId,
+            Tier = inventoryRune.Tier
+        });
+
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = _runeDao.GetDestroyableRunesByPlayerId(player.Id);
+
+        // Assert
+        Assert.AreEqual(0, result.Count);
+    }
+    
+    [TestMethod]
+    public void GetDestroyableRunesByPlayerId_WhenSomeCopiesAreEquipped_ReturnsRune()
+    {
+        // Arrange
+        var player = CreateAndSavePlayer("Test Player");
+        var rune = CreateRune(
+            "Test Rune",
+            10,
+            ElementType.Fire,
+            RarityLevel.Common,
+            TestRuneType.Weapon);
+
+        _context.Runes.Add(rune);
+        _context.SaveChanges();
+
+        _runeDao.AddRuneToPlayer(rune.Id, player.Id, 1, 3);
+
+        var inventoryRune = _context.InventoryRunes.Single(
+            ir => ir.RuneId == rune.Id &&
+                  ir.Inventory.PlayerId == player.Id);
+
+        _context.EquippedRunes.Add(new EquippedRune
+        {
+            InventoryId = inventoryRune.InventoryId,
+            RuneId = inventoryRune.RuneId,
+            Tier = inventoryRune.Tier
+        });
+
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = _runeDao.GetDestroyableRunesByPlayerId(player.Id);
+
+        // Assert
+        Assert.AreEqual(1, result.Count);
+        Assert.AreEqual(rune.Id, result[0].RuneId);
+        Assert.AreEqual(3, result[0].Quantity);
+        Assert.AreEqual(1, result[0].EquippedRunes.Count);
+    }
+    
+    [TestMethod]
+    public void GetDestroyableRunesByPlayerId_ReturnsOnlyPlayersRunes()
+    {
+        // Arrange
+        var playerOne = CreateAndSavePlayer("Player One");
+        var playerTwo = CreateAndSavePlayer("Player Two");
+
+        var rune = CreateRune(
+            "Test Rune",
+            10,
+            ElementType.Fire,
+            RarityLevel.Common,
+            TestRuneType.Weapon);
+
+        _context.Runes.Add(rune);
+        _context.SaveChanges();
+
+        _runeDao.AddRuneToPlayer(rune.Id, playerOne.Id, 1);
+        _runeDao.AddRuneToPlayer(rune.Id, playerTwo.Id, 1);
+
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = _runeDao.GetDestroyableRunesByPlayerId(playerOne.Id);
+
+        // Assert
+        Assert.AreEqual(1, result.Count);
+        Assert.AreEqual(rune.Id, result[0].RuneId);
+        Assert.AreEqual(playerOne.Id, result[0].Inventory.PlayerId);
+    }
 }

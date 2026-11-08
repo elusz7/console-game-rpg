@@ -273,19 +273,19 @@ Replace the existing in-memory inventory implementations with persistent ownersh
 - [x] Update equipment operations to persist equipping and unequipping.
 - [x] Verify equipped weapons and armor survive database reloads.
 - [x] Implement adding and removing rune and ingredient quantities.
-- [ ] Validate positive quantities and prevent invalid ownership changes.
-- [ ] Prevent negative inventory quantities and remove or clean up empty ownership records consistently.
-- [ ] Update fuseable, destroyable, and transmutable inventory queries.
-- [ ] Ensure equipped rune quantities cannot be consumed or destroyed.
-- [ ] Update rune crafting to consume persistent ingredient quantities.
-- [ ] Update rune fusion to consume four available copies.
-- [ ] Implement player-specific tier progression and rarity evolution.
-- [ ] Update rune destruction to return recovered ingredients.
-- [ ] Update essence transmutation to consume and award persistent quantities.
-- [ ] Ensure multi-record crafting operations are atomic.
-- [ ] Preserve existing recipe requirements and crafting rules.
-- [ ] Add focused crafting and progression tests.
-- [ ] Verify crafting, fusion, destruction, and transmutation against database-reloaded inventories.
+- [x] Validate positive quantities and prevent invalid ownership changes.
+- [x] Prevent negative inventory quantities and remove or clean up empty ownership records consistently.
+- [x] Update fuseable, destroyable, and transmutable inventory queries.
+- [x] Ensure equipped rune quantities cannot be consumed or destroyed.
+- [x] Update rune crafting to consume persistent ingredient quantities.
+- [x] Update rune fusion to consume three available copies.
+- [x] Implement player-specific tier progression and rarity evolution.
+- [x] Update rune destruction to return recovered ingredients.
+- [x] Update essence transmutation to consume and award persistent quantities.
+- [x] Ensure multi-record crafting operations are atomic.
+- [x] Preserve existing recipe requirements and crafting rules.
+- [x] Add focused crafting and progression tests.
+- [x] Verify crafting, fusion, destruction, and transmutation against database-reloaded inventories.
 
 **Completion criteria:** All rune and ingredient inventory operations use persistent ownership. Crafting, fusion, destruction, and transmutation correctly update player-owned quantities, preserve equipped runes, enforce existing gameplay rules, and maintain data integrity through atomic operations and automated tests.
 

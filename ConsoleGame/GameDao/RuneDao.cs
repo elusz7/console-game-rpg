@@ -32,6 +32,29 @@ public class RuneDao(GameContext context) : IRuneDao
                 .Where(ir => ir.Inventory.PlayerId == playerId)
         ];
     }
+    
+    public List<InventoryRune> GetFuseableRunesByPlayerId(int playerId)
+    {
+        return _context.InventoryRunes
+            .Include(ir => ir.Rune)
+            .Include(ir => ir.Inventory)
+            .Include(ir => ir.EquippedRunes)
+            .Where(ir => ir.Inventory.PlayerId == playerId)
+            .Where(ir => ir.Quantity - ir.EquippedRunes.Count >= 3)
+            .Where(ir => !(ir.Rune.Rarity == RarityLevel.Mythic && ir.Tier == 3))
+            .ToList();
+    }
+    
+    public List<InventoryRune> GetDestroyableRunesByPlayerId(int playerId)
+    {
+        return _context.InventoryRunes
+            .Include(ir => ir.Rune)
+            .Include(ir => ir.Inventory)
+            .Include(ir => ir.EquippedRunes)
+            .Where(ir => ir.Inventory.PlayerId == playerId)
+            .Where(ir => ir.Quantity > ir.EquippedRunes.Count)
+            .ToList();
+    }
 
     public Rune? GetRuneDefinitionById(int runeId)
     {
@@ -40,6 +63,9 @@ public class RuneDao(GameContext context) : IRuneDao
 
     public void AddRuneToPlayer(int runeId, int playerId, int tier, int quantity = 1)
     {
+        if (tier is < 1 or > 3)
+            throw new ArgumentOutOfRangeException(nameof(tier));
+        
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(quantity);
 
         var inventory = _context.Inventories
@@ -75,12 +101,12 @@ public class RuneDao(GameContext context) : IRuneDao
         _context.SaveChanges();
     }
 
-    public void UpdatePlayerRuneQuantity(
-        int runeId, int playerId, int tier, int quantity = 1)
+    public void UpdatePlayerRuneQuantity(int runeId, int playerId, int tier, int quantity = 1)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(quantity);
+        ArgumentOutOfRangeException.ThrowIfNegative(quantity);
 
         var inventoryRune = _context.InventoryRunes
+                                .Include(ir => ir.EquippedRunes)
                                 .FirstOrDefault(ir =>
                                     ir.RuneId == runeId &&
                                     ir.Tier == tier &&
@@ -88,8 +114,16 @@ public class RuneDao(GameContext context) : IRuneDao
                             ?? throw new InventoryException(
                                 $"Player {playerId} does not own rune {runeId} at tier {tier}.");
 
-        //overwrite quantity
-        inventoryRune.Quantity = quantity;
+        var equippedQuantity = inventoryRune.EquippedRunes.Count;
+
+        if (quantity < equippedQuantity)
+            throw new InventoryException(
+                "Cannot reduce rune quantity below the number of equipped copies.");
+
+        if (quantity == 0)
+            _context.InventoryRunes.Remove(inventoryRune);
+        else
+            inventoryRune.Quantity = quantity;
 
         _context.SaveChanges();
     }
@@ -97,6 +131,7 @@ public class RuneDao(GameContext context) : IRuneDao
     public void RemoveRuneFromPlayer(int runeId, int playerId, int tier)
     {
         var inventoryRune = _context.InventoryRunes
+                                .Include(ir => ir.EquippedRunes)
                                 .FirstOrDefault(ir =>
                                     ir.RuneId == runeId &&
                                     ir.Tier == tier &&
@@ -104,8 +139,11 @@ public class RuneDao(GameContext context) : IRuneDao
                             ?? throw new InventoryException(
                                 $"Player {playerId} does not own rune {runeId} at tier {tier}.");
 
-        _context.InventoryRunes.Remove(inventoryRune);
+        if (inventoryRune.EquippedRunes.Count > 0)
+            throw new InventoryException(
+                "Cannot remove a rune while copies are equipped.");
 
+        _context.InventoryRunes.Remove(inventoryRune);
         _context.SaveChanges();
     }
 }
