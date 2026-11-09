@@ -21,7 +21,10 @@ public interface IMonster : ITargetable
     int DefensePower { get; set; } //defense power of monster
     int AttackPower { get; set; } //attack power of monster
     int Resistance { get; set; } //resistance to damage
-
+    
+    ElementType? AttackElement { get; set; } //what element they attack with/ingredient drop
+    int? ElementalPower { get; set; } //how much elemental damage they deal
+    ElementType? Vulnerability { get; set; } //what element they take more damage from
 
     DamageType DamageType { get; set; }
     ThreatLevel ThreatLevel { get; set; }

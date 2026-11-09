@@ -311,6 +311,9 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("AggressionLevel")
                         .HasColumnType("int");
 
+                    b.Property<int?>("AttackElement")
+                        .HasColumnType("int");
+
                     b.Property<int>("AttackPower")
                         .HasColumnType("int");
 
@@ -324,6 +327,9 @@ namespace ConsoleGameEntities.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("Description");
+
+                    b.Property<int?>("ElementalPower")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsCore")
                         .HasColumnType("bit");
@@ -350,6 +356,9 @@ namespace ConsoleGameEntities.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("ThreatLevel")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Vulnerability")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

@@ -222,7 +222,7 @@ interactions.
 
 # Step 9 — Integrate Elemental Systems and Implement Persistent Rune and Ingredient Inventory
 
-**Status: In Progress**
+**Status: Complete**
 
 **Working branch:** `elemental-refactor`
 
@@ -295,24 +295,65 @@ Replace the existing in-memory inventory implementations with persistent ownersh
 
 # E. Crafting and Elemental Gameplay Improvements
 
-## Step 10 --- Improve Crafting and Rune Progression Gameplay
+## Step 10 — Improve Crafting and Rune Progression Gameplay
 
 **Status: Not started**
 
-**Goal:** Improve the gameplay experience and balance of crafting now
-that persistence and ownership are reliable.
+**Goal:** Improve the gameplay experience and balance of crafting now that persistence and ownership are reliable.
 
--   [ ] Review crafting costs and progression balance.
--   [ ] Review rune tier and rarity evolution rules.
--   [ ] Review recipe discovery and presentation.
--   [ ] Review crafting restrictions and resource requirements.
--   [ ] Review rune fusion balance.
--   [ ] Improve crafting feedback and error handling.
--   [ ] Add additional crafting gameplay features where appropriate.
--   [ ] Add balance and edge-case tests.
+### A. Restore Monster Ingredient Rewards
 
-**Completion criteria:** Crafting and rune progression provide
-consistent, balanced gameplay on top of the persistent ownership system.
+- [x] Review legacy MonsterFactory elemental assignment.
+- [x] Restore randomized monster elemental affinity.
+- [x] Ensure every monster receives a valid elemental affinity.
+- [ ] Restore ingredient drop calculations in LootService.
+- [ ] Retrieve potential drops using monster element and threat level.
+- [ ] Preserve all-element essence drop availability.
+- [ ] Preserve element-specific core and monster-part drops.
+- [ ] Restore monster-level drop bonuses with probability limits.
+- [ ] Award ingredients through the persistent IngredientDao.
+- [ ] Integrate ingredient rewards with existing monster treasure rewards.
+- [ ] Add monster factory and loot integration tests.
+
+### B. Review Crafting Economy and Progression
+
+- [ ] Analyze ingredient drop rates against monster threat levels.
+- [ ] Evaluate ingredient acquisition rates during player progression.
+- [ ] Review crafting costs and progression balance.
+- [ ] Review essence rarity progression and transmutation.
+- [ ] Review core and monster-part availability.
+- [ ] Review rune tier and rarity evolution rules.
+- [ ] Review rune fusion balance.
+- [ ] Review rune destruction and ingredient refunds.
+
+### C. Validate Crafting Rules and Restrictions
+
+- [ ] Validate recipe definitions and ingredient requirements.
+- [ ] Prevent crafting from malformed or ingredient-free recipes.
+- [ ] Review resource ownership and quantity requirements.
+- [ ] Review equipped rune restrictions.
+- [ ] Review crafting, fusion, and destruction transaction behavior.
+- [ ] Ensure failed operations do not partially modify inventory.
+
+### D. Improve Recipe Discovery and Presentation
+
+- [ ] Review existing recipe discovery infrastructure.
+- [ ] Implement a dedicated crafting menu.
+- [ ] Display available recipes and requirements.
+- [ ] Show missing ingredients and quantities.
+- [ ] Allow players to initiate crafting through the menu.
+- [ ] Display crafting results and resource changes.
+
+### E. Improve Crafting Feedback and Gameplay
+
+- [ ] Improve crafting feedback and error handling.
+- [ ] Provide player-friendly failure messages.
+- [ ] Improve fusion and destruction feedback.
+- [ ] Consider additional crafting gameplay features where appropriate.
+- [ ] Add balance and edge-case tests.
+- [ ] Run the complete test suite.
+
+**Completion criteria:** Monster ingredient acquisition, crafting, fusion, transmutation, and destruction provide consistent, balanced gameplay on top of the persistent ownership system. Players can discover recipes, understand their requirements, and receive clear feedback when performing crafting operations.
 
 ## Step 11 --- Complete and Improve Elemental Damage and Status Effects
 
@@ -327,6 +368,7 @@ damage architecture.
 -   [ ] Review elemental status effects.
 -   [ ] Review effect duration and expiration behavior.
 -   [ ] Review effect ticking and callback timing.
+-   [ ] Review and consolidate monster elemental properties restored during Step 10.
 -   [ ] Ensure effects interact correctly with player death and monster
     death.
 -   [ ] Review elemental interactions and combinations.

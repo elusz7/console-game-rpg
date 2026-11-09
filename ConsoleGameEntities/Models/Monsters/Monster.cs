@@ -38,6 +38,11 @@ public class Monster : IMonster
     [NotMapped] public virtual double DodgeChance { get; set; } = 0.01;
     public string MonsterType { get; set; }
     public bool IsCore {get; set;}
+    
+    public ElementType? AttackElement { get; set; }
+    public int? ElementalPower { get; set; }
+    public ElementType? Vulnerability { get; set; }
+    
     public virtual List<Skill> Skills { get; set; } = new List<Skill>();
     public int? RoomId { get; set; }
     public virtual Room? Room { get; set; }
