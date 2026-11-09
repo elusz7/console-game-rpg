@@ -1,13 +1,14 @@
 ﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Managers.Interfaces;
 using ConsoleGame.Models;
+using ConsoleGame.Services.Interfaces;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Services;
 
-public class LootService(IIngredientDao ingredientDao, IMonsterDropDao monsterDropDao, ITransactionManager transactionManager)
+public class LootService(IIngredientDao ingredientDao, IMonsterDropDao monsterDropDao, ITransactionManager transactionManager) : ILootService
 {
     private readonly IIngredientDao _ingredientDao = ingredientDao;
     private readonly IMonsterDropDao _monsterDropDao = monsterDropDao;

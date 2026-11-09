@@ -306,13 +306,13 @@ Replace the existing in-memory inventory implementations with persistent ownersh
 - [x] Review legacy MonsterFactory elemental assignment.
 - [x] Restore randomized monster elemental affinity.
 - [x] Ensure every monster receives a valid elemental affinity.
-- [ ] Restore ingredient drop calculations in LootService.
-- [ ] Retrieve potential drops using monster element and threat level.
-- [ ] Preserve all-element essence drop availability.
-- [ ] Preserve element-specific core and monster-part drops.
-- [ ] Restore monster-level drop bonuses with probability limits.
-- [ ] Award ingredients through the persistent IngredientDao.
-- [ ] Integrate ingredient rewards with existing monster treasure rewards.
+- [x] Restore ingredient drop calculations in LootService.
+- [x] Retrieve potential drops using monster element and threat level.
+- [x] Preserve all-element essence drop availability.
+- [x] Preserve element-specific core and monster-part drops.
+- [x] Restore monster-level drop bonuses with probability limits.
+- [x] Award ingredients through the persistent IngredientDao.
+- [x] Integrate ingredient rewards with existing monster treasure rewards.
 - [ ] Add monster factory and loot integration tests.
 
 ### B. Review Crafting Economy and Progression

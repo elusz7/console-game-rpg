@@ -420,6 +420,8 @@ public class Player : IPlayer
             Gold = Random.Next(15, 24),
             Capacity = (decimal)Math.Round((Random.NextDouble() * 10 + 15), 2),
             Items = [],
+            Runes = [],
+            Ingredients = [],
             Player = this
         };
 

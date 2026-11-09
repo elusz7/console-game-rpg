@@ -17,7 +17,7 @@ public class MonsterSkillSelector : IMonsterSkillSelector
         return monster.Skills
             .Where(s => s.RequiredLevel <= monster.Level)
             .Where(s => s is not UltimateSkill && s is not BossSkill && !s.IsOnCooldown)
-            .ToList() ?? new List<Skill>();
+            .ToList();
     }
 
     public virtual Skill? GetHighestDamageSkill(IMonster monster)

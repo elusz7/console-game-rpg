@@ -47,7 +47,9 @@ public static class ModelCreationHelper
         {
             Gold = gold,
             Capacity = 10M,
-            Items = []
+            Items = [],
+            Runes = [],
+            Ingredients = []
         };
     }
 
