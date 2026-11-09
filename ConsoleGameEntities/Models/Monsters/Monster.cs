@@ -43,6 +43,9 @@ public class Monster : IMonster
     public int? ElementalPower { get; set; }
     public ElementType? Vulnerability { get; set; }
     
+    [NotMapped] public bool TreasureLooted { get; set; }
+    [NotMapped] public bool IngredientsLooted { get; set; }
+    
     public virtual List<Skill> Skills { get; set; } = new List<Skill>();
     public int? RoomId { get; set; }
     public virtual Room? Room { get; set; }

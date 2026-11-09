@@ -6,7 +6,7 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Interfaces;
 
-public interface IMonster : ITargetable
+public interface IMonster : ITargetable, ILootable
 {
     int Id { get; set; }
     string Name { get; set; }
@@ -34,6 +34,7 @@ public interface IMonster : ITargetable
     Room? Room { get; set; }
 
     void Attack(IPlayer target);
+    
     Item? Loot();
     void SetLoot(Item item);
 
