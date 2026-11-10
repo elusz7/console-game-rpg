@@ -5,6 +5,7 @@ using ConsoleGameEntities.Models.Entities;
 using static ConsoleGame.Helpers.AdventureEnums;
 using ConsoleGame.Managers.Interfaces;
 using ConsoleGame.Factories.Interfaces;
+using ConsoleGame.Menus;
 
 namespace ConsoleGame.Services;
 
@@ -20,7 +21,8 @@ public class AdventureService(
     FloorProgressionService floorProgressionService,
     RoomNavigationService roomNavigationService,
     LootService lootService,
-    CampaignService campaignService)
+    CampaignService campaignService,
+    CraftMenu craftMenu)
 {
     private readonly IOutputManager _outputManager = outputManager;
     private readonly IInputManager _inputManager = inputManager;
@@ -29,6 +31,7 @@ public class AdventureService(
     private readonly CombatHelper _combatHelper = combatHelper;
     private readonly EquipmentHelper _equipmentHelper = equipmentHelper;
     private readonly MerchantHelper _merchantHelper = merchantHelper;
+    private readonly CraftMenu _craftMenu = craftMenu;
 
     private readonly IFloorFactory _floorFactory = floorFactory;
 
@@ -211,6 +214,13 @@ public class AdventureService(
                             _outputManager.WriteLine();
                             _mapManager.DisplayMap();
                             break;
+                        case AdventureOptions.Craft:
+                            _outputManager.Clear();
+                            _craftMenu.CraftingTable(Session.Player.Id);
+                            _outputManager.Clear();
+                            _outputManager.WriteLine();
+                            _mapManager.DisplayMap();
+                            break;
                         case AdventureOptions.Quit:
                             var prompt = Session.IsCampaign ? "Quit Campaign" : "Quit Adventure";
                             bool quit = _inputManager.ConfirmAction(prompt);
@@ -303,9 +313,17 @@ public class AdventureService(
             }
         }
 
-        if (room.Monsters.Count != 0 && room.Monsters.Any(m => m.CurrentHealth > 0))
+        var livingMonsters = room.Monsters
+            .Where(m => m.CurrentHealth > 0)
+            .ToList();
+
+        if (livingMonsters.Count != 0)
         {
-            _outputManager.WriteLine("\nYou are not alone in the room. Prepare to fight. Or die.", ConsoleColor.Red);
+            var monsterNames = string.Join(", ", livingMonsters.Select(m => m.Name));
+
+            _outputManager.WriteLine(
+                $"\n{monsterNames} roar at you menacingly.\nPrepare to fight. Or die.",
+                ConsoleColor.Red);
         }
     }
 
@@ -386,6 +404,7 @@ public class AdventureService(
                 AddMenuOption(options, "Rest", AdventureOptions.Rest);
                 AddMenuOption(options, "Speak To Merchant", AdventureOptions.Merchant);
                 AddMenuOption(options, "Manage Equipment", AdventureOptions.Equipment);
+                AddMenuOption(options, "Craft Runes", AdventureOptions.Craft);
             }
 
             var directions = currentRoom.GetConnections() ?? [];
@@ -431,7 +450,7 @@ public class AdventureService(
         if (collectedItems.Count > 0)
         {
             _outputManager.WriteLine(
-                $"Automatically looted: {string.Join(", ", collectedItems.Select(item => item.Name))}",
+                $"\nAutomatically looted: {string.Join(", ", collectedItems.Select(item => item.Name))}",
                 ConsoleColor.DarkGreen);
         }
     }

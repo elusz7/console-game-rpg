@@ -13,6 +13,12 @@ public class PlayerDao(GameContext context) : IPlayerDao
     {
         _context.Players.Add(player);
         _context.SaveChanges();
+
+        // The runtime player is managed separately during gameplay.
+        // Detach it and its inventory so later room changes don't
+        // cause EF Core to track generated room instances.
+        _context.Entry(player).State = EntityState.Detached;
+        _context.Entry(player.Inventory).State = EntityState.Detached;
     }
 
     public void UpdatePlayer(Player player)

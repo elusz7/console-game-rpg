@@ -220,7 +220,7 @@ interactions.
 
 # D. Branch Integration, Inventory, Runes, and Crafting
 
-# Step 9 — Integrate Elemental Systems and Implement Persistent Rune and Ingredient Inventory
+## Step 9 — Integrate Elemental Systems and Implement Persistent Rune and Ingredient Inventory
 
 **Status: Complete**
 
@@ -297,7 +297,7 @@ Replace the existing in-memory inventory implementations with persistent ownersh
 
 ## Step 10 — Improve Crafting and Rune Progression Gameplay
 
-**Status: Not started**
+**Status: In progress**
 
 **Goal:** Improve the gameplay experience and balance of crafting now that persistence and ownership are reliable.
 
@@ -313,27 +313,27 @@ Replace the existing in-memory inventory implementations with persistent ownersh
 - [x] Restore monster-level drop bonuses with probability limits.
 - [x] Award ingredients through the persistent IngredientDao.
 - [x] Integrate ingredient rewards with existing monster treasure rewards.
-- [ ] Add monster factory and loot integration tests.
+- [x] Add monster factory and loot integration tests.
 
 ### B. Review Crafting Economy and Progression
 
-- [ ] Analyze ingredient drop rates against monster threat levels.
-- [ ] Evaluate ingredient acquisition rates during player progression.
-- [ ] Review crafting costs and progression balance.
-- [ ] Review essence rarity progression and transmutation.
-- [ ] Review core and monster-part availability.
-- [ ] Review rune tier and rarity evolution rules.
-- [ ] Review rune fusion balance.
-- [ ] Review rune destruction and ingredient refunds.
+- [x] Analyze ingredient drop rates against monster threat levels.
+- [x] Evaluate ingredient acquisition rates during player progression.
+- [x] Review crafting costs and progression balance.
+- [x] Review essence rarity progression and transmutation.
+- [x] Review core and monster-part availability.
+- [x] Review rune tier and rarity evolution rules.
+- [x] Review rune fusion balance.
+- [x] Review rune destruction and ingredient refunds.
 
 ### C. Validate Crafting Rules and Restrictions
 
-- [ ] Validate recipe definitions and ingredient requirements.
-- [ ] Prevent crafting from malformed or ingredient-free recipes.
-- [ ] Review resource ownership and quantity requirements.
-- [ ] Review equipped rune restrictions.
-- [ ] Review crafting, fusion, and destruction transaction behavior.
-- [ ] Ensure failed operations do not partially modify inventory.
+- [x] Validate recipe definitions and ingredient requirements.
+- [x] Prevent crafting from malformed or ingredient-free recipes.
+- [x] Review resource ownership and quantity requirements.
+- [x] Review equipped rune restrictions.
+- [x] Review crafting, fusion, and destruction transaction behavior.
+- [x] Ensure failed operations do not partially modify inventory.
 
 ### D. Improve Recipe Discovery and Presentation
 
@@ -353,35 +353,57 @@ Replace the existing in-memory inventory implementations with persistent ownersh
 - [ ] Add balance and edge-case tests.
 - [ ] Run the complete test suite.
 
-**Completion criteria:** Monster ingredient acquisition, crafting, fusion, transmutation, and destruction provide consistent, balanced gameplay on top of the persistent ownership system. Players can discover recipes, understand their requirements, and receive clear feedback when performing crafting operations.
+**Completion criteria:** Monster ingredient acquisition, crafting, fusion, transmutation, and destruction provide 
+consistent, balanced gameplay on top of the persistent ownership system. Players can discover recipes, 
+understand their requirements, and receive clear feedback when performing crafting operations.
 
-## Step 11 --- Complete and Improve Elemental Damage and Status Effects
+Step 11 — Complete and Improve Elemental Damage and Status Effects
+Status: Not started
 
-**Status: Not started**
-
-**Goal:** Complete elemental gameplay using the consolidated combat and
-damage architecture.
-
--   [ ] Review elemental types and their relationships.
--   [ ] Review elemental damage calculations.
--   [ ] Review elemental resistance and vulnerability balance.
--   [ ] Review elemental status effects.
--   [ ] Review effect duration and expiration behavior.
--   [ ] Review effect ticking and callback timing.
--   [ ] Review and consolidate monster elemental properties restored during Step 10.
--   [ ] Ensure effects interact correctly with player death and monster
-    death.
--   [ ] Review elemental interactions and combinations.
--   [ ] Add additional elemental skill mechanics where appropriate.
--   [ ] Review monster elemental behavior.
--   [ ] Review player elemental behavior.
--   [ ] Add tests for each elemental type.
--   [ ] Add tests for status-effect application, ticking, and
-    expiration.
--   [ ] Add balance and edge-case tests.
-
-**Completion criteria:** Elemental mechanics integrate correctly with
-shared damage, combat, equipment, and status-effect systems.
+Goal: Complete elemental gameplay using the consolidated combat and damage architecture.
+A. Review and Define Elemental Mechanics
+- [ ] Review elemental types and their relationships.
+- [ ] Review elemental damage calculations.
+- [ ] Review elemental resistance and vulnerability balance.
+- [ ] Define elemental damage multipliers and mitigation order.
+- [ ] Review elemental status effects.
+- [ ] Define the six elemental status-effect behaviors.
+- [ ] Review elemental interactions and combinations.
+- [ ] Review effect duration and expiration behavior.
+- [ ] Define status-effect stacking, refreshing, and replacement rules.
+- [ ] Review effect ticking and callback timing.
+- 
+  B. Integrate Elemental Damage into Combat
+- [ ] Review and consolidate monster elemental properties restored during Step 10.
+- [ ] Ensure elemental attacks use the shared damage architecture.
+- [ ] Connect weapon rune elemental damage to player attacks.
+- [ ] Integrate elemental damage with boss phase transitions.
+- [ ] Integrate monster elemental attacks into monster combat strategies.
+- [ ] Review monster elemental behavior.
+- [ ] Review player elemental behavior.
+- 
+  C. Integrate Elemental Equipment and Status Effects
+- [ ] Connect weapon rune status-effect application to combat.
+- [ ] Connect armor rune power to elemental damage mitigation.
+- [ ] Implement deterministic status-effect duration and expiration.
+- [ ] Implement damage-over-time ticking at a defined combat-turn point.
+- [ ] Ensure effects interact correctly with player death and monster death.
+- [ ] Ensure effect ticking handles player and monster death correctly.
+- 
+  D. Expand Elemental Gameplay
+- [ ] Add additional elemental skill mechanics where appropriate.
+- [ ] Review elemental interactions and combinations.
+- 
+  E. Testing and Balance
+- [ ] Add tests for each elemental type.
+- [ ] Add tests for status-effect application, ticking, and expiration.
+- [ ] Add balance and edge-case tests.
+- [ ] Run the complete test suite.
+  
+**Completion criteria:** Elemental damage, resistance, vulnerability, weapon and armor rune effects, 
+monster elemental attacks, and status effects integrate correctly with the shared damage, combat, equipment, 
+and effect systems. Status effects behave deterministically across combat turns, including ticking, 
+expiration, stacking, and death handling.
 
 ## Step 12 --- Implement Additional Combat Features
 

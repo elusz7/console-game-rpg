@@ -30,6 +30,8 @@ public class CraftingService(
 
             if (recipe == null)
                 throw new RecipeNotFoundException();
+            
+            ValidateRecipe(recipe);
 
             var ingredients = _ingredientDao.GetIngredientsByPlayerId(playerId);
             
@@ -217,11 +219,7 @@ public class CraftingService(
         return nextEssence;
     }
     
-    private InventoryRune GetPlayerRune(
-        int playerId,
-        int runeId,
-        int tier,
-        int requiredQuantity)
+    private InventoryRune GetPlayerRune(int playerId, int runeId, int tier, int requiredQuantity)
     {
         if (tier is < 1 or > 3)
             throw new RuneFusionException();
@@ -236,5 +234,34 @@ public class CraftingService(
             playerRune.Quantity - playerRune.EquippedRunes.Count;
 
         return availableQuantity < requiredQuantity ? throw new RuneQuantityException() : playerRune;
+    }
+    
+    private static void ValidateRecipe(Recipe recipe)
+    {
+        if (recipe.Rune == null)
+            throw new InvalidRecipeException();
+
+        if (recipe.Ingredients == null || recipe.Ingredients.Count == 0)
+            throw new InvalidRecipeException();
+
+        var ingredientIds = new HashSet<int>();
+
+        foreach (var ingredient in recipe.Ingredients)
+        {
+            if (ingredient == null)
+                throw new InvalidRecipeException();
+
+            if (ingredient.Quantity <= 0)
+                throw new InvalidRecipeException();
+
+            if (ingredient.Ingredient == null)
+                throw new InvalidRecipeException();
+
+            if (ingredient.Ingredient.Id != ingredient.IngredientId)
+                throw new InvalidRecipeException();
+
+            if (!ingredientIds.Add(ingredient.IngredientId))
+                throw new InvalidRecipeException();
+        }
     }
 }

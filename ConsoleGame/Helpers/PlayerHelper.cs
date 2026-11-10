@@ -56,6 +56,14 @@ public class PlayerHelper(
         };
 
         player.Initialize();
+        
+        _playerDao.AddPlayer(player);
+
+        if (player.Id <= 0 || player.Inventory.Id <= 0)
+        {
+            throw new InvalidOperationException(
+                "Failed to persist the new campaign player and inventory.");
+        }
 
         return player;
     }

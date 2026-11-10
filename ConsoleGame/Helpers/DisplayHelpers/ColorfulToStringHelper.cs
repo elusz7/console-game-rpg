@@ -1,10 +1,13 @@
-﻿using ConsoleGameEntities.Models.Items;
+﻿using System.Text;
+using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
-using System.Text;
 using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Models.Entities.Inventories;
+using ConsoleGameEntities.Models.Runes.Recipes;
+using Rune = ConsoleGameEntities.Models.Runes.Rune;
 
 namespace ConsoleGame.Helpers.DisplayHelpers;
 
@@ -208,5 +211,56 @@ public static class ColorfulToStringHelper
             parts.Add(turnsNeeded);
 
         return parts.Count == 0 ? "" : string.Join(" ", parts);
+    }
+    
+    public static ConsoleColor GetRarityColor(RarityLevel rarity)
+    {
+        return rarity switch
+        {
+            RarityLevel.Common => ConsoleColor.Gray,
+            RarityLevel.Uncommon => ConsoleColor.Green,
+            RarityLevel.Rare => ConsoleColor.Blue,
+            RarityLevel.Epic => ConsoleColor.Magenta,
+            RarityLevel.Legendary => ConsoleColor.Yellow,
+            RarityLevel.Mythic => ConsoleColor.Red,
+            _ => ConsoleColor.White
+        };
+    }
+    
+    public static string RuneToString(InventoryRune ir)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"[{ir.Rune.Name}] - {ir.Rune.RuneType.Split("Rune")[0]}");
+        sb.AppendLine($"\tRarity: {ir.Rune.Rarity} | Element: {ir.Rune.Element} | Tier: {ir.Tier} | Power: {ir.Rune.Power}");
+        return sb.ToString();
+    }
+    
+    public static string RecipeToString(
+        Recipe recipe,
+        List<InventoryIngredient> availableIngredients)
+    {
+        var sb = new StringBuilder();
+
+        var ingredientQuantities = availableIngredients
+            .ToDictionary(i => i.Ingredient.Id, i => i.Quantity);
+
+        sb.AppendLine($"[{recipe.Rune.Name} ({recipe.Rune.RuneType.Split("Rune")[0]})]");
+        sb.AppendLine($"Rarity: {recipe.Rune.Rarity} | Element: {recipe.Rune.Element}");
+        sb.AppendLine("\nIngredients:");
+
+        foreach (var recipeIngredient in recipe.Ingredients)
+        {
+            var ingredientId = recipeIngredient.Ingredient.Id;
+            var required = recipeIngredient.Quantity;
+
+            ingredientQuantities.TryGetValue(ingredientId, out var available);
+
+            var status = available >= required ? "Ready" : "Missing";
+
+            sb.AppendLine(
+                $"\t{recipeIngredient.Ingredient.Name} x{required} | Available: {available} | {status}");
+        }
+
+        return sb.ToString();
     }
 }

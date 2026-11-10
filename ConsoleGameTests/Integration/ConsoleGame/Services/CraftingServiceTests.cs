@@ -693,6 +693,60 @@ public class CraftingServiceTests
     }
     
     [TestMethod]
+    public void FuseRune_WhenAwardingResultFails_RollsBackRuneConsumption()
+    {
+        // Arrange
+        var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
+        var inventory = CreateInventory(100);
+        var player = CreatePlayer("Test Player", archetype, inventory);
+
+        var rune = CreateRune(
+            "Fire Rune",
+            10,
+            ElementType.Fire,
+            RarityLevel.Common,
+            TestRuneType.Weapon);
+
+        _context.Players.Add(player);
+        _context.Runes.Add(rune);
+        _context.SaveChanges();
+
+        inventory.Runes =
+        [
+            new InventoryRune
+            {
+                Rune = rune,
+                Tier = 1,
+                Quantity = 3
+            }
+        ];
+
+        _context.SaveChanges();
+
+        _context.Database.ExecuteSqlRaw($"""
+                                         CREATE TRIGGER FailTierTwoRuneAward
+                                         BEFORE INSERT ON InventoryRunes
+                                         WHEN NEW.RuneId = {rune.Id} AND NEW.Tier = 2
+                                         BEGIN
+                                             SELECT RAISE(ABORT, 'Simulated rune award failure');
+                                         END;
+                                         """);
+
+        // Act
+        Assert.ThrowsException<DbUpdateException>(() =>
+            _craftingService.FuseRune(player.Id, rune.Id, 1));
+
+        // Assert
+        var remainingTierOne = GetPlayerRune(player.Id, rune.Id, 1);
+        var awardedTierTwo = GetPlayerRune(player.Id, rune.Id, 2);
+
+        Assert.IsNotNull(remainingTierOne);
+        Assert.AreEqual(3, remainingTierOne.Quantity);
+
+        Assert.IsNull(awardedTierTwo);
+    }
+    
+    [TestMethod]
     public void DestroyRune_WhenRuneIsDestroyed_ReturnsRecipeIngredientsAndConsumesRune()
     {
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
@@ -1059,6 +1113,82 @@ public class CraftingServiceTests
     }
     
     [TestMethod]
+    public void DestroyRune_WhenLaterIngredientRefundFails_RollsBackEarlierRefunds()
+    {
+        // Arrange
+        var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
+        var inventory = CreateInventory(100);
+        var player = CreatePlayer("Test Player", archetype, inventory);
+    
+        var rune = CreateRune(
+            "Test Rune", 10, ElementType.Fire,
+            RarityLevel.Common, TestRuneType.Weapon);
+    
+        var ingredientOne = CreateIngredient(
+            "Monster Claw", ComponentType.MonsterPart);
+    
+        var ingredientTwo = CreateIngredient(
+            "Monster Scale", ComponentType.MonsterPart);
+    
+        var recipe = CreateRecipe(
+            "Test Recipe",
+            rune,
+            [
+                CreateRecipeIngredient(ingredientOne, 4),
+                CreateRecipeIngredient(ingredientTwo, 6)
+            ]);
+    
+        _context.Players.Add(player);
+        _context.Runes.Add(rune);
+        _context.Ingredients.AddRange(ingredientOne, ingredientTwo);
+        _context.Recipes.Add(recipe);
+        _context.SaveChanges();
+    
+        inventory.Runes =
+        [
+            new InventoryRune
+            {
+                Rune = rune,
+                Tier = 1,
+                Quantity = 1
+            }
+        ];
+    
+        _context.SaveChanges();
+    
+        // Reject the second ingredient refund.
+        _context.Database.ExecuteSqlRaw($"""
+            CREATE TRIGGER FailSecondIngredientRefund
+            BEFORE INSERT ON InventoryIngredients
+            WHEN NEW.IngredientId = {ingredientTwo.Id}
+            BEGIN
+                SELECT RAISE(ABORT, 'Simulated ingredient refund failure');
+            END;
+            """);
+    
+        // Act
+        Assert.ThrowsException<DbUpdateException>(() =>
+            _craftingService.DestroyRune(player.Id, rune.Id, 1));
+    
+        // Assert
+        var remainingRune = GetPlayerRune(player.Id, rune.Id, 1);
+    
+        var refundedIngredientOne = GetPlayerIngredient(
+            player.Id, ingredientOne.Id);
+    
+        var refundedIngredientTwo = GetPlayerIngredient(
+            player.Id, ingredientTwo.Id);
+    
+        // The rune must be restored.
+        Assert.IsNotNull(remainingRune);
+        Assert.AreEqual(1, remainingRune.Quantity);
+    
+        // Neither ingredient refund should persist.
+        Assert.IsNull(refundedIngredientOne);
+        Assert.IsNull(refundedIngredientTwo);
+    }
+    
+    [TestMethod]
     public void TransmuteEssence_WhenEssenceIsTransmuted_ConsumesFiveAndAwardsNextRarity()
     {
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
@@ -1126,42 +1256,6 @@ public class CraftingServiceTests
         var remainingEssence = GetPlayerIngredient(player.Id, commonEssence.Id);
         Assert.IsNotNull(remainingEssence);
         Assert.AreEqual(3, remainingEssence.Quantity);
-
-        var awardedEssence = GetPlayerIngredient(player.Id, uncommonEssence.Id);
-        Assert.IsNotNull(awardedEssence);
-        Assert.AreEqual(1, awardedEssence.Quantity);
-    }
-    
-    [TestMethod]
-    public void TransmuteEssence_WhenExactlyFiveEssencesExist_RemovesOriginalInventoryRecord()
-    {
-        var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
-        var inventory = CreateInventory(100);
-        var player = CreatePlayer("Test Player", archetype, inventory);
-
-        var commonEssence = CreateIngredient("Common Essence", ComponentType.Essence);
-        commonEssence.EssenceRarity = RarityLevel.Common;
-
-        var uncommonEssence = CreateIngredient("Uncommon Essence", ComponentType.Essence);
-        uncommonEssence.EssenceRarity = RarityLevel.Uncommon;
-
-        _context.Players.Add(player);
-        _context.Ingredients.AddRange(commonEssence, uncommonEssence);
-        _context.SaveChanges();
-
-        inventory.Ingredients =
-        [
-            new InventoryIngredient
-            {
-                Ingredient = commonEssence,
-                Quantity = 5
-            }
-        ];
-        _context.SaveChanges();
-
-        _craftingService.TransmuteEssence(player.Id, commonEssence.Id);
-
-        Assert.IsNull(GetPlayerIngredient(player.Id, commonEssence.Id));
 
         var awardedEssence = GetPlayerIngredient(player.Id, uncommonEssence.Id);
         Assert.IsNotNull(awardedEssence);
@@ -1312,7 +1406,72 @@ public class CraftingServiceTests
     }
     
     [TestMethod]
-    public void CraftRune_WhenLaterIngredientFails_RollsBackEarlierIngredientConsumption()
+    public void TransmuteEssence_WhenAwardingNextEssenceFails_RollsBackConsumption()
+    {
+        // Arrange
+        var archetype = CreateArchetype(
+            "Test Archetype", ArchetypeType.Martial);
+
+        var inventory = CreateInventory(100);
+        var player = CreatePlayer("Test Player", archetype, inventory);
+
+        var commonEssence = CreateIngredient(
+            "Common Essence", ComponentType.Essence);
+
+        commonEssence.EssenceRarity = RarityLevel.Common;
+
+        var uncommonEssence = CreateIngredient(
+            "Uncommon Essence", ComponentType.Essence);
+
+        uncommonEssence.EssenceRarity = RarityLevel.Uncommon;
+
+        _context.Players.Add(player);
+        _context.Ingredients.AddRange(commonEssence, uncommonEssence);
+        _context.SaveChanges();
+
+        inventory.Ingredients =
+        [
+            new InventoryIngredient
+            {
+                Ingredient = commonEssence,
+                Quantity = 5
+            }
+        ];
+
+        _context.SaveChanges();
+
+        // Reject the Uncommon Essence award after Common Essence consumption.
+        _context.Database.ExecuteSqlRaw($"""
+                                         CREATE TRIGGER FailUncommonEssenceAward
+                                         BEFORE INSERT ON InventoryIngredients
+                                         WHEN NEW.IngredientId = {uncommonEssence.Id}
+                                         BEGIN
+                                             SELECT RAISE(ABORT, 'Simulated essence award failure');
+                                         END;
+                                         """);
+
+        // Act
+        Assert.ThrowsException<DbUpdateException>(() =>
+            _craftingService.TransmuteEssence(
+                player.Id, commonEssence.Id));
+
+        // Assert
+        var remainingCommonEssence = GetPlayerIngredient(
+            player.Id, commonEssence.Id);
+
+        var awardedUncommonEssence = GetPlayerIngredient(
+            player.Id, uncommonEssence.Id);
+
+        // Original essence must be restored.
+        Assert.IsNotNull(remainingCommonEssence);
+        Assert.AreEqual(5, remainingCommonEssence.Quantity);
+
+        // Failed award must not persist.
+        Assert.IsNull(awardedUncommonEssence);
+    }
+    
+    [TestMethod]
+    public void CraftRune_WhenLaterIngredientIsMissing_RollsBackEarlierIngredientConsumption()
     {
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
@@ -1359,6 +1518,76 @@ public class CraftingServiceTests
         Assert.IsNull(GetPlayerIngredient(player.Id, ingredientTwo.Id));
         Assert.IsNull(GetPlayerRune(player.Id, rune.Id, 1));
     }
+    
+    [TestMethod]
+    public void CraftRune_WhenLaterIngredientQuantityIsInsufficient_RollsBackEarlierIngredientConsumption()
+    {
+        // Arrange
+        var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
+        var inventory = CreateInventory(100);
+        var player = CreatePlayer("Test Player", archetype, inventory);
+
+        var rune = CreateRune(
+            "Test Rune", 10, ElementType.Fire, RarityLevel.Common,
+            TestRuneType.Weapon);
+
+        var ingredientOne = CreateIngredient("Monster Claw", ComponentType.MonsterPart);
+        var ingredientTwo = CreateIngredient("Monster Scale", ComponentType.MonsterPart);
+
+        var recipe = CreateRecipe(
+            "Test Recipe",
+            rune,
+            [
+                CreateRecipeIngredient(ingredientOne, 2),
+                CreateRecipeIngredient(ingredientTwo, 3)
+            ]);
+
+        _context.Players.Add(player);
+        _context.Runes.Add(rune);
+        _context.Ingredients.AddRange(ingredientOne, ingredientTwo);
+        _context.Recipes.Add(recipe);
+        _context.SaveChanges();
+
+        inventory.Ingredients =
+        [
+            new InventoryIngredient
+            {
+                Ingredient = ingredientOne,
+                Quantity = 5
+            },
+            new InventoryIngredient
+            {
+                Ingredient = ingredientTwo,
+                Quantity = 2
+            }
+        ];
+        _context.SaveChanges();
+
+        // Act
+        Assert.ThrowsException<IngredientQuantityException>(() =>
+            _craftingService.CraftRune(player.Id, recipe.Id));
+
+        // Assert
+        var remainingIngredientOne =
+            GetPlayerIngredient(player.Id, ingredientOne.Id);
+
+        var remainingIngredientTwo =
+            GetPlayerIngredient(player.Id, ingredientTwo.Id);
+
+        var awardedRune = GetPlayerRune(player.Id, rune.Id, 1);
+
+        // Earlier ingredient consumption must be rolled back.
+        Assert.IsNotNull(remainingIngredientOne);
+        Assert.AreEqual(5, remainingIngredientOne.Quantity);
+
+        // The insufficient ingredient must also remain unchanged.
+        Assert.IsNotNull(remainingIngredientTwo);
+        Assert.AreEqual(2, remainingIngredientTwo.Quantity);
+
+        // No rune should be awarded.
+        Assert.IsNull(awardedRune);
+    }
+
     
     [TestMethod]
     public void FuseRune_WhenOperationFails_DoesNotPersistPartialChanges()

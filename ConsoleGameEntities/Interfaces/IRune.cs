@@ -10,6 +10,4 @@ public interface IRune
     int Power { get; set; }
     ElementType Element { get; set; }
     RarityLevel Rarity { get; set; }
-
-    Dictionary<Ingredient, int> DestroyRune();
 }

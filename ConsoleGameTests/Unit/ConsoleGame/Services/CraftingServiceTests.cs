@@ -1139,6 +1139,183 @@ public class CraftingServiceTests
             t => t.ExecuteInTransaction(It.IsAny<Action>()),
             Times.Once);
     }
+    
+    //Recipe & Ingredient Validation
+    [TestMethod]
+    public void CraftRune_WhenRecipeHasNoIngredients_ThrowsInvalidRecipeException()
+    {
+        // Arrange
+        var recipe = new Recipe
+        {
+            Id = RecipeId,
+            RuneId = RuneId,
+            Rune = CreateRuneDefinition(RuneId, RarityLevel.Common),
+            Name = "Test Rune Recipe",
+            Ingredients = []
+        };
+
+        _recipeDaoMock
+            .Setup(r => r.GetRecipeById(RecipeId))
+            .Returns(recipe);
+
+        // Act & Assert
+        Assert.ThrowsException<InvalidRecipeException>(
+            () => _service.CraftRune(PlayerId, RecipeId));
+
+        // No resources should be consumed and no rune should be awarded.
+        _ingredientDaoMock.Verify(
+            i => i.RemoveIngredientFromPlayer(It.IsAny<int>(), PlayerId),
+            Times.Never);
+
+        _ingredientDaoMock.Verify(
+            i => i.UpdatePlayerIngredientQuantity(
+                It.IsAny<int>(), PlayerId, It.IsAny<int>()),
+            Times.Never);
+
+        _runeDaoMock.Verify(
+            r => r.AddRuneToPlayer(
+                It.IsAny<int>(), PlayerId, It.IsAny<int>()),
+            Times.Never);
+    }
+    
+    [TestMethod]
+    public void CraftRune_WhenRecipeHasNoRune_ThrowsInvalidRecipeException()
+    {
+        // Arrange
+        var recipe = CreateRecipe(3);
+        recipe.Rune = null!;
+
+        _recipeDaoMock
+            .Setup(r => r.GetRecipeById(RecipeId))
+            .Returns(recipe);
+
+        // Act & Assert
+        Assert.ThrowsException<InvalidRecipeException>(
+            () => _service.CraftRune(PlayerId, RecipeId));
+
+        // No resources should be consumed and no rune should be awarded.
+        _ingredientDaoMock.Verify(
+            i => i.RemoveIngredientFromPlayer(It.IsAny<int>(), PlayerId),
+            Times.Never);
+
+        _ingredientDaoMock.Verify(
+            i => i.UpdatePlayerIngredientQuantity(
+                It.IsAny<int>(), PlayerId, It.IsAny<int>()),
+            Times.Never);
+
+        _runeDaoMock.Verify(
+            r => r.AddRuneToPlayer(
+                It.IsAny<int>(), PlayerId, It.IsAny<int>()),
+            Times.Never);
+    }
+    
+    [DataTestMethod]
+    [DataRow(0)]
+    [DataRow(-1)]
+    public void CraftRune_WhenIngredientQuantityIsInvalid_ThrowsInvalidRecipeException(
+        int invalidQuantity)
+    {
+        // Arrange
+        var recipe = CreateRecipe(invalidQuantity);
+
+        _recipeDaoMock
+            .Setup(r => r.GetRecipeById(RecipeId))
+            .Returns(recipe);
+
+        // Act & Assert
+        Assert.ThrowsException<InvalidRecipeException>(
+            () => _service.CraftRune(PlayerId, RecipeId));
+
+        // No resources should be consumed and no rune should be awarded.
+        _ingredientDaoMock.Verify(
+            i => i.RemoveIngredientFromPlayer(It.IsAny<int>(), PlayerId),
+            Times.Never);
+
+        _ingredientDaoMock.Verify(
+            i => i.UpdatePlayerIngredientQuantity(
+                It.IsAny<int>(), PlayerId, It.IsAny<int>()),
+            Times.Never);
+
+        _runeDaoMock.Verify(
+            r => r.AddRuneToPlayer(
+                It.IsAny<int>(), PlayerId, It.IsAny<int>()),
+            Times.Never);
+    }
+    
+    [TestMethod]
+    public void CraftRune_WhenIngredientDefinitionIsMissing_ThrowsInvalidRecipeException()
+    {
+        // Arrange
+        var recipe = CreateRecipe(3);
+        recipe.Ingredients[0].Ingredient = null!;
+
+        _recipeDaoMock
+            .Setup(r => r.GetRecipeById(RecipeId))
+            .Returns(recipe);
+
+        // Act & Assert
+        Assert.ThrowsException<InvalidRecipeException>(
+            () => _service.CraftRune(PlayerId, RecipeId));
+
+        // No resources should be consumed and no rune should be awarded.
+        _ingredientDaoMock.Verify(
+            i => i.RemoveIngredientFromPlayer(It.IsAny<int>(), PlayerId),
+            Times.Never);
+
+        _ingredientDaoMock.Verify(
+            i => i.UpdatePlayerIngredientQuantity(
+                It.IsAny<int>(), PlayerId, It.IsAny<int>()),
+            Times.Never);
+
+        _runeDaoMock.Verify(
+            r => r.AddRuneToPlayer(
+                It.IsAny<int>(), PlayerId, It.IsAny<int>()),
+            Times.Never);
+    }
+    
+    [TestMethod]
+    public void CraftRune_WhenRecipeHasDuplicateIngredientEntries_ThrowsInvalidRecipeException()
+    {
+        // Arrange
+        var recipe = CreateRecipe(
+            2,
+            new RecipeIngredient
+            {
+                IngredientId = IngredientId,
+                Ingredient = new Ingredient
+                {
+                    Id = IngredientId,
+                    Name = "Test Ingredient"
+                },
+                Quantity = 3
+            });
+
+        _recipeDaoMock
+            .Setup(r => r.GetRecipeById(RecipeId))
+            .Returns(recipe);
+
+        // Act & Assert
+        Assert.ThrowsException<InvalidRecipeException>(
+            () => _service.CraftRune(PlayerId, RecipeId));
+
+        // No resources should be consumed and no rune should be awarded.
+        _ingredientDaoMock.Verify(
+            i => i.RemoveIngredientFromPlayer(It.IsAny<int>(), PlayerId),
+            Times.Never);
+
+        _ingredientDaoMock.Verify(
+            i => i.UpdatePlayerIngredientQuantity(
+                It.IsAny<int>(), PlayerId, It.IsAny<int>()),
+            Times.Never);
+
+        _runeDaoMock.Verify(
+            r => r.AddRuneToPlayer(
+                It.IsAny<int>(), PlayerId, It.IsAny<int>()),
+            Times.Never);
+    }
+    
+    
+    
 
     // --------------------------------------------------
     // Test Helpers
@@ -1159,25 +1336,40 @@ public class CraftingServiceTests
             .Callback<Action>(action => action());
     }
 
-    private static Recipe CreateRecipe(int requiredQuantity, params RecipeIngredient[] additionalIngredients)
+    private static Recipe CreateRecipe(
+        int requiredQuantity,
+        params RecipeIngredient[] additionalIngredients)
     {
+        var ingredients = new List<RecipeIngredient>
+        {
+            new()
+            {
+                IngredientId = IngredientId,
+                Quantity = requiredQuantity
+            }
+        };
+
+        ingredients.AddRange(additionalIngredients);
+
+        foreach (var ingredient in ingredients)
+        {
+            ingredient.Ingredient ??= new Ingredient
+            {
+                Id = ingredient.IngredientId,
+                Name = "Test Ingredient"
+            };
+        }
+
         return new Recipe
         {
             Id = RecipeId,
             RuneId = RuneId,
+            Rune = CreateRuneDefinition(RuneId, RarityLevel.Common),
             Name = "Test Rune Recipe",
-            Ingredients =
-            [
-                new RecipeIngredient
-                {
-                    IngredientId = IngredientId,
-                    Quantity = requiredQuantity
-                },
-                .. additionalIngredients
-            ]
+            Ingredients = ingredients
         };
     }
-
+    
     private static InventoryIngredient CreatePlayerIngredient(int quantity, int ingredientId = IngredientId)
     {
         return new InventoryIngredient

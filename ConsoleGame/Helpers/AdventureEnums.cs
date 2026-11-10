@@ -1,6 +1,6 @@
 ﻿namespace ConsoleGame.Helpers;
 
-public class AdventureEnums
+public static class AdventureEnums
 {
     public enum AdventureOptions
     {
@@ -10,7 +10,8 @@ public class AdventureEnums
         Merchant = 4,
         Equipment = 5,
         Move = 6,
-        Quit = 7
+        Craft = 7,
+        Quit = 8
     }
 
     public enum MerchantOptions
@@ -29,5 +30,25 @@ public class AdventureEnums
         UseSkill = 1,
         UseConsumable = 2,
         SkipTurn = 3
+    }
+    
+    public enum CraftingOptions
+    {
+        CraftRune = 0,
+        FuseRunes = 1,
+        DestroyRune = 2,
+        TransmuteEssence = 3,
+        ViewRecipes = 4,
+        Exit = 5
+    }
+
+    public enum RecipeOptions
+    {
+        ViewAll = 0,
+        ViewCraftable = 1,
+        SearchByName = 2,
+        SearchByElement = 3,
+        SearchByRarity = 4,
+        Exit = 5
     }
 }

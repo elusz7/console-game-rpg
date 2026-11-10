@@ -3,7 +3,6 @@ using ConsoleGame.Managers;
 using ConsoleGame.Services;
 using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Helpers;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -32,7 +31,7 @@ public static class Startup
         var configuration = ConfigurationHelper.GetConfiguration();
 
         // Create and bind FileLoggerOptions
-        var fileLoggerOptions = new NReco.Logging.File.FileLoggerOptions();
+        var fileLoggerOptions = new FileLoggerOptions();
         configuration.GetSection("Logging:File").Bind(fileLoggerOptions);
 
         // Configure logging
@@ -106,6 +105,9 @@ public static class Startup
         services.AddTransient<ArchetypeMenu>();
         services.AddTransient<ArchetypeDisplay>();
         services.AddTransient<ArchetypeManagement>();
+        
+        services.AddTransient<CraftMenu>();
+        services.AddTransient<RecipeMenu>();
 
         services.AddTransient<IFloorFactory, FloorFactory>();
         services.AddTransient<IMonsterFactory, MonsterFactory>();
