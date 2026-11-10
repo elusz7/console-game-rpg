@@ -1,6 +1,7 @@
 ﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Items;
 using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleGame.GameDao;
@@ -15,10 +16,18 @@ public class PlayerDao(GameContext context) : IPlayerDao
         _context.SaveChanges();
 
         // The runtime player is managed separately during gameplay.
-        // Detach it and its inventory so later room changes don't
-        // cause EF Core to track generated room instances.
-        _context.Entry(player).State = EntityState.Detached;
-        _context.Entry(player.Inventory).State = EntityState.Detached;
+        // Detach the entire graph so generated runtime objects
+        // are not accidentally tracked by EF Core.
+        foreach (var entry in _context.ChangeTracker
+                     .Entries()
+                     .Where(e => e.Entity == player ||
+                                 e.Entity == player.Inventory ||
+                                 e.Entity is Item item &&
+                                 item.InventoryId == player.Inventory.Id)
+                     .ToList())
+        {
+            entry.State = EntityState.Detached;
+        }
     }
 
     public void UpdatePlayer(Player player)

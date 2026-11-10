@@ -1,9 +1,11 @@
-﻿namespace ConsoleGame.Services.Interfaces;
+﻿using static ConsoleGame.Models.Results.Crafting.CraftingResults;
+
+namespace ConsoleGame.Services.Interfaces;
 
 public interface ICraftingService
 {
-    void CraftRune(int playerId, int recipeId);
-    void FuseRune(int playerId, int runeId, int tier);
-    void DestroyRune(int playerId, int runeId, int tier);
-    void TransmuteEssence(int playerId, int essenceId);
+    CraftRuneResult CraftRune(int playerId, int recipeId);
+    FuseRuneResult FuseRune(int playerId, int runeId, int tier);
+    DestroyRuneResult DestroyRune(int playerId, int runeId, int tier);
+    TransmuteEssenceResult TransmuteEssence(int playerId, int essenceId);
 }

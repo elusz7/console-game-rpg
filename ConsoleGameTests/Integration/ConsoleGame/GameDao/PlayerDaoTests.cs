@@ -185,7 +185,7 @@ public class PlayerDaoTests
         var player = CreatePlayer("TestPlayer", archetype, inventory);
 
         var weapon = (Weapon)CreateItem("Iron Sword", 1, 10, TestItemType.Weapon);
-        inventory.Items.Add(weapon);
+        inventory.AddItem(weapon);
 
         _playerDao.AddPlayer(player);
 

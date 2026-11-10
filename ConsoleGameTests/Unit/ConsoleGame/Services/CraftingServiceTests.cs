@@ -1314,7 +1314,236 @@ public class CraftingServiceTests
             Times.Never);
     }
     
+    //validate return results
+    [TestMethod]
+    public void CraftRune_WhenCraftingSucceeds_ReturnsCraftingResult()
+    {
+        // Arrange
+        var recipe = CreateRecipe(3);
+
+        _recipeDaoMock
+            .Setup(r => r.GetRecipeById(RecipeId))
+            .Returns(recipe);
+
+        _ingredientDaoMock
+            .Setup(i => i.GetIngredientsByPlayerId(PlayerId))
+            .Returns([CreatePlayerIngredient(3)]);
+
+        // Act
+        var result = _service.CraftRune(PlayerId, RecipeId);
+
+        // Assert
+        Assert.AreEqual(RuneId, result.CraftedRune.Id);
+        Assert.AreEqual(1, result.IngredientsConsumed.Count);
+        Assert.AreEqual(IngredientId, result.IngredientsConsumed[0].Ingredient.Id);
+        Assert.AreEqual(3, result.IngredientsConsumed[0].Quantity);
+    }
     
+    [TestMethod]
+    public void FuseRune_WhenFusionSucceeds_ReturnsCorrectFusionResult()
+    {
+        // Arrange
+        const int originalTier = 1;
+        const int expectedTier = 2;
+
+        var expectedRune = SetupSuccessfulFusion(
+            tier: originalTier,
+            rarity: RarityLevel.Common);
+
+        // Act
+        var result = _service.FuseRune(PlayerId, RuneId, originalTier);
+
+        // Assert
+        Assert.AreEqual(ExpectedRuneId, result.ResultRune.Id);
+        Assert.AreEqual(expectedTier, result.ResultTier);
+
+        Assert.AreEqual(RuneId, result.ConsumedRune.Id);
+        Assert.AreEqual(originalTier, result.ConsumedTier);
+
+        Assert.AreEqual(expectedRune.Name, result.ResultRune.Name);
+    }
+    
+    [TestMethod]
+    public void DestroyRune_WhenDestructionSucceeds_ReturnsCorrectDestructionResult()
+    {
+        // Arrange
+        const int destroyedTier = 2;
+
+        SetupRuneAndRecipeForDestruction(tier: destroyedTier);
+
+        // Act
+        var result = _service.DestroyRune(PlayerId, RuneId, destroyedTier);
+
+        // Assert
+        Assert.AreEqual(RuneId, result.DestroyedRune.Id);
+        Assert.AreEqual(destroyedTier, result.DestroyedTier);
+
+        Assert.AreEqual(3, result.IngredientsReturned.Count);
+
+        var firstIngredient = result.IngredientsReturned
+            .Single(i => i.Ingredient.Id == 31);
+
+        var secondIngredient = result.IngredientsReturned
+            .Single(i => i.Ingredient.Id == 32);
+
+        var thirdIngredient = result.IngredientsReturned
+            .Single(i => i.Ingredient.Id == 33);
+
+        Assert.AreEqual(2, firstIngredient.Quantity);
+        Assert.AreEqual(2, secondIngredient.Quantity);
+        Assert.AreEqual(3, thirdIngredient.Quantity);
+    }
+    
+    [TestMethod]
+    public void TransmuteEssence_WhenTransmutationSucceeds_ReturnsCorrectTransmutationResult()
+    {
+        // Arrange
+        var consumedEssence = CreateEssence(
+            IngredientId,
+            RarityLevel.Common);
+
+        var producedEssence = CreateEssence(
+            ExpectedIngredientId,
+            RarityLevel.Uncommon);
+
+        SetupPlayerIngredientForTransmutation(
+            quantity: 5,
+            essenceRarity: RarityLevel.Common);
+
+        _ingredientDaoMock
+            .Setup(i => i.GetEssenceByRarity(RarityLevel.Uncommon))
+            .Returns(producedEssence);
+
+        // Act
+        var result = _service.TransmuteEssence(PlayerId, IngredientId);
+
+        // Assert
+        Assert.AreEqual(IngredientId, result.ConsumedEssence.Id);
+        Assert.AreEqual(RarityLevel.Common, result.ConsumedEssence.EssenceRarity);
+
+        Assert.AreEqual(ExpectedIngredientId, result.ProducedEssence.Id);
+        Assert.AreEqual(RarityLevel.Uncommon, result.ProducedEssence.EssenceRarity);
+
+        Assert.AreEqual(ComponentType.Essence, result.ConsumedEssence.ComponentType);
+        Assert.AreEqual(ComponentType.Essence, result.ProducedEssence.ComponentType);
+    }
+    
+    //malformed destruction recipes
+    [TestMethod]
+    public void DestroyRune_WhenRecipeHasNoRune_ThrowsInvalidRecipeException()
+    {
+        // Arrange
+        var recipe = CreateRecipe(1);
+        recipe.Rune = null!;
+
+        // Act & Assert
+        AssertInvalidDestructionRecipe(recipe);
+    }
+
+    [TestMethod]
+    public void DestroyRune_WhenRecipeContainsNullIngredient_ThrowsInvalidRecipeException()
+    {
+        // Arrange
+        var recipe = CreateRecipe(1);
+        recipe.Ingredients.Add(null!);
+
+        // Act & Assert
+        AssertInvalidDestructionRecipe(recipe);
+    }
+
+    [TestMethod]
+    public void DestroyRune_WhenIngredientDefinitionIsMissing_ThrowsInvalidRecipeException()
+    {
+        // Arrange
+        var recipe = CreateRecipe(1);
+        recipe.Ingredients[0].Ingredient = null!;
+
+        // Act & Assert
+        AssertInvalidDestructionRecipe(recipe);
+    }
+
+    [TestMethod]
+    public void DestroyRune_WhenIngredientIdDoesNotMatchDefinition_ThrowsInvalidRecipeException()
+    {
+        // Arrange
+        var recipe = CreateRecipe(1);
+        recipe.Ingredients[0].Ingredient.Id = ExpectedIngredientId;
+
+        // Act & Assert
+        AssertInvalidDestructionRecipe(recipe);
+    }
+
+    [TestMethod]
+    public void DestroyRune_WhenRecipeHasDuplicateIngredientEntries_ThrowsInvalidRecipeException()
+    {
+        // Arrange
+        var recipe = CreateRecipe(
+            1,
+            new RecipeIngredient
+            {
+                IngredientId = IngredientId,
+                Ingredient = new Ingredient
+                {
+                    Id = IngredientId,
+                    Name = "Duplicate Test Ingredient"
+                },
+                Quantity = 2
+            });
+
+        // Act & Assert
+        AssertInvalidDestructionRecipe(recipe);
+    }
+
+    [DataTestMethod]
+    [DataRow(0)]
+    [DataRow(-1)]
+    public void DestroyRune_WhenIngredientQuantityIsInvalid_ThrowsInvalidRecipeException(
+        int invalidQuantity)
+    {
+        // Arrange
+        var recipe = CreateRecipe(invalidQuantity);
+
+        // Act & Assert
+        AssertInvalidDestructionRecipe(recipe);
+    }
+    
+    private void AssertInvalidDestructionRecipe(Recipe recipe)
+    {
+        // Arrange
+        SetupOwnedRuneForDestruction();
+
+        _recipeDaoMock
+            .Setup(r => r.GetRecipeByRuneId(RuneId))
+            .Returns(recipe);
+
+        // Act & Assert
+        Assert.ThrowsException<InvalidRecipeException>(
+            () => _service.DestroyRune(PlayerId, RuneId, 1));
+
+        // No ingredients should be refunded.
+        _ingredientDaoMock.Verify(
+            i => i.AddIngredientToPlayer(
+                It.IsAny<int>(),
+                PlayerId,
+                It.IsAny<int>()),
+            Times.Never);
+
+        // The original rune should not be consumed.
+        _runeDaoMock.Verify(
+            r => r.RemoveRuneFromPlayer(
+                RuneId,
+                PlayerId,
+                1),
+            Times.Never);
+
+        _runeDaoMock.Verify(
+            r => r.UpdatePlayerRuneQuantity(
+                It.IsAny<int>(),
+                PlayerId,
+                It.IsAny<int>(),
+                It.IsAny<int>()),
+            Times.Never);
+    }
     
 
     // --------------------------------------------------
@@ -1457,33 +1686,49 @@ public class CraftingServiceTests
             .Returns([playerRune]);
     }
 
-    private void SetupRuneAndRecipeForDestruction(int quantity = 1, int equippedCount = 0, int tier = 1)
+    private void SetupRuneAndRecipeForDestruction(
+        int quantity = 1,
+        int equippedCount = 0,
+        int tier = 1)
     {
-        SetupOwnedRuneForDestruction(
-            quantity,
-            equippedCount,
-            tier);
+        SetupOwnedRuneForDestruction(quantity, equippedCount, tier);
 
         var recipe = new Recipe
         {
             Id = RecipeId,
             RuneId = RuneId,
+            Rune = CreateRuneDefinition(RuneId, RarityLevel.Common),
             Name = "Test Rune Recipe",
             Ingredients =
             [
                 new RecipeIngredient
                 {
                     IngredientId = 31,
+                    Ingredient = new Ingredient
+                    {
+                        Id = 31,
+                        Name = "Ingredient 31"
+                    },
                     Quantity = 1
                 },
                 new RecipeIngredient
                 {
                     IngredientId = 32,
+                    Ingredient = new Ingredient
+                    {
+                        Id = 32,
+                        Name = "Ingredient 32"
+                    },
                     Quantity = 3
                 },
                 new RecipeIngredient
                 {
                     IngredientId = 33,
+                    Ingredient = new Ingredient
+                    {
+                        Id = 33,
+                        Name = "Ingredient 33"
+                    },
                     Quantity = 5
                 }
             ]

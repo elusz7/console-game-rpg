@@ -337,21 +337,21 @@ Replace the existing in-memory inventory implementations with persistent ownersh
 
 ### D. Improve Recipe Discovery and Presentation
 
-- [ ] Review existing recipe discovery infrastructure.
-- [ ] Implement a dedicated crafting menu.
-- [ ] Display available recipes and requirements.
-- [ ] Show missing ingredients and quantities.
-- [ ] Allow players to initiate crafting through the menu.
-- [ ] Display crafting results and resource changes.
+- [x] Review existing recipe discovery infrastructure.
+- [x] Implement a dedicated crafting menu.
+- [x] Display available recipes and requirements.
+- [x] Show missing ingredients and quantities.
+- [x] Allow players to initiate crafting through the menu.
+- [x] Display crafting results and resource changes.
 
 ### E. Improve Crafting Feedback and Gameplay
 
-- [ ] Improve crafting feedback and error handling.
-- [ ] Provide player-friendly failure messages.
-- [ ] Improve fusion and destruction feedback.
-- [ ] Consider additional crafting gameplay features where appropriate.
-- [ ] Add balance and edge-case tests.
-- [ ] Run the complete test suite.
+- [x] Improve crafting feedback and error handling.
+- [x] Provide player-friendly failure messages.
+- [x] Improve fusion and destruction feedback.
+- [x] Consider additional crafting gameplay features where appropriate.
+- [x] Add balance and edge-case tests.
+- [x] Run the complete test suite.
 
 **Completion criteria:** Monster ingredient acquisition, crafting, fusion, transmutation, and destruction provide 
 consistent, balanced gameplay on top of the persistent ownership system. Players can discover recipes, 
