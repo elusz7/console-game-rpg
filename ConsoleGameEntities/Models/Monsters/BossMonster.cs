@@ -3,6 +3,7 @@ using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Helpers;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Monsters.Strategies;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
@@ -11,9 +12,6 @@ namespace ConsoleGameEntities.Models.Monsters;
 
 public class BossMonster : Monster
 {
-    [NotMapped]
-    private static readonly DamageResolver DamageResolver = new();
-
     private int _currentPhase = 1;
     private const int MaxPhases = 3;
     private int _baseHealth;
@@ -76,27 +74,17 @@ public class BossMonster : Monster
         AddActionItem($"Boss [{Name}] has entered phase {_currentPhase}!");
     }
 
-    public override void TakeDamage(int damage, DamageType? damageType)
+    public override void TakeDamage(AttackDamage attack)
     {
-        var result = DamageResolver.ResolveDamage(
-            damage,
-            damageType,
-            GetStat(StatType.Defense),
-            GetStat(StatType.Resistance),
-            DodgeChance + (GetStat(StatType.Speed) * 0.01));
-
-        if (result.IsDodged)
+        try
         {
-            AddActionItem($"{Name} dodged the attack!");
-            return;
+            base.TakeDamage(attack);
         }
-
-        AddActionItem($"{Name} takes {result.FinalDamage} damage!");
-        CurrentHealth -= result.FinalDamage;
-
-        // Bosses transition phases instead of dying immediately.
-        if (CurrentHealth <= 0)
+        catch (MonsterDeathException)
+        {
+            // Bosses transition phases instead of dying immediately.
             CheckPhaseChange();
+        }
     }
 
     public override void SetLevel(int newLevel)

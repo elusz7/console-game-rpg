@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ConsoleGameEntities.Helpers;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
@@ -63,6 +64,8 @@ public class CautiousStrategy : DefaultStrategy
     {
         var decreasedDamage = (int)Math.Ceiling(monster.GetStat(StatType.Attack) * 0.8);
         monster.AddActionItem($"{monster.Name} attacks for {decreasedDamage} damage!");
-        target.TakeDamage(decreasedDamage, monster.DamageType);
+        
+        var attack = new AttackDamage(decreasedDamage, monster.DamageType, monster.ElementalPower ?? 0, monster.AttackElement);
+        target.TakeDamage(attack);
     }
 }

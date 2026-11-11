@@ -10,6 +10,7 @@ using ConsoleGame.Services.Interfaces;
 using ConsoleGameEntities.Exceptions.Recipes;
 using ConsoleGameEntities.Models.Entities.Inventories;
 using ConsoleGameEntities.Exceptions.Runes;
+using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Runes;
 using static ConsoleGameTests.TestHelpers.ModelCreationHelper;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
@@ -577,7 +578,8 @@ public class CraftingServiceTests
 
         _context.EquippedRunes.Add(new EquippedRune
         {
-            InventoryRune = playerRune
+            InventoryRune = playerRune,
+            Weapon = (Weapon)CreateItem("Test Weapon", 1, 5, TestItemType.Weapon)
         });
 
         _context.SaveChanges();
@@ -628,7 +630,8 @@ public class CraftingServiceTests
 
         _context.EquippedRunes.Add(new EquippedRune
         {
-            InventoryRune = playerRune
+            InventoryRune = playerRune,
+            Weapon = (Weapon)CreateItem("Test Weapon", 1, 5, TestItemType.Weapon)
         });
 
         _context.SaveChanges();
@@ -887,7 +890,8 @@ public class CraftingServiceTests
 
         _context.EquippedRunes.Add(new EquippedRune
         {
-            InventoryRune = playerRune
+            InventoryRune = playerRune,
+            Weapon = (Weapon)CreateItem("Test Weapon", 1, 5, TestItemType.Weapon)
         });
         _context.SaveChanges();
 

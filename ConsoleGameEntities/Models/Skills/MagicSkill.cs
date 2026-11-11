@@ -3,6 +3,7 @@ using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Models.Combat;
 
 namespace ConsoleGameEntities.Models.Skills;
 
@@ -18,7 +19,8 @@ public class MagicSkill : DamageSkill
 
         if (singleEnemy == null && (multipleEnemies == null || multipleEnemies.Count == 0))
             throw new InvalidTargetException("No suitable target(s) provided.");
-
+        
+        var attack = new AttackDamage(Power, DamageType, 0, null);
         switch (caster)
         {
             case Player player:
@@ -40,7 +42,7 @@ public class MagicSkill : DamageSkill
                 switch (TargetType)
                 {
                     case TargetType.SingleEnemy:
-                        singleEnemy!.TakeDamage(Power, DamageType);
+                        singleEnemy?.TakeDamage(attack);
                         break;
 
                     case TargetType.AllEnemies:
@@ -48,7 +50,7 @@ public class MagicSkill : DamageSkill
                         {
                             try
                             {
-                                tar.TakeDamage(Power, DamageType);
+                                tar.TakeDamage(attack);
                             }
                             catch (MonsterDeathException)
                             {
@@ -72,9 +74,9 @@ public class MagicSkill : DamageSkill
 
                 if (singleEnemy == null)
                     throw new InvalidTargetException("Monster skill requires a single enemy target.");
-
+    
                 monster.AddActionItem(this);
-                singleEnemy.TakeDamage(Power, DamageType);
+                singleEnemy.TakeDamage(attack);
 
                 Reset();
                 break;

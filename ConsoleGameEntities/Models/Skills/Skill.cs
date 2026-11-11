@@ -2,6 +2,7 @@
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
@@ -41,7 +42,7 @@ public class Skill : ISkill
             throw new SkillCooldownException($"Skill '{Name}' is on cooldown!");
 
         ValidateCasterLevel(caster);
-        ValidateTargets(caster, singleEnemy, multipleEnemies);
+        ValidateTargets(singleEnemy, multipleEnemies);
 
         if (caster is Player player)
         {
@@ -66,15 +67,12 @@ public class Skill : ISkill
                 throw new InvalidSkillLevelException(
                     $"{p.Name} does not meet the required level ({RequiredLevel}) for '{Name}'.");
         }
-        else if (caster is Monster m)
-        {
-            if (m.Level < RequiredLevel)
-                throw new InvalidSkillLevelException(
-                    $"{m.Name} does not meet the required level ({RequiredLevel}) for '{Name}'.");
-        }
+        else if (caster is Monster m && m.Level < RequiredLevel)
+            throw new InvalidSkillLevelException(
+                $"{m.Name} does not meet the required level ({RequiredLevel}) for '{Name}'.");
     }
 
-    private void ValidateTargets(ITargetable caster, ITargetable? singleEnemy, List<ITargetable>? multipleEnemies)
+    private void ValidateTargets(ITargetable? singleEnemy, List<ITargetable>? multipleEnemies)
     {
         switch (TargetType)
         {
@@ -138,12 +136,13 @@ public class Skill : ISkill
         }
         else if (this is DamageSkill damageSkill)
         {
+            var attack = new AttackDamage(Power, damageSkill.DamageType, 0, null);
             switch (TargetType)
             {
                 case TargetType.SingleEnemy:
                     (singleEnemy ?? throw new InvalidTargetException(
                             "Single enemy target not provided."))
-                        .TakeDamage(Power, damageSkill.DamageType);
+                        .TakeDamage(attack);
                     break;
 
                 case TargetType.AllEnemies:
@@ -151,7 +150,7 @@ public class Skill : ISkill
                                            ?? throw new InvalidTargetException(
                                                "Multiple enemies not provided."))
                     {
-                        target.TakeDamage(Power, damageSkill.DamageType);
+                        target.TakeDamage(attack);
                     }
 
                     break;

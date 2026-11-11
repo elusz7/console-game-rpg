@@ -2,6 +2,7 @@
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Interfaces.Attributes;
 using System.ComponentModel.DataAnnotations.Schema;
+using ConsoleGameEntities.Models.Combat;
 
 namespace ConsoleGameEntities.Models.Skills;
 
@@ -35,7 +36,8 @@ public class BossSkill : DamageSkill
         caster.AddActionItem(this);
 
         var damage = (int)(Power * multiplier);
-        singleEnemy?.TakeDamage(damage, DamageType);
+        var attack = new AttackDamage(damage, DamageType, 0, null);
+        singleEnemy?.TakeDamage(attack);
     }
 
     public override Skill Clone()

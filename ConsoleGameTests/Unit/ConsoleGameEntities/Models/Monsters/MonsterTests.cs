@@ -1,4 +1,5 @@
 ﻿using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
@@ -62,7 +63,8 @@ public class MonsterTests
         monster.DefensePower = 0;
         monster.CurrentHealth = monster.MaxHealth;
 
-        monster.TakeDamage(10, DamageType.Martial);
+        var attack = new AttackDamage(10, DamageType.Martial, 0, null);
+        monster.TakeDamage(attack);
 
         if (monster.CurrentHealth < monster.MaxHealth)
         {
@@ -83,7 +85,8 @@ public class MonsterTests
         monster.DefensePower = 5;
         monster.CurrentHealth = monster.MaxHealth;
 
-        monster.TakeDamage(10, DamageType.Martial);
+        var attack = new AttackDamage(10, DamageType.Martial, 0, null);
+        monster.TakeDamage(attack);
 
         if (monster.CurrentHealth < monster.MaxHealth)
         {
@@ -104,7 +107,8 @@ public class MonsterTests
         monster.DefensePower = 12;
         monster.CurrentHealth = monster.MaxHealth;
 
-        monster.TakeDamage(10, DamageType.Martial);
+        var attack = new AttackDamage(10, DamageType.Martial, 0, null);
+        monster.TakeDamage(attack);
 
         if (monster.CurrentHealth < monster.MaxHealth)
         {
@@ -125,7 +129,8 @@ public class MonsterTests
         monster.Resistance = 0;
         monster.CurrentHealth = monster.MaxHealth;
 
-        monster.TakeDamage(10, DamageType.Magical);
+        var attack = new AttackDamage(10, DamageType.Magical, 0, null);
+        monster.TakeDamage(attack);
 
         if (monster.CurrentHealth < monster.MaxHealth)
         {
@@ -146,7 +151,8 @@ public class MonsterTests
         monster.Resistance = 5;
         monster.CurrentHealth = monster.MaxHealth;
 
-        monster.TakeDamage(10, DamageType.Magical);
+        var attack = new AttackDamage(10, DamageType.Magical, 0, null);
+        monster.TakeDamage(attack);
 
         if (monster.CurrentHealth < monster.MaxHealth)
         {
@@ -167,7 +173,8 @@ public class MonsterTests
         monster.Resistance = 12;
         monster.CurrentHealth = monster.MaxHealth;
 
-        monster.TakeDamage(10, DamageType.Magical);
+        var attack = new AttackDamage(10, DamageType.Magical, 0, null);
+        monster.TakeDamage(attack);
 
         if (monster.CurrentHealth < monster.MaxHealth)
         {
@@ -186,8 +193,10 @@ public class MonsterTests
     {
         var monster = CreateMonster();
         monster.CurrentHealth = 1;
+        
+        var attack = new AttackDamage(1000, DamageType.Magical, 0, null);
 
-        Assert.ThrowsException<MonsterDeathException>(() => monster.TakeDamage(1000, DamageType.Magical));
+        Assert.ThrowsException<MonsterDeathException>(() => monster.TakeDamage(attack));
     }
 
     [TestMethod]

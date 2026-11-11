@@ -3,6 +3,7 @@ using ConsoleGameEntities.Data;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Entities.Inventories;
+using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Runes;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -347,7 +348,8 @@ public class RuneDaoTests
         {
             InventoryId = inventoryRune.InventoryId,
             RuneId = rune.Id,
-            Tier = 1
+            Tier = 1,
+            Weapon = (Weapon)CreateItem("Test Weapon", 1, 5, TestItemType.Weapon)
         });
 
         _context.SaveChanges();
@@ -424,7 +426,8 @@ public class RuneDaoTests
         {
             InventoryId = inventoryRune.InventoryId,
             RuneId = rune.Id,
-            Tier = 1
+            Tier = 1,
+            Weapon = (Weapon)CreateItem("Test Weapon", 1, 5, TestItemType.Weapon)
         });
 
         _context.SaveChanges();
@@ -659,7 +662,8 @@ public class RuneDaoTests
         {
             InventoryId = inventoryRune.InventoryId,
             RuneId = inventoryRune.RuneId,
-            Tier = inventoryRune.Tier
+            Tier = inventoryRune.Tier,
+            Weapon = (Weapon)CreateItem("Test Weapon", 1, 5, TestItemType.Weapon)
         });
 
         _context.SaveChanges();
@@ -790,7 +794,8 @@ public class RuneDaoTests
         {
             InventoryId = inventoryRune.InventoryId,
             RuneId = inventoryRune.RuneId,
-            Tier = inventoryRune.Tier
+            Tier = inventoryRune.Tier,
+            Weapon = (Weapon)CreateItem("Test Weapon", 1, 5, TestItemType.Weapon)
         });
 
         _context.SaveChanges();
@@ -828,7 +833,8 @@ public class RuneDaoTests
         {
             InventoryId = inventoryRune.InventoryId,
             RuneId = inventoryRune.RuneId,
-            Tier = inventoryRune.Tier
+            Tier = inventoryRune.Tier,
+            Weapon = (Weapon)CreateItem("Test Weapon", 1, 5, TestItemType.Weapon)
         });
 
         _context.SaveChanges();

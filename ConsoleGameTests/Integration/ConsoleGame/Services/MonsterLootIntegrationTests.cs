@@ -103,24 +103,27 @@ public class MonsterLootIntegrationTests
     [TestMethod]
     public void MonsterFactoryAndLootService_GeneratedMonsterDropsIngredient()
     {
-        // Arrange
-        var monster = CreateMonster("Test Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        // Arrange: Seed Low, Medium, and High monsters so campaign mode at level 3 generates all three
+        var lowMonster = CreateMonster("Test Low Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        var mediumMonster = CreateMonster("Test Medium Monster", ThreatLevel.Medium, DamageType.Magical, TestMonsterType.Common);
+        var highMonster = CreateMonster("Test High Monster", ThreatLevel.High, DamageType.Magical, TestMonsterType.Common);
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
         var player = CreatePlayer("Test Player", archetype, inventory);
         
-        _context.Monsters.Add(monster);
+        _context.Monsters.AddRange(lowMonster, mediumMonster, highMonster);
         _context.Players.Add(player);
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
         
-        var floor = CreateFloor(1);
+        var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(1, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
         Assert.IsTrue(campaignMonsters.Any());
 
-        var campaignMonster = campaignMonsters[0];
+        // Pick a monster with AttackElement (Medium+ threat)
+        var campaignMonster = campaignMonsters.First(m => m.AttackElement.HasValue);
         AddMonsterToFloor(session, campaignMonster);
         
         var ingredient = CreateIngredient("Test Ingredient", ComponentType.Core);
@@ -150,24 +153,27 @@ public class MonsterLootIntegrationTests
     [TestMethod]
     public void MonsterFactoryAndLootService_UsesGeneratedElementAndThreatLevelForDrops()
     {
-        // Arrange
-        var monster = CreateMonster("Test Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        // Arrange: Seed Low, Medium, and High monsters so campaign mode at level 5 generates all three
+        var lowMonster = CreateMonster("Test Low Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        var mediumMonster = CreateMonster("Test Medium Monster", ThreatLevel.Medium, DamageType.Magical, TestMonsterType.Common);
+        var highMonster = CreateMonster("Test High Monster", ThreatLevel.High, DamageType.Magical, TestMonsterType.Common);
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
         var player = CreatePlayer("Test Player", archetype, inventory);
         
-        _context.Monsters.Add(monster);
+        _context.Monsters.AddRange(lowMonster, mediumMonster, highMonster);
         _context.Players.Add(player);
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
         
-        var floor = CreateFloor(1);
+        var floor = CreateFloor(5);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(1, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(5, true);
         Assert.IsTrue(campaignMonsters.Any());
 
-        var campaignMonster = campaignMonsters[0];
+        // Pick a High threat monster (has both AttackElement and Vulnerability)
+        var campaignMonster = campaignMonsters.First(m => m.ThreatLevel == ThreatLevel.High);
         AddMonsterToFloor(session, campaignMonster);
         
         var ingredient1 = CreateIngredient("Test Ingredient 1", ComponentType.Core);
@@ -202,24 +208,27 @@ public class MonsterLootIntegrationTests
     [TestMethod]
     public void MonsterFactoryAndLootService_DoesNotDropIngredientsForDifferentThreatLevel()
     {
-        // Arrange
-        var monster = CreateMonster("Test Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        // Arrange: Seed Low, Medium, and High monsters so campaign mode at level 3 generates all three
+        var lowMonster = CreateMonster("Test Low Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        var mediumMonster = CreateMonster("Test Medium Monster", ThreatLevel.Medium, DamageType.Magical, TestMonsterType.Common);
+        var highMonster = CreateMonster("Test High Monster", ThreatLevel.High, DamageType.Magical, TestMonsterType.Common);
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
         var player = CreatePlayer("Test Player", archetype, inventory);
         
-        _context.Monsters.Add(monster);
+        _context.Monsters.AddRange(lowMonster, mediumMonster, highMonster);
         _context.Players.Add(player);
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
         
-        var floor = CreateFloor(1);
+        var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(1, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
         Assert.IsTrue(campaignMonsters.Any());
 
-        var campaignMonster = campaignMonsters[0];
+        // Pick a monster with AttackElement (Medium+ threat)
+        var campaignMonster = campaignMonsters.First(m => m.AttackElement.HasValue);
         AddMonsterToFloor(session, campaignMonster);
         
         var ingredient = CreateIngredient("Test Ingredient 1", ComponentType.Core);
@@ -246,24 +255,27 @@ public class MonsterLootIntegrationTests
     [TestMethod]
     public void MonsterFactoryAndLootService_DoesNotDropIngredientsForDifferentElement()
     {
-        // Arrange
-        var monster = CreateMonster("Test Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        // Arrange: Seed Low, Medium, and High monsters so campaign mode at level 5 generates all three
+        var lowMonster = CreateMonster("Test Low Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        var mediumMonster = CreateMonster("Test Medium Monster", ThreatLevel.Medium, DamageType.Magical, TestMonsterType.Common);
+        var highMonster = CreateMonster("Test High Monster", ThreatLevel.High, DamageType.Magical, TestMonsterType.Common);
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
         var player = CreatePlayer("Test Player", archetype, inventory);
         
-        _context.Monsters.Add(monster);
+        _context.Monsters.AddRange(lowMonster, mediumMonster, highMonster);
         _context.Players.Add(player);
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
         
-        var floor = CreateFloor(1);
+        var floor = CreateFloor(5);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(1, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(5, true);
         Assert.IsTrue(campaignMonsters.Any());
 
-        var campaignMonster = campaignMonsters[0];
+        // Pick a High threat monster (has Vulnerability)
+        var campaignMonster = campaignMonsters.First(m => m.ThreatLevel == ThreatLevel.High);
         AddMonsterToFloor(session, campaignMonster);
         
         var ingredient = CreateIngredient("Test Ingredient 1", ComponentType.Core);
@@ -290,24 +302,27 @@ public class MonsterLootIntegrationTests
     [TestMethod]
     public void LootService_PersistsMultipleIngredientDrops()
     {
-        // Arrange
-        var monster = CreateMonster("Test Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        // Arrange: Seed Low, Medium, and High monsters so campaign mode at level 3 generates all three
+        var lowMonster = CreateMonster("Test Low Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        var mediumMonster = CreateMonster("Test Medium Monster", ThreatLevel.Medium, DamageType.Magical, TestMonsterType.Common);
+        var highMonster = CreateMonster("Test High Monster", ThreatLevel.High, DamageType.Magical, TestMonsterType.Common);
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
         var player = CreatePlayer("Test Player", archetype, inventory);
         
-        _context.Monsters.Add(monster);
+        _context.Monsters.AddRange(lowMonster, mediumMonster, highMonster);
         _context.Players.Add(player);
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
         
-        var floor = CreateFloor(1);
+        var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(1, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
         Assert.IsTrue(campaignMonsters.Any());
 
-        var campaignMonster = campaignMonsters[0];
+        // Pick a monster with AttackElement (Medium+ threat)
+        var campaignMonster = campaignMonsters.First(m => m.AttackElement.HasValue);
         AddMonsterToFloor(session, campaignMonster);
         
         var ingredient1 = CreateIngredient("Test Ingredient 1", ComponentType.Core);
@@ -350,24 +365,27 @@ public class MonsterLootIntegrationTests
     [TestMethod]
     public void LootService_IncrementsExistingIngredientQuantity()
     {
-        // Arrange
-        var monster = CreateMonster("Test Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        // Arrange: Seed Low, Medium, and High monsters so campaign mode at level 3 generates all three
+        var lowMonster = CreateMonster("Test Low Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        var mediumMonster = CreateMonster("Test Medium Monster", ThreatLevel.Medium, DamageType.Magical, TestMonsterType.Common);
+        var highMonster = CreateMonster("Test High Monster", ThreatLevel.High, DamageType.Magical, TestMonsterType.Common);
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
         var player = CreatePlayer("Test Player", archetype, inventory);
         
-        _context.Monsters.Add(monster);
+        _context.Monsters.AddRange(lowMonster, mediumMonster, highMonster);
         _context.Players.Add(player);
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
         
-        var floor = CreateFloor(1);
+        var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(1, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
         Assert.IsTrue(campaignMonsters.Any());
 
-        var campaignMonster = campaignMonsters[0];
+        // Pick a monster with AttackElement (Medium+ threat)
+        var campaignMonster = campaignMonsters.First(m => m.AttackElement.HasValue);
         AddMonsterToFloor(session, campaignMonster);
         
         var ingredient1 = CreateIngredient("Test Ingredient 1", ComponentType.Core);
@@ -401,24 +419,27 @@ public class MonsterLootIntegrationTests
     [TestMethod]
     public void LootService_DoesNotDuplicateIngredientsWhenLootingTwice()
     {
-        // Arrange
-        var monster = CreateMonster("Test Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        // Arrange: Seed Low, Medium, and High monsters so campaign mode at level 3 generates all three
+        var lowMonster = CreateMonster("Test Low Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        var mediumMonster = CreateMonster("Test Medium Monster", ThreatLevel.Medium, DamageType.Magical, TestMonsterType.Common);
+        var highMonster = CreateMonster("Test High Monster", ThreatLevel.High, DamageType.Magical, TestMonsterType.Common);
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
         var player = CreatePlayer("Test Player", archetype, inventory);
         
-        _context.Monsters.Add(monster);
+        _context.Monsters.AddRange(lowMonster, mediumMonster, highMonster);
         _context.Players.Add(player);
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
         
-        var floor = CreateFloor(1);
+        var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(1, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
         Assert.IsTrue(campaignMonsters.Any());
 
-        var campaignMonster = campaignMonsters[0];
+        // Pick a monster with AttackElement (Medium+ threat)
+        var campaignMonster = campaignMonsters.First(m => m.AttackElement.HasValue);
         AddMonsterToFloor(session, campaignMonster);
         
         var ingredient1 = CreateIngredient("Test Ingredient 1", ComponentType.Core);
@@ -449,24 +470,27 @@ public class MonsterLootIntegrationTests
     [TestMethod]
     public void LootService_DoesNotPersistIngredientsWhenNoMatchingDropsExist()
     {
-        // Arrange
-        var monster = CreateMonster("Test Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        // Arrange: Seed Low, Medium, and High monsters so campaign mode at level 3 generates all three
+        var lowMonster = CreateMonster("Test Low Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        var mediumMonster = CreateMonster("Test Medium Monster", ThreatLevel.Medium, DamageType.Magical, TestMonsterType.Common);
+        var highMonster = CreateMonster("Test High Monster", ThreatLevel.High, DamageType.Magical, TestMonsterType.Common);
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
         var player = CreatePlayer("Test Player", archetype, inventory);
         
-        _context.Monsters.Add(monster);
+        _context.Monsters.AddRange(lowMonster, mediumMonster, highMonster);
         _context.Players.Add(player);
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
         
-        var floor = CreateFloor(1);
+        var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(1, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
         Assert.IsTrue(campaignMonsters.Any());
 
-        var campaignMonster = campaignMonsters[0];
+        // Pick a monster with AttackElement (Medium+ threat)
+        var campaignMonster = campaignMonsters.First(m => m.AttackElement.HasValue);
         AddMonsterToFloor(session, campaignMonster);
 
         // Act
@@ -485,24 +509,27 @@ public class MonsterLootIntegrationTests
     [TestMethod]
     public void LootService_PersistsTreasureAndIngredientsTogether()
     {
-        // Arrange
-        var monster = CreateMonster("Test Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        // Arrange: Seed Low, Medium, and High monsters so campaign mode at level 3 generates all three
+        var lowMonster = CreateMonster("Test Low Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        var mediumMonster = CreateMonster("Test Medium Monster", ThreatLevel.Medium, DamageType.Magical, TestMonsterType.Common);
+        var highMonster = CreateMonster("Test High Monster", ThreatLevel.High, DamageType.Magical, TestMonsterType.Common);
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
         var player = CreatePlayer("Test Player", archetype, inventory);
         
-        _context.Monsters.Add(monster);
+        _context.Monsters.AddRange(lowMonster, mediumMonster, highMonster);
         _context.Players.Add(player);
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
         
-        var floor = CreateFloor(1);
+        var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(1, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
         Assert.IsTrue(campaignMonsters.Any());
 
-        var campaignMonster = campaignMonsters[0];
+        // Pick a monster with AttackElement (Medium+ threat)
+        var campaignMonster = campaignMonsters.First(m => m.AttackElement.HasValue);
         AddMonsterToFloor(session, campaignMonster);
         
         var ingredient1 = CreateIngredient("Test Ingredient 1", ComponentType.Core);
@@ -544,26 +571,29 @@ public class MonsterLootIntegrationTests
     [TestMethod]
     public void LootService_RemovesMonsterAfterAllLootIsCollected()
     {
-        // Arrange
-        var monster = CreateMonster("Test Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        // Arrange: Seed Low, Medium, and High monsters so campaign mode at level 3 generates all three
+        var lowMonster = CreateMonster("Test Low Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        var mediumMonster = CreateMonster("Test Medium Monster", ThreatLevel.Medium, DamageType.Magical, TestMonsterType.Common);
+        var highMonster = CreateMonster("Test High Monster", ThreatLevel.High, DamageType.Magical, TestMonsterType.Common);
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
         var player = CreatePlayer("Test Player", archetype, inventory);
         var room = CreateRoom("Test Room");
         player.CurrentRoom = room;
         
-        _context.Monsters.Add(monster);
+        _context.Monsters.AddRange(lowMonster, mediumMonster, highMonster);
         _context.Players.Add(player);
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
         
-        var floor = CreateFloor(1);
+        var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(1, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
         Assert.IsTrue(campaignMonsters.Any());
 
-        var campaignMonster = campaignMonsters[0];
+        // Pick a monster with AttackElement (Medium+ threat)
+        var campaignMonster = campaignMonsters.First(m => m.AttackElement.HasValue);
         AddMonsterToFloor(session, campaignMonster);
         player.CurrentRoom.Monsters.Add(campaignMonster);
         
@@ -596,26 +626,29 @@ public class MonsterLootIntegrationTests
     [TestMethod]
     public void LootService_KeepsMonsterAvailableWhenTreasureLootingFails()
     {
-        // Arrange
-        var monster = CreateMonster("Test Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        // Arrange: Seed Low, Medium, and High monsters so campaign mode at level 3 generates all three
+        var lowMonster = CreateMonster("Test Low Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        var mediumMonster = CreateMonster("Test Medium Monster", ThreatLevel.Medium, DamageType.Magical, TestMonsterType.Common);
+        var highMonster = CreateMonster("Test High Monster", ThreatLevel.High, DamageType.Magical, TestMonsterType.Common);
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
         var player = CreatePlayer("Test Player", archetype, inventory);
         var room = CreateRoom("Test Room");
         player.CurrentRoom = room;
         
-        _context.Monsters.Add(monster);
+        _context.Monsters.AddRange(lowMonster, mediumMonster, highMonster);
         _context.Players.Add(player);
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
         
-        var floor = CreateFloor(1);
+        var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(1, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
         Assert.IsTrue(campaignMonsters.Any());
 
-        var campaignMonster = campaignMonsters[0];
+        // Pick a monster with AttackElement (Medium+ threat)
+        var campaignMonster = campaignMonsters.First(m => m.AttackElement.HasValue);
         AddMonsterToFloor(session, campaignMonster);
         player.CurrentRoom.Monsters.Add(campaignMonster);
         
@@ -641,26 +674,29 @@ public class MonsterLootIntegrationTests
     [TestMethod]
     public void LootService_AllowsIngredientLootWhenTreasureWasAlreadyLooted()
     {
-        // Arrange
-        var monster = CreateMonster("Test Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        // Arrange: Seed Low, Medium, and High monsters so campaign mode at level 3 generates all three
+        var lowMonster = CreateMonster("Test Low Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        var mediumMonster = CreateMonster("Test Medium Monster", ThreatLevel.Medium, DamageType.Magical, TestMonsterType.Common);
+        var highMonster = CreateMonster("Test High Monster", ThreatLevel.High, DamageType.Magical, TestMonsterType.Common);
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
         var player = CreatePlayer("Test Player", archetype, inventory);
         var room = CreateRoom("Test Room");
         player.CurrentRoom = room;
         
-        _context.Monsters.Add(monster);
+        _context.Monsters.AddRange(lowMonster, mediumMonster, highMonster);
         _context.Players.Add(player);
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
         
-        var floor = CreateFloor(1);
+        var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(1, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
         Assert.IsTrue(campaignMonsters.Any());
 
-        var campaignMonster = campaignMonsters[0];
+        // Pick a monster with AttackElement (Medium+ threat)
+        var campaignMonster = campaignMonsters.First(m => m.AttackElement.HasValue);
         AddMonsterToFloor(session, campaignMonster);
         player.CurrentRoom.Monsters.Add(campaignMonster);
 
@@ -697,26 +733,29 @@ public class MonsterLootIntegrationTests
     [TestMethod]
     public void LootService_AllowsTreasureLootWhenIngredientsWereAlreadyLooted()
     {
-        // Arrange
-        var monster = CreateMonster("Test Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        // Arrange: Seed Low, Medium, and High monsters so campaign mode at level 3 generates all three
+        var lowMonster = CreateMonster("Test Low Monster", ThreatLevel.Low, DamageType.Magical, TestMonsterType.Common);
+        var mediumMonster = CreateMonster("Test Medium Monster", ThreatLevel.Medium, DamageType.Magical, TestMonsterType.Common);
+        var highMonster = CreateMonster("Test High Monster", ThreatLevel.High, DamageType.Magical, TestMonsterType.Common);
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
         var player = CreatePlayer("Test Player", archetype, inventory);
         var room = CreateRoom("Test Room");
         player.CurrentRoom = room;
         
-        _context.Monsters.Add(monster);
+        _context.Monsters.AddRange(lowMonster, mediumMonster, highMonster);
         _context.Players.Add(player);
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
         
-        var floor = CreateFloor(1);
+        var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(1, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
         Assert.IsTrue(campaignMonsters.Any());
 
-        var campaignMonster = campaignMonsters[0];
+        // Pick a monster with AttackElement (Medium+ threat)
+        var campaignMonster = campaignMonsters.First(m => m.AttackElement.HasValue);
         AddMonsterToFloor(session, campaignMonster);
         player.CurrentRoom.Monsters.Add(campaignMonster);
         

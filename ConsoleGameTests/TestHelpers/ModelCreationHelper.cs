@@ -301,7 +301,8 @@ public static class ModelCreationHelper
                 DefensePower = 10,
                 AttackPower = 15,
                 DamageType = damage,
-                Resistance = 5
+                Resistance = 5,
+                MonsterType = "Monster"
             }
         };
     }

@@ -163,12 +163,40 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skilldao, IMonster
         {
             vulnerability = GetRandomElement();
         }
-        
-        var elementalPower = Random.Next(1, 3); 
 
-        monster.AttackElement = attackElement;
-        monster.ElementalPower = elementalPower;
-        monster.Vulnerability = vulnerability;
+        var resilience = GetRandomElement();
+        while (vulnerability == resilience)
+        {
+            resilience = GetRandomElement();
+        }
+        
+        // ElementalPower = 10-20% of AttackPower, minimum 1
+        var elementalPower = Math.Max(
+            1,
+            (int)Math.Round(monster.AttackPower * 0.15,
+                MidpointRounding.AwayFromZero));
+
+        //add elemental properties to monsters based on their threat level
+        switch (monster.ThreatLevel)
+        {
+            case ThreatLevel.Boss:
+            case ThreatLevel.Elite:
+                monster.Resilience = resilience;
+                goto case ThreatLevel.High;
+
+            case ThreatLevel.High:
+                monster.Vulnerability = vulnerability;
+                goto case ThreatLevel.Medium;
+
+            case ThreatLevel.Medium:
+                monster.AttackElement = attackElement;
+                monster.ElementalPower = elementalPower;
+                break;
+
+            case ThreatLevel.Low:
+            default:
+                break;
+        }
     }
     
     private static ElementType GetRandomElement()

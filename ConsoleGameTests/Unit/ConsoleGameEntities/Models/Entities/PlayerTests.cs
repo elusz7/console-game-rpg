@@ -1,8 +1,11 @@
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Entities.Inventories;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Monsters;
+using ConsoleGameEntities.Models.Runes;
 using ConsoleGameEntities.Models.Skills;
 using Moq;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
@@ -122,7 +125,7 @@ public class PlayerTests
 
         player.Attack(targetMock.Object);
 
-        targetMock.Verify(t => t.TakeDamage(It.IsAny<int>(), DamageType.Martial), Times.Once);
+        targetMock.Verify(t => t.TakeDamage(It.IsAny<AttackDamage>()), Times.Once);
         Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("You attack with")));
         Assert.IsTrue(weapon.Durability < oldDurability);
     }
@@ -153,7 +156,7 @@ public class PlayerTests
 
         player.Attack(targetMock.Object);
 
-        targetMock.Verify(t => t.TakeDamage(It.IsAny<int>(), DamageType.Martial), Times.Once);
+        targetMock.Verify(t => t.TakeDamage(It.IsAny<AttackDamage>()), Times.Once);
         Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("broke and can't be used")));
         Assert.IsFalse(weapon.IsEquipped());
     }
@@ -164,7 +167,8 @@ public class PlayerTests
         var player = CreatePlayer();
         player.Archetype.DefenseBonus = 0;
 
-        player.TakeDamage(10, DamageType.Martial);
+        var attack = new AttackDamage(10, DamageType.Martial, 0, null);
+        player.TakeDamage(attack);
 
         if (player.CurrentHealth < player.MaxHealth)
         {
@@ -191,7 +195,8 @@ public class PlayerTests
         player.Inventory.AddItem(armor);
         player.Equip(armor);
 
-        player.TakeDamage(10, DamageType.Martial);
+        var attack = new AttackDamage(10, DamageType.Martial, 0, null);
+        player.TakeDamage(attack);
 
         Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("broke and can't be used")));
         Assert.IsFalse(armor.IsEquipped());
@@ -210,7 +215,8 @@ public class PlayerTests
         player.Inventory.AddItem(armor);
         player.Equip(armor);
 
-        player.TakeDamage(10, DamageType.Magical);
+        var attack = new AttackDamage(10, DamageType.Magical, 0, null);
+        player.TakeDamage(attack);
 
         Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("broke and can't be used")));
         Assert.IsFalse(armor.IsEquipped());
@@ -231,7 +237,8 @@ public class PlayerTests
 
         var oldDurability = armor.Durability;
 
-        player.TakeDamage(10, DamageType.Martial);
+        var attack = new AttackDamage(10, DamageType.Martial, 0, null);
+        player.TakeDamage(attack);
 
         Assert.AreEqual(armor.Durability, oldDurability);
     }
@@ -251,7 +258,8 @@ public class PlayerTests
 
         var oldDurability = armor.Durability;
 
-        player.TakeDamage(10, DamageType.Magical);
+        var attack = new AttackDamage(10, DamageType.Magical, 0, null);
+        player.TakeDamage(attack);
 
         Assert.AreEqual(armor.Durability, oldDurability);
     }
@@ -262,7 +270,8 @@ public class PlayerTests
         var player = CreatePlayer();
         player.Archetype.ResistanceBonus = 0;
 
-        player.TakeDamage(10, DamageType.Magical);
+        var attack = new AttackDamage(10, DamageType.Magical, 0, null);
+        player.TakeDamage(attack);
 
         if (player.CurrentHealth < player.MaxHealth)
         {
@@ -281,8 +290,10 @@ public class PlayerTests
     {
         var player = CreatePlayer();
         player.Archetype.DefenseBonus = 0;
+        
+        var attack = new AttackDamage(250, DamageType.Magical, 0, null);
 
-        Assert.ThrowsException<PlayerDeathException>(() => player.TakeDamage(250, DamageType.Martial));
+        Assert.ThrowsException<PlayerDeathException>(() => player.TakeDamage(attack));
     }
 
     [TestMethod]
@@ -907,7 +918,8 @@ public class PlayerTests
         player.Equip(headArmor);
         player.Equip(chestArmor);
 
-        player.TakeDamage(20, DamageType.Hybrid);
+        var attack = new AttackDamage(20, DamageType.Hybrid, 0, null);
+        player.TakeDamage(attack);
 
         Assert.AreEqual(4, headArmor.Durability);
         Assert.AreEqual(5, chestArmor.Durability);
@@ -945,7 +957,8 @@ public class PlayerTests
         player.Equip(headArmor);
         player.Equip(chestArmor);
 
-        player.TakeDamage(20, DamageType.Hybrid);
+        var attack = new AttackDamage(20, DamageType.Hybrid, 0, null);
+        player.TakeDamage(attack);
 
         Assert.AreEqual(5, headArmor.Durability);
         Assert.AreEqual(4, chestArmor.Durability);
@@ -983,12 +996,339 @@ public class PlayerTests
         player.Equip(headArmor);
         player.Equip(chestArmor);
 
-        player.TakeDamage(20, DamageType.Hybrid);
+        var attack = new AttackDamage(20, DamageType.Hybrid, 0, null);
+        player.TakeDamage(attack);
 
         var headDamaged = headArmor.Durability == 4;
         var chestDamaged = chestArmor.Durability == 4;
 
         Assert.IsTrue(headDamaged ^ chestDamaged,
             "Exactly one armor piece should lose durability.");
+    }
+
+    private static Weapon CreateWeaponWithRune(ElementType element, int tier, int power)
+    {
+        var weaponRune = new WeaponRune
+        {
+            Id = 1,
+            Name = $"Rune of {element}",
+            Element = element,
+            Power = power,
+            Rarity = RarityLevel.Common
+        };
+
+        var inventoryRune = new InventoryRune
+        {
+            InventoryId = 1,
+            Rune = weaponRune,
+            Tier = tier,
+            Quantity = 1
+        };
+
+        var equippedRune = new EquippedRune
+        {
+            Id = 1,
+            Tier = tier,
+            InventoryRune = inventoryRune
+        };
+
+        inventoryRune.EquippedRunes.Add(equippedRune);
+
+        var weapon = CreateWeapon();
+        weapon.EquippedRune = equippedRune;
+
+        return weapon;
+    }
+
+    // ── Attack: No Rune ──
+
+    [TestMethod]
+    public void Attack_WithoutRune_ElementalDamageIsZero()
+    {
+        var player = CreatePlayer();
+        var weapon = CreateWeapon();
+        weapon.RequiredLevel = player.Level;
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var targetMock = new Mock<ITargetable>();
+        AttackDamage? capturedAttack = null;
+        targetMock.Setup(t => t.TakeDamage(It.IsAny<AttackDamage>()))
+            .Callback<AttackDamage>(a => capturedAttack = a);
+
+        player.Attack(targetMock.Object);
+
+        Assert.IsNotNull(capturedAttack);
+        Assert.AreEqual(0, capturedAttack.ElementalDamage);
+        Assert.IsNull(capturedAttack.Element);
+    }
+
+    [TestMethod]
+    public void Attack_WithoutRune_StandardDamageDealt()
+    {
+        var player = CreatePlayer();
+        var weapon = CreateWeapon();
+        weapon.RequiredLevel = player.Level;
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var targetMock = new Mock<ITargetable>();
+        AttackDamage? capturedAttack = null;
+        targetMock.Setup(t => t.TakeDamage(It.IsAny<AttackDamage>()))
+            .Callback<AttackDamage>(a => capturedAttack = a);
+
+        player.Attack(targetMock.Object);
+
+        Assert.IsNotNull(capturedAttack);
+        Assert.IsTrue(capturedAttack.PhysicalDamage > 0);
+    }
+
+    // ── Attack: Each Elemental Rune ──
+
+    [TestMethod]
+    public void Attack_WithFireRune_DealsFireElementalDamage()
+    {
+        var player = CreatePlayer();
+        var weapon = CreateWeaponWithRune(ElementType.Fire, tier: 1, power: 5);
+        weapon.RequiredLevel = player.Level;
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var targetMock = new Mock<ITargetable>();
+        AttackDamage? capturedAttack = null;
+        targetMock.Setup(t => t.TakeDamage(It.IsAny<AttackDamage>()))
+            .Callback<AttackDamage>(a => capturedAttack = a);
+
+        player.Attack(targetMock.Object);
+
+        Assert.IsNotNull(capturedAttack);
+        Assert.AreEqual(5, capturedAttack.ElementalDamage);
+        Assert.AreEqual(ElementType.Fire, capturedAttack.Element);
+    }
+
+    [DataTestMethod]
+    [DataRow(ElementType.Fire, 5)]
+    [DataRow(ElementType.Lightning, 5)]
+    [DataRow(ElementType.Ice, 5)]
+    [DataRow(ElementType.Nature, 5)]
+    [DataRow(ElementType.Radiance, 5)]
+    [DataRow(ElementType.Abyssal, 5)]
+    public void Attack_WithElementalRune_AllElements(ElementType element, int expectedDamage)
+    {
+        var player = CreatePlayer();
+        var weapon = CreateWeaponWithRune(element, tier: 1, power: 5);
+        weapon.RequiredLevel = player.Level;
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var targetMock = new Mock<ITargetable>();
+        AttackDamage? capturedAttack = null;
+        targetMock.Setup(t => t.TakeDamage(It.IsAny<AttackDamage>()))
+            .Callback<AttackDamage>(a => capturedAttack = a);
+
+        player.Attack(targetMock.Object);
+
+        Assert.IsNotNull(capturedAttack);
+        Assert.AreEqual(expectedDamage, capturedAttack.ElementalDamage);
+        Assert.AreEqual(element, capturedAttack.Element);
+    }
+
+    // ── Attack: Tier-Based Damage ──
+
+    [TestMethod]
+    public void Attack_Tier1Rune_DealsTierTimesPower()
+    {
+        var player = CreatePlayer();
+        var weapon = CreateWeaponWithRune(ElementType.Fire, tier: 1, power: 5);
+        weapon.RequiredLevel = player.Level;
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var targetMock = new Mock<ITargetable>();
+        AttackDamage? capturedAttack = null;
+        targetMock.Setup(t => t.TakeDamage(It.IsAny<AttackDamage>()))
+            .Callback<AttackDamage>(a => capturedAttack = a);
+
+        player.Attack(targetMock.Object);
+
+        Assert.IsNotNull(capturedAttack);
+        Assert.AreEqual(5, capturedAttack.ElementalDamage);
+    }
+
+    [TestMethod]
+    public void Attack_Tier2Rune_DealsTierTimesPower()
+    {
+        var player = CreatePlayer();
+        var weapon = CreateWeaponWithRune(ElementType.Fire, tier: 2, power: 5);
+        weapon.RequiredLevel = player.Level;
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var targetMock = new Mock<ITargetable>();
+        AttackDamage? capturedAttack = null;
+        targetMock.Setup(t => t.TakeDamage(It.IsAny<AttackDamage>()))
+            .Callback<AttackDamage>(a => capturedAttack = a);
+
+        player.Attack(targetMock.Object);
+
+        Assert.IsNotNull(capturedAttack);
+        Assert.AreEqual(10, capturedAttack.ElementalDamage);
+    }
+
+    [TestMethod]
+    public void Attack_Tier3Rune_DealsTierTimesPower()
+    {
+        var player = CreatePlayer();
+        var weapon = CreateWeaponWithRune(ElementType.Fire, tier: 3, power: 5);
+        weapon.RequiredLevel = player.Level;
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var targetMock = new Mock<ITargetable>();
+        AttackDamage? capturedAttack = null;
+        targetMock.Setup(t => t.TakeDamage(It.IsAny<AttackDamage>()))
+            .Callback<AttackDamage>(a => capturedAttack = a);
+
+        player.Attack(targetMock.Object);
+
+        Assert.IsNotNull(capturedAttack);
+        Assert.AreEqual(15, capturedAttack.ElementalDamage);
+    }
+
+    [DataTestMethod]
+    [DataRow(1, 3, 3)]
+    [DataRow(2, 3, 6)]
+    [DataRow(3, 3, 9)]
+    [DataRow(4, 3, 12)]
+    [DataRow(5, 3, 15)]
+    public void Attack_TierScaling_ElementalDamageScales(int tier, int power, int expectedDamage)
+    {
+        var player = CreatePlayer();
+        var weapon = CreateWeaponWithRune(ElementType.Fire, tier: tier, power: power);
+        weapon.RequiredLevel = player.Level;
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var targetMock = new Mock<ITargetable>();
+        AttackDamage? capturedAttack = null;
+        targetMock.Setup(t => t.TakeDamage(It.IsAny<AttackDamage>()))
+            .Callback<AttackDamage>(a => capturedAttack = a);
+
+        player.Attack(targetMock.Object);
+
+        Assert.IsNotNull(capturedAttack);
+        Assert.AreEqual(expectedDamage, capturedAttack.ElementalDamage);
+    }
+
+    // ── Attack: Combined Standard + Elemental ──
+
+    [TestMethod]
+    public void Attack_WithRune_BothStandardAndElementalDamage()
+    {
+        var player = CreatePlayer();
+        var weapon = CreateWeaponWithRune(ElementType.Fire, tier: 1, power: 5);
+        weapon.RequiredLevel = player.Level;
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var targetMock = new Mock<ITargetable>();
+        AttackDamage? capturedAttack = null;
+        targetMock.Setup(t => t.TakeDamage(It.IsAny<AttackDamage>()))
+            .Callback<AttackDamage>(a => capturedAttack = a);
+
+        player.Attack(targetMock.Object);
+
+        Assert.IsNotNull(capturedAttack);
+        Assert.IsTrue(capturedAttack.PhysicalDamage > 0);
+        Assert.AreEqual(5, capturedAttack.ElementalDamage);
+    }
+
+    // ── Attack: Dodge with Rune ──
+
+    [TestMethod]
+    public void Attack_WithRune_TargetDodges_BothDamagesZeroed()
+    {
+        var player = CreatePlayer();
+        var weapon = CreateWeaponWithRune(ElementType.Fire, tier: 1, power: 5);
+        weapon.RequiredLevel = player.Level;
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var monster = CreateMonster();
+        monster.DodgeChance = 33;
+
+        var targetMock = new Mock<ITargetable>();
+        AttackDamage? capturedAttack = null;
+        targetMock.Setup(t => t.TakeDamage(It.IsAny<AttackDamage>()))
+            .Callback<AttackDamage>(a => capturedAttack = a);
+
+        player.Attack(targetMock.Object);
+
+        Assert.IsNotNull(capturedAttack);
+        Assert.IsTrue(capturedAttack.PhysicalDamage > 0);
+        Assert.AreEqual(5, capturedAttack.ElementalDamage);
+        Assert.AreEqual(ElementType.Fire, capturedAttack.Element);
+    }
+
+    // ── Attack: Action Items with Rune ──
+
+    [TestMethod]
+    public void Attack_WithRune_ActionItemShowsElementalDamage()
+    {
+        var player = CreatePlayer();
+        var weapon = CreateWeaponWithRune(ElementType.Fire, tier: 1, power: 5);
+        weapon.RequiredLevel = player.Level;
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var targetMock = new Mock<ITargetable>();
+
+        player.Attack(targetMock.Object);
+
+        Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("primordial energy")));
+        Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("5 points of Fire")));
+    }
+
+    [TestMethod]
+    public void Attack_WithoutRune_ActionItemDoesNotShowElementalDamage()
+    {
+        var player = CreatePlayer();
+        var weapon = CreateWeapon();
+        weapon.RequiredLevel = player.Level;
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var targetMock = new Mock<ITargetable>();
+
+        player.Attack(targetMock.Object);
+
+        Assert.IsFalse(player.ActionItems.Values.Any(a => a.Contains("primordial energy")));
+    }
+
+    // ── Attack: Magical Archetype with Rune ──
+
+    [TestMethod]
+    public void Attack_MagicalArchetype_WithRune_DealsElementalDamage()
+    {
+        var player = CreatePlayer();
+        player.Archetype.ArchetypeType = ArchetypeType.Magical;
+
+        var weapon = CreateWeaponWithRune(ElementType.Ice, tier: 2, power: 4);
+        weapon.RequiredLevel = player.Level;
+        weapon.DamageType = DamageType.Magical;
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var targetMock = new Mock<ITargetable>();
+        AttackDamage? capturedAttack = null;
+        targetMock.Setup(t => t.TakeDamage(It.IsAny<AttackDamage>()))
+            .Callback<AttackDamage>(a => capturedAttack = a);
+
+        player.Attack(targetMock.Object);
+
+        Assert.IsNotNull(capturedAttack);
+        Assert.AreEqual(8, capturedAttack.ElementalDamage);
+        Assert.AreEqual(ElementType.Ice, capturedAttack.Element);
+        Assert.AreEqual(DamageType.Magical, capturedAttack.DamageType);
     }
 }

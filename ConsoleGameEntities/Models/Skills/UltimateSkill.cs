@@ -4,6 +4,7 @@ using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Exceptions;
 using System.ComponentModel.DataAnnotations.Schema;
+using ConsoleGameEntities.Models.Combat;
 using Microsoft.Extensions.Logging;
 
 namespace ConsoleGameEntities.Models.Skills;
@@ -42,6 +43,7 @@ public class UltimateSkill : DamageSkill
 
         bool monsterDeath = false;
 
+        var attack = new AttackDamage(Power,  DamageType, 0, null);
         if (caster is Player player)
         {
             if (player.Level < RequiredLevel)
@@ -64,7 +66,7 @@ public class UltimateSkill : DamageSkill
             {
                 case TargetType.SingleEnemy:
                     (singleEnemy ?? throw new InvalidTargetException("Single enemy target not provided."))
-                        .TakeDamage(Power, DamageType);
+                        .TakeDamage(attack);
                     break;
 
                 case TargetType.AllEnemies:
@@ -73,7 +75,7 @@ public class UltimateSkill : DamageSkill
                     {
                         try
                         {
-                            tar.TakeDamage(Power, DamageType);
+                            tar.TakeDamage(attack);
                         }
                         catch (MonsterDeathException)
                         {
@@ -94,7 +96,7 @@ public class UltimateSkill : DamageSkill
             monster.AddActionItem(this);
 
             (singleEnemy ?? throw new InvalidTargetException("Single enemy target not provided."))
-                .TakeDamage(Power, DamageType);
+                .TakeDamage(attack);
         }
 
         Reset();

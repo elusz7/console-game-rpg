@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
+using ConsoleGameEntities.Models.Runes;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Items;
@@ -22,6 +23,8 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
     public virtual void Equip() => Equipped = true;
     public virtual void Unequip() => Equipped = false;
     public virtual bool IsEquipped() => Equipped;
+    
+    public virtual EquippedRune? EquippedRune { get; set; }
 
     public virtual void Enchant()
     {
@@ -96,4 +99,13 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
 
         RequiredLevel = Math.Max(1, estimatedLevel); // Safety cap
     }
+
+    public virtual int UseRune()
+    {
+        if (EquippedRune == null)
+            return 0;
+
+        return EquippedRune.InventoryRune.Tier * EquippedRune.InventoryRune.Rune.Power;
+    } 
+    
 }

@@ -9,6 +9,7 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Models.Items;
 using System.Text;
 using ConsoleGameEntities.Helpers;
+using ConsoleGameEntities.Models.Combat;
 
 namespace ConsoleGameEntities.Models.Monsters;
 
@@ -42,11 +43,12 @@ public class Monster : IMonster
     public ElementType? AttackElement { get; set; }
     public int? ElementalPower { get; set; }
     public ElementType? Vulnerability { get; set; }
-    
+    public ElementType? Resilience  { get; set; }
+
     [NotMapped] public bool TreasureLooted { get; set; }
     [NotMapped] public bool IngredientsLooted { get; set; }
     
-    public virtual List<Skill> Skills { get; set; } = new List<Skill>();
+    public virtual List<Skill> Skills { get; set; } = [];
     public int? RoomId { get; set; }
     public virtual Room? Room { get; set; }
     public virtual Item? Treasure { get; set; }
@@ -170,13 +172,18 @@ public class Monster : IMonster
         DodgeChance = 0.002 * newLevel;
     }
 
-    public virtual void TakeDamage(int damage, DamageType? damageType)
+    public virtual void TakeDamage(AttackDamage attack)
     {
-        var result = _damageResolver.ResolveDamage(
-            damage,
-            damageType,
+        var modifiers = new MonsterDamageModifiers(
             GetStat(StatType.Defense),
             GetStat(StatType.Resistance),
+            Resilience,
+            Vulnerability
+        );
+        
+        var result = _damageResolver.ResolveMonsterDamage(
+            attack,
+            modifiers,
             DodgeChance + (GetStat(StatType.Speed) * 0.01));
 
         if (result.IsDodged)
@@ -186,14 +193,24 @@ public class Monster : IMonster
         }
 
         // Preserve damage tracking for successful Martial and Magical hits.
-        if (result.DamageType == DamageType.Martial)
+        if (result.StandardDamageType == DamageType.Martial)
             DamageRecord[DamageType.Martial] += 1;
-        else if (result.DamageType == DamageType.Magical)
+        else if (result.StandardDamageType == DamageType.Magical)
             DamageRecord[DamageType.Magical] += 1;
 
-        AddActionItem($"{Name} takes {result.FinalDamage} damage!");
-        CurrentHealth -= result.FinalDamage;
+        AddActionItem($"{Name} takes {result.FinalStandardDamage} damage!");
 
+        if (result.FinalElementalDamage != 0)
+        {
+            AddActionItem($"{Name} takes {result.FinalElementalDamage} {result.Element} damage!");
+        }
+
+        if (result.IncomingElementalDamage != 0 && result.FinalElementalDamage == 0)
+        {
+            AddActionItem($"{Name} shrugs off the {result.Element} damage!");
+        }
+
+        CurrentHealth -= (result.FinalStandardDamage + result.FinalElementalDamage);
         if (CurrentHealth <= 0)
         {
             AddActionItem($"{Name} is now dead.");

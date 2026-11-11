@@ -1,6 +1,7 @@
 ﻿using ConsoleGameEntities.Helpers;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Monsters.Strategies;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
@@ -52,6 +53,8 @@ public class OffensiveStrategy : DefaultStrategy
     {
         var increasedDamage = (int)Math.Ceiling(monster.GetStat(StatType.Attack) * 1.2);
         monster.AddActionItem($"{monster.Name} attacks for {increasedDamage} damage!");
-        target.TakeDamage(increasedDamage, monster.DamageType);
+        
+        var attack = new AttackDamage(increasedDamage, monster.DamageType, monster.ElementalPower ?? 0, monster.AttackElement);
+        target.TakeDamage(attack);
     }
 }

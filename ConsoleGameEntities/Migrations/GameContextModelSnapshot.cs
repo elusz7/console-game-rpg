@@ -349,6 +349,9 @@ namespace ConsoleGameEntities.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("Resilience")
+                        .HasColumnType("int");
+
                     b.Property<int>("Resistance")
                         .HasColumnType("int");
 
@@ -380,10 +383,10 @@ namespace ConsoleGameEntities.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("InventoryId")
+                    b.Property<int?>("ArmorId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ItemId")
+                    b.Property<int>("InventoryId")
                         .HasColumnType("int");
 
                     b.Property<int>("RuneId")
@@ -392,16 +395,26 @@ namespace ConsoleGameEntities.Migrations
                     b.Property<int>("Tier")
                         .HasColumnType("int");
 
+                    b.Property<int?>("WeaponId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("ItemId")
+                    b.HasIndex("ArmorId")
                         .IsUnique()
-                        .HasFilter("[ItemId] IS NOT NULL");
+                        .HasFilter("[ArmorId] IS NOT NULL");
+
+                    b.HasIndex("WeaponId")
+                        .IsUnique()
+                        .HasFilter("[WeaponId] IS NOT NULL");
 
                     b.HasIndex("InventoryId", "RuneId", "Tier")
                         .IsUnique();
 
-                    b.ToTable("EquippedRunes");
+                    b.ToTable("EquippedRunes", t =>
+                        {
+                            t.HasCheckConstraint("CK_EquippedRune_OneOwner", "(ArmorId IS NOT NULL AND WeaponId IS NULL) OR (ArmorId IS NULL AND WeaponId IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Runes.Recipes.Ingredient", b =>
@@ -871,9 +884,14 @@ namespace ConsoleGameEntities.Migrations
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Runes.EquippedRune", b =>
                 {
-                    b.HasOne("ConsoleGameEntities.Models.Items.Item", "Item")
+                    b.HasOne("ConsoleGameEntities.Models.Items.Armor", "Armor")
                         .WithOne("EquippedRune")
-                        .HasForeignKey("ConsoleGameEntities.Models.Runes.EquippedRune", "ItemId")
+                        .HasForeignKey("ConsoleGameEntities.Models.Runes.EquippedRune", "ArmorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ConsoleGameEntities.Models.Items.Weapon", "Weapon")
+                        .WithOne("EquippedRune")
+                        .HasForeignKey("ConsoleGameEntities.Models.Runes.EquippedRune", "WeaponId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("ConsoleGameEntities.Models.Entities.Inventories.InventoryRune", "InventoryRune")
@@ -882,9 +900,11 @@ namespace ConsoleGameEntities.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("Armor");
+
                     b.Navigation("InventoryRune");
 
-                    b.Navigation("Item");
+                    b.Navigation("Weapon");
                 });
 
             modelBuilder.Entity("ConsoleGameEntities.Models.Runes.Recipes.MonsterDrop", b =>
@@ -975,11 +995,6 @@ namespace ConsoleGameEntities.Migrations
                     b.Navigation("Monsters");
                 });
 
-            modelBuilder.Entity("ConsoleGameEntities.Models.Items.Item", b =>
-                {
-                    b.Navigation("EquippedRune");
-                });
-
             modelBuilder.Entity("ConsoleGameEntities.Models.Monsters.Monster", b =>
                 {
                     b.Navigation("Skills");
@@ -995,6 +1010,16 @@ namespace ConsoleGameEntities.Migrations
             modelBuilder.Entity("ConsoleGameEntities.Models.Runes.Rune", b =>
                 {
                     b.Navigation("Recipe");
+                });
+
+            modelBuilder.Entity("ConsoleGameEntities.Models.Items.Armor", b =>
+                {
+                    b.Navigation("EquippedRune");
+                });
+
+            modelBuilder.Entity("ConsoleGameEntities.Models.Items.Weapon", b =>
+                {
+                    b.Navigation("EquippedRune");
                 });
 #pragma warning restore 612, 618
         }

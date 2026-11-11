@@ -7,6 +7,7 @@ using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Helpers;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
@@ -35,6 +36,7 @@ public class BerserkerStrategy : DefaultStrategy
 
         int boostedDamage = (int)Math.Ceiling(monster.GetStat(StatType.Attack) * 1.5);
         monster.AddActionItem($"{monster.Name} attacks for {boostedDamage} damage!");
-        target.TakeDamage(boostedDamage, monster.DamageType);
+        var attack = new AttackDamage(boostedDamage, monster.DamageType, monster.ElementalPower ?? 0, monster.AttackElement);
+        target.TakeDamage(attack);
     }
 }

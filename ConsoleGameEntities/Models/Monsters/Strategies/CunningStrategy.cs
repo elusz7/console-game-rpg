@@ -1,5 +1,6 @@
 ﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
@@ -81,6 +82,8 @@ public class CunningStrategy : DefaultStrategy
     {
         var adjustedDamage = (int)Math.Ceiling(monster.GetStat(StatType.Attack) * 1.1); // 10% stronger basic hit
         monster.AddActionItem($"{monster.Name} attacks for {adjustedDamage} damage!");
-        target.TakeDamage(adjustedDamage, monster.DamageType);
+        
+        var attack = new AttackDamage(adjustedDamage, monster.DamageType, monster.ElementalPower ?? 0, monster.AttackElement);
+        target.TakeDamage(attack);
     }
 }

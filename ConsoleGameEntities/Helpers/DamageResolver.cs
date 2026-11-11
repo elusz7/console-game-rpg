@@ -1,4 +1,5 @@
 ﻿using ConsoleGameEntities.Models.Combat;
+using ConsoleGameEntities.Models.Runes;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Helpers;
@@ -7,50 +8,100 @@ namespace ConsoleGameEntities.Helpers;
 /// Resolves incoming attacks by determining dodge outcomes
 /// and calculating damage.
 /// </summary>
-public class DamageResolver
+public class DamageResolver(Random? rng = null)
 {
-    private readonly Random _rng;
-
-    public DamageResolver(Random? rng = null)
-    {
-        _rng = rng ?? Random.Shared;
-    }
+    private readonly Random _rng = rng ?? Random.Shared;
 
     /// <summary>
     /// Resolves an incoming attack against a target.
     /// </summary>
-    public DamageResolutionResult ResolveDamage(
-        int incomingDamage,
-        DamageType? damageType,
-        int defense,
-        int resistance,
-        double dodgeChance)
+    public AttackResolutionResult ResolveMonsterDamage(AttackDamage attack, MonsterDamageModifiers modifiers, double dodgeChance)
     {
-        DamageCalculator.ValidateInputs(incomingDamage, damageType);
+        DamageCalculator.ValidateInputs(attack);
+        DamageCalculator.ValidateMonsterModifiers(modifiers);
 
         var chance = Math.Clamp(dodgeChance, 0, 33);
         var dodged = _rng.NextDouble() * 100 < chance;
 
         if (dodged)
         {
-            return new DamageResolutionResult(
-                incomingDamage,
+            return new AttackResolutionResult(
+                attack.PhysicalDamage,
                 0,
-                damageType!.Value,
+                attack.DamageType,
+                attack.ElementalDamage,
+                0,
+                attack.Element,
                 true,
                 false);
         }
 
-        var finalDamage = DamageCalculator.CalculateDamage(
-            incomingDamage,
-            damageType,
-            defense,
-            resistance);
+        var finalStandardDamage = DamageCalculator.CalculateStandardDamage(
+            attack.PhysicalDamage,
+            attack.DamageType,
+            modifiers.Defense,
+            modifiers.Resistance);
 
-        return new DamageResolutionResult(
-            incomingDamage,
-            finalDamage,
-            damageType!.Value,
+        var finalElementalDamage = attack.ElementalDamage is 0
+            ? 0
+            : DamageCalculator.CalculateMonsterPrimordialDamage(
+                attack.ElementalDamage,
+                attack.Element!.Value,
+                modifiers.Resilience,
+                modifiers.Vulnverability);
+
+        return new AttackResolutionResult(
+            attack.PhysicalDamage,
+            finalStandardDamage,
+            attack.DamageType,
+            attack.ElementalDamage,
+            finalElementalDamage,
+            attack.Element,
+            false,
+            false);
+    }
+
+    public AttackResolutionResult ResolvePlayerDamage(AttackDamage attack, PlayerDamageModifiers modifiers,
+        double dodgeChance)
+    {
+        DamageCalculator.ValidateInputs(attack);
+        DamageCalculator.ValidatePlayerModifiers(modifiers);
+
+        var chance = Math.Clamp(dodgeChance, 0, 33);
+        var dodged = _rng.NextDouble() * 100 < chance;
+
+        if (dodged)
+        {
+            return new AttackResolutionResult(
+                attack.PhysicalDamage,
+                0,
+                attack.DamageType,
+                attack.ElementalDamage,
+                0,
+                attack.Element,
+                true,
+                false);
+        }
+
+        var finalStandardDamage = DamageCalculator.CalculateStandardDamage(
+            attack.PhysicalDamage,
+            attack.DamageType,
+            modifiers.Defense,
+            modifiers.Resistance);
+        
+        var finalElementalDamage = attack.ElementalDamage is 0
+            ? 0
+            : DamageCalculator.CalculatePlayerPrimordialDamage(
+                attack.ElementalDamage,
+                modifiers.ArmorResilience);
+
+        return new AttackResolutionResult(
+            attack.PhysicalDamage,
+            finalStandardDamage,
+            attack.DamageType,
+            attack.ElementalDamage,
+            finalElementalDamage,
+            attack.Element,
             false,
             false);
     }

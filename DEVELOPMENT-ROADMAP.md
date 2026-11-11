@@ -192,7 +192,7 @@ death handling cannot be bypassed by an individual attack type.
 
 ## Step 8 --- Introduce a Reusable Damage Calculation System
 
-**Status: Foundational implementation complete**
+**Status: Complete**
 
 **Goal:** Avoid duplicating damage-resolution rules across players,
 monsters, skills, and elemental attacks.
@@ -297,7 +297,7 @@ Replace the existing in-memory inventory implementations with persistent ownersh
 
 ## Step 10 — Improve Crafting and Rune Progression Gameplay
 
-**Status: In progress**
+**Status: Complete**
 
 **Goal:** Improve the gameplay experience and balance of crafting now that persistence and ownership are reliable.
 
@@ -358,33 +358,33 @@ consistent, balanced gameplay on top of the persistent ownership system. Players
 understand their requirements, and receive clear feedback when performing crafting operations.
 
 Step 11 — Complete and Improve Elemental Damage and Status Effects
-Status: Not started
+Status: In Progress
 
 Goal: Complete elemental gameplay using the consolidated combat and damage architecture.
 A. Review and Define Elemental Mechanics
-- [ ] Review elemental types and their relationships.
-- [ ] Review elemental damage calculations.
-- [ ] Review elemental resistance and vulnerability balance.
-- [ ] Define elemental damage multipliers and mitigation order.
-- [ ] Review elemental status effects.
-- [ ] Define the six elemental status-effect behaviors.
-- [ ] Review elemental interactions and combinations.
-- [ ] Review effect duration and expiration behavior.
-- [ ] Define status-effect stacking, refreshing, and replacement rules.
-- [ ] Review effect ticking and callback timing.
+- [x] Review elemental types and their relationships.
+- [x] Review elemental damage calculations.
+- [x] Review elemental resistance and vulnerability balance.
+- [x] Define elemental damage multipliers and mitigation order.
+- [x] Review elemental status effects.
+- [x] Define the six elemental status-effect behaviors.
+- [x] Review elemental interactions and combinations.
+- [x] Review effect duration and expiration behavior.
+- [x] Define status-effect stacking, refreshing, and replacement rules.
+- [x] Review effect ticking and callback timing.
 - 
   B. Integrate Elemental Damage into Combat
-- [ ] Review and consolidate monster elemental properties restored during Step 10.
-- [ ] Ensure elemental attacks use the shared damage architecture.
-- [ ] Connect weapon rune elemental damage to player attacks.
-- [ ] Integrate elemental damage with boss phase transitions.
-- [ ] Integrate monster elemental attacks into monster combat strategies.
-- [ ] Review monster elemental behavior.
-- [ ] Review player elemental behavior.
+- [x] Review and consolidate monster elemental properties restored during Step 10.
+- [x] Ensure elemental attacks use the shared damage architecture.
+- [x] Connect weapon rune elemental damage to player attacks.
+- [x] Integrate elemental damage with boss phase transitions.
+- [x] Integrate monster elemental attacks into monster combat strategies.
+- [x] Review monster elemental behavior.
+- [x] Review player elemental behavior.
 - 
   C. Integrate Elemental Equipment and Status Effects
 - [ ] Connect weapon rune status-effect application to combat.
-- [ ] Connect armor rune power to elemental damage mitigation.
+- [x] Connect armor rune power to elemental damage mitigation.
 - [ ] Implement deterministic status-effect duration and expiration.
 - [ ] Implement damage-over-time ticking at a defined combat-turn point.
 - [ ] Ensure effects interact correctly with player death and monster death.

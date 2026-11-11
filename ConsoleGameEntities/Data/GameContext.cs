@@ -195,10 +195,23 @@ namespace ConsoleGameEntities.Data
             
             // Configure EquippedRune relationships
             modelBuilder.Entity<EquippedRune>()
-                .HasOne(e => e.Item)
-                .WithOne(i => i.EquippedRune)
-                .HasForeignKey<EquippedRune>(e => e.ItemId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .HasOne(e => e.Armor)
+                .WithOne(a => a.EquippedRune)
+                .HasForeignKey<EquippedRune>(e => e.ArmorId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<EquippedRune>()
+                .HasOne(e => e.Weapon)
+                .WithOne(w => w.EquippedRune)
+                .HasForeignKey<EquippedRune>(e => e.WeaponId)
+                .OnDelete(DeleteBehavior.NoAction);
+            
+            modelBuilder.Entity<EquippedRune>()
+                .ToTable(t => t.HasCheckConstraint(
+                    "CK_EquippedRune_OneOwner",
+                    "(ArmorId IS NOT NULL AND WeaponId IS NULL) OR " +
+                    "(ArmorId IS NULL AND WeaponId IS NOT NULL)"
+                ));
 
             modelBuilder.Entity<EquippedRune>()
                 .HasOne(e => e.InventoryRune)

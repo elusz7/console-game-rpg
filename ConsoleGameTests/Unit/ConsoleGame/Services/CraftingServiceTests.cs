@@ -5,6 +5,7 @@ using ConsoleGameEntities.Exceptions.Recipes;
 using ConsoleGameEntities.Models.Entities.Inventories;
 using ConsoleGameEntities.Models.Runes.Recipes;
 using ConsoleGameEntities.Exceptions.Runes;
+using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Runes;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using Moq;
@@ -1608,8 +1609,12 @@ public class CraftingServiceTests
         };
     }
 
-    private static InventoryRune CreatePlayerRune(int quantity = 3, int equippedCount = 0, int tier = 1,
-        RarityLevel rarity = RarityLevel.Common, bool isArmor = false)
+    private static InventoryRune CreatePlayerRune(
+        int quantity = 3,
+        int equippedCount = 0,
+        int tier = 1,
+        RarityLevel rarity = RarityLevel.Common,
+        bool isArmor = false)
     {
         Rune rune = isArmor
             ? new ArmorRune()
@@ -1622,18 +1627,34 @@ public class CraftingServiceTests
         rune.Rarity = rarity;
         rune.Power = 10;
 
-        return new InventoryRune
+        var playerRune = new InventoryRune
         {
             RuneId = RuneId,
             Rune = rune,
             Tier = tier,
-            Quantity = quantity,
-            EquippedRunes =
-            [
-                .. Enumerable.Range(0, equippedCount)
-                    .Select(_ => new EquippedRune())
-            ]
+            Quantity = quantity
         };
+
+        playerRune.EquippedRunes =
+        [
+            .. Enumerable.Range(0, equippedCount)
+                .Select(_ =>
+                {
+                    var equippedRune = new EquippedRune
+                    {
+                        InventoryRune = playerRune
+                    };
+
+                    if (isArmor)
+                        equippedRune.Armor = new Armor();
+                    else
+                        equippedRune.Weapon = new Weapon();
+
+                    return equippedRune;
+                })
+        ];
+
+        return playerRune;
     }
 
     private static Rune CreateRuneDefinition(int runeId, RarityLevel rarity, bool isArmor = false)

@@ -2,6 +2,7 @@
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
+using ConsoleGameEntities.Models.Runes;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Items;
@@ -27,6 +28,8 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
     public void Equip() => Equipped = true;
     public void Unequip() => Equipped = false;
     public bool IsEquipped() => Equipped;
+    
+    public virtual EquippedRune? EquippedRune { get; set; }
 
     public void Reforge()
     {
@@ -140,4 +143,12 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
 
         RequiredLevel = Math.Max(1, estimatedLevel); // Safety cap
     }
+    
+    public virtual int UseRune()
+    {
+        if (EquippedRune == null)
+            return 0;
+
+        return EquippedRune.InventoryRune.Tier * EquippedRune.InventoryRune.Rune.Power;
+    } 
 }

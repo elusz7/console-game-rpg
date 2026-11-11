@@ -1,5 +1,6 @@
 ﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Monsters.Strategies;
@@ -12,11 +13,13 @@ public static class StrategyHelper
 {
     public class DummyMonster : Monster
     {
-        public DummyMonster()
+        public DummyMonster(ElementType? attackElement = null, int elementalPower = 0)
         {
             AttackPower = 50;
             CurrentHealth = 100;
             MaxHealth = 100;
+            AttackElement = attackElement;
+            ElementalPower = elementalPower;
         }
 
         public override void Attack(IPlayer target)
@@ -44,10 +47,14 @@ public static class StrategyHelper
     public class DummyPlayer : Player
     {
         public int DamageTaken { get; private set; }
+        public int ElementalDamageTaken { get; private set; }
+        public ElementType? ElementDealt { get; private set; }
 
-        public override void TakeDamage(int damage, DamageType? damageType)
+        public override void TakeDamage(AttackDamage attack)
         {
-            DamageTaken += damage;
+            DamageTaken += attack.PhysicalDamage;
+            ElementalDamageTaken += attack.ElementalDamage;
+            ElementDealt = attack.Element;
         }
     }
 
@@ -60,7 +67,8 @@ public static class StrategyHelper
             List<ITargetable>? multipleEnemies = null)
         {
             Activated = true;
-            singleEnemy?.TakeDamage(Power, ModelEnums.DamageType.Martial);
+            var attack = new AttackDamage(Power, ModelEnums.DamageType.Martial, 0, null);
+            singleEnemy?.TakeDamage(attack);
         }
     }
 

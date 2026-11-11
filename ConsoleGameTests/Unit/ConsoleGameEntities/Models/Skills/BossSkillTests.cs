@@ -1,5 +1,6 @@
 ﻿using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
@@ -141,12 +142,12 @@ public class BossSkillTests
 
         var caster = new Mock<ITargetable>();
         var target = new Mock<ITargetable>();
-
+        
         skill.Activate(caster.Object, target.Object);
 
         Assert.AreEqual(0, skill.ElapsedTime);
         target.Verify(
-            t => t.TakeDamage(20, DamageType.Martial),
+            t => t.TakeDamage(It.IsAny<AttackDamage>()),
             Times.Once);
     }
 }

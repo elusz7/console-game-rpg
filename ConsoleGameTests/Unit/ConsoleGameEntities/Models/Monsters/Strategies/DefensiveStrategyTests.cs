@@ -1,4 +1,5 @@
 ﻿using ConsoleGameEntities.Models.Monsters.Strategies;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using static ConsoleGameTests.TestHelpers.StrategyHelper;
 
 namespace ConsoleGameTests.Unit.ConsoleGameEntities.Models.Monsters.Strategies;
@@ -73,5 +74,86 @@ public class DefensiveStrategyTests
         monster.Attack(player);
 
         Assert.AreEqual((int)(monster.AttackPower * 0.8), player.DamageTaken);
+    }
+
+    // ── Elemental Damage ──
+
+    [TestMethod]
+    public void ExecuteAttack_BasicAttack_WithElementalDamage()
+    {
+        var selector = new FakeSkillSelector();
+        var player = new DummyPlayer();
+        var monster = new DummyMonster(attackElement: ElementType.Fire, elementalPower: 5)
+        {
+            Strategy = new DefensiveStrategy(selector)
+        };
+
+        monster.Attack(player);
+
+        var expectedDamage = (int)Math.Round(monster.AttackPower * 0.8);
+        Assert.AreEqual(expectedDamage, player.DamageTaken);
+        Assert.AreEqual(5, player.ElementalDamageTaken);
+        Assert.AreEqual(ElementType.Fire, player.ElementDealt);
+    }
+
+    [TestMethod]
+    public void ExecuteAttack_BasicAttack_WithoutElementalProperties_IsNeutral()
+    {
+        var selector = new FakeSkillSelector();
+        var player = new DummyPlayer();
+        var monster = new DummyMonster()
+        {
+            Strategy = new DefensiveStrategy(selector)
+        };
+
+        monster.Attack(player);
+
+        var expectedDamage = (int)Math.Round(monster.AttackPower * 0.8);
+        Assert.AreEqual(expectedDamage, player.DamageTaken);
+        Assert.AreEqual(0, player.ElementalDamageTaken);
+        Assert.IsNull(player.ElementDealt);
+    }
+
+    [DataTestMethod]
+    [DataRow(ElementType.Fire)]
+    [DataRow(ElementType.Lightning)]
+    [DataRow(ElementType.Ice)]
+    [DataRow(ElementType.Nature)]
+    [DataRow(ElementType.Radiance)]
+    [DataRow(ElementType.Abyssal)]
+    public void ExecuteAttack_BasicAttack_AllElements(ElementType element)
+    {
+        var selector = new FakeSkillSelector();
+        var player = new DummyPlayer();
+        var monster = new DummyMonster(attackElement: element, elementalPower: 3)
+        {
+            Strategy = new DefensiveStrategy(selector)
+        };
+
+        monster.Attack(player);
+
+        Assert.AreEqual(3, player.ElementalDamageTaken);
+        Assert.AreEqual(element, player.ElementDealt);
+    }
+
+    [TestMethod]
+    public void ExecuteAttack_WithHealingSkill_StillIncludesElementalDamage()
+    {
+        var healingSkill = new DummySupportSkill();
+        var selector = new FakeSkillSelector(healingSkill: healingSkill);
+        var player = new DummyPlayer();
+        var monster = new DummyMonster(attackElement: ElementType.Ice, elementalPower: 4)
+        {
+            CurrentHealth = 80,
+            Strategy = new DefensiveStrategy(selector)
+        };
+
+        monster.Attack(player);
+
+        Assert.IsTrue(healingSkill.Activated);
+        var expectedDamage = (int)Math.Round(monster.AttackPower * 0.8);
+        Assert.AreEqual(expectedDamage, player.DamageTaken);
+        Assert.AreEqual(4, player.ElementalDamageTaken);
+        Assert.AreEqual(ElementType.Ice, player.ElementDealt);
     }
 }

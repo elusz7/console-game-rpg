@@ -3,6 +3,7 @@ using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Models.Combat;
 
 namespace ConsoleGameEntities.Models.Skills;
 
@@ -14,6 +15,7 @@ public class MartialSkill : DamageSkill
         if (IsOnCooldown)
             throw new SkillCooldownException();
 
+        var attack = new AttackDamage(Power, DamageType, 0, null);
         switch (TargetType)
         {
             case TargetType.SingleEnemy:
@@ -49,7 +51,7 @@ public class MartialSkill : DamageSkill
             {
                 case TargetType.SingleEnemy:
                     (singleEnemy ?? throw new InvalidTargetException("Single enemy target not provided."))
-                        .TakeDamage(Power, DamageType);
+                        .TakeDamage(attack);
                     break;
 
                 case TargetType.AllEnemies:
@@ -58,7 +60,7 @@ public class MartialSkill : DamageSkill
                     {
                         try
                         {
-                            tar.TakeDamage(Power, DamageType);
+                            tar.TakeDamage(attack);
                         }
                         catch (MonsterDeathException)
                         {
@@ -81,7 +83,7 @@ public class MartialSkill : DamageSkill
             monster.AddActionItem(this);
 
             (singleEnemy ?? throw new InvalidTargetException("Single enemy target not provided."))
-                .TakeDamage(Power, DamageType);
+                .TakeDamage(attack);
             Reset();
         }
     }

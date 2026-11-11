@@ -4,9 +4,12 @@ namespace ConsoleGameEntities.Models.Combat;
 /// <summary>
 /// Represents the outcome of resolving an incoming attack.
 /// </summary>
-public record DamageResolutionResult(
-    int IncomingDamage,
-    int FinalDamage,
-    DamageType DamageType,
+public record AttackResolutionResult(
+    int IncomingStandardDamage,
+    int FinalStandardDamage,
+    DamageType StandardDamageType,
+    int? IncomingElementalDamage,
+    int FinalElementalDamage,
+    ElementType? Element,
     bool IsDodged,
     bool IsCritical);

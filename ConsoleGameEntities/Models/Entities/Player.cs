@@ -9,6 +9,8 @@ using ConsoleGameEntities.Models.Items;
 using System.Numerics;
 using ConsoleGameEntities.Helpers;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
+using ConsoleGameEntities.Models.Combat;
+using ConsoleGameEntities.Models.Runes;
 
 namespace ConsoleGameEntities.Models.Entities;
 
@@ -47,35 +49,59 @@ public class Player : IPlayer
             ? GetStat(StatType.Attack)
             : GetStat(StatType.Magic);
 
-        AddActionItem($"You attack with {weapon.Name} for {damage} damage!");
-        target.TakeDamage(damage, DamageType.Martial);
+        var elementalDamage = weapon.UseRune();
+        ElementType? element = null;
+        if (elementalDamage != 0)
+            element = weapon.EquippedRune!.InventoryRune.Rune.Element;
+        
+        var attack = new AttackDamage(damage, weapon.DamageType, elementalDamage, element);
+
+        AddActionItem($"You attack with {weapon.Name}!");
+        if (element != null)
+            AddActionItem($"Your weapon is charged with primordial energy!\nIt deals an extra {elementalDamage} points of {element} damage!");
+        
+        target.TakeDamage(attack);
 
         CheckWeaponDurability();
     }
 
-    public virtual void TakeDamage(int damage, DamageType? damageType)
+    public virtual void TakeDamage(AttackDamage attack)
     {
-        var result = DamageResolver.ResolveDamage(
-            damage,
-            damageType,
+        var equippedResilience = Equipment
+            .OfType<Armor>()
+            .Where(a => a.EquippedRune != null &&
+                        a.EquippedRune.InventoryRune.Rune.Element == attack.Element)
+            .Sum(a => a.UseRune());
+        
+        var modifiers = new PlayerDamageModifiers(
             GetStat(StatType.Defense),
             GetStat(StatType.Resistance),
-            DodgeChance + (GetStat(StatType.Speed) * 0.01));
+            equippedResilience);
+            
+        var result = DamageResolver.ResolvePlayerDamage(attack, modifiers, DodgeChance + (GetStat(StatType.Speed) * 0.01));
 
         if (result.IsDodged)
         {
             AddActionItem("You dodged the attack and took no damage!");
             return;
         }
+        AddActionItem($"You've taken {result.FinalStandardDamage} damage! [{CurrentHealth} / {MaxHealth}]");
 
-        CurrentHealth -= result.FinalDamage;
-        AddActionItem(
-            $"You've taken {result.FinalDamage} damage! [{CurrentHealth} / {MaxHealth}]");
+        if (result.FinalElementalDamage != 0)
+        {
+            AddActionItem($"You've taken {result.FinalElementalDamage} {result.Element} damage! [{CurrentHealth} / {MaxHealth}]");
+        }
 
+        if (result.IncomingElementalDamage != 0 && result.FinalElementalDamage == 0)
+        {
+            AddActionItem($"You shrug off the {result.Element} damage! [{CurrentHealth} / {MaxHealth}]");
+        }
+        
+        CurrentHealth -= (result.FinalStandardDamage + result.FinalElementalDamage);
         if (CurrentHealth <= 0)
             throw new PlayerDeathException();
 
-        CheckArmorDurability(result.DamageType);
+        CheckArmorDurability(result.StandardDamageType);
     }
 
     public virtual void Heal(int regainedHealth)
