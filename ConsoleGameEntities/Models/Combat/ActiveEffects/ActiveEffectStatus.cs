@@ -6,3 +6,11 @@ public enum ActiveEffectType
     ElementalStatus,
     ElementalDamageOverTime
 }
+
+public enum RegistrationStatus
+{
+    Registered,
+    Refreshed,
+    Retained,
+    Rejected
+}

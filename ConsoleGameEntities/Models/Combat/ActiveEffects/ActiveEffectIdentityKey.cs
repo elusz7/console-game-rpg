@@ -12,8 +12,19 @@ public sealed record SupportSkillEffectKey : ActiveEffectIdentityKey
     public SupportSkillEffectKey(ISkill sourceSkill)
     {
         ArgumentNullException.ThrowIfNull(sourceSkill);
-
         SourceSkill = sourceSkill;
+    }
+
+    public bool Equals(SupportSkillEffectKey? other)
+    {
+        return other is not null &&
+               ReferenceEquals(SourceSkill, other.SourceSkill);
+    }
+
+    public override int GetHashCode()
+    {
+        return System.Runtime.CompilerServices.RuntimeHelpers
+            .GetHashCode(SourceSkill);
     }
 }
 

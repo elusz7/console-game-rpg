@@ -91,7 +91,7 @@ public class ActiveEffect
         ActiveEffectType effectType,
         ActiveEffectIdentityKey identityKey)
     {
-        var isValid = (effectType, identityKey) switch
+        var isValid = (effectType: effectType, identityKey) switch
         {
             (ActiveEffectType.SupportStatModifier,
                 SupportSkillEffectKey) => true,
