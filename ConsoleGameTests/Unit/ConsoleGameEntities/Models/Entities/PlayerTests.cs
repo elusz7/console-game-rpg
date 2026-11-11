@@ -545,6 +545,98 @@ public class PlayerTests
         Assert.ThrowsException<StatTypeException>(() => player.ModifyStat((StatType)999, 5));
     }
 
+    // -----------------------------------------------------------------------
+    // Regression test: LevelUp desynchronizes _activeEffects from
+    // SupportSkill.TargetsAffected, causing an incorrect stat modifier
+    // when the skill effect subsequently expires.
+    //
+    // Expected behavior: After LevelUp clears _activeEffects to 0, the
+    // SupportSkill should recognize the effect is no longer valid and
+    // should NOT apply a revert modifier on expiration.
+    //
+    // Observed failure: LevelUp zeroes _activeEffects[Attack] to 0, but
+    // SupportSkill.TargetsAffected still tracks the player. When the skill
+    // expires, RevertEffect calls ModifyStat(Attack, -Power), pushing
+    // _activeEffects[Attack] into the negative — creating a debuff where
+    // none existed.
+    // -----------------------------------------------------------------------
+
+    [TestMethod]
+    [Ignore("Deferred to Step 11, Phase C3: ActiveEffectManager lifecycle migration.")]
+    public void LevelUp_WhileBuffActive_SkillExpirationCausesNegativeDebuff()
+    {
+        // Arrange: create a player with a +10 Attack buff from a SupportSkill.
+        // Give the player a weapon so baseAttack > 0 — this makes the bug visible
+        // because Math.Max(0, base + (-10)) will differ from base when base > 0.
+        var player = CreatePlayer();
+        player.Archetype.AttackBonus = 0;
+        player.Archetype.AttackMultiplier = 0M; // Prevent LevelUp from changing AttackBonus
+        player.Level = 2; // Ensure player meets the skill's RequiredLevel
+
+        var weapon = CreateWeapon();
+        weapon.RequiredLevel = player.Level;
+        weapon.AttackPower = 20; // Non-zero base so the debuff is visible
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var buffSkill = new SupportSkill
+        {
+            Name = "Battle Cry",
+            Power = 10,
+            Duration = 2,
+            Cooldown = 3,
+            ElapsedTime = 6, // off cooldown
+            Cost = 0,
+            RequiredLevel = 1,
+            StatAffected = StatType.Attack,
+            SupportEffect = (int)SupportEffectType.Boost,
+            TargetType = TargetType.Self
+        };
+
+        int baseAttack = player.GetStat(StatType.Attack);
+
+        // Act 1: apply the buff.
+        buffSkill.Activate(player);
+        int boostedAttack = player.GetStat(StatType.Attack);
+        Assert.AreEqual(baseAttack + 10, boostedAttack, "Buff should increase Attack by Power.");
+        Assert.IsTrue(buffSkill.TargetsAffected.ContainsKey(player), "Skill should track the player.");
+
+        // Act 2: level up while the buff is still active.
+        player.LevelUp();
+        int afterLevelUpAttack = player.GetStat(StatType.Attack);
+        Assert.AreEqual(baseAttack, afterLevelUpAttack,
+            "LevelUp zeroes _activeEffects, so Attack should return to base.");
+
+        // The bug: TargetsAffected still contains the player, even though
+        // _activeEffects[Attack] was zeroed by LevelUp.
+        Assert.IsTrue(buffSkill.TargetsAffected.ContainsKey(player),
+            "BUG: Skill still tracks the player after LevelUp cleared the effect.");
+
+        // Act 3: advance time until the skill expires.
+        buffSkill.UpdateElapsedTime(); // 1 turn left
+        buffSkill.UpdateElapsedTime(); // 0 turns — should expire
+
+        // Assert: the skill has expired and called RevertEffect.
+        Assert.IsFalse(buffSkill.TargetsAffected.ContainsKey(player),
+            "Skill should no longer track the player after expiration.");
+
+        int finalAttack = player.GetStat(StatType.Attack);
+
+        // EXPECTED: finalAttack == baseAttack (the effect was already zeroed
+        // by LevelUp, so reverting should be a no-op).
+        //
+        // OBSERVED FAILURE: finalAttack == 0 (clamped from -10), because
+        // RevertEffect called ModifyStat(Attack, -10) on an already-zeroed
+        // _activeEffects[Attack], creating a -10 debuff.
+        //
+        // The test demonstrates the desynchronization bug. Math.Max(0, ...)
+        // in GetStat clamps the result, so the effective Attack is 0 instead
+        // of the expected base value.
+        Assert.AreEqual(baseAttack, finalAttack,
+            "BUG: After LevelUp + expiration, Attack should remain at base value, " +
+            $"but RevertEffect applied a negative modifier. Expected {baseAttack}, got {finalAttack}.");
+    }
+
     [TestMethod]
     public void Loot_MonsterWithLoot_AddsItem()
     {

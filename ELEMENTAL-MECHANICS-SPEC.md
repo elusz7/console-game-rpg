@@ -87,6 +87,9 @@ Temporary reductions must not permanently mutate a combatant's base stats. Apply
 - Apply effects immediately when their application succeeds.
 - Tick damage-over-time effects at the beginning of the affected combatant's turn.
 - A duration of 3 means three scheduled ticks for a damage-over-time effect, beginning with the next applicable turn after application.
+- - If a DoT is applied during or after the affected combatant's turn, its first tick occurs at the beginning of that combatant's next turn. It never ticks immediately upon application.
+- `RemainingDuration` decreases only when a scheduled DoT tick is processed, after the damage for that tick has been resolved. Ending a combatant's turn does not independently decrease DoT duration.
+- A DoT expires after its final scheduled tick, when `RemainingDuration` reaches zero. A tick consumes duration even if mitigation reduces its resulting damage to zero.
 - Decrement an effect's remaining duration after the affected combatant completes its turn. Expire it and run its expiration handling when the duration reaches zero.
 - If a damage-over-time tick kills the affected combatant, stop its turn and do not process later effects for that dead combatant.
 - Dead combatants do not continue ticking effects. Clear their active effects through the normal death/cleanup path.
