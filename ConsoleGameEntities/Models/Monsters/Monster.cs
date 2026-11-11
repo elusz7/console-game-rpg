@@ -10,11 +10,13 @@ using ConsoleGameEntities.Models.Items;
 using System.Text;
 using ConsoleGameEntities.Helpers;
 using ConsoleGameEntities.Models.Combat;
+using ConsoleGameEntities.Models.Combat.ActiveEffects;
 
 namespace ConsoleGameEntities.Models.Monsters;
 
 public class Monster : IMonster
 {
+    [NotMapped] public ActiveEffectManager ActiveEffectManager { get; } = new();
     private static readonly Random _rng = Random.Shared;
     [NotMapped] private static readonly DamageResolver _damageResolver = new();
     [NotMapped] public Dictionary<long, string> ActionItems { get; } = new();

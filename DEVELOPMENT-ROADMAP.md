@@ -513,8 +513,8 @@ This phase establishes `ActiveEffectManager` as the authoritative source for act
 - [x] Define effect identity and type.
 - [x] Define effect source information, including source skill and caster references where applicable.
 - [x] Define effect Power, Duration, and RemainingDuration.
-- [ ] Implement `ActiveEffectManager`.
-- [ ] Ensure each `ITargetable` owns an `ActiveEffectManager`.
+- [x] Implement `ActiveEffectManager`.
+- [x] Ensure each `ITargetable` owns an `ActiveEffectManager`.
 - [ ] Implement effect registration and lookup.
 - [ ] Implement duplicate prevention.
 - [ ] Implement approved stacking and refresh behavior.

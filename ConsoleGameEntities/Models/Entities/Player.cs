@@ -10,12 +10,14 @@ using System.Numerics;
 using ConsoleGameEntities.Helpers;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Combat;
+using ConsoleGameEntities.Models.Combat.ActiveEffects;
 using ConsoleGameEntities.Models.Runes;
 
 namespace ConsoleGameEntities.Models.Entities;
 
 public class Player : IPlayer
 {
+    [NotMapped] public ActiveEffectManager ActiveEffectManager { get; } = new();
     [NotMapped] public Dictionary<long, string> ActionItems { get; } = new();
     [NotMapped] private static readonly Random Random = Random.Shared;
     [NotMapped] private static readonly DamageResolver DamageResolver = new();

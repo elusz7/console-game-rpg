@@ -1,11 +1,7 @@
-using ConsoleGame.Services;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Combat.ActiveEffects;
-using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Skills;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Mono.Cecil.Cil;
 using Moq;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
@@ -73,6 +69,9 @@ public class ActiveEffectManagerTests
         var result1 = manager.Register(effect1);
         var result2 = manager.Register(effect2);
 
+        Assert.AreSame(effect1, result1.Effect);
+        Assert.AreSame(effect2, result2.Effect);
+        
         Assert.AreEqual(RegistrationStatus.Registered, result1.Registration);
         Assert.AreEqual(RegistrationStatus.Registered, result2.Registration);
 
@@ -115,7 +114,7 @@ public class ActiveEffectManagerTests
 
         var updateResult = manager.Register(newEffect);
 
-        Assert.AreEqual(RegistrationStatus.Refreshed, updateResult.Registration);
+        Assert.AreEqual(RegistrationStatus.Strengthened, updateResult.Registration);
         Assert.AreEqual(originalId, existingEffect.EffectId);
         Assert.AreSame(caster, existingEffect.SourceCaster);
         Assert.AreSame(rune, existingEffect.SourceInstance);
@@ -133,33 +132,43 @@ public class ActiveEffectManagerTests
 
         var key = new ElementalDamageOverTimeEffectKey(ElementType.Fire);
         var rune = Mock.Of<IRune>();
+        var caster = Mock.Of<ITargetable>();
 
         var existingEffect = new ActiveEffect(
             ActiveEffectType.ElementalDamageOverTime,
             key,
             10,
             3,
+            sourceCaster: caster,
             sourceInstance: rune);
 
         var result = manager.Register(existingEffect);
         Assert.AreEqual(RegistrationStatus.Registered, result.Registration);
         var originalId = existingEffect.EffectId;
 
+        var incomingCaster = Mock.Of<ITargetable>();
+        var incomingRune = Mock.Of<IRune>();
+
         var strongerEffect = new ActiveEffect(
             ActiveEffectType.ElementalDamageOverTime,
             key,
             20,
-            5);
+            5,
+            sourceCaster: incomingCaster,
+            sourceInstance: incomingRune);
 
         var updateResult = manager.Register(strongerEffect);
 
-        Assert.AreEqual(RegistrationStatus.Refreshed, updateResult.Registration);
+        Assert.AreSame(existingEffect, updateResult.Effect);
+        Assert.AreEqual(RegistrationStatus.Strengthened, updateResult.Registration);
         Assert.AreEqual(originalId, existingEffect.EffectId);
+        Assert.AreSame(caster, existingEffect.SourceCaster);
         Assert.AreSame(rune, existingEffect.SourceInstance);
         Assert.AreEqual(20, existingEffect.Power);
         Assert.AreEqual(5, existingEffect.Duration);
         Assert.AreEqual(1, manager.ActiveEffects.Count);
         Assert.AreEqual(5, existingEffect.RemainingDuration);
+        
     }
 
     // ---------------------------------------------------------------------------
@@ -234,7 +243,7 @@ public class ActiveEffectManagerTests
 
         var updateResult = manager.Register(weakerEffect);
 
-        Assert.AreEqual(RegistrationStatus.Rejected, updateResult.Registration);
+        Assert.AreEqual(RegistrationStatus.RejectedWeaker, updateResult.Registration);
         Assert.AreEqual(originalId, existingEffect.EffectId);
         Assert.AreEqual(originalPower, existingEffect.Power);
         Assert.AreEqual(originalDuration, existingEffect.Duration);
@@ -276,8 +285,9 @@ public class ActiveEffectManagerTests
 
         var updateResult = manager.Register(duplicateEffect);
 
+        Assert.AreSame(existingEffect, updateResult.Effect);
         Assert.AreSame(skill, existingEffect.SourceSkill);
-        Assert.AreEqual(RegistrationStatus.Rejected, updateResult.Registration);
+        Assert.AreEqual(RegistrationStatus.RejectedDuplicate, updateResult.Registration);
         Assert.AreEqual(originalId, existingEffect.EffectId);
         Assert.AreEqual(originalPower, existingEffect.Power);
         Assert.AreEqual(originalDuration, existingEffect.Duration);
@@ -507,7 +517,7 @@ public class ActiveEffectManagerTests
 
         var updateResult = manager.Register(strongerEffect);
 
-        Assert.AreEqual(RegistrationStatus.Refreshed, updateResult.Registration);
+        Assert.AreEqual(RegistrationStatus.Strengthened, updateResult.Registration);
         Assert.AreEqual(originalId, existingEffect.EffectId);
         Assert.AreEqual(20, existingEffect.Power);
         Assert.AreEqual(8, existingEffect.Duration);
@@ -674,6 +684,9 @@ public class ActiveEffectManagerTests
         var result2 = manager.Register(effectB);
 
         // Both should register since they're distinct references
+        Assert.AreEqual(
+            new SupportSkillEffectKey(skillA),
+            new SupportSkillEffectKey(skillA));
         Assert.AreEqual(RegistrationStatus.Registered, result1.Registration);
         Assert.AreEqual(RegistrationStatus.Registered, result2.Registration);
         Assert.AreEqual(2, manager.ActiveEffects.Count);
@@ -829,5 +842,28 @@ public class ActiveEffectManagerTests
                 3));
 
         Assert.AreEqual(0, manager.ActiveEffects.Count);
+    }
+    
+    //I promise its immutable
+    [TestMethod]
+    public void ActiveEffects_ReturnsReadOnlyCollection()
+    {
+        var manager = new ActiveEffectManager();
+
+        var skill = GetTestSkill();
+        var effect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill),
+            10,
+            3,
+            sourceSkill: skill);
+
+        manager.Register(effect);
+
+        Assert.IsInstanceOfType(
+            manager.ActiveEffects,
+            typeof(IReadOnlyList<ActiveEffect>));
+
+        Assert.AreEqual(1, manager.ActiveEffects.Count);
     }
 }

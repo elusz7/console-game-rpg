@@ -97,7 +97,7 @@ public class ActiveEffectManager
                 return UpdateElementalDamageOverTime(existingEffect, newEffect);
 
             case ActiveEffectType.SupportStatModifier:
-                return RegistrationStatus.Rejected;
+                return RegistrationStatus.RejectedDuplicate;
 
             default:
                 throw new ArgumentOutOfRangeException(
@@ -130,7 +130,7 @@ public class ActiveEffectManager
         if (newEffect.Power > existingEffect.Power)
         {
             existingEffect.Refresh(newEffect.Power, newEffect.Duration);
-            return RegistrationStatus.Refreshed;
+            return RegistrationStatus.Strengthened;
         }
 
         if (newEffect.Power == existingEffect.Power)
@@ -151,7 +151,7 @@ public class ActiveEffectManager
         if (newEffect.Power > existingEffect.Power)
         {
             existingEffect.Refresh(newEffect.Power, newEffect.Duration);
-            return RegistrationStatus.Refreshed;
+            return RegistrationStatus.Strengthened;
         }
 
         if (newEffect.Power == existingEffect.Power)
@@ -160,6 +160,6 @@ public class ActiveEffectManager
             return RegistrationStatus.Refreshed;
         }
 
-        return RegistrationStatus.Rejected;
+        return RegistrationStatus.RejectedWeaker;
     }
 }

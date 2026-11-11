@@ -11,6 +11,8 @@ public enum RegistrationStatus
 {
     Registered,
     Refreshed,
+    Strengthened,
     Retained,
-    Rejected
+    RejectedWeaker,
+    RejectedDuplicate
 }
