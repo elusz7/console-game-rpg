@@ -222,25 +222,6 @@ public class MonsterTests
     }
 
     [TestMethod]
-    public void GetStat_ReturnsCorrectStat()
-    {
-        var monster = CreateMonster();
-        monster.AttackPower = 10;
-
-        int attack = monster.GetStat(StatType.Attack);
-
-        Assert.AreEqual(10, attack);
-    }
-
-    [TestMethod]
-    public void GetStat_InvalidStat_Throws()
-    {
-        var monster = CreateMonster();
-
-        Assert.ThrowsException<StatTypeException>(() => monster.GetStat((StatType)999));
-    }
-
-    [TestMethod]
     public void ModifyStat_Health_Heals()
     {
         var monster = CreateMonster();

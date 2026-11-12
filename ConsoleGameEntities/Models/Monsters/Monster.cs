@@ -243,19 +243,20 @@ public class Monster : IMonster
     {
         var damageBoost = DamageType switch
         {
-            DamageType.Martial => ActiveEffects[StatType.Attack],
-            DamageType.Magical => ActiveEffects[StatType.Magic],
+            DamageType.Martial => ActiveEffects[StatType.Attack] + ActiveEffectManager.GetStatModifier(StatType.Attack),
+            DamageType.Magical => ActiveEffects[StatType.Magic] + ActiveEffectManager.GetStatModifier(StatType.Magic),
             DamageType.Hybrid =>
-                (int)Math.Round((ActiveEffects[StatType.Attack] + ActiveEffects[StatType.Magic]) / 2.0),
+                (int)Math.Round((ActiveEffects[StatType.Attack] + ActiveEffects[StatType.Magic] 
+                                                                + ActiveEffectManager.GetStatModifier(StatType.Attack) + ActiveEffectManager.GetStatModifier(StatType.Magic)) / 2.0),
             _ => throw new InvalidDataException("Damage Type not properly mapped to a enum")
         };
 
         return stat switch
         {
-            StatType.Defense => Math.Max(0, DefensePower + ActiveEffects[StatType.Defense]),
-            StatType.Speed => Math.Max(0, AggressionLevel + ActiveEffects[StatType.Speed]),
+            StatType.Defense => Math.Max(0, DefensePower + ActiveEffects[StatType.Defense] + ActiveEffectManager.GetStatModifier(StatType.Defense)),
+            StatType.Speed => Math.Max(0, AggressionLevel + ActiveEffects[StatType.Speed] + ActiveEffectManager.GetStatModifier(StatType.Speed)),
             StatType.Attack or StatType.Magic => Math.Max(0, AttackPower + damageBoost),
-            StatType.Resistance => Math.Max(0, Resistance + ActiveEffects[StatType.Resistance]),
+            StatType.Resistance => Math.Max(0, Resistance + ActiveEffects[StatType.Resistance] + ActiveEffectManager.GetStatModifier(StatType.Resistance)),
             StatType.Health => CurrentHealth,
             _ => throw new StatTypeException("Monster Get Stat")
         };
