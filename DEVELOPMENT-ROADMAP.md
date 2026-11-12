@@ -523,8 +523,8 @@ This phase establishes `ActiveEffectManager` as the authoritative source for act
 
 **Acceptance:** Each combatant has one authoritative store for active effects, with deterministic identity, stacking, refreshing, and removal behavior.
 
-## C2. Integrate Temporary Combat Modifiers
 
+## C2. Integrate Temporary Combat Modifiers
 - [ ] Route temporary stat modifications through `ActiveEffectManager`.
 - [ ] Implement effective-stat calculations using active modifiers.
 - [ ] Integrate Charred with effective defense.

@@ -1,5 +1,6 @@
 ﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Combat.ActiveEffects;
 
@@ -218,5 +219,33 @@ public class ActiveEffectManager
         _activeEffects.Clear();
 
         return new ActiveEffectRemovalResult(effectsToRemove);
+    }
+
+    public int GetStatModifier(StatType stat)
+    {
+        if (stat == StatType.Defense)
+        {
+            return GetElementalStatusModifier(ElementalStatusEffectType.Charred);
+        }
+
+        if (stat == StatType.Resistance)
+        {
+            return GetElementalStatusModifier(ElementalStatusEffectType.Shocked);
+        }
+
+        if (stat == StatType.Speed)
+        {
+            return GetElementalStatusModifier(ElementalStatusEffectType.Snared);
+        }
+
+        return 0;
+    }
+
+    private int GetElementalStatusModifier(ElementalStatusEffectType elementalStatus)
+    {
+        return _activeEffects
+            .Where(ae => ae.EffectType == ActiveEffectType.ElementalStatus
+                         && ((ElementalStatusEffectKey)ae.EffectIdentityKey).StatusType == elementalStatus)
+            .Sum(ae => -ae.Power);
     }
 }
