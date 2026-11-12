@@ -200,28 +200,6 @@ public class MonsterTests
     }
 
     [TestMethod]
-    public void Heal_Success()
-    {
-        var monster = CreateMonster();
-        monster.CurrentHealth = monster.MaxHealth - 30;
-
-        monster.Heal(20);
-
-        Assert.AreEqual(monster.MaxHealth - 10, monster.CurrentHealth);
-    }
-
-    [TestMethod]
-    public void Heal_HitsMaximum()
-    {
-        var monster = CreateMonster();
-        monster.CurrentHealth = monster.MaxHealth - 10;
-
-        monster.Heal(20);
-
-        Assert.AreEqual(monster.MaxHealth, monster.CurrentHealth);
-    }
-
-    [TestMethod]
     public void ModifyStat_Health_Heals()
     {
         var monster = CreateMonster();

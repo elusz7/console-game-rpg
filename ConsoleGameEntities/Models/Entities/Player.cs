@@ -112,18 +112,13 @@ public class Player : IPlayer
             throw new ArgumentOutOfRangeException(
                 nameof(regainedHealth),
                 "Healing amount cannot be negative.");
-        
-        int healedAmount;
-        if (CurrentHealth + regainedHealth > MaxHealth)
-        {
-            healedAmount = MaxHealth - CurrentHealth;
-            CurrentHealth = MaxHealth;
-        }
-        else
-        {
-            healedAmount = regainedHealth;
-            CurrentHealth += regainedHealth;
-        }
+
+        var frozenReduction = ActiveEffectManager.GetHealingReduction();
+        var actualHealing = Math.Max(0, regainedHealth - frozenReduction);
+
+        var healedAmount = Math.Min(actualHealing, MaxHealth - CurrentHealth);
+
+        CurrentHealth += healedAmount;
 
         AddActionItem($"You healed for {healedAmount} health! [{CurrentHealth} / {MaxHealth}]");
     }

@@ -241,6 +241,15 @@ public class ActiveEffectManager
         return 0;
     }
 
+    public int GetHealingReduction()
+    {
+        return _activeEffects
+            .Where(ae => ae.EffectType == ActiveEffectType.ElementalStatus
+                         && ((ElementalStatusEffectKey)ae.EffectIdentityKey).StatusType
+                         == ElementalStatusEffectType.Frozen)
+            .Sum(ae => ae.Power);
+    }
+
     private int GetElementalStatusModifier(ElementalStatusEffectType elementalStatus)
     {
         return _activeEffects

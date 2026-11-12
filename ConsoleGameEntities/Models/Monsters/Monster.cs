@@ -226,17 +226,15 @@ public class Monster : IMonster
             throw new ArgumentOutOfRangeException(
                 nameof(regainedHealth),
                 "Healing amount cannot be negative.");
-        
-        if (CurrentHealth + regainedHealth > MaxHealth)
-        {
-            AddActionItem($"{Name} heals for {MaxHealth - CurrentHealth} health!");
-            CurrentHealth = MaxHealth;
-        }
-        else
-        {
-            AddActionItem($"{Name} heals for {regainedHealth} health!");
-            CurrentHealth += regainedHealth;
-        }
+
+        var frozenReduction = ActiveEffectManager.GetHealingReduction();
+        var actualHealing = Math.Max(0, regainedHealth - frozenReduction);
+
+        var healedAmount = Math.Min(actualHealing, MaxHealth - CurrentHealth);
+
+        CurrentHealth += healedAmount;
+
+        AddActionItem($"{Name} heals for {healedAmount} health!");
     }
 
     public virtual int GetStat(StatType stat)

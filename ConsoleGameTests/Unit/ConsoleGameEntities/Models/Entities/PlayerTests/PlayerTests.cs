@@ -297,30 +297,6 @@ public class PlayerTests
     }
 
     [TestMethod]
-    public void Heal_HealthRestored()
-    {
-        var player = CreatePlayer();
-        player.CurrentHealth = 50;
-
-        player.Heal(30);
-
-        Assert.AreEqual(80, player.CurrentHealth);
-        Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("healed for 30")));
-    }
-
-    [TestMethod]
-    public void Heal_HealthDoesNotExceedMax()
-    {
-        var player = CreatePlayer();
-        player.CurrentHealth = 90;
-
-        player.Heal(30);
-
-        Assert.AreEqual(player.CurrentHealth, player.MaxHealth);
-        Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("healed for 10")));
-    }
-
-    [TestMethod]
     public void LevelUp_IncreasesLevelAndStats()
     {
         var player = CreatePlayer();

@@ -527,10 +527,10 @@ This phase establishes `ActiveEffectManager` as the authoritative source for act
 ## C2. Integrate Temporary Combat Modifiers
 - [ ] Route temporary stat modifications through `ActiveEffectManager`.
 - [ ] Implement effective-stat calculations using active modifiers.
-- [ ] Integrate Charred with effective defense.
-- [ ] Integrate Shocked with effective resilience.
-- [ ] Integrate Frozen with healing received.
-- [ ] Integrate Snared with effective speed.
+- [x] Integrate Charred with effective defense.
+- [x] Integrate Shocked with effective resilience.
+- [x] Integrate Frozen with healing received.
+- [x] Integrate Snared with effective speed.
 - [ ] Integrate Blinded with direct incoming damage.
 - [ ] Integrate Corrupted with outgoing damage.
 - [ ] Preserve base stats.
