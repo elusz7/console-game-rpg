@@ -515,11 +515,11 @@ This phase establishes `ActiveEffectManager` as the authoritative source for act
 - [x] Define effect Power, Duration, and RemainingDuration.
 - [x] Implement `ActiveEffectManager`.
 - [x] Ensure each `ITargetable` owns an `ActiveEffectManager`.
-- [ ] Implement effect registration and lookup.
-- [ ] Implement duplicate prevention.
-- [ ] Implement approved stacking and refresh behavior.
-- [ ] Preserve original effect identity and source ownership when stronger DoTs refresh existing effects.
-- [ ] Define removal-result contracts for expiration and clearing operations.
+- [x] Implement effect registration and lookup.
+- [x] Implement duplicate prevention.
+- [x] Implement approved stacking and refresh behavior.
+- [x] Preserve original effect identity and source ownership when stronger DoTs refresh existing effects.
+- [x] Define removal-result contracts for expiration and clearing operations.
 
 **Acceptance:** Each combatant has one authoritative store for active effects, with deterministic identity, stacking, refreshing, and removal behavior.
 

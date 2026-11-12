@@ -100,7 +100,7 @@ public class ActiveEffectManagerTests
             10,
             3,
             sourceCaster: caster,
-            sourceInstance: rune);
+            sourceRune: rune);
 
         var result = manager.Register(existingEffect);
         Assert.AreEqual(RegistrationStatus.Registered, result.Registration);
@@ -117,7 +117,7 @@ public class ActiveEffectManagerTests
         Assert.AreEqual(RegistrationStatus.Strengthened, updateResult.Registration);
         Assert.AreEqual(originalId, existingEffect.EffectId);
         Assert.AreSame(caster, existingEffect.SourceCaster);
-        Assert.AreSame(rune, existingEffect.SourceInstance);
+        Assert.AreSame(rune, existingEffect.SourceRune);
         Assert.AreEqual(1, manager.ActiveEffects.Count);
     }
 
@@ -140,7 +140,7 @@ public class ActiveEffectManagerTests
             10,
             3,
             sourceCaster: caster,
-            sourceInstance: rune);
+            sourceRune: rune);
 
         var result = manager.Register(existingEffect);
         Assert.AreEqual(RegistrationStatus.Registered, result.Registration);
@@ -155,7 +155,7 @@ public class ActiveEffectManagerTests
             20,
             5,
             sourceCaster: incomingCaster,
-            sourceInstance: incomingRune);
+            sourceRune: incomingRune);
 
         var updateResult = manager.Register(strongerEffect);
 
@@ -163,7 +163,7 @@ public class ActiveEffectManagerTests
         Assert.AreEqual(RegistrationStatus.Strengthened, updateResult.Registration);
         Assert.AreEqual(originalId, existingEffect.EffectId);
         Assert.AreSame(caster, existingEffect.SourceCaster);
-        Assert.AreSame(rune, existingEffect.SourceInstance);
+        Assert.AreSame(rune, existingEffect.SourceRune);
         Assert.AreEqual(20, existingEffect.Power);
         Assert.AreEqual(5, existingEffect.Duration);
         Assert.AreEqual(1, manager.ActiveEffects.Count);
@@ -690,9 +690,6 @@ public class ActiveEffectManagerTests
         Assert.AreEqual(RegistrationStatus.Registered, result1.Registration);
         Assert.AreEqual(RegistrationStatus.Registered, result2.Registration);
         Assert.AreEqual(2, manager.ActiveEffects.Count);
-        Assert.AreNotEqual(
-            new SupportSkillEffectKey(skillA),
-            new SupportSkillEffectKey(skillB));
     }
 
     // ---------------------------------------------------------------------------
@@ -720,14 +717,14 @@ public class ActiveEffectManagerTests
             new ElementalStatusEffectKey(ElementalStatusEffectType.Charred),
             15,
             3,
-            sourceInstance: rune);
+            sourceRune: rune);
 
         var dotEffect = new ActiveEffect(
             ActiveEffectType.ElementalDamageOverTime,
             new ElementalDamageOverTimeEffectKey(ElementType.Fire),
             20,
             4,
-            sourceInstance: rune);
+            sourceRune: rune);
 
         manager.Register(supportEffect);
         manager.Register(statusEffect);
@@ -776,28 +773,41 @@ public class ActiveEffectManagerTests
 
         // RemoveById
         var removed = manager.RemoveById(2L);
-        Assert.IsTrue(removed);
+        Assert.IsTrue(removed.HasRemovedEffects);
+        Assert.AreEqual(1, removed.Count);
+        Assert.AreSame(statusEffect, removed.RemovedEffect);
+        Assert.AreSame(statusEffect, removed.RemovedEffects[0]);
         Assert.AreEqual(2, manager.ActiveEffects.Count);
         Assert.IsNull(manager.GetById(2L));
 
         // RemoveById with non-existent id
         var notRemoved = manager.RemoveById(999L);
-        Assert.IsFalse(notRemoved);
+        Assert.IsFalse(notRemoved.HasRemovedEffects);
         Assert.AreEqual(2, manager.ActiveEffects.Count);
+        Assert.AreEqual(0, notRemoved.Count);
+        Assert.IsNull(notRemoved.RemovedEffect);
+        Assert.AreEqual(0, notRemoved.RemovedEffects.Count);
 
         // RemoveByIdentityKey
         var fireKey = new ElementalDamageOverTimeEffectKey(ElementType.Fire);
         var removedByKey = manager.RemoveByIdentityKey(fireKey);
-        Assert.IsTrue(removedByKey);
+        Assert.IsTrue(removedByKey.HasRemovedEffects);
+        Assert.AreEqual(1, removedByKey.Count);
+        Assert.AreSame(dotEffect, removedByKey.RemovedEffect);
+        Assert.AreSame(dotEffect, removedByKey.RemovedEffects[0]);
         Assert.AreEqual(1, manager.ActiveEffects.Count);
         Assert.IsNull(manager.GetByIdentityKey(fireKey));
+        
 
         // RemoveByIdentityKey with non-existent key
         var notRemovedByKey = manager.RemoveByIdentityKey(
             new ElementalDamageOverTimeEffectKey(ElementType.Ice));
-        Assert.IsFalse(notRemovedByKey);
+        Assert.IsFalse(notRemovedByKey.HasRemovedEffects);
         Assert.AreEqual(1, manager.ActiveEffects.Count);
-
+        Assert.AreEqual(0, notRemovedByKey.Count);
+        Assert.IsNull(notRemovedByKey.RemovedEffect);
+        Assert.AreEqual(0, notRemovedByKey.RemovedEffects.Count);
+        
         // Verify remaining effect
         Assert.AreEqual(1L, supportEffect.EffectId);
         Assert.AreSame(supportEffect, manager.ActiveEffects[0]);
@@ -860,10 +870,1059 @@ public class ActiveEffectManagerTests
 
         manager.Register(effect);
 
-        Assert.IsInstanceOfType(
-            manager.ActiveEffects,
-            typeof(IReadOnlyList<ActiveEffect>));
+        var activeEffects = manager.ActiveEffects;
+
+        Assert.AreEqual(1, activeEffects.Count);
+
+        var mutableView = activeEffects as IList<ActiveEffect>;
+
+        Assert.IsNotNull(mutableView);
+
+        Assert.ThrowsException<NotSupportedException>(
+            () => mutableView.Add(effect));
 
         Assert.AreEqual(1, manager.ActiveEffects.Count);
+    }
+    
+    
+    // ---------------------------------------------------------------------------
+    // T. ClearBySource(ITargetable)
+    // ---------------------------------------------------------------------------
+
+    [TestMethod]
+    public void ClearBySource_NullCaster_Throws()
+    {
+        var manager = new ActiveEffectManager();
+
+        Assert.ThrowsException<ArgumentNullException>(
+            () => manager.ClearBySource((ITargetable)null!));
+
+        Assert.AreEqual(0, manager.ActiveEffects.Count);
+    }
+
+    [TestMethod]
+    public void ClearBySource_NoMatchingEffects_ReturnsEmptyResult()
+    {
+        var manager = new ActiveEffectManager();
+
+        var skill = GetTestSkill();
+        var effect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill),
+            10,
+            5,
+            sourceSkill: skill);
+
+        manager.Register(effect);
+
+        var otherCaster = Mock.Of<ITargetable>();
+        var result = manager.ClearBySource(otherCaster);
+
+        Assert.IsFalse(result.HasRemovedEffects);
+        Assert.AreEqual(0, result.Count);
+        Assert.AreEqual(1, manager.ActiveEffects.Count);
+    }
+
+    [TestMethod]
+    public void ClearBySource_RemovesSingleMatchingEffect()
+    {
+        var manager = new ActiveEffectManager();
+        var caster = Mock.Of<ITargetable>();
+        var rune = Mock.Of<IRune>();
+
+        var effect = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            10,
+            5,
+            sourceCaster: caster,
+            sourceRune: rune);
+
+        manager.Register(effect);
+
+        var result = manager.ClearBySource(caster);
+
+        Assert.IsTrue(result.HasRemovedEffects);
+        Assert.AreEqual(1, result.Count);
+        Assert.AreSame(effect, result.RemovedEffect);
+        Assert.AreEqual(0, manager.ActiveEffects.Count);
+    }
+
+    [TestMethod]
+    public void ClearBySource_RemovesMultipleMatchingEffects()
+    {
+        var manager = new ActiveEffectManager();
+        var casterA = Mock.Of<ITargetable>();
+        var casterB = Mock.Of<ITargetable>();
+        var runeA = Mock.Of<IRune>();
+        var runeB = Mock.Of<IRune>();
+
+        var effectA1 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            10,
+            5,
+            sourceCaster: casterA,
+            sourceRune: runeA);
+
+        var effectA2 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Ice),
+            15,
+            3,
+            sourceCaster: casterA,
+            sourceRune: runeA);
+
+        var effectA3 = new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(ElementalStatusEffectType.Charred),
+            20,
+            4,
+            sourceCaster: casterA,
+            sourceRune: runeA);
+
+        var effectB1 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Lightning),
+            12,
+            6,
+            sourceCaster: casterB,
+            sourceRune: runeB);
+
+        var effectB2 = new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(ElementalStatusEffectType.Shocked),
+            18,
+            2,
+            sourceCaster: casterB,
+            sourceRune: runeB);
+
+        manager.Register(effectA1);
+        manager.Register(effectA2);
+        manager.Register(effectA3);
+        manager.Register(effectB1);
+        manager.Register(effectB2);
+
+        var result = manager.ClearBySource(casterA);
+
+        Assert.IsTrue(result.HasRemovedEffects);
+        Assert.AreEqual(3, result.Count);
+        Assert.IsNull(result.RemovedEffect);
+        CollectionAssert.Contains(result.RemovedEffects.ToList(), effectA1);
+        CollectionAssert.Contains(result.RemovedEffects.ToList(), effectA2);
+        CollectionAssert.Contains(result.RemovedEffects.ToList(), effectA3);
+        Assert.AreEqual(2, manager.ActiveEffects.Count);
+        CollectionAssert.Contains(manager.ActiveEffects.ToList(), effectB1);
+        CollectionAssert.Contains(manager.ActiveEffects.ToList(), effectB2);
+        Assert.IsNull(manager.GetById(effectA1.EffectId));
+        Assert.IsNull(manager.GetById(effectA2.EffectId));
+        Assert.IsNull(manager.GetById(effectA3.EffectId));
+    }
+
+    [TestMethod]
+    public void ClearBySource_PreservesEffectsFromOtherCasters()
+    {
+        var manager = new ActiveEffectManager();
+        var casterA = Mock.Of<ITargetable>();
+        var casterB = Mock.Of<ITargetable>();
+        var rune = Mock.Of<IRune>();
+
+        var effectA = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            10,
+            5,
+            sourceCaster: casterA,
+            sourceRune: rune);
+
+        var effectB = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Ice),
+            15,
+            3,
+            sourceCaster: casterB,
+            sourceRune: rune);
+
+        manager.Register(effectA);
+        manager.Register(effectB);
+
+        var result = manager.ClearBySource(casterA);
+
+        Assert.AreEqual(1, result.Count);
+        Assert.AreEqual(1, manager.ActiveEffects.Count);
+        Assert.AreSame(effectB, manager.ActiveEffects[0]);
+        Assert.IsFalse(result.RemovedEffects.Contains(effectB));
+    }
+
+    [TestMethod]
+    public void ClearBySource_UsesReferenceEquality()
+    {
+        var manager = new ActiveEffectManager();
+        var casterA = Mock.Of<ITargetable>();
+        var casterB = Mock.Of<ITargetable>();
+        var rune = Mock.Of<IRune>();
+
+        Assert.IsFalse(ReferenceEquals(casterA, casterB));
+
+        var effect = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            10,
+            5,
+            sourceCaster: casterA,
+            sourceRune: rune);
+
+        manager.Register(effect);
+
+        var result = manager.ClearBySource(casterB);
+
+        Assert.IsFalse(result.HasRemovedEffects);
+        Assert.AreEqual(0, result.Count);
+        Assert.AreEqual(1, manager.ActiveEffects.Count);
+    }
+
+    [TestMethod]
+    public void ClearBySource_ReturnsRemovedEffectInstances()
+    {
+        var manager = new ActiveEffectManager();
+        var caster = Mock.Of<ITargetable>();
+        var rune = Mock.Of<IRune>();
+
+        var effect1 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            10,
+            5,
+            sourceCaster: caster,
+            sourceRune: rune);
+
+        var effect2 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Ice),
+            15,
+            3,
+            sourceCaster: caster,
+            sourceRune: rune);
+
+        manager.Register(effect1);
+        manager.Register(effect2);
+
+        var result = manager.ClearBySource(caster);
+
+        Assert.AreSame(effect1, result.RemovedEffects[0]);
+        Assert.AreSame(effect2, result.RemovedEffects[1]);
+        Assert.AreEqual(2, result.Count);
+        Assert.AreSame(effect1, result.RemovedEffects[0]);
+        Assert.AreSame(effect2, result.RemovedEffects[1]);
+        Assert.AreEqual(0, manager.ActiveEffects.Count);
+    }
+
+    // ---------------------------------------------------------------------------
+    // U. ClearBySource(ISkill)
+    // ---------------------------------------------------------------------------
+
+    [TestMethod]
+    public void ClearBySource_Skill_NullSource_Throws()
+    {
+        var manager = new ActiveEffectManager();
+
+        Assert.ThrowsException<ArgumentNullException>(
+            () => manager.ClearBySource((ISkill)null!));
+
+        Assert.AreEqual(0, manager.ActiveEffects.Count);
+    }
+
+    [TestMethod]
+    public void ClearBySource_Skill_NoMatchingEffects_ReturnsEmptyResult()
+    {
+        var manager = new ActiveEffectManager();
+        var skill = GetTestSkill();
+
+        var effect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill),
+            10,
+            5,
+            sourceSkill: skill);
+
+        manager.Register(effect);
+
+        var otherSkill = GetTestSkill2();
+        var result = manager.ClearBySource(otherSkill);
+
+        Assert.IsFalse(result.HasRemovedEffects);
+        Assert.AreEqual(0, result.Count);
+        Assert.IsNull(result.RemovedEffect);
+        Assert.AreEqual(1, manager.ActiveEffects.Count);
+    }
+
+    [TestMethod]
+    public void ClearBySource_Skill_RemovesSingleMatchingEffect()
+    {
+        var manager = new ActiveEffectManager();
+        var skill = GetTestSkill();
+
+        var effect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill),
+            10,
+            5,
+            sourceSkill: skill);
+
+        manager.Register(effect);
+
+        var result = manager.ClearBySource(skill);
+
+        Assert.IsTrue(result.HasRemovedEffects);
+        Assert.AreEqual(1, result.Count);
+        Assert.AreSame(effect, result.RemovedEffect);
+        Assert.AreEqual(0, manager.ActiveEffects.Count);
+    }
+
+    [TestMethod]
+    public void ClearBySource_Skill_RemovesMultipleMatchingEffects()
+    {
+        var manager = new ActiveEffectManager();
+        var skillA = GetTestSkill();
+        var skillB = GetTestSkill2();
+
+        // Use elemental effects with different identity keys but the same SourceSkill
+        var effectA1 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            10,
+            5,
+            sourceSkill: skillA);
+
+        var effectA2 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Ice),
+            15,
+            3,
+            sourceSkill: skillA);
+
+        var effectA3 = new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(ElementalStatusEffectType.Charred),
+            20,
+            4,
+            sourceSkill: skillA);
+
+        var effectB1 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Lightning),
+            12,
+            6,
+            sourceSkill: skillB);
+
+        var effectB2 = new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(ElementalStatusEffectType.Shocked),
+            18,
+            2,
+            sourceSkill: skillB);
+
+        manager.Register(effectA1);
+        manager.Register(effectA2);
+        manager.Register(effectA3);
+        manager.Register(effectB1);
+        manager.Register(effectB2);
+
+        var result = manager.ClearBySource(skillA);
+
+        Assert.IsTrue(result.HasRemovedEffects);
+        Assert.AreEqual(3, result.Count);
+        Assert.IsNull(result.RemovedEffect);
+        CollectionAssert.Contains(result.RemovedEffects.ToList(), effectA1);
+        CollectionAssert.Contains(result.RemovedEffects.ToList(), effectA2);
+        CollectionAssert.Contains(result.RemovedEffects.ToList(), effectA3);
+        Assert.AreEqual(2, manager.ActiveEffects.Count);
+        CollectionAssert.Contains(manager.ActiveEffects.ToList(), effectB1);
+        CollectionAssert.Contains(manager.ActiveEffects.ToList(), effectB2);
+        Assert.IsNull(manager.GetById(effectA1.EffectId));
+        Assert.IsNull(manager.GetById(effectA2.EffectId));
+        Assert.IsNull(manager.GetById(effectA3.EffectId));
+    }
+
+    [TestMethod]
+    public void ClearBySource_Skill_PreservesEffectsFromOtherSkills()
+    {
+        var manager = new ActiveEffectManager();
+        var skillA = GetTestSkill();
+        var skillB = GetTestSkill2();
+
+        var effectA = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skillA),
+            10,
+            5,
+            sourceSkill: skillA);
+
+        var effectB = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skillB),
+            15,
+            3,
+            sourceSkill: skillB);
+
+        manager.Register(effectA);
+        manager.Register(effectB);
+
+        var result = manager.ClearBySource(skillA);
+
+        Assert.AreEqual(1, result.Count);
+        Assert.AreEqual(1, manager.ActiveEffects.Count);
+        Assert.AreSame(effectB, manager.ActiveEffects[0]);
+        Assert.IsFalse(result.RemovedEffects.Contains(effectB));
+    }
+
+    [TestMethod]
+    public void ClearBySource_Skill_UsesReferenceEquality()
+    {
+        var manager = new ActiveEffectManager();
+
+        var skillA = new Skill
+        {
+            Name = "IdenticalSkill",
+            Power = 10,
+            Cooldown = 3,
+            ElapsedTime = 6,
+            Cost = 0,
+            RequiredLevel = 1,
+            TargetType = TargetType.Self,
+            SkillCategory = SkillCategory.Basic
+        };
+
+        var skillB = new Skill
+        {
+            Name = "IdenticalSkill",
+            Power = 10,
+            Cooldown = 3,
+            ElapsedTime = 6,
+            Cost = 0,
+            RequiredLevel = 1,
+            TargetType = TargetType.Self,
+            SkillCategory = SkillCategory.Basic
+        };
+
+        Assert.IsFalse(ReferenceEquals(skillA, skillB));
+
+        var effect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skillA),
+            10,
+            5,
+            sourceSkill: skillA);
+
+        manager.Register(effect);
+
+        var result = manager.ClearBySource(skillB);
+
+        Assert.IsFalse(result.HasRemovedEffects);
+        Assert.AreEqual(0, result.Count);
+        Assert.AreEqual(1, manager.ActiveEffects.Count);
+    }
+
+    [TestMethod]
+    public void ClearBySource_Skill_ReturnsRemovedEffectInstances()
+    {
+        var manager = new ActiveEffectManager();
+        var skill = GetTestSkill();
+
+        var effect1 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            10,
+            5,
+            sourceSkill: skill);
+
+        var effect2 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Ice),
+            15,
+            3,
+            sourceSkill: skill);
+
+        manager.Register(effect1);
+        manager.Register(effect2);
+
+        var result = manager.ClearBySource(skill);
+
+        Assert.AreSame(effect1, result.RemovedEffects[0]);
+        Assert.AreSame(effect2, result.RemovedEffects[1]);
+        Assert.AreEqual(2, result.Count);
+        Assert.AreSame(effect1, result.RemovedEffects[0]);
+        Assert.AreSame(effect2, result.RemovedEffects[1]);
+        Assert.AreEqual(0, manager.ActiveEffects.Count);
+    }
+
+    // ---------------------------------------------------------------------------
+    // V. ClearBySource(IRune)
+    // ---------------------------------------------------------------------------
+
+    [TestMethod]
+    public void ClearBySource_Rune_NullSource_Throws()
+    {
+        var manager = new ActiveEffectManager();
+
+        Assert.ThrowsException<ArgumentNullException>(
+            () => manager.ClearBySource((IRune)null!));
+
+        Assert.AreEqual(0, manager.ActiveEffects.Count);
+    }
+
+    [TestMethod]
+    public void ClearBySource_Rune_NoMatchingEffects_ReturnsEmptyResult()
+    {
+        var manager = new ActiveEffectManager();
+        var rune = Mock.Of<IRune>();
+
+        var effect = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            10,
+            5,
+            sourceRune: rune);
+
+        manager.Register(effect);
+
+        var otherRune = Mock.Of<IRune>();
+        var result = manager.ClearBySource(otherRune);
+
+        Assert.IsFalse(result.HasRemovedEffects);
+        Assert.AreEqual(0, result.Count);
+        Assert.AreEqual(1, manager.ActiveEffects.Count);
+    }
+
+    [TestMethod]
+    public void ClearBySource_Rune_RemovesSingleMatchingEffect()
+    {
+        var manager = new ActiveEffectManager();
+        var rune = Mock.Of<IRune>();
+
+        var effect = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            10,
+            5,
+            sourceRune: rune);
+
+        manager.Register(effect);
+
+        var result = manager.ClearBySource(rune);
+
+        Assert.IsTrue(result.HasRemovedEffects);
+        Assert.AreEqual(1, result.Count);
+        Assert.AreSame(effect, result.RemovedEffect);
+        Assert.AreEqual(0, manager.ActiveEffects.Count);
+    }
+
+    [TestMethod]
+    public void ClearBySource_Rune_RemovesMultipleMatchingEffects()
+    {
+        var manager = new ActiveEffectManager();
+        var runeA = Mock.Of<IRune>();
+        var runeB = Mock.Of<IRune>();
+
+        var effectA1 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            10,
+            5,
+            sourceRune: runeA);
+
+        var effectA2 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Ice),
+            15,
+            3,
+            sourceRune: runeA);
+
+        var effectA3 = new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(ElementalStatusEffectType.Charred),
+            20,
+            4,
+            sourceRune: runeA);
+
+        var effectB1 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Lightning),
+            12,
+            6,
+            sourceRune: runeB);
+
+        var effectB2 = new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(ElementalStatusEffectType.Shocked),
+            18,
+            2,
+            sourceRune: runeB);
+
+        manager.Register(effectA1);
+        manager.Register(effectA2);
+        manager.Register(effectA3);
+        manager.Register(effectB1);
+        manager.Register(effectB2);
+
+        var result = manager.ClearBySource(runeA);
+
+        Assert.IsTrue(result.HasRemovedEffects);
+        Assert.AreEqual(3, result.Count);
+        Assert.IsNull(result.RemovedEffect);
+        CollectionAssert.Contains(result.RemovedEffects.ToList(), effectA1);
+        CollectionAssert.Contains(result.RemovedEffects.ToList(), effectA2);
+        CollectionAssert.Contains(result.RemovedEffects.ToList(), effectA3);
+        Assert.AreEqual(2, manager.ActiveEffects.Count);
+        CollectionAssert.Contains(manager.ActiveEffects.ToList(), effectB1);
+        CollectionAssert.Contains(manager.ActiveEffects.ToList(), effectB2);
+        Assert.IsNull(manager.GetById(effectA1.EffectId));
+        Assert.IsNull(manager.GetById(effectA2.EffectId));
+        Assert.IsNull(manager.GetById(effectA3.EffectId));
+    }
+
+    [TestMethod]
+    public void ClearBySource_Rune_PreservesEffectsFromOtherRunes()
+    {
+        var manager = new ActiveEffectManager();
+        var runeA = Mock.Of<IRune>();
+        var runeB = Mock.Of<IRune>();
+
+        var effectA = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            10,
+            5,
+            sourceRune: runeA);
+
+        var effectB = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Ice),
+            15,
+            3,
+            sourceRune: runeB);
+
+        manager.Register(effectA);
+        manager.Register(effectB);
+
+        var result = manager.ClearBySource(runeA);
+
+        Assert.AreEqual(1, result.Count);
+        Assert.AreEqual(1, manager.ActiveEffects.Count);
+        Assert.AreSame(effectB, manager.ActiveEffects[0]);
+        Assert.IsFalse(result.RemovedEffects.Contains(effectB));
+    }
+
+    [TestMethod]
+    public void ClearBySource_Rune_UsesReferenceEquality()
+    {
+        var manager = new ActiveEffectManager();
+        var runeA = Mock.Of<IRune>();
+        var runeB = Mock.Of<IRune>();
+
+        Assert.IsFalse(ReferenceEquals(runeA, runeB));
+
+        var effect = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            10,
+            5,
+            sourceRune: runeA);
+
+        manager.Register(effect);
+
+        var result = manager.ClearBySource(runeB);
+
+        Assert.IsFalse(result.HasRemovedEffects);
+        Assert.AreEqual(0, result.Count);
+        Assert.AreEqual(1, manager.ActiveEffects.Count);
+    }
+
+    [TestMethod]
+    public void ClearBySource_Rune_ReturnsRemovedEffectInstances()
+    {
+        var manager = new ActiveEffectManager();
+        var rune = Mock.Of<IRune>();
+
+        var effect1 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            10,
+            5,
+            sourceRune: rune);
+
+        var effect2 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Ice),
+            15,
+            3,
+            sourceRune: rune);
+
+        manager.Register(effect1);
+        manager.Register(effect2);
+
+        var result = manager.ClearBySource(rune);
+
+        Assert.AreSame(effect1, result.RemovedEffects[0]);
+        Assert.AreSame(effect2, result.RemovedEffects[1]);
+        Assert.AreEqual(2, result.Count);
+        Assert.AreSame(effect1, result.RemovedEffects[0]);
+        Assert.AreSame(effect2, result.RemovedEffects[1]);
+        Assert.AreEqual(0, manager.ActiveEffects.Count);
+    }
+
+    // ---------------------------------------------------------------------------
+    // W. ClearAll
+    // ---------------------------------------------------------------------------
+
+    [TestMethod]
+    public void ClearAll_EmptyManager_ReturnsEmptyResult()
+    {
+        var manager = new ActiveEffectManager();
+
+        var result = manager.ClearAll();
+
+        Assert.IsFalse(result.HasRemovedEffects);
+        Assert.AreEqual(0, result.Count);
+        Assert.AreEqual(0, manager.ActiveEffects.Count);
+    }
+
+    [TestMethod]
+    public void ClearAll_RemovesSingleEffect()
+    {
+        var manager = new ActiveEffectManager();
+        var skill = GetTestSkill();
+
+        var effect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill),
+            10,
+            5,
+            sourceSkill: skill);
+
+        manager.Register(effect);
+
+        var result = manager.ClearAll();
+
+        Assert.IsTrue(result.HasRemovedEffects);
+        Assert.AreEqual(1, result.Count);
+        Assert.AreSame(effect, result.RemovedEffect);
+        Assert.AreEqual(0, manager.ActiveEffects.Count);
+    }
+
+    [TestMethod]
+    public void ClearAll_RemovesMultipleEffects()
+    {
+        var manager = new ActiveEffectManager();
+        var skill = GetTestSkill();
+        var rune = Mock.Of<IRune>();
+
+        var effect1 = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill),
+            10,
+            5,
+            sourceSkill: skill);
+
+        var effect2 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            15,
+            3,
+            sourceRune: rune);
+
+        var effect3 = new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(ElementalStatusEffectType.Charred),
+            20,
+            4,
+            sourceRune: rune);
+
+        manager.Register(effect1);
+        manager.Register(effect2);
+        manager.Register(effect3);
+
+        var result = manager.ClearAll();
+
+        Assert.AreEqual(3, result.Count);
+        Assert.IsNull(result.RemovedEffect);
+        Assert.AreEqual(3, result.RemovedEffects.Count);
+        Assert.AreEqual(0, manager.ActiveEffects.Count);
+    }
+
+    [TestMethod]
+    public void ClearAll_RemovesEffectsRegardlessOfType()
+    {
+        var manager = new ActiveEffectManager();
+        var skill = GetTestSkill();
+        var rune = Mock.Of<IRune>();
+
+        var supportEffect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill),
+            10,
+            5,
+            sourceSkill: skill);
+
+        var statusEffect = new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(ElementalStatusEffectType.Charred),
+            15,
+            3,
+            sourceRune: rune);
+
+        var dotEffect = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            20,
+            4,
+            sourceRune: rune);
+
+        manager.Register(supportEffect);
+        manager.Register(statusEffect);
+        manager.Register(dotEffect);
+
+        var result = manager.ClearAll();
+
+        Assert.AreEqual(3, result.Count);
+        Assert.IsNull(result.RemovedEffect);
+        Assert.AreEqual(3, result.RemovedEffects.Count);
+
+        CollectionAssert.AreEquivalent(
+            new[] { supportEffect, statusEffect, dotEffect },
+            result.RemovedEffects.ToArray());
+
+        Assert.AreEqual(0, manager.ActiveEffects.Count);
+    }
+
+    [TestMethod]
+    public void ClearAll_ReturnsAllOriginalEffectInstances()
+    {
+        var manager = new ActiveEffectManager();
+        var skill = GetTestSkill();
+        var rune = Mock.Of<IRune>();
+
+        var effect1 = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill),
+            10,
+            5,
+            sourceSkill: skill);
+
+        var effect2 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            15,
+            3,
+            sourceRune: rune);
+
+        manager.Register(effect1);
+        manager.Register(effect2);
+
+        var result = manager.ClearAll();
+
+        Assert.AreSame(effect1, result.RemovedEffects[0]);
+        Assert.AreSame(effect2, result.RemovedEffects[1]);
+    }
+
+    [TestMethod]
+    public void ClearAll_DoesNotResetEffectIdSequence()
+    {
+        var manager = new ActiveEffectManager();
+        var skill = GetTestSkill();
+
+        var effect1 = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill),
+            10,
+            5,
+            sourceSkill: skill);
+
+        var rune = Mock.Of<IRune>();
+        var effect2 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            15,
+            3,
+            sourceRune: rune);
+
+        manager.Register(effect1);
+        manager.Register(effect2);
+
+        var clearResult = manager.ClearAll();
+        Assert.AreEqual(2, clearResult.Count);
+
+        var skill2 = GetTestSkill2();
+        var effect3 = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill2),
+            20,
+            4,
+            sourceSkill: skill2);
+
+        manager.Register(effect3);
+
+        Assert.AreEqual(3L, effect3.EffectId);
+    }
+
+    [TestMethod]
+    public void ClearAll_CanBeCalledRepeatedly()
+    {
+        var manager = new ActiveEffectManager();
+        var skill = GetTestSkill();
+
+        var effect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill),
+            10,
+            5,
+            sourceSkill: skill);
+
+        manager.Register(effect);
+
+        var result1 = manager.ClearAll();
+        Assert.AreEqual(1, result1.Count);
+
+        var result2 = manager.ClearAll();
+        Assert.IsFalse(result2.HasRemovedEffects);
+        Assert.AreEqual(0, result2.Count);
+    }
+
+    // ---------------------------------------------------------------------------
+    // X. Removal result contract
+    // ---------------------------------------------------------------------------
+
+    [TestMethod]
+    public void RemovalResult_OneEffect_SetsRemovedEffect()
+    {
+        var manager = new ActiveEffectManager();
+        var skill = GetTestSkill();
+
+        var effect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill),
+            10,
+            5,
+            sourceSkill: skill);
+
+        manager.Register(effect);
+
+        var result = manager.RemoveById(effect.EffectId);
+
+        Assert.AreEqual(1, result.Count);
+        Assert.IsTrue(result.HasRemovedEffects);
+        Assert.AreSame(effect, result.RemovedEffect);
+    }
+
+    [TestMethod]
+    public void RemovalResult_MultipleEffects_HasNullRemovedEffect()
+    {
+        var manager = new ActiveEffectManager();
+        var skill = GetTestSkill();
+
+        var effect1 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            10,
+            5,
+            sourceSkill: skill);
+
+        var effect2 = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Ice),
+            15,
+            3,
+            sourceSkill: skill);
+
+        manager.Register(effect1);
+        manager.Register(effect2);
+
+        var result = manager.ClearBySource(skill);
+
+        Assert.AreEqual(2, result.Count);
+        Assert.IsTrue(result.HasRemovedEffects);
+        Assert.IsNull(result.RemovedEffect);
+    }
+
+    [TestMethod]
+    public void RemovalResult_EmptyCollection_HasNoRemovedEffects()
+    {
+        var manager = new ActiveEffectManager();
+
+        var result = manager.RemoveById(999L);
+
+        Assert.IsFalse(result.HasRemovedEffects);
+        Assert.AreEqual(0, result.Count);
+        Assert.IsNull(result.RemovedEffect);
+    }
+    
+    [TestMethod]
+    public void ClearBySource_Caster_DoesNotMatchSharedRune()
+    {
+        var manager = new ActiveEffectManager();
+
+        var casterA = new Mock<ITargetable>().Object;
+        var casterB = new Mock<ITargetable>().Object;
+        var sharedRune = new Mock<IRune>().Object;
+
+        var effectA = new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(ElementalStatusEffectType.Charred),
+            power: 10,
+            duration: 3,
+            sourceCaster: casterA,
+            sourceRune: sharedRune);
+
+        var effectB = new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(ElementalStatusEffectType.Frozen),
+            power: 10,
+            duration: 3,
+            sourceCaster: casterB,
+            sourceRune: sharedRune);
+
+        manager.Register(effectA);
+        manager.Register(effectB);
+
+        var result = manager.ClearBySource(casterA);
+
+        Assert.AreEqual(1, result.Count);
+        Assert.AreSame(effectA, result.RemovedEffect);
+        Assert.AreSame(effectB, manager.ActiveEffects.Single());
+    }
+    
+    [TestMethod]
+    public void ClearBySource_Rune_DoesNotMatchSharedCaster()
+    {
+        var manager = new ActiveEffectManager();
+
+        var sharedCaster = new Mock<ITargetable>().Object;
+        var runeA = new Mock<IRune>().Object;
+        var runeB = new Mock<IRune>().Object;
+
+        var effectA = new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(ElementalStatusEffectType.Shocked),
+            power: 10,
+            duration: 3,
+            sourceCaster: sharedCaster,
+            sourceRune: runeA);
+
+        var effectB = new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(ElementalStatusEffectType.Corrupted),
+            power: 10,
+            duration: 3,
+            sourceCaster: sharedCaster,
+            sourceRune: runeB);
+
+        manager.Register(effectA);
+        manager.Register(effectB);
+
+        var result = manager.ClearBySource(runeA);
+
+        Assert.AreEqual(1, result.Count);
+        Assert.AreSame(effectA, result.RemovedEffect);
+        Assert.AreSame(effectB, manager.ActiveEffects.Single());
     }
 }

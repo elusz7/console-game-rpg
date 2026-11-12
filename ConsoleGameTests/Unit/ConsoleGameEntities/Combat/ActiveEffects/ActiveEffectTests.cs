@@ -76,7 +76,7 @@ public class ActiveEffectTests
 
         Assert.IsNull(effect.SourceCaster);
         Assert.IsNull(effect.SourceSkill);
-        Assert.IsNull(effect.SourceInstance);
+        Assert.IsNull(effect.SourceRune);
     }
 
     [TestMethod]
@@ -94,11 +94,11 @@ public class ActiveEffectTests
             3,
             sourceCaster: caster,
             sourceSkill: skill,
-            sourceInstance: rune);
+            sourceRune: rune);
 
         Assert.AreSame(caster, effect.SourceCaster);
         Assert.AreSame(skill, effect.SourceSkill);
-        Assert.AreSame(rune, effect.SourceInstance);
+        Assert.AreSame(rune, effect.SourceRune);
     }
     
     [TestMethod]
@@ -345,9 +345,9 @@ public class ActiveEffectTests
             key,
             10,
             3,
-            sourceInstance: rune);
+            sourceRune: rune);
 
-        Assert.AreSame(rune, effect.SourceInstance);
+        Assert.AreSame(rune, effect.SourceRune);
     }
 
     [TestMethod]
@@ -358,7 +358,7 @@ public class ActiveEffectTests
 
         Assert.IsNull(effect.SourceCaster);
         Assert.IsNull(effect.SourceSkill);
-        Assert.IsNull(effect.SourceInstance);
+        Assert.IsNull(effect.SourceRune);
     }
 
     // ---------------------------------------------------------------------------
@@ -443,11 +443,11 @@ public class ActiveEffectTests
             key,
             10,
             3,
-            sourceInstance: rune);
+            sourceRune: rune);
 
         effect.Refresh(20, 5);
 
-        Assert.AreSame(rune, effect.SourceInstance);
+        Assert.AreSame(rune, effect.SourceRune);
     }
 
     [TestMethod]

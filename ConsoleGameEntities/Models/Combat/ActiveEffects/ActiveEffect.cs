@@ -21,7 +21,7 @@ public class ActiveEffect
 
     public ISkill? SourceSkill { get; }
 
-    public IRune? SourceInstance { get; }
+    public IRune? SourceRune { get; }
 
     public ActiveEffect(
         ActiveEffectType effectType,
@@ -30,7 +30,7 @@ public class ActiveEffect
         int duration,
         ITargetable? sourceCaster = null,
         ISkill? sourceSkill = null,
-        IRune? sourceInstance = null)
+        IRune? sourceRune = null)
     {
         ArgumentNullException.ThrowIfNull(effectIdentityKey);
         
@@ -50,7 +50,7 @@ public class ActiveEffect
 
         SourceCaster = sourceCaster;
         SourceSkill = sourceSkill;
-        SourceInstance = sourceInstance;
+        SourceRune = sourceRune;
     }
 
     internal void AssignEffectId(long effectId)

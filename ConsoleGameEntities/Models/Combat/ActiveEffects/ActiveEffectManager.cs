@@ -1,4 +1,5 @@
 ﻿using ConsoleGameEntities.Interfaces;
+using ConsoleGameEntities.Interfaces.Attributes;
 
 namespace ConsoleGameEntities.Models.Combat.ActiveEffects;
 
@@ -54,18 +55,29 @@ public class ActiveEffectManager
             ae => ReferenceEquals(ae.SourceSkill, source))];
     }
 
-    public bool RemoveById(long effectId)
+    public ActiveEffectRemovalResult RemoveById(long effectId)
     {
         var effect = GetById(effectId);
 
-        return effect != null && _activeEffects.Remove(effect);
+        if (effect == null)
+            return new ActiveEffectRemovalResult([]);
+
+        _activeEffects.Remove(effect);
+
+        return new ActiveEffectRemovalResult([effect]);
     }
 
-    public bool RemoveByIdentityKey(ActiveEffectIdentityKey identityKey)
+    public ActiveEffectRemovalResult RemoveByIdentityKey(
+        ActiveEffectIdentityKey identityKey)
     {
         var effect = GetByIdentityKey(identityKey);
-        
-        return effect != null && _activeEffects.Remove(effect);
+
+        if (effect == null)
+            return new ActiveEffectRemovalResult([]);
+
+        _activeEffects.Remove(effect);
+
+        return new ActiveEffectRemovalResult([effect]);
     }
     
     private static void ValidateEffect(ActiveEffect effect)
@@ -101,7 +113,7 @@ public class ActiveEffectManager
 
             default:
                 throw new ArgumentOutOfRangeException(
-                    nameof(existingEffect.EffectType));
+                    nameof(existingEffect), "Effect Type is Invalid.");
         }
     }
 
@@ -161,5 +173,50 @@ public class ActiveEffectManager
         }
 
         return RegistrationStatus.RejectedWeaker;
+    }
+
+    public ActiveEffectRemovalResult ClearBySource(ITargetable sourceCaster)
+    {
+        ArgumentNullException.ThrowIfNull(sourceCaster);
+
+        var effectsToRemove = _activeEffects.Where(ae => ReferenceEquals(ae.SourceCaster, sourceCaster)).ToList();
+
+        foreach (var effect in effectsToRemove)
+            _activeEffects.Remove(effect);
+        
+        return new ActiveEffectRemovalResult(effectsToRemove);
+    }
+
+    public ActiveEffectRemovalResult ClearBySource(ISkill sourceSkill)
+    {
+        ArgumentNullException.ThrowIfNull(sourceSkill);
+
+        var effectsToRemove = _activeEffects.Where(ae => ReferenceEquals(ae.SourceSkill, sourceSkill)).ToList();
+
+        foreach (var effect in effectsToRemove)
+            _activeEffects.Remove(effect);
+        
+        return new ActiveEffectRemovalResult(effectsToRemove);
+    }
+
+    public ActiveEffectRemovalResult ClearBySource(IRune sourceInstance)
+    {
+        ArgumentNullException.ThrowIfNull(sourceInstance);
+
+        var effectsToRemove = _activeEffects.Where(ae => ReferenceEquals(ae.SourceRune, sourceInstance)).ToList();
+
+        foreach (var effect in effectsToRemove)
+            _activeEffects.Remove(effect);
+        
+        return new ActiveEffectRemovalResult(effectsToRemove);
+    }
+
+    public ActiveEffectRemovalResult ClearAll()
+    {
+        var effectsToRemove = _activeEffects.ToList();
+
+        _activeEffects.Clear();
+
+        return new ActiveEffectRemovalResult(effectsToRemove);
     }
 }
