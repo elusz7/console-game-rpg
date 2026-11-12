@@ -152,13 +152,12 @@ public class Player : IPlayer
         return stat switch
         {
             StatType.Defense => Math.Max(0,
-                EquippedDefense() + Archetype.DefenseBonus + _activeEffects[StatType.Defense]),
-            StatType.Speed => Math.Max(0, Archetype.Speed + _activeEffects[StatType.Speed]),
-            StatType.Attack => Math.Max(0, EquippedAttack() + Archetype.AttackBonus + _activeEffects[StatType.Attack]),
-            StatType.Resistance => Math.Max(0,
-                EquippedResistance() + Archetype.ResistanceBonus + _activeEffects[StatType.Resistance]),
+                EquippedDefense() + Archetype.DefenseBonus + _activeEffects[StatType.Defense]+ ActiveEffectManager.GetStatModifier(StatType.Defense)),
+            StatType.Speed => Math.Max(0, Archetype.Speed + _activeEffects[StatType.Speed]+ ActiveEffectManager.GetStatModifier(StatType.Speed)),
+            StatType.Attack => Math.Max(0, EquippedAttack() + Archetype.AttackBonus + _activeEffects[StatType.Attack]+ ActiveEffectManager.GetStatModifier(StatType.Attack)),
+            StatType.Resistance => Math.Max(0, EquippedResistance() + Archetype.ResistanceBonus + _activeEffects[StatType.Resistance]+ ActiveEffectManager.GetStatModifier(StatType.Resistance)),
             StatType.Health => CurrentHealth,
-            StatType.Magic => Math.Max(0, EquippedAttack() + Archetype.MagicBonus + _activeEffects[StatType.Magic]),
+            StatType.Magic => Math.Max(0, EquippedAttack() + Archetype.MagicBonus + _activeEffects[StatType.Magic]+ ActiveEffectManager.GetStatModifier(StatType.Magic)),
             _ => throw new StatTypeException("Monster Get Stat")
         };
     }

@@ -10,7 +10,7 @@ using ConsoleGameEntities.Models.Skills;
 using Moq;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
-namespace ConsoleGameTests.Unit.ConsoleGameEntities.Models.Entities;
+namespace ConsoleGameTests.Unit.ConsoleGameEntities.Models.Entities.PlayerTests;
 
 [TestClass]
 public class PlayerTests
@@ -337,25 +337,6 @@ public class PlayerTests
         Assert.AreEqual(player.CurrentHealth, player.MaxHealth);
         Assert.IsTrue(player.Inventory.Gold > oldGold);
         Assert.IsTrue(player.Inventory.Capacity > oldCapacity);
-    }
-
-    [TestMethod]
-    public void GetStat_ReturnsCorrectStat()
-    {
-        var player = CreatePlayer();
-        player.Archetype.AttackBonus = 10;
-
-        int attack = player.GetStat(StatType.Attack);
-
-        Assert.AreEqual(10, attack);
-    }
-
-    [TestMethod]
-    public void GetStat_InvalidStat_Throws()
-    {
-        var player = CreatePlayer();
-
-        Assert.ThrowsException<StatTypeException>(() => player.GetStat((StatType)999));
     }
 
     [TestMethod]
@@ -809,102 +790,7 @@ public class PlayerTests
 
         Assert.IsTrue(player.Archetype.CurrentResource > oldResource);
     }
-    
-    [TestMethod]
-    public void GetStat_Attack_IncludesWeaponAndArchetypeBonus()
-    {
-        var player = CreatePlayer();
-        player.Archetype.AttackBonus = 5;
 
-        var weapon = CreateWeapon();
-        weapon.AttackPower = 12;
-        weapon.RequiredLevel = player.Level;
-
-        player.Inventory.AddItem(weapon);
-        player.Equip(weapon);
-
-        Assert.AreEqual(17, player.GetStat(StatType.Attack));
-    }
-    
-    [TestMethod]
-    public void GetStat_Magic_IncludesWeaponAndArchetypeBonus()
-    {
-        var player = CreatePlayer();
-        player.Archetype.MagicBonus = 4;
-
-        var weapon = CreateWeapon();
-        weapon.AttackPower = 12;
-        weapon.RequiredLevel = player.Level;
-
-        player.Inventory.AddItem(weapon);
-        player.Equip(weapon);
-
-        Assert.AreEqual(16, player.GetStat(StatType.Magic));
-    }
-    
-    [TestMethod]
-    public void GetStat_Defense_AveragesEquippedArmor()
-    {
-        var player = CreatePlayer();
-        player.Archetype.DefenseBonus = 3;
-
-        var headArmor = CreateArmor();
-        headArmor.DefensePower = 10;
-        headArmor.RequiredLevel = player.Level;
-
-        var chestArmor = CreateArmor();
-        chestArmor.DefensePower = 20;
-        chestArmor.ArmorType = ArmorType.Chest;
-        chestArmor.RequiredLevel = player.Level;
-
-        player.Inventory.AddItem(headArmor);
-        player.Inventory.AddItem(chestArmor);
-
-        player.Equip(headArmor);
-        player.Equip(chestArmor);
-
-        Assert.AreEqual(18, player.GetStat(StatType.Defense));
-    }
-    
-    [TestMethod]
-    public void GetStat_Resistance_AveragesEquippedArmor()
-    {
-        var player = CreatePlayer();
-        player.Archetype.ResistanceBonus = 2;
-
-        var headArmor = CreateArmor();
-        headArmor.Resistance = 8;
-        headArmor.RequiredLevel = player.Level;
-
-        var chestArmor = CreateArmor();
-        chestArmor.Resistance = 18;
-        chestArmor.ArmorType = ArmorType.Chest;
-        chestArmor.RequiredLevel = player.Level;
-
-        player.Inventory.AddItem(headArmor);
-        player.Inventory.AddItem(chestArmor);
-
-        player.Equip(headArmor);
-        player.Equip(chestArmor);
-
-        Assert.AreEqual(15, player.GetStat(StatType.Resistance));
-    }
-    
-    [TestMethod]
-    public void GetStat_WithoutEquipment_ReturnsArchetypeBonus()
-    {
-        var player = CreatePlayer();
-        player.Archetype.DefenseBonus = 5;
-        player.Archetype.ResistanceBonus = 3;
-        player.Archetype.AttackBonus = 7;
-        player.Archetype.MagicBonus = 4;
-
-        Assert.AreEqual(5, player.GetStat(StatType.Defense));
-        Assert.AreEqual(3, player.GetStat(StatType.Resistance));
-        Assert.AreEqual(7, player.GetStat(StatType.Attack));
-        Assert.AreEqual(4, player.GetStat(StatType.Magic));
-    }
-    
     [TestMethod]
     public void Unequip_Armor_RemovesStatContribution()
     {

@@ -1120,3 +1120,9 @@ Implement Persistent Rune and Ingredient Inventory.
 **Overall objective:** Establish a clean, maintainable RPG architecture
 that supports the original gameplay and provides a reliable foundation
 for elemental combat, runes, crafting, and future gameplay systems.
+
+
+Future Player stat simplification
+- Replace the separate Player Attack and Magic power contributions with a single Attack Power value.
+- Let the Player's archetype/damage type determine whether that power is used for martial, magical, or hybrid damage.
+- Avoid maintaining two independently calculated offensive stats when the distinction belongs to the damage type.
