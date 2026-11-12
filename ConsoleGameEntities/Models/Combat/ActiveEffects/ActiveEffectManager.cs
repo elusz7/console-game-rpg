@@ -250,6 +250,24 @@ public class ActiveEffectManager
             .Sum(ae => ae.Power);
     }
 
+    public int GetIncomingDamageIncrease()
+    {
+        return _activeEffects
+            .Where(ae => ae.EffectType == ActiveEffectType.ElementalStatus
+                         && ((ElementalStatusEffectKey)ae.EffectIdentityKey).StatusType
+                         == ElementalStatusEffectType.Blinded)
+            .Sum(ae => ae.Power);
+    }
+    
+    public int GetOutgoingDamageDecrease()
+    {
+        return _activeEffects
+            .Where(ae => ae.EffectType == ActiveEffectType.ElementalStatus
+                         && ((ElementalStatusEffectKey)ae.EffectIdentityKey).StatusType
+                         == ElementalStatusEffectType.Corrupted)
+            .Sum(ae => ae.Power);
+    }
+
     private int GetElementalStatusModifier(ElementalStatusEffectType elementalStatus)
     {
         return _activeEffects

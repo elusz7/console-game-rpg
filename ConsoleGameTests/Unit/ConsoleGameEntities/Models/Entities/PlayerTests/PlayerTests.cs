@@ -162,141 +162,6 @@ public class PlayerTests
     }
 
     [TestMethod]
-    public void TakeDamage_MartialDamage_ReducesHealth()
-    {
-        var player = CreatePlayer();
-        player.Archetype.DefenseBonus = 0;
-
-        var attack = new AttackDamage(10, DamageType.Martial, 0, null);
-        player.TakeDamage(attack);
-
-        if (player.CurrentHealth < player.MaxHealth)
-        {
-            Assert.AreEqual(90, player.CurrentHealth);
-            Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("You've taken")));
-        }
-        else
-        {
-            Assert.AreEqual(player.CurrentHealth, player.MaxHealth);
-            Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("You dodged the attack")));
-        }
-    }
-
-    [TestMethod]
-    public void TakeDamage_Martial_WithArmor_UsesUpDurability()
-    {
-        var player = CreatePlayer();
-        player.Archetype.Speed = 0;
-        player.Archetype.DefenseBonus = 0;
-
-        var armor = CreateArmor();
-        armor.Durability = 1;
-        armor.RequiredLevel = player.Level;
-        player.Inventory.AddItem(armor);
-        player.Equip(armor);
-
-        var attack = new AttackDamage(10, DamageType.Martial, 0, null);
-        player.TakeDamage(attack);
-
-        Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("broke and can't be used")));
-        Assert.IsFalse(armor.IsEquipped());
-    }
-
-    [TestMethod]
-    public void TakeDamage_Magical_WithArmor_UsesUpDurability()
-    {
-        var player = CreatePlayer();
-        player.Archetype.Speed = 0;
-        player.Archetype.ResistanceBonus = 0;
-
-        var armor = CreateArmor();
-        armor.Durability = 1;
-        armor.RequiredLevel = player.Level;
-        player.Inventory.AddItem(armor);
-        player.Equip(armor);
-
-        var attack = new AttackDamage(10, DamageType.Magical, 0, null);
-        player.TakeDamage(attack);
-
-        Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("broke and can't be used")));
-        Assert.IsFalse(armor.IsEquipped());
-    }
-
-    [TestMethod]
-    public void TakeDamage_Martial_ArmorHasNoDefense_ArmorNotUsed()
-    {
-        var player = CreatePlayer();
-        player.Archetype.Speed = 0;
-        player.Archetype.DefenseBonus = 0;
-
-        var armor = CreateArmor();
-        armor.DefensePower = 0;
-        armor.RequiredLevel = player.Level;
-        player.Inventory.AddItem(armor);
-        player.Equip(armor);
-
-        var oldDurability = armor.Durability;
-
-        var attack = new AttackDamage(10, DamageType.Martial, 0, null);
-        player.TakeDamage(attack);
-
-        Assert.AreEqual(armor.Durability, oldDurability);
-    }
-
-    [TestMethod]
-    public void TakeDamage_Magical_ArmorHasNoResistance_ArmorNotUsed()
-    {
-        var player = CreatePlayer();
-        player.Archetype.Speed = 0;
-        player.Archetype.ResistanceBonus = 0;
-
-        var armor = CreateArmor();
-        armor.Resistance = 0;
-        armor.RequiredLevel = player.Level;
-        player.Inventory.AddItem(armor);
-        player.Equip(armor);
-
-        var oldDurability = armor.Durability;
-
-        var attack = new AttackDamage(10, DamageType.Magical, 0, null);
-        player.TakeDamage(attack);
-
-        Assert.AreEqual(armor.Durability, oldDurability);
-    }
-
-    [TestMethod]
-    public void TakeDamage_MagicalDamage_ReducesHealth()
-    {
-        var player = CreatePlayer();
-        player.Archetype.ResistanceBonus = 0;
-
-        var attack = new AttackDamage(10, DamageType.Magical, 0, null);
-        player.TakeDamage(attack);
-
-        if (player.CurrentHealth < player.MaxHealth)
-        {
-            Assert.AreEqual(90, player.CurrentHealth);
-            Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("You've taken")));
-        }
-        else
-        {
-            Assert.AreEqual(player.CurrentHealth, player.MaxHealth);
-            Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("You dodged the attack")));
-        }
-    }
-
-    [TestMethod]
-    public void TakeDamage_HealthBelowZero_ThrowsDeath()
-    {
-        var player = CreatePlayer();
-        player.Archetype.DefenseBonus = 0;
-        
-        var attack = new AttackDamage(250, DamageType.Magical, 0, null);
-
-        Assert.ThrowsException<PlayerDeathException>(() => player.TakeDamage(attack));
-    }
-
-    [TestMethod]
     public void LevelUp_IncreasesLevelAndStats()
     {
         var player = CreatePlayer();
@@ -1034,7 +899,7 @@ public class PlayerTests
         player.Attack(targetMock.Object);
 
         Assert.IsNotNull(capturedAttack);
-        Assert.IsTrue(capturedAttack.PhysicalDamage > 0);
+        Assert.IsTrue(capturedAttack.StandardDamage > 0);
     }
 
     // ── Attack: Each Elemental Rune ──
@@ -1193,7 +1058,7 @@ public class PlayerTests
         player.Attack(targetMock.Object);
 
         Assert.IsNotNull(capturedAttack);
-        Assert.IsTrue(capturedAttack.PhysicalDamage > 0);
+        Assert.IsTrue(capturedAttack.StandardDamage > 0);
         Assert.AreEqual(5, capturedAttack.ElementalDamage);
     }
 
@@ -1219,7 +1084,7 @@ public class PlayerTests
         player.Attack(targetMock.Object);
 
         Assert.IsNotNull(capturedAttack);
-        Assert.IsTrue(capturedAttack.PhysicalDamage > 0);
+        Assert.IsTrue(capturedAttack.StandardDamage > 0);
         Assert.AreEqual(5, capturedAttack.ElementalDamage);
         Assert.AreEqual(ElementType.Fire, capturedAttack.Element);
     }

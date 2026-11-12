@@ -79,8 +79,13 @@ public class Player : IPlayer
             GetStat(StatType.Defense),
             GetStat(StatType.Resistance),
             equippedResilience);
-            
-        var result = DamageResolver.ResolvePlayerDamage(attack, modifiers, DodgeChance + (GetStat(StatType.Speed) * 0.01));
+
+        var blindedBonus = CalculateBlindedBonus(attack.StandardDamage, attack.ElementalDamage);
+
+        var updatedAttack = new AttackDamage(attack.StandardDamage + blindedBonus.StandardBonus, attack.DamageType,
+            attack.ElementalDamage + blindedBonus.ElementalBonus, attack.Element);
+        
+        var result = DamageResolver.ResolvePlayerDamage(updatedAttack, modifiers, DodgeChance + (GetStat(StatType.Speed) * 0.01));
 
         if (result.IsDodged)
         {
@@ -105,6 +110,34 @@ public class Player : IPlayer
 
         CheckArmorDurability(result.StandardDamageType);
     }
+
+    private (int StandardBonus, int ElementalBonus) CalculateBlindedBonus(int standardDamage, int elementalDamage)
+    {
+        var blindedBonus = ActiveEffectManager.GetIncomingDamageIncrease();
+
+        var standardBlindedBonus = 0;
+        var elementalBlindedBonus = 0;
+
+        var hasStandardDamage = standardDamage > 0;
+        var hasElementalDamage = elementalDamage > 0;
+
+        if (hasStandardDamage && hasElementalDamage)
+        {
+            standardBlindedBonus = (blindedBonus + 1) / 2;
+            elementalBlindedBonus = blindedBonus / 2;
+        }
+        else if (hasStandardDamage)
+        {
+            standardBlindedBonus = blindedBonus;
+        }
+        else if (hasElementalDamage)
+        {
+            elementalBlindedBonus = blindedBonus;
+        }
+
+        return (standardBlindedBonus, elementalBlindedBonus);
+    }
+    
 
     public virtual void Heal(int regainedHealth)
     {

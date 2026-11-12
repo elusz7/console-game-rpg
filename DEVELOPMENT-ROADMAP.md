@@ -531,7 +531,7 @@ This phase establishes `ActiveEffectManager` as the authoritative source for act
 - [x] Integrate Shocked with effective resilience.
 - [x] Integrate Frozen with healing received.
 - [x] Integrate Snared with effective speed.
-- [ ] Integrate Blinded with direct incoming damage.
+- [x] Integrate Blinded with direct incoming damage.
 - [ ] Integrate Corrupted with outgoing damage.
 - [ ] Preserve base stats.
 - [ ] Enforce supported minimum values for derived stats.
@@ -1126,3 +1126,6 @@ Future Player stat simplification
 - Replace the separate Player Attack and Magic power contributions with a single Attack Power value.
 - Let the Player's archetype/damage type determine whether that power is used for martial, magical, or hybrid damage.
 - Avoid maintaining two independently calculated offensive stats when the distinction belongs to the damage type.
+
+DamageCalculator.ValidateInputs
+- investigate whether ValidateInputs() should accept an attack when either standard or elemental damage is positive

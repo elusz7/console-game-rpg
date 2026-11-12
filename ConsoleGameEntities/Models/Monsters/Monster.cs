@@ -183,8 +183,13 @@ public class Monster : IMonster
             Vulnerability
         );
         
+        var blindedBonus = CalculateBlindedBonus(attack.StandardDamage, attack.ElementalDamage);
+
+        var updatedAttack = new AttackDamage(attack.StandardDamage + blindedBonus.StandardBonus, attack.DamageType,
+            attack.ElementalDamage + blindedBonus.ElementalBonus, attack.Element);
+        
         var result = _damageResolver.ResolveMonsterDamage(
-            attack,
+            updatedAttack,
             modifiers,
             DodgeChance + (GetStat(StatType.Speed) * 0.01));
 
@@ -218,6 +223,33 @@ public class Monster : IMonster
             AddActionItem($"{Name} is now dead.");
             throw new MonsterDeathException();
         }
+    }
+    
+    private (int StandardBonus, int ElementalBonus) CalculateBlindedBonus(int standardDamage, int elementalDamage)
+    {
+        var blindedBonus = ActiveEffectManager.GetIncomingDamageIncrease();
+
+        var standardBlindedBonus = 0;
+        var elementalBlindedBonus = 0;
+
+        var hasStandardDamage = standardDamage > 0;
+        var hasElementalDamage = elementalDamage > 0;
+
+        if (hasStandardDamage && hasElementalDamage)
+        {
+            standardBlindedBonus = (blindedBonus + 1) / 2;
+            elementalBlindedBonus = blindedBonus / 2;
+        }
+        else if (hasStandardDamage)
+        {
+            standardBlindedBonus = blindedBonus;
+        }
+        else if (hasElementalDamage)
+        {
+            elementalBlindedBonus = blindedBonus;
+        }
+
+        return (standardBlindedBonus, elementalBlindedBonus);
     }
 
     public virtual void Heal(int regainedHealth)

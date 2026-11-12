@@ -56,8 +56,9 @@ public static class DamageCalculator
     /// </summary>
     public static void ValidateInputs(AttackDamage attack)
     {
-        if (attack.PhysicalDamage <= 0)
-            throw new ArgumentOutOfRangeException(nameof(attack), "Physical damage must be greater than zero.");
+        if (attack.StandardDamage < 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(attack), "Standard damage cannot be negative.");
 
         if (!Enum.IsDefined(attack.DamageType))
             throw new ArgumentOutOfRangeException(nameof(attack), "Physical damage type is not defined.");
@@ -70,6 +71,10 @@ public static class DamageCalculator
             if (attack.Element is null || !Enum.IsDefined(attack.Element.Value))
                 throw new ArgumentOutOfRangeException(nameof(attack), "Element type is not defined.");
         }
+        
+        if (attack is { StandardDamage: 0, ElementalDamage: 0 })
+            throw new ArgumentOutOfRangeException(
+                nameof(attack), "At least one damage component must be greater than zero.");
     }
 
     public static void ValidateMonsterModifiers(MonsterDamageModifiers modifiers)

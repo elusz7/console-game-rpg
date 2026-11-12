@@ -281,7 +281,7 @@ public class DamageResolverTests
     public void ResolveMonsterDamage_ZeroElemental_SkipsPrimordialCalculation()
     {
         var resolver = new DamageResolver(new FixedRandom(0.99));
-        var attack = new AttackDamage(20, DamageType.Martial, 0, ElementType.Fire);
+        var attack = new AttackDamage(20, DamageType.Martial, 0, null);
         var modifiers = new MonsterDamageModifiers(
             0, 0, ElementType.Fire, ElementType.Ice);
 
@@ -479,7 +479,7 @@ public class DamageResolverTests
     [DataTestMethod]
     [DataRow(0)]
     [DataRow(-1)]
-    public void ResolveMonsterDamage_InvalidPhysicalDamage_Throws(int damage)
+    public void ResolveMonsterDamage_InvalidDamageComponents_Throws(int damage)
     {
         var resolver = new DamageResolver(new FixedRandom(0.99));
         var attack = new AttackDamage(damage, DamageType.Martial, 0, null);
@@ -505,7 +505,7 @@ public class DamageResolverTests
     [DataTestMethod]
     [DataRow(0)]
     [DataRow(-1)]
-    public void ResolvePlayerDamage_InvalidPhysicalDamage_Throws(int damage)
+    public void ResolvePlayerDamage_InvalidDamageComponents_Throws(int damage)
     {
         var resolver = new DamageResolver(new FixedRandom(0.99));
         var attack = new AttackDamage(damage, DamageType.Martial, 0, null);
@@ -513,5 +513,62 @@ public class DamageResolverTests
 
         Assert.ThrowsException<ArgumentOutOfRangeException>(
             () => resolver.ResolvePlayerDamage(attack, modifiers, 0));
+    }
+    
+    [TestMethod]
+    public void ResolveMonsterDamage_ElementalOnly_SkipsStandardCalculation()
+    {
+        var resolver = new DamageResolver(new FixedRandom(0.99));
+        var attack = new AttackDamage(0, DamageType.Martial, 10, ElementType.Fire);
+        var modifiers = new MonsterDamageModifiers(
+            0, 0, ElementType.Fire, ElementType.Ice);
+
+        var result = resolver.ResolveMonsterDamage(attack, modifiers, 0);
+
+        Assert.AreEqual(0, result.FinalStandardDamage);
+        Assert.AreEqual(5, result.FinalElementalDamage);
+        Assert.IsFalse(result.IsDodged);
+    }
+    
+    [TestMethod]
+    public void ResolvePlayerDamage_ElementalOnly_SkipsStandardCalculation()
+    {
+        var resolver = new DamageResolver(new FixedRandom(0.99));
+        var attack = new AttackDamage(0, DamageType.Martial, 10, ElementType.Fire);
+        var modifiers = new PlayerDamageModifiers(0, 0, 4);
+
+        var result = resolver.ResolvePlayerDamage(attack, modifiers, 0);
+
+        Assert.AreEqual(0, result.FinalStandardDamage);
+        Assert.AreEqual(6, result.FinalElementalDamage);
+        Assert.IsFalse(result.IsDodged);
+    }
+    
+    [TestMethod]
+    public void ResolveMonsterDamage_ElementalOnly_Dodged_ReturnsZeroDamage()
+    {
+        var resolver = new DamageResolver(new FixedRandom(0.0));
+        var attack = new AttackDamage(0, DamageType.Martial, 10, ElementType.Fire);
+        var modifiers = new MonsterDamageModifiers(0, 0, null, null);
+
+        var result = resolver.ResolveMonsterDamage(attack, modifiers, 33);
+
+        Assert.AreEqual(0, result.FinalStandardDamage);
+        Assert.AreEqual(0, result.FinalElementalDamage);
+        Assert.IsTrue(result.IsDodged);
+    }
+    
+    [TestMethod]
+    public void ResolvePlayerDamage_ElementalOnly_Dodged_ReturnsZeroDamage()
+    {
+        var resolver = new DamageResolver(new FixedRandom(0.0));
+        var attack = new AttackDamage(0, DamageType.Martial, 10, ElementType.Fire);
+        var modifiers = new PlayerDamageModifiers(0, 0, 0);
+
+        var result = resolver.ResolvePlayerDamage(attack, modifiers, 33);
+
+        Assert.AreEqual(0, result.FinalStandardDamage);
+        Assert.AreEqual(0, result.FinalElementalDamage);
+        Assert.IsTrue(result.IsDodged);
     }
 }

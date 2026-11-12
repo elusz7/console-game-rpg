@@ -52,7 +52,7 @@ public static class StrategyHelper
 
         public override void TakeDamage(AttackDamage attack)
         {
-            DamageTaken += attack.PhysicalDamage;
+            DamageTaken += attack.StandardDamage;
             ElementalDamageTaken += attack.ElementalDamage;
             ElementDealt = attack.Element;
         }

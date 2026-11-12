@@ -26,7 +26,7 @@ public class DamageResolver(Random? rng = null)
         if (dodged)
         {
             return new AttackResolutionResult(
-                attack.PhysicalDamage,
+                attack.StandardDamage,
                 0,
                 attack.DamageType,
                 attack.ElementalDamage,
@@ -36,11 +36,13 @@ public class DamageResolver(Random? rng = null)
                 false);
         }
 
-        var finalStandardDamage = DamageCalculator.CalculateStandardDamage(
-            attack.PhysicalDamage,
-            attack.DamageType,
-            modifiers.Defense,
-            modifiers.Resistance);
+        var finalStandardDamage = attack.StandardDamage == 0
+            ? 0
+            : DamageCalculator.CalculateStandardDamage(
+                attack.StandardDamage,
+                attack.DamageType,
+                modifiers.Defense,
+                modifiers.Resistance);
 
         var finalElementalDamage = attack.ElementalDamage is 0
             ? 0
@@ -51,7 +53,7 @@ public class DamageResolver(Random? rng = null)
                 modifiers.Vulnverability);
 
         return new AttackResolutionResult(
-            attack.PhysicalDamage,
+            attack.StandardDamage,
             finalStandardDamage,
             attack.DamageType,
             attack.ElementalDamage,
@@ -73,7 +75,7 @@ public class DamageResolver(Random? rng = null)
         if (dodged)
         {
             return new AttackResolutionResult(
-                attack.PhysicalDamage,
+                attack.StandardDamage,
                 0,
                 attack.DamageType,
                 attack.ElementalDamage,
@@ -83,11 +85,13 @@ public class DamageResolver(Random? rng = null)
                 false);
         }
 
-        var finalStandardDamage = DamageCalculator.CalculateStandardDamage(
-            attack.PhysicalDamage,
-            attack.DamageType,
-            modifiers.Defense,
-            modifiers.Resistance);
+        var finalStandardDamage = attack.StandardDamage == 0
+            ? 0
+            : DamageCalculator.CalculateStandardDamage(
+                attack.StandardDamage,
+                attack.DamageType,
+                modifiers.Defense,
+                modifiers.Resistance);
         
         var finalElementalDamage = attack.ElementalDamage is 0
             ? 0
@@ -96,7 +100,7 @@ public class DamageResolver(Random? rng = null)
                 modifiers.ArmorResilience);
 
         return new AttackResolutionResult(
-            attack.PhysicalDamage,
+            attack.StandardDamage,
             finalStandardDamage,
             attack.DamageType,
             attack.ElementalDamage,

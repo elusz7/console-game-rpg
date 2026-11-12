@@ -262,4 +262,47 @@ public class DamageCalculatorTests
         var actual = DamageCalculator.CalculatePlayerPrimordialDamage(0, 5);
         Assert.AreEqual(0, actual);
     }
+    
+    [TestMethod]
+    public void StandardDamageOnly_IsValid()
+    {
+        var attack = new AttackDamage(10, DamageType.Martial, 0, null);
+
+        DamageCalculator.ValidateInputs(attack);
+    }
+
+    [TestMethod]
+    public void ElementalDamageOnly_IsValid()
+    {
+        var attack = new AttackDamage(0, DamageType.Martial, 10, ElementType.Fire);
+
+        DamageCalculator.ValidateInputs(attack);
+    }
+
+    [TestMethod]
+    public void CombinedDamage_IsValid()
+    {
+        var attack = new AttackDamage(10, DamageType.Martial, 10, ElementType.Fire);
+
+        DamageCalculator.ValidateInputs(attack);
+    }
+    
+    [TestMethod]
+    public void ElementalDamageWithoutElement_ThrowsArgumentOutOfRangeException()
+    {
+        var attack = new AttackDamage(0, DamageType.Martial, 10, null);
+
+        Assert.ThrowsException<ArgumentOutOfRangeException>(
+            () => DamageCalculator.ValidateInputs(attack));
+    }
+    
+    [TestMethod]
+    public void NegativeElementalDamage_ThrowsArgumentOutOfRangeException()
+    {
+        var attack = new AttackDamage(0, DamageType.Magical, -10, ElementType.Fire);
+
+        Assert.ThrowsException<ArgumentOutOfRangeException>(
+            () => DamageCalculator.ValidateInputs(attack));
+    }
+    
 }

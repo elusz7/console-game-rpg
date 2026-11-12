@@ -3,7 +3,7 @@
 namespace ConsoleGameEntities.Models.Combat;
 
 public record AttackDamage(
-    int PhysicalDamage,
+    int StandardDamage,
     DamageType DamageType,
     int ElementalDamage,
     ElementType? Element);
