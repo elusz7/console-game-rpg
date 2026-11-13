@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleGameEntities.Interfaces;
+﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
@@ -12,7 +7,7 @@ namespace ConsoleGameEntities.Models.Monsters.Strategies;
 
 public class MonsterSkillSelector : IMonsterSkillSelector
 {
-    public static List<Skill> GetAvailableSkills(IMonster monster)
+    private static List<Skill> GetAvailableSkills(IMonster monster)
     {
         return monster.Skills
             .Where(s => s.RequiredLevel <= monster.Level)
@@ -38,13 +33,12 @@ public class MonsterSkillSelector : IMonsterSkillSelector
 
     public virtual List<SupportSkill> GetSupportSkills(IMonster monster)
     {
-        return GetAvailableSkills(monster).OfType<SupportSkill>().ToList()
-               ?? new List<SupportSkill>();
+        return [..GetAvailableSkills(monster).OfType<SupportSkill>()];
     }
 
     public virtual SupportSkill? GetDebuffSkill(IMonster monster, StatType? affectedStat = null)
     {
-        return GetSupportSkills(monster)?
+        return GetSupportSkills(monster)
             .Where(s => affectedStat == null || s.StatAffected == affectedStat)
             .Where(s => s.TargetType == TargetType.SingleEnemy)
             .OrderByDescending(s => s.Power)
@@ -70,6 +64,6 @@ public class MonsterSkillSelector : IMonsterSkillSelector
     public virtual UltimateSkill? GetUltimateSkill(IMonster monster)
     {
         return monster.Skills.OfType<UltimateSkill>()
-            .Where(s => s.IsReady).FirstOrDefault();
+            .FirstOrDefault(s => s.IsReady);
     }
 }

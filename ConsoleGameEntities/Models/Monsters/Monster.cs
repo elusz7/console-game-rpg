@@ -7,7 +7,6 @@ using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters.Strategies;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Models.Items;
-using System.Text;
 using ConsoleGameEntities.Helpers;
 using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Combat.ActiveEffects;
@@ -71,6 +70,50 @@ public class Monster : IMonster
     public virtual void Attack(IPlayer target)
     {
         Strategy.ExecuteAttack(this, target);
+    }
+    
+    public void MakeBasicAttack(IPlayer target, double multiplier = 1.0)
+    {
+        var damage = GetEffectiveDamage(multiplier);
+
+        if (damage.StandardDamage > 0)
+        {
+            AddActionItem(
+                $"{Name} attacks for {damage.StandardDamage} {DamageType} damage!");
+        }
+
+        if (damage.ElementalDamage > 0)
+        {
+            AddActionItem(
+                $"{Name} attacks for {damage.ElementalDamage} {AttackElement} damage!");
+        }
+
+        var attack = new AttackDamage(
+            damage.StandardDamage,
+            DamageType,
+            damage.ElementalDamage,
+            damage.ElementalDamage > 0 ? AttackElement : null);
+
+        target.TakeDamage(attack);
+    }
+    
+    private (int StandardDamage, int ElementalDamage) GetEffectiveDamage(double multiplier = 1.0)
+    {
+        var standardDamage = (int)Math.Round(
+            GetStat(StatType.Attack) * multiplier,
+            MidpointRounding.AwayFromZero);
+
+        var corruptedModifier = ActiveEffectManager.GetOutgoingDamageDecrease();
+
+        var effectiveStandardDamage = Math.Max(0, standardDamage - corruptedModifier);
+        var effectiveElementalDamage = Math.Max(0, (ElementalPower ?? 0) - corruptedModifier);
+
+        if (effectiveStandardDamage == 0 && effectiveElementalDamage == 0)
+        {
+            throw new AttackException($"{Name}'s attack has been completely suppressed!");
+        }
+
+        return (effectiveStandardDamage, effectiveElementalDamage);
     }
 
     public static IMonsterStrategy GetStrategyFor(MonsterBehaviorType behavior, IMonsterSkillSelector skillSelector)

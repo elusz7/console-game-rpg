@@ -1,22 +1,15 @@
 ﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Models.Combat;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
 
-public class DefensiveStrategy : DefaultStrategy
+public class DefensiveStrategy(IMonsterSkillSelector skillSelector) : DefaultStrategy
 {
-    private readonly IMonsterSkillSelector _skillSelector;
-
-    public DefensiveStrategy(IMonsterSkillSelector skillSelector)
-    {
-        _skillSelector = skillSelector;
-    }
-
+    private readonly IMonsterSkillSelector _skillSelector = skillSelector;
+    
     /*
      * 1. Try To Heal
-     * 2. If not heal, try to use an damage skill or debuff skill
+     * 2. If not heal, try to use a damage skill or debuff skill
      * 3. slightly weaker basic attack as last resort or followup
      */
     public override void ExecuteAttack(IMonster monster, IPlayer target)
@@ -30,7 +23,7 @@ public class DefensiveStrategy : DefaultStrategy
             if (healingSkill != null)
             {
                 healingSkill.Activate(monster);
-                MakeAttack(monster, target);
+                monster.MakeBasicAttack(target, 0.8);
                 return;
             }
         }
@@ -45,15 +38,6 @@ public class DefensiveStrategy : DefaultStrategy
         // 3. If no damage skill, try debuffing the player
         _skillSelector.GetDebuffSkill(monster)?.Activate(monster, target);
 
-        MakeAttack(monster, target);
-    }
-
-    private static void MakeAttack(IMonster monster, IPlayer target)
-    {
-        var decreasedDamage = (int)Math.Round(monster.GetStat(StatType.Attack) * .8);
-        monster.AddActionItem($"{monster.Name} attacks for {decreasedDamage} damage!");
-        
-        var attack = new AttackDamage(decreasedDamage, monster.DamageType, monster.ElementalPower ?? 0, monster.AttackElement);
-        target.TakeDamage(attack);
+        monster.MakeBasicAttack(target, 0.8);
     }
 }

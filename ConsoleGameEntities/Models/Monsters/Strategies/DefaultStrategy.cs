@@ -1,7 +1,5 @@
 ﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Models.Combat;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
 
@@ -37,7 +35,7 @@ public class DefaultStrategy : IMonsterStrategy
             if (healingSkill != null)
             {
                 healingSkill.Activate(monster);
-                MakeAttack(monster, target);
+                monster.MakeBasicAttack(target);
                 return;
             }
         }
@@ -47,7 +45,7 @@ public class DefaultStrategy : IMonsterStrategy
             if (buffSkill != null)
             {
                 buffSkill.Activate(monster);
-                MakeAttack(monster, target);
+                monster.MakeBasicAttack(target);
                 return;
             }
         }
@@ -57,7 +55,7 @@ public class DefaultStrategy : IMonsterStrategy
             if (debuffSkill != null)
             {
                 debuffSkill.Activate(monster, target);
-                MakeAttack(monster, target);
+                monster.MakeBasicAttack(target);
                 return;
             }
         }
@@ -69,14 +67,6 @@ public class DefaultStrategy : IMonsterStrategy
             return;
         }
 
-        MakeAttack(monster, target);
-    }
-
-    private static void MakeAttack(IMonster monster, IPlayer target)
-    {
-        monster.AddActionItem($"{monster.Name} attacks for {monster.GetStat(StatType.Attack)} damage!");
-        
-        var attack = new AttackDamage(monster.GetStat(StatType.Attack), monster.DamageType, monster.ElementalPower ?? 0, monster.AttackElement);
-        target.TakeDamage(attack);
+        monster.MakeBasicAttack(target);
     }
 }

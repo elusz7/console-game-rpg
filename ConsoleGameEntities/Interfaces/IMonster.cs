@@ -34,5 +34,6 @@ public interface IMonster : ITargetable, ILootable, IElemental
     Item? Loot();
     void SetLoot(Item item);
 
+    void MakeBasicAttack(IPlayer target, double multiplier = 1.0);
     bool MoreMartialDamageTaken();
 }

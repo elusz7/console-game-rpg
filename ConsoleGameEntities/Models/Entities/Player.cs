@@ -1,17 +1,14 @@
-﻿using System.Text;
-using ConsoleGameEntities.Exceptions;
+﻿using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using System.ComponentModel.DataAnnotations.Schema;
 using ConsoleGameEntities.Models.Items;
-using System.Numerics;
 using ConsoleGameEntities.Helpers;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Combat.ActiveEffects;
-using ConsoleGameEntities.Models.Runes;
 
 namespace ConsoleGameEntities.Models.Entities;
 
@@ -45,26 +42,47 @@ public class Player : IPlayer
 
     public void Attack(ITargetable target)
     {
-        var weapon = EquippedWeapon() ?? throw new EquipmentException("You need to equip a weapon before attacking.");
+        var damage = CalculatePlayerDamage();
+        var weapon = damage.weapon;
 
-        var damage = Archetype.ArchetypeType == ArchetypeType.Martial
-            ? GetStat(StatType.Attack)
-            : GetStat(StatType.Magic);
+        ElementType? element = damage.elemental > 0
+            ? weapon.EquippedRune?.InventoryRune.Rune.Element
+            : null;
 
-        var elementalDamage = weapon.UseRune();
-        ElementType? element = null;
-        if (elementalDamage != 0)
-            element = weapon.EquippedRune!.InventoryRune.Rune.Element;
-        
-        var attack = new AttackDamage(damage, weapon.DamageType, elementalDamage, element);
+        var attack = new AttackDamage(
+            damage.standard,
+            weapon.DamageType,
+            damage.elemental,
+            element);
 
         AddActionItem($"You attack with {weapon.Name}!");
-        if (element != null)
-            AddActionItem($"Your weapon is charged with primordial energy!\nIt deals an extra {elementalDamage} points of {element} damage!");
-        
+
+        if (damage.elemental > 0 && element != null)
+            AddActionItem($"Your weapon is charged with primordial energy!\nIt deals an extra {damage.elemental} points of {element} damage!");
+
         target.TakeDamage(attack);
 
         CheckWeaponDurability();
+    }
+
+    private (Weapon weapon, int standard, int elemental) CalculatePlayerDamage()
+    {
+        var weapon = EquippedWeapon()
+                     ?? throw new EquipmentException("You need to equip a weapon before attacking.");
+
+        var standardDamage = Archetype.ArchetypeType == ArchetypeType.Martial
+            ? GetStat(StatType.Attack)
+            : GetStat(StatType.Magic);
+
+        var corruptedModifier = ActiveEffectManager.GetOutgoingDamageDecrease();
+
+        var actualStandardDamage = Math.Max(0, standardDamage - corruptedModifier);
+        var actualElementalDamage = Math.Max(0, weapon.UseRune() - corruptedModifier);
+
+        if (actualStandardDamage == 0 && actualElementalDamage == 0)
+            throw new AttackException("Your attack is completely suppressed!");
+
+        return (weapon, actualStandardDamage, actualElementalDamage);
     }
 
     public virtual void TakeDamage(AttackDamage attack)
@@ -182,10 +200,10 @@ public class Player : IPlayer
             StatType.Defense => Math.Max(0,
                 EquippedDefense() + Archetype.DefenseBonus + _activeEffects[StatType.Defense] + ActiveEffectManager.GetStatModifier(StatType.Defense)),
             StatType.Speed => Math.Max(0, Archetype.Speed + _activeEffects[StatType.Speed] + ActiveEffectManager.GetStatModifier(StatType.Speed)),
-            StatType.Attack => Math.Max(0, EquippedAttack() + Archetype.AttackBonus + _activeEffects[StatType.Attack] + ActiveEffectManager.GetStatModifier(StatType.Attack)),
+            StatType.Attack => Math.Max(0, EquippedAttack() + Archetype.AttackBonus + _activeEffects[StatType.Attack]),
             StatType.Resistance => Math.Max(0, EquippedResistance() + Archetype.ResistanceBonus + _activeEffects[StatType.Resistance] + ActiveEffectManager.GetStatModifier(StatType.Resistance)),
             StatType.Health => CurrentHealth,
-            StatType.Magic => Math.Max(0, EquippedAttack() + Archetype.MagicBonus + _activeEffects[StatType.Magic] + ActiveEffectManager.GetStatModifier(StatType.Magic)),
+            StatType.Magic => Math.Max(0, EquippedAttack() + Archetype.MagicBonus + _activeEffects[StatType.Magic]),
             _ => throw new StatTypeException("Monster Get Stat")
         };
     }
@@ -223,7 +241,7 @@ public class Player : IPlayer
         }
         else if (item is Armor newArmor)
         {
-            var armorPiece = Equipment.OfType<Armor>().Where(a => a.ArmorType == newArmor.ArmorType).FirstOrDefault();
+            var armorPiece = Equipment.OfType<Armor>().FirstOrDefault(a => a.ArmorType == newArmor.ArmorType);
 
             if (armorPiece != null)
             {

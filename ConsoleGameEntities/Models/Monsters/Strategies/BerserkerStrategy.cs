@@ -1,25 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Helpers;
-using ConsoleGameEntities.Interfaces;
+﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Models.Combat;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
 
-public class BerserkerStrategy : DefaultStrategy
+public class BerserkerStrategy(IMonsterSkillSelector skillSelector) : DefaultStrategy
 {
-    private readonly IMonsterSkillSelector _skillSelector;
-
-    public BerserkerStrategy(IMonsterSkillSelector skillSelector)
-    {
-        _skillSelector = skillSelector;
-    }
+    private readonly IMonsterSkillSelector _skillSelector = skillSelector;
 
     /*
      *  Use a damage skill if available; otherwise, strike once with 1.5× base attack
@@ -34,9 +20,6 @@ public class BerserkerStrategy : DefaultStrategy
             return;
         }
 
-        int boostedDamage = (int)Math.Ceiling(monster.GetStat(StatType.Attack) * 1.5);
-        monster.AddActionItem($"{monster.Name} attacks for {boostedDamage} damage!");
-        var attack = new AttackDamage(boostedDamage, monster.DamageType, monster.ElementalPower ?? 0, monster.AttackElement);
-        target.TakeDamage(attack);
+        monster.MakeBasicAttack(target, 1.5);
     }
 }

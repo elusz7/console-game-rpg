@@ -1,4 +1,5 @@
-﻿using ConsoleGameEntities.Models.Monsters.Strategies;
+﻿using ConsoleGameEntities.Models.Combat.ActiveEffects;
+using ConsoleGameEntities.Models.Monsters.Strategies;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using static ConsoleGameTests.TestHelpers.StrategyHelper;
 
@@ -242,5 +243,120 @@ public class DefaultStrategyTests
         Assert.AreEqual(monster.AttackPower, player.DamageTaken);
         Assert.AreEqual(7, player.ElementalDamageTaken);
         Assert.AreEqual(ElementType.Nature, player.ElementDealt);
+    }
+
+    // ── Boundary and Decision Coverage ──
+
+    [TestMethod]
+    public void ExecuteAttack_At33PercentHealth_UsesExpectedBehavior()
+    {
+        // At exactly 33 HP (33% of 100), healing should NOT activate because
+        // the condition is CurrentHealth < healingThreshold (33 < 33 is false).
+        // The strategy falls through to the debuff path.
+        var debuffSkill = new DummySupportSkill();
+        var healingSkill = new DummySupportSkill();
+        var selector = new FakeSkillSelector(debuffSkill: debuffSkill, healingSkill: healingSkill);
+        var player = new DummyPlayer();
+        var monster = new DummyMonster
+        {
+            CurrentHealth = 33,
+            Strategy = new DefaultStrategy(selector)
+        };
+
+        monster.Attack(player);
+
+        Assert.IsFalse(healingSkill.Activated);
+        Assert.IsTrue(debuffSkill.Activated);
+        Assert.AreEqual(monster.AttackPower, player.DamageTaken);
+    }
+
+    [TestMethod]
+    public void ExecuteAttack_At50PercentHealth_UsesExpectedBehavior()
+    {
+        // At exactly 50 HP (50% of 100), buff should NOT activate because
+        // the condition is CurrentHealth > buffThreshold (50 > 50 is false).
+        // The strategy falls through to the debuff path.
+        var debuffSkill = new DummySupportSkill();
+        var buffSkill = new DummySupportSkill();
+        var selector = new FakeSkillSelector(debuffSkill: debuffSkill, buffSkill: buffSkill);
+        var player = new DummyPlayer();
+        var monster = new DummyMonster
+        {
+            CurrentHealth = 50,
+            Strategy = new DefaultStrategy(selector)
+        };
+
+        monster.Attack(player);
+
+        Assert.IsFalse(buffSkill.Activated);
+        Assert.IsTrue(debuffSkill.Activated);
+        Assert.AreEqual(monster.AttackPower, player.DamageTaken);
+    }
+
+    [TestMethod]
+    public void ExecuteAttack_HealingSkillAvailable_AboveThreshold_DoesNotActivateHealing()
+    {
+        // When healing skill is available but health is above the healing threshold,
+        // the healing skill should NOT activate.
+        var healingSkill = new DummySupportSkill();
+        var debuffSkill = new DummySupportSkill();
+        var selector = new FakeSkillSelector(debuffSkill: debuffSkill, healingSkill: healingSkill);
+        var player = new DummyPlayer();
+        var monster = new DummyMonster
+        {
+            CurrentHealth = 50,
+            Strategy = new DefaultStrategy(selector)
+        };
+
+        monster.Attack(player);
+
+        Assert.IsFalse(healingSkill.Activated);
+        Assert.IsTrue(debuffSkill.Activated);
+        Assert.AreEqual(monster.AttackPower, player.DamageTaken);
+    }
+
+    [TestMethod]
+    public void ExecuteAttack_SupportSkillAvailable_BeforeDamageSkill_PrioritizesSupport()
+    {
+        // When both a support skill and a damage skill are available at high health,
+        // the support skill (buff) should be prioritized over the damage skill.
+        var buffSkill = new DummySupportSkill();
+        var damageSkill = new DummyAttackSkill();
+        var selector = new FakeSkillSelector(buffSkill: buffSkill, damageSkill: damageSkill);
+        var player = new DummyPlayer();
+        var monster = new DummyMonster
+        {
+            CurrentHealth = 75,
+            Strategy = new DefaultStrategy(selector)
+        };
+
+        monster.Attack(player);
+
+        Assert.IsTrue(buffSkill.Activated);
+        Assert.IsFalse(damageSkill.Activated);
+        Assert.AreEqual(monster.AttackPower, player.DamageTaken);
+    }
+
+    [TestMethod]
+    public void ExecuteAttack_WithCorruptedEffect_ReducesBasicAttackDamage()
+    {
+        var selector = new FakeSkillSelector();
+        var player = new DummyPlayer();
+        var monster = new DummyMonster
+        {
+            Strategy = new DefaultStrategy(selector)
+        };
+
+        var corruptedEffect = new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(ElementalStatusEffectType.Corrupted),
+            power: 10,
+            duration: 3);
+
+        monster.ActiveEffectManager.Register(corruptedEffect);
+
+        monster.Attack(player);
+
+        Assert.AreEqual(monster.AttackPower - 10, player.DamageTaken);
     }
 }

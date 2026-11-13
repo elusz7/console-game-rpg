@@ -2,9 +2,7 @@ using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Combat.ActiveEffects;
 using ConsoleGameEntities.Models.Entities;
-using ConsoleGameEntities.Models.Entities.Inventories;
 using ConsoleGameEntities.Models.Items;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameTests.Unit.ConsoleGameEntities.Models.Entities.PlayerTests;
@@ -374,5 +372,125 @@ public class PlayerTakeDamageTests
 
         Assert.ThrowsException<ArgumentOutOfRangeException>(
             () => player.TakeDamage(attack));
+    }
+    
+    [TestMethod]
+    public void TakeDamage_Hybrid_DefenseHigher_DamagesDefenseArmor()
+    {
+        var player = CreatePlayer();
+        player.Archetype.Speed = 0;
+        player.Archetype.DefenseBonus = 0;
+        player.Archetype.ResistanceBonus = 0;
+
+        var headArmor = new Armor
+        {
+            Name = "Head Armor",
+            ArmorType = ArmorType.Head,
+            Durability = 5,
+            DefensePower = 10,
+            RequiredLevel = player.Level
+        };
+
+        var chestArmor = new Armor
+        {
+            Name = "Chest Armor",
+            ArmorType = ArmorType.Chest,
+            Durability = 5,
+            Resistance = 5,
+            RequiredLevel = player.Level
+        };
+
+        player.Inventory.AddItem(headArmor);
+        player.Inventory.AddItem(chestArmor);
+
+        player.Equip(headArmor);
+        player.Equip(chestArmor);
+
+        var attack = new AttackDamage(20, DamageType.Hybrid, 0, null);
+        player.TakeDamage(attack);
+
+        Assert.AreEqual(4, headArmor.Durability);
+        Assert.AreEqual(5, chestArmor.Durability);
+    }
+
+    [TestMethod]
+    public void TakeDamage_Hybrid_ResistanceHigher_DamagesResistanceArmor()
+    {
+        var player = CreatePlayer();
+        player.Archetype.Speed = 0;
+        player.Archetype.DefenseBonus = 0;
+        player.Archetype.ResistanceBonus = 0;
+
+        var headArmor = new Armor
+        {
+            Name = "Head Armor",
+            ArmorType = ArmorType.Head,
+            Durability = 5,
+            DefensePower = 5,
+            RequiredLevel = player.Level
+        };
+
+        var chestArmor = new Armor
+        {
+            Name = "Chest Armor",
+            ArmorType = ArmorType.Chest,
+            Durability = 5,
+            Resistance = 10,
+            RequiredLevel = player.Level
+        };
+
+        player.Inventory.AddItem(headArmor);
+        player.Inventory.AddItem(chestArmor);
+
+        player.Equip(headArmor);
+        player.Equip(chestArmor);
+
+        var attack = new AttackDamage(20, DamageType.Hybrid, 0, null);
+        player.TakeDamage(attack);
+
+        Assert.AreEqual(5, headArmor.Durability);
+        Assert.AreEqual(4, chestArmor.Durability);
+    }
+
+    [TestMethod]
+    public void TakeDamage_Hybrid_StatsEqual_DamagesEitherArmorType()
+    {
+        var player = CreatePlayer();
+        player.Archetype.Speed = 0;
+        player.Archetype.DefenseBonus = 0;
+        player.Archetype.ResistanceBonus = 0;
+
+        var headArmor = new Armor
+        {
+            Name = "Head Armor",
+            ArmorType = ArmorType.Head,
+            Durability = 5,
+            DefensePower = 10,
+            RequiredLevel = player.Level
+        };
+
+        var chestArmor = new Armor
+        {
+            Name = "Chest Armor",
+            ArmorType = ArmorType.Chest,
+            Durability = 5,
+            Resistance = 10,
+            RequiredLevel = player.Level
+        };
+
+        player.Inventory.AddItem(headArmor);
+        player.Inventory.AddItem(chestArmor);
+
+        player.Equip(headArmor);
+        player.Equip(chestArmor);
+
+        var attack = new AttackDamage(20, DamageType.Hybrid, 0, null);
+        player.TakeDamage(attack);
+
+        var headDamaged = headArmor.Durability == 4;
+        var chestDamaged = chestArmor.Durability == 4;
+
+        Assert.IsTrue(headDamaged ^ chestDamaged,
+            "Exactly one armor piece should lose durability.");
     }
 }

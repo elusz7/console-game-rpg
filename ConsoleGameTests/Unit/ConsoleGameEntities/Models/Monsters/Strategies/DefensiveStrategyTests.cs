@@ -1,4 +1,5 @@
-﻿using ConsoleGameEntities.Models.Monsters.Strategies;
+using ConsoleGameEntities.Models.Combat.ActiveEffects;
+using ConsoleGameEntities.Models.Monsters.Strategies;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using static ConsoleGameTests.TestHelpers.StrategyHelper;
 
@@ -155,5 +156,79 @@ public class DefensiveStrategyTests
         Assert.AreEqual(expectedDamage, player.DamageTaken);
         Assert.AreEqual(4, player.ElementalDamageTaken);
         Assert.AreEqual(ElementType.Ice, player.ElementDealt);
+    }
+
+    // ── Boundary and Decision Coverage ──
+
+    [TestMethod]
+    public void ExecuteAttack_AtFullHealth_DoesNotActivateHealing()
+    {
+        // When the monster is at full health, the healing skill should NOT activate
+        // because the condition is CurrentHealth < MaxHealth (100 < 100 is false).
+        // The strategy falls through to the damage skill or basic attack path.
+        var healingSkill = new DummySupportSkill();
+        var selector = new FakeSkillSelector(healingSkill: healingSkill);
+        var player = new DummyPlayer();
+        var monster = new DummyMonster
+        {
+            CurrentHealth = 100,
+            Strategy = new DefensiveStrategy(selector)
+        };
+
+        monster.Attack(player);
+
+        Assert.IsFalse(healingSkill.Activated);
+        var expectedDamage = (int)Math.Round(monster.AttackPower * 0.8, MidpointRounding.AwayFromZero);
+        Assert.AreEqual(expectedDamage, player.DamageTaken);
+    }
+
+    [TestMethod]
+    public void ExecuteAttack_DamageSkillAvailable_DoesNotPerformBasicAttack()
+    {
+        // When a damage skill is available and the monster is at full health,
+        // the damage skill should activate and return without also performing a basic attack.
+        var damageSkill = new DummyAttackSkill();
+        var selector = new FakeSkillSelector(damageSkill: damageSkill);
+        var player = new DummyPlayer();
+        var monster = new DummyMonster
+        {
+            Strategy = new DefensiveStrategy(selector)
+        };
+
+        monster.Attack(player);
+
+        Assert.IsTrue(damageSkill.Activated);
+        // Player damage should equal only the skill's power, not skill + basic attack
+        Assert.AreEqual(damageSkill.Power, player.DamageTaken);
+    }
+
+    [TestMethod]
+    public void ExecuteAttack_WithCorruptedEffect_AppliesAfterDefensiveMultiplier()
+    {
+        // Corrupted should reduce the standard damage AFTER the 0.8x defensive
+        // multiplier is applied, and also reduce the elemental component.
+        var selector = new FakeSkillSelector();
+        var player = new DummyPlayer();
+        var monster = new DummyMonster(attackElement: ElementType.Fire, elementalPower: 5)
+        {
+            Strategy = new DefensiveStrategy(selector)
+        };
+
+        var corruptedEffect = new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(ElementalStatusEffectType.Corrupted),
+            power: 10,
+            duration: 3);
+
+        monster.ActiveEffectManager.Register(corruptedEffect);
+
+        monster.Attack(player);
+
+        // Standard damage = round(50 * 0.8) - 10 = 40 - 10 = 30
+        var expectedStandard = (int)Math.Round(monster.AttackPower * 0.8, MidpointRounding.AwayFromZero) - 10;
+        Assert.AreEqual(expectedStandard, player.DamageTaken);
+        // Elemental damage = max(0, 5 - 10) = 0
+        Assert.AreEqual(0, player.ElementalDamageTaken);
+        Assert.IsNull(player.ElementDealt);
     }
 }

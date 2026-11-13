@@ -1,18 +1,12 @@
 ﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Models.Combat;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
 
-public class CunningStrategy : DefaultStrategy
+public class CunningStrategy(IMonsterSkillSelector skillSelector) : DefaultStrategy
 {
-    private readonly IMonsterSkillSelector _skillSelector;
-
-    public CunningStrategy(IMonsterSkillSelector skillSelector)
-    {
-        _skillSelector = skillSelector;
-    }
+    private readonly IMonsterSkillSelector _skillSelector = skillSelector;
 
     /*
      * CunningStrategy behavior:
@@ -34,7 +28,7 @@ public class CunningStrategy : DefaultStrategy
             if (emergencyHeal != null)
             {
                 emergencyHeal.Activate(monster);
-                MakeAttack(monster, target);
+                monster.MakeBasicAttack(target, 1.1);
                 return;
             }
         }
@@ -48,7 +42,7 @@ public class CunningStrategy : DefaultStrategy
         if (debuffSkill != null)
         {
             debuffSkill.Activate(monster, target);
-            MakeAttack(monster, target);
+            monster.MakeBasicAttack(target, 1.1);
             return;
         }
 
@@ -61,7 +55,7 @@ public class CunningStrategy : DefaultStrategy
         if (buffSkill != null)
         {
             buffSkill.Activate(monster);
-            MakeAttack(monster, target);
+            monster.MakeBasicAttack(target, 1.1);
             return;
         }
 
@@ -73,17 +67,14 @@ public class CunningStrategy : DefaultStrategy
             return;
         }
 
-        // Step 3: Heal
-        _skillSelector.GetHealingSkill(monster, healthLost);
-        MakeAttack(monster, target);
-    }
+        // Step 4: Heal if possible, then perform a basic attack
+        var healingSkill = _skillSelector.GetHealingSkill(monster, healthLost);
 
-    private static void MakeAttack(IMonster monster, IPlayer target)
-    {
-        var adjustedDamage = (int)Math.Ceiling(monster.GetStat(StatType.Attack) * 1.1); // 10% stronger basic hit
-        monster.AddActionItem($"{monster.Name} attacks for {adjustedDamage} damage!");
-        
-        var attack = new AttackDamage(adjustedDamage, monster.DamageType, monster.ElementalPower ?? 0, monster.AttackElement);
-        target.TakeDamage(attack);
+        if (healingSkill != null)
+        {
+            healingSkill.Activate(monster);
+        }
+
+        monster.MakeBasicAttack(target, 1.1);
     }
 }

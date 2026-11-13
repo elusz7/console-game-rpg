@@ -1,26 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleGameEntities.Helpers;
-using ConsoleGameEntities.Interfaces;
+﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Models.Combat;
-using ConsoleGameEntities.Models.Skills;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
 
-public class BossStrategy : DefaultStrategy
+public class BossStrategy(IMonsterSkillSelector skillSelector) : DefaultStrategy
 {
-    private readonly static Random _rng = Random.Shared;
-    private readonly IMonsterSkillSelector _skillSelector;
-
-    public BossStrategy(IMonsterSkillSelector skillSelector)
-    {
-        _skillSelector = skillSelector;
-    }
+    private readonly IMonsterSkillSelector _skillSelector = skillSelector;
+    private static readonly Random Random = Random.Shared;
 
     public override void ExecuteAttack(IMonster monster, IPlayer target)
     {
@@ -36,9 +22,9 @@ public class BossStrategy : DefaultStrategy
 
         if (supportSkills.Count > 0)
         {
-            var randomSkill = supportSkills[_rng.Next(supportSkills.Count)];
+            var randomSkill = supportSkills[Random.Next(supportSkills.Count)];
             randomSkill.Activate(monster, target);
-            MakeAttack(monster, target);
+            monster.MakeBasicAttack(target);
             return;
         }
 
@@ -50,14 +36,6 @@ public class BossStrategy : DefaultStrategy
             return;
         }
 
-        MakeAttack(monster, target);
-    }
-
-    private static void MakeAttack(IMonster monster, IPlayer target)
-    {
-        monster.AddActionItem($"{monster.Name} attacks for {monster.GetStat(StatType.Attack)} damage!");
-        
-        var attack = new AttackDamage(monster.GetStat(StatType.Attack), monster.DamageType, monster.ElementalPower ?? 0, monster.AttackElement);
-        target.TakeDamage(attack);
+        monster.MakeBasicAttack(target);
     }
 }

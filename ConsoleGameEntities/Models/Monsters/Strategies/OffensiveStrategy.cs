@@ -1,24 +1,15 @@
-﻿using ConsoleGameEntities.Helpers;
-using ConsoleGameEntities.Interfaces;
+﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Models.Combat;
-using ConsoleGameEntities.Models.Monsters.Strategies;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
 
-public class OffensiveStrategy : DefaultStrategy
+public class OffensiveStrategy(IMonsterSkillSelector skillSelector) : DefaultStrategy
 {
-    private readonly IMonsterSkillSelector _skillSelector;
-
-    public OffensiveStrategy(IMonsterSkillSelector skillSelector)
-    {
-        _skillSelector = skillSelector;
-    }
+    private readonly IMonsterSkillSelector _skillSelector = skillSelector;
 
     /*
-     *  Use damage skill if can
-     *  use buff or healing skill if can
+     *  Use damage skill if able
+     *  use buff or healing skill if able
      *  basic attack with a slightly higher power
      */
     public override void ExecuteAttack(IMonster monster, IPlayer target)
@@ -34,7 +25,7 @@ public class OffensiveStrategy : DefaultStrategy
         if (buffSkill != null)
         {
             buffSkill.Activate(monster);
-            MakeAttack(monster, target);
+            monster.MakeBasicAttack(target, 1.2);
             return;
         }
 
@@ -46,15 +37,6 @@ public class OffensiveStrategy : DefaultStrategy
             _skillSelector.GetHealingSkill(monster, healthLost)?.Activate(monster);
         }
 
-        MakeAttack(monster, target);
-    }
-
-    private static void MakeAttack(IMonster monster, IPlayer target)
-    {
-        var increasedDamage = (int)Math.Ceiling(monster.GetStat(StatType.Attack) * 1.2);
-        monster.AddActionItem($"{monster.Name} attacks for {increasedDamage} damage!");
-        
-        var attack = new AttackDamage(increasedDamage, monster.DamageType, monster.ElementalPower ?? 0, monster.AttackElement);
-        target.TakeDamage(attack);
+        monster.MakeBasicAttack(target, 1.2);
     }
 }

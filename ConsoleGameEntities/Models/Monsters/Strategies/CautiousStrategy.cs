@@ -1,25 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleGameEntities.Helpers;
-using ConsoleGameEntities.Interfaces;
+﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
-using ConsoleGameEntities.Models.Combat;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
 
-public class CautiousStrategy : DefaultStrategy
+public class CautiousStrategy(IMonsterSkillSelector skillSelector) : DefaultStrategy
 {
-    private readonly IMonsterSkillSelector _skillSelector;
-
-    public CautiousStrategy(IMonsterSkillSelector skillSelector)
-    {
-        _skillSelector = skillSelector;
-    }
-
+    private readonly IMonsterSkillSelector _skillSelector = skillSelector;
+    
     /*
         CautiousMonsterStrategy:
         debuff > damage > heal > buff
@@ -30,7 +17,7 @@ public class CautiousStrategy : DefaultStrategy
         if (debuffSkill != null)
         {
             debuffSkill.Activate(monster, target);
-            MakeAttack(monster, target);
+            monster.MakeBasicAttack(target, 0.8);
             return;
         }
 
@@ -50,22 +37,13 @@ public class CautiousStrategy : DefaultStrategy
             if (healingSkill != null)
             {
                 healingSkill.Activate(monster);
-                MakeAttack(monster, target);
+                monster.MakeBasicAttack(target, 0.8);
                 return;
             }
         }
 
         _skillSelector.GetBuffSkill(monster)?.Activate(monster);
 
-        MakeAttack(monster, target);
-    }
-
-    private static void MakeAttack(IMonster monster, IPlayer target)
-    {
-        var decreasedDamage = (int)Math.Ceiling(monster.GetStat(StatType.Attack) * 0.8);
-        monster.AddActionItem($"{monster.Name} attacks for {decreasedDamage} damage!");
-        
-        var attack = new AttackDamage(decreasedDamage, monster.DamageType, monster.ElementalPower ?? 0, monster.AttackElement);
-        target.TakeDamage(attack);
+        monster.MakeBasicAttack(target, 0.8);
     }
 }
