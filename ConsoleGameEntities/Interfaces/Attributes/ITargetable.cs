@@ -12,7 +12,6 @@ public interface ITargetable
     void TakeDamage(AttackDamage attack);
     void Heal(int regainedHealth);
     int GetStat(StatType stat);
-    void ModifyStat(StatType stat, int amount);
     void AddActionItem(Skill skill);
     void AddActionItem(string action);
     void ClearActionItems();

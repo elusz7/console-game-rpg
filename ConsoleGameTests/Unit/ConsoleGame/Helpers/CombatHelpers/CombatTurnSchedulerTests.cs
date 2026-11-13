@@ -1,6 +1,8 @@
 ﻿using ConsoleGame.Helpers.CombatHelpers;
+using ConsoleGameEntities.Models.Combat.ActiveEffects;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
+using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameTests.Unit.ConsoleGame.Helpers.CombatHelpers;
@@ -38,6 +40,21 @@ public class CombatTurnSchedulerTests
             Name = name,
             AggressionLevel = speed,
             CurrentHealth = health
+        };
+    }
+    
+    private static SupportSkill CreateSelfSupportSkill()
+    {
+        return new SupportSkill
+        {
+            Name = "Speed Boost",
+            Duration = 3,
+            Cooldown = 5,
+            Power = 4,
+            StatAffected = StatType.Speed,
+            SupportEffect = SupportEffectType.Boost,
+            TargetType = TargetType.Self,
+            ElapsedTime = 5
         };
     }
 
@@ -155,7 +172,15 @@ public class CombatTurnSchedulerTests
         Assert.AreSame(monsters[0], enumerator.Current.Monster);
 
         // Increase player Speed before Monster B's turn.
-        player.ModifyStat(StatType.Speed, 3);
+        var supportSkill = CreateSelfSupportSkill();
+        
+        player.ActiveEffectManager.Register(new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(supportSkill),
+            supportSkill.Power,
+            supportSkill.Duration,
+            sourceCaster: player,
+            sourceSkill: supportSkill));
 
         // The player now ties Monster B and acts first.
         Assert.IsTrue(enumerator.MoveNext());

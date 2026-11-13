@@ -8,12 +8,7 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers.CrudHelpers;
 
-public class SkillManagement(
-    IInputManager inputManager,
-    IOutputManager outputManager,
-    ISkillDao skillDao,
-    IMonsterDao monsterDao,
-    IArchetypeDao archetypeDao)
+public class SkillManagement(IInputManager inputManager, IOutputManager outputManager, ISkillDao skillDao, IMonsterDao monsterDao, IArchetypeDao archetypeDao)
 {
     private readonly IInputManager _inputManager = inputManager;
     private readonly IOutputManager _outputManager = outputManager;
@@ -177,9 +172,9 @@ public class SkillManagement(
         var skill =
             _inputManager.Selector(
                 skills,
-                s => ColorfulToStringHelper.SkillToString(s),
+                ColorfulToStringHelper.SkillToString,
                 "Select a skill to edit",
-                s => ColorfulToStringHelper.GetSkillColor(s));
+                ColorfulToStringHelper.GetSkillColor);
 
         if (skill == null)
         {
@@ -198,19 +193,22 @@ public class SkillManagement(
                         : "\nEnter skill damage: ";
                     var power = _inputManager.ReadInt(powerPrompt);
 
-                    StatType? statEffected = null;
+                    var adjustments = new Dictionary<string, int>
+                    {
+                        [SkillKeys.POWER] = power,
+                        [SkillKeys.CATEGORY] = (int)skill.SkillCategory
+                    };
+                    
                     if (skill is SupportSkill support)
-                        statEffected = support.StatAffected;
-
-                    var adjustments = new Dictionary<string, int>();
+                        adjustments[SkillKeys.STAT] = (int)support.StatAffected;
 
                     SkillAdjustment(adjustments, powerPrompt);
 
-                    adjustments.TryGetValue("power", out power);
-                    adjustments.TryGetValue("level", out var level);
-                    adjustments.TryGetValue("cost", out var cost);
-                    adjustments.TryGetValue("cooldown", out var cooldown);
-                    adjustments.TryGetValue("duration", out var duration);
+                    adjustments.TryGetValue(SkillKeys.POWER, out power);
+                    adjustments.TryGetValue(SkillKeys.LEVEL, out var level);
+                    adjustments.TryGetValue(SkillKeys.COST, out var cost);
+                    adjustments.TryGetValue(SkillKeys.COOLDOWN, out var cooldown);
+                    adjustments.TryGetValue(SkillKeys.DURATION, out var duration);
 
                     skill.Power = power;
                     skill.RequiredLevel = level;
@@ -232,15 +230,15 @@ public class SkillManagement(
                     if (skill is SupportSkill supportSkill)
                     {
                         if (targetType == TargetType.Self)
-                            supportSkill.SupportEffect = (int)SupportEffectType.Boost;
-                        else if (targetType != TargetType.Self && supportSkill.StatAffected == StatType.Health)
+                            supportSkill.SupportEffect = SupportEffectType.Boost;
+                        else if (supportSkill.StatAffected == StatType.Health)
                         {
                             _outputManager.WriteLine("\nCannot target enemies with a support skill affected health!\n",
                                 ConsoleColor.Red);
                             return;
                         }
                         else
-                            supportSkill.SupportEffect |= (int)SupportEffectType.Reduce;
+                            supportSkill.SupportEffect = SupportEffectType.Reduce;
 
                         skill.TargetType = targetType;
                     }
@@ -314,9 +312,9 @@ public class SkillManagement(
             var skill =
                 _inputManager.Selector(
                     skills,
-                    s => ColorfulToStringHelper.SkillToString(s),
+                    ColorfulToStringHelper.SkillToString,
                     "Select a skill to assign",
-                    s => ColorfulToStringHelper.GetSkillColor(s));
+                    ColorfulToStringHelper.GetSkillColor);
 
             if (skill == null)
             {
@@ -330,11 +328,11 @@ public class SkillManagement(
             object? target = assignment switch
             {
                 "m" => _inputManager.Selector(_monsterDao.GetAllMonsters(),
-                    m => ColorfulToStringHelper.MonsterToString(m), $"Select which monster to assign {skill.Name}",
-                    m => ColorfulToStringHelper.GetMonsterColor(m)),
+                    ColorfulToStringHelper.MonsterToString, $"Select which monster to assign {skill.Name}",
+                    ColorfulToStringHelper.GetMonsterColor),
                 "a" => _inputManager.Selector(_archetypeDao.GetAllArchetypes(),
-                    a => ColorfulToStringHelper.ArchetypeToString(a), $"Select which archetype to assign {skill.Name}",
-                    a => ColorfulToStringHelper.GetArchetypeColor(a)),
+                    ColorfulToStringHelper.ArchetypeToString, $"Select which archetype to assign {skill.Name}",
+                    ColorfulToStringHelper.GetArchetypeColor),
                 _ => null
             };
 
@@ -360,9 +358,10 @@ public class SkillManagement(
                     return;
                 }
 
-                if (skill.TargetType == TargetType.AllEnemies)
+                if (skill is DamageSkill && skill.TargetType == TargetType.AllEnemies)
                 {
-                    _outputManager.WriteLine("\nCannot assign a skill that affects multiple targets to a monster.\n",
+                    _outputManager.WriteLine(
+                        "\nDamage skills assigned to monsters must target a single enemy.\n",
                         ConsoleColor.Red);
                     return;
                 }
@@ -384,8 +383,10 @@ public class SkillManagement(
             }
             else if (target is Archetype archetype && skill is DamageSkill damageSkill)
             {
-                if ((damageSkill.DamageType.Equals("Martial") && archetype.ArchetypeType.Equals("Magic")) ||
-                    (damageSkill.DamageType.Equals("Magic") && archetype.ArchetypeType.Equals("Martial")))
+                if ((damageSkill.DamageType == DamageType.Martial &&
+                     archetype.ArchetypeType == ArchetypeType.Magical) ||
+                    (damageSkill.DamageType == DamageType.Magical &&
+                     archetype.ArchetypeType == ArchetypeType.Martial))
                 {
                     _outputManager.WriteLine(
                         $"\nYou cannot assign a {damageSkill.DamageType} skill to a {archetype.ArchetypeType} archetype.\n",
@@ -413,9 +414,9 @@ public class SkillManagement(
 
         var skill = _inputManager.Selector(
             skills,
-            s => ColorfulToStringHelper.SkillToString(s),
+            ColorfulToStringHelper.SkillToString,
             "Select a skill to unassign",
-            s => ColorfulToStringHelper.GetSkillColor(s));
+            ColorfulToStringHelper.GetSkillColor);
 
         if (skill == null)
         {
@@ -449,9 +450,9 @@ public class SkillManagement(
 
         var skill = _inputManager.Selector(
             skills,
-            s => ColorfulToStringHelper.SkillToString(s),
+            ColorfulToStringHelper.SkillToString,
             "Select a skill to delete",
-            s => ColorfulToStringHelper.GetSkillColor(s));
+            ColorfulToStringHelper.GetSkillColor);
 
         if (skill == null)
         {
@@ -571,6 +572,7 @@ public class SkillManagement(
             statEffected = (StatType)stat;
 
         numericValues.TryGetValue(SkillKeys.EFFECT, out var supportEffect);
+        
         numericValues.TryGetValue(SkillKeys.DURATION, out var duration);
 
         return skillType switch
@@ -586,8 +588,9 @@ public class SkillManagement(
                 Cooldown = cooldown,
                 TargetType = targetType,
                 StatAffected = statEffected,
-                SupportEffect = supportEffect,
-                Duration = duration
+                SupportEffect = (SupportEffectType)supportEffect,
+                Duration = duration,
+                Power = power
             },
             SkillType.UltimateSkill => new UltimateSkill
             {
@@ -641,18 +644,8 @@ public class SkillManagement(
                 DamageType = (DamageType)damage,
                 Power = power
             },
-            _ => new Skill
-            {
-                Name = name,
-                SkillCategory = skillCategory,
-                SkillType = skillType.ToString(),
-                Description = description,
-                RequiredLevel = level,
-                Cost = cost,
-                Cooldown = cooldown,
-                TargetType = targetType,
-                Power = power
-            }
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(skillType), skillType, "Unsupported skill type.")
         };
     }
 }

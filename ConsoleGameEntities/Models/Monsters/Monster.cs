@@ -16,23 +16,14 @@ namespace ConsoleGameEntities.Models.Monsters;
 public class Monster : IMonster
 {
     [NotMapped] public ActiveEffectManager ActiveEffectManager { get; } = new();
-    private static readonly Random _rng = Random.Shared;
-    [NotMapped] private static readonly DamageResolver _damageResolver = new();
+    private static readonly Random Random = Random.Shared;
+    [NotMapped] private static readonly DamageResolver DamageResolver = new();
     [NotMapped] public Dictionary<long, string> ActionItems { get; } = new();
     public int Id { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
     public int Level { get; set; }
     [NotMapped] public int CurrentHealth { get; set; }
-
-    [NotMapped] private readonly Dictionary<StatType, int> ActiveEffects = new()
-    {
-        { StatType.Defense, 0 },
-        { StatType.Resistance, 0 },
-        { StatType.Speed, 0 },
-        { StatType.Attack, 0 },
-        { StatType.Magic, 0 },
-    };
 
     public int MaxHealth { get; set; }
     public ThreatLevel ThreatLevel { get; set; }
@@ -205,11 +196,11 @@ public class Monster : IMonster
                     break;
             }
 
-            AttackPower = _rng.Next(attackMin, attackMax + 1);
-            DefensePower = _rng.Next(defenseMin, defenseMax + 1);
-            Resistance = _rng.Next(resistMin, resistMax + 1);
-            AggressionLevel = _rng.Next(speedMin, speedMax + 1);
-            MaxHealth = _rng.Next(healthMin, healthMax + 1);
+            AttackPower = Random.Next(attackMin, attackMax + 1);
+            DefensePower = Random.Next(defenseMin, defenseMax + 1);
+            Resistance = Random.Next(resistMin, resistMax + 1);
+            AggressionLevel = Random.Next(speedMin, speedMax + 1);
+            MaxHealth = Random.Next(healthMin, healthMax + 1);
         }
 
         //set these regardless of level being different
@@ -231,7 +222,7 @@ public class Monster : IMonster
         var updatedAttack = new AttackDamage(attack.StandardDamage + blindedBonus.StandardBonus, attack.DamageType,
             attack.ElementalDamage + blindedBonus.ElementalBonus, attack.Element);
         
-        var result = _damageResolver.ResolveMonsterDamage(
+        var result = DamageResolver.ResolveMonsterDamage(
             updatedAttack,
             modifiers,
             DodgeChance + (GetStat(StatType.Speed) * 0.01));
@@ -316,36 +307,22 @@ public class Monster : IMonster
     {
         var damageBoost = DamageType switch
         {
-            DamageType.Martial => ActiveEffects[StatType.Attack] + ActiveEffectManager.GetStatModifier(StatType.Attack),
-            DamageType.Magical => ActiveEffects[StatType.Magic] + ActiveEffectManager.GetStatModifier(StatType.Magic),
+            DamageType.Martial => ActiveEffectManager.GetStatModifier(StatType.Attack),
+            DamageType.Magical => ActiveEffectManager.GetStatModifier(StatType.Magic),
             DamageType.Hybrid =>
-                (int)Math.Round((ActiveEffects[StatType.Attack] + ActiveEffects[StatType.Magic] 
-                                                                + ActiveEffectManager.GetStatModifier(StatType.Attack) + ActiveEffectManager.GetStatModifier(StatType.Magic)) / 2.0),
+                (int)Math.Round((ActiveEffectManager.GetStatModifier(StatType.Attack) + ActiveEffectManager.GetStatModifier(StatType.Magic)) / 2.0),
             _ => throw new InvalidDataException("Damage Type not properly mapped to a enum")
         };
 
         return stat switch
         {
-            StatType.Defense => Math.Max(0, DefensePower + ActiveEffects[StatType.Defense] + ActiveEffectManager.GetStatModifier(StatType.Defense)),
-            StatType.Speed => Math.Max(0, AggressionLevel + ActiveEffects[StatType.Speed] + ActiveEffectManager.GetStatModifier(StatType.Speed)),
+            StatType.Defense => Math.Max(0, DefensePower + ActiveEffectManager.GetStatModifier(StatType.Defense)),
+            StatType.Speed => Math.Max(0, AggressionLevel + ActiveEffectManager.GetStatModifier(StatType.Speed)),
             StatType.Attack or StatType.Magic => Math.Max(0, AttackPower + damageBoost),
-            StatType.Resistance => Math.Max(0, Resistance + ActiveEffects[StatType.Resistance] + ActiveEffectManager.GetStatModifier(StatType.Resistance)),
+            StatType.Resistance => Math.Max(0, Resistance + ActiveEffectManager.GetStatModifier(StatType.Resistance)),
             StatType.Health => CurrentHealth,
             _ => throw new StatTypeException("Monster Get Stat")
         };
-    }
-
-    public virtual void ModifyStat(StatType stat, int amount)
-    {
-        if (stat == StatType.Health)
-            Heal(amount);
-        else if (ActiveEffects.ContainsKey(stat))
-        {
-            AddActionItem($"{Name}'s {stat} is changed by {amount}!");
-            ActiveEffects[stat] += amount;
-        }
-        else
-            throw new StatTypeException("Invalid stat to modify");
     }
 
     public void ClearActionItems()

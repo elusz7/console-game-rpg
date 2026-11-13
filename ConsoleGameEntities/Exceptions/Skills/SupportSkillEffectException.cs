@@ -1,4 +1,4 @@
-﻿namespace ConsoleGameEntities.Exceptions;
+﻿namespace ConsoleGameEntities.Exceptions.Skills;
 
 public class SupportSkillEffectException : Exception
 {

@@ -1,5 +1,4 @@
 ﻿using ConsoleGameEntities.Models.Entities;
-using ConsoleGameEntities.Models.Entities.Inventories;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Monsters;
@@ -202,7 +201,7 @@ public static class ModelCreationHelper
                 SkillCategory = SkillCategory.Support,
                 Duration = 4,
                 StatAffected = StatType.Resistance,
-                SupportEffect = 1
+                SupportEffect = SupportEffectType.Boost
             }
         };
     }

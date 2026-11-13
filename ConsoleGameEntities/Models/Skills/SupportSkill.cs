@@ -1,9 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Exceptions.Skills;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat.ActiveEffects;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
-using Microsoft.Extensions.Logging;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Skills;
@@ -12,153 +13,156 @@ public class SupportSkill : Skill
 {
     public int Duration { get; set; } // Duration MUST be less than cooldown
     public StatType StatAffected { get; set; }
-    public int SupportEffect { get; set; }
+    public SupportEffectType SupportEffect { get; set; }
+    [NotMapped] protected override bool AllowsAllyTargets => true;
 
     // Track how many turns each target has left under the effect
-    [NotMapped] public Dictionary<ITargetable, int> TargetsAffected { get; set; } = new();
+    [NotMapped]
+    private readonly HashSet<ITargetable> _targets = [];
 
-    public override void Activate(ITargetable caster, ITargetable? singleEnemy = null,
-        List<ITargetable>? multipleEnemies = null)
+    public override void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
         if (IsOnCooldown)
             throw new SkillCooldownException();
 
-        if (caster is Player self)
+        ValidateCasterLevel(caster);
+        ValidateSupportTargets(caster, singleEnemy, multipleEnemies);
+
+        ExecuteSkill(caster, singleEnemy, multipleEnemies);
+    }
+
+    private void ExecuteSkill(ITargetable self, ITargetable? singleEnemy, List<ITargetable>? multipleEnemies)
+    {
+        if (self is Player player)
+            ConsumePlayerResources(player);
+
+        var appliedCount = 0;
+
+        switch (TargetType)
         {
-            if (self.Level < RequiredLevel)
-                throw new InvalidSkillLevelException();
+            case TargetType.Self:
+                appliedCount = TryApplyEffect(self, self) ? 1 : 0;
+                break;
 
-            try
-            {
-                self.Archetype.UseResource(Cost);
-            }
-            catch (InvalidOperationException)
-            {
-                throw new SkillResourceException();
-            }
+            case TargetType.SingleEnemy:
+                appliedCount = TryApplyEffect(self, singleEnemy!) ? 1 : 0;
+                break;
 
-            self.AddActionItem(this);
-
-            if (TargetType == TargetType.Self)
-            {
-                ApplyEffect(self);
-            }
-            else if (TargetType == TargetType.SingleEnemy)
-            {
-                if (singleEnemy == null)
-                    throw new InvalidTargetException("Support");
-
-                ApplyEffect(singleEnemy);
-            }
-            else if (TargetType == TargetType.AllEnemies)
-            {
-                if (multipleEnemies == null || multipleEnemies.Count == 0)
-                    throw new InvalidTargetException("Support");
-
-                foreach (var tar in multipleEnemies)
+            case TargetType.AllEnemies:
+                foreach (var target in multipleEnemies!)
                 {
-                    try
-                    {
-                        ApplyEffect(tar);
-                    }
-                    catch (InvalidTargetException)
-                    {
-                        /*do nothing, the stat has been effected*/
-                    }
+                    if (TryApplyEffect(self, target))
+                        appliedCount++;
                 }
-            }
-
-            ElapsedTime = 0;
+                break;
         }
-        else if (caster is Monster monster)
+
+        if (appliedCount == 0 && self is Player p)
         {
-            if (TargetType == TargetType.Self)
-            {
-                monster.AddActionItem(this);
-                ApplyEffect(monster);
-            }
-            else if (TargetType == TargetType.SingleEnemy)
-            {
-                if (singleEnemy == null)
-                    throw new InvalidTargetException("Support");
-
-                monster.AddActionItem(this);
-                ApplyEffect(singleEnemy);
-            }
-
-            ElapsedTime = 0;
+            RefundPlayerResources(p);
+            throw new InvalidTargetException("Support");
         }
+
+        self.AddActionItem(this);
+        ElapsedTime = 0;
     }
 
     public override void UpdateElapsedTime()
     {
-        var expiredTargets = new List<ITargetable>();
-
-        foreach (var kvp in TargetsAffected)
-        {
-            var target = kvp.Key;
-            int turnsRemaining = kvp.Value - 1;
-
-            if (turnsRemaining <= 0)
-            {
-                RevertEffect(target);
-                expiredTargets.Add(target);
-            }
-            else
-            {
-                TargetsAffected[target] = turnsRemaining;
-            }
-        }
-
-        foreach (var target in expiredTargets)
-            TargetsAffected.Remove(target);
-
         ElapsedTime++;
     }
 
     public override void Reset()
     {
-        foreach (var target in TargetsAffected.Keys)
-            RevertEffect(target);
+        foreach (var target in _targets)
+            ClearEffectFromTarget(target);
 
-        TargetsAffected.Clear();
+        _targets.Clear();
         ElapsedTime = 0;
     }
 
-    public void ApplyEffect(ITargetable target)
+    private bool TryApplyEffect(ITargetable caster, ITargetable target)
     {
-        if (TargetsAffected.ContainsKey(target))
-            throw new InvalidTargetException("Cannot apply multiple effects to same target with same skill");
-
-        int modifier = SupportEffect == (int)SupportEffectType.Boost ? Power : -Power;
-        target.ModifyStat(StatAffected, modifier);
-
-        if (StatAffected != StatType.Health)
-            TargetsAffected[target] = Duration;
-    }
-
-    private void RevertEffect(ITargetable target)
-    {
-        target.AddActionItem($"{Name} effect expired");
-        int modifier = SupportEffect == (int)SupportEffectType.Boost ? -Power : Power;
-        target.ModifyStat(StatAffected, modifier);
-    }
-
-    public override Skill Clone()
-    {
-        return new SupportSkill
+        if (StatAffected == StatType.Health)
         {
-            Name = this.Name,
-            Description = this.Description,
-            RequiredLevel = this.RequiredLevel,
-            Cost = this.Cost,
-            Power = this.Power,
-            Cooldown = this.Cooldown,
-            TargetType = this.TargetType,
-            SkillCategory = this.SkillCategory,
-            Duration = this.Duration,
-            StatAffected = this.StatAffected,
-            SupportEffect = this.SupportEffect
+            target.Heal(Power);
+            return true;
+        }
+        
+        var identityKey = new SupportSkillEffectKey(this);
+
+        if (target.ActiveEffectManager.GetByIdentityKey(identityKey) != null)
+            return false;
+
+        var effect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            identityKey,
+            power: Power,
+            duration: Duration,
+            sourceCaster: caster,
+            sourceSkill: this);
+
+        var result = target.ActiveEffectManager.Register(effect);
+
+        if (result.Registration == RegistrationStatus.RejectedDuplicate)
+            return false;
+
+        _targets.Add(target);
+        return true;
+    }
+
+    private void ClearEffectFromTarget(ITargetable target)
+    {
+        var result = target.ActiveEffectManager.ClearBySource(this);
+        if (result.HasRemovedEffects)
+            target.AddActionItem($"{Name} effect removed");
+    }
+
+    public override SupportSkill Clone()
+    {
+        var clone = new SupportSkill
+        {
+            Duration = Duration,
+            StatAffected = StatAffected,
+            SupportEffect = SupportEffect
         };
+
+        CopyTo(clone);
+
+        return clone;
+    }
+
+    private void ValidateSupportTargets(ITargetable caster, ITargetable? singleEnemy, List<ITargetable>? multipleEnemies)
+    {
+        ValidateTargets(caster, singleEnemy, multipleEnemies);
+
+        if (TargetType == TargetType.Self && SupportEffect != SupportEffectType.Boost)
+            throw new InvalidSkillConfigurationException("Support skills targeting self must boost stats.");
+        
+        if (caster is Player && TargetType != TargetType.Self && SupportEffect != SupportEffectType.Reduce)
+            throw new InvalidSkillConfigurationException("Player support skills targeting enemies must reduce enemy stats.");
+        
+        if (TargetType == TargetType.SingleEnemy)
+        {
+            if (caster is Player && singleEnemy is not Monster _)
+                throw new InvalidTargetException("Player support skills must target monsters.");
+
+            if (caster is Monster && singleEnemy is not (Player or Monster _))
+                throw new InvalidTargetException("Monster support skills must target players or monsters.");
+        }
+        
+        if (caster is Monster && TargetType == TargetType.SingleEnemy && singleEnemy is Player && SupportEffect != SupportEffectType.Reduce)
+            throw new InvalidSkillConfigurationException("Monster support skills must reduce player stats");
+        
+        if (caster is Monster && TargetType == TargetType.SingleEnemy && singleEnemy is Monster && SupportEffect != SupportEffectType.Boost)
+            throw new InvalidSkillConfigurationException("Monster support skills must boost another monster's stats");
+        
+        if (caster is Monster && TargetType == TargetType.AllEnemies && SupportEffect != SupportEffectType.Boost)
+            throw new InvalidSkillConfigurationException("Monster multi-target support skills must boost other monsters' stats.");
+        
+        if (TargetType == TargetType.AllEnemies &&
+            multipleEnemies!.Any(me => me is not Monster _))
+            throw new InvalidSkillConfigurationException(
+                "Support skills targeting multiple enemies must target only monsters.");
     }
 }

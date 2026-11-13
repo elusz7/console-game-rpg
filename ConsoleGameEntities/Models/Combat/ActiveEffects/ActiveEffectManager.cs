@@ -1,5 +1,6 @@
 ﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Combat.ActiveEffects;
@@ -225,20 +226,59 @@ public class ActiveEffectManager
     {
         if (stat == StatType.Defense)
         {
-            return GetElementalStatusModifier(ElementalStatusEffectType.Charred);
+            return GetElementalStatusModifier(ElementalStatusEffectType.Charred) + GetSkillStatModifier(StatType.Defense);
         }
 
         if (stat == StatType.Resistance)
         {
-            return GetElementalStatusModifier(ElementalStatusEffectType.Shocked);
+            return GetElementalStatusModifier(ElementalStatusEffectType.Shocked) + GetSkillStatModifier(StatType.Resistance);
         }
 
         if (stat == StatType.Speed)
         {
-            return GetElementalStatusModifier(ElementalStatusEffectType.Snared);
+            return GetElementalStatusModifier(ElementalStatusEffectType.Snared) + GetSkillStatModifier(StatType.Speed);
+        }
+
+        if (stat == StatType.Attack)
+        {
+            return GetSkillStatModifier(StatType.Attack);
+        }
+
+        if (stat == StatType.Magic)
+        {
+            return GetSkillStatModifier(StatType.Magic);
         }
 
         return 0;
+    }
+    
+    private int GetSkillStatModifier(StatType statAffected)
+    {
+        var modifier = 0;
+
+        foreach (var effect in _activeEffects)
+        {
+            if (effect.EffectType != ActiveEffectType.SupportStatModifier ||
+                effect.EffectIdentityKey is not SupportSkillEffectKey key ||
+                key.SourceSkill is not SupportSkill skill ||
+                skill.StatAffected != statAffected)
+            {
+                continue;
+            }
+
+            switch (skill.SupportEffect)
+            {
+                case SupportEffectType.Boost:
+                    modifier += effect.Power;
+                    break;
+
+                case SupportEffectType.Reduce:
+                    modifier -= effect.Power;
+                    break;
+            }
+        }
+
+        return modifier;
     }
 
     public int GetHealingReduction()
@@ -274,5 +314,27 @@ public class ActiveEffectManager
             .Where(ae => ae.EffectType == ActiveEffectType.ElementalStatus
                          && ((ElementalStatusEffectKey)ae.EffectIdentityKey).StatusType == elementalStatus)
             .Sum(ae => -ae.Power);
+    }
+    
+    public ActiveEffectTickResult TickTurnBased()
+    {
+        var effectsToProcess = _activeEffects.ToList();
+
+        var processedEffects = new List<ActiveEffect>();
+        var expiredEffects = new List<ActiveEffect>();
+
+        foreach (var effect in effectsToProcess)
+        {
+            effect.DecrementRemainingDuration();
+            processedEffects.Add(effect);
+
+            if (effect.RemainingDuration == 0)
+            {
+                expiredEffects.Add(effect);
+                RemoveById(effect.EffectId);
+            }
+        }
+
+        return new ActiveEffectTickResult(processedEffects, expiredEffects);
     }
 }

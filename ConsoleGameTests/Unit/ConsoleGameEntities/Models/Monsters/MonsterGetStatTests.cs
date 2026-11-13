@@ -1,6 +1,7 @@
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Combat.ActiveEffects;
 using ConsoleGameEntities.Models.Monsters;
+using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameTests.Unit.ConsoleGameEntities.Models.Monsters;
@@ -32,6 +33,21 @@ public class MonsterGetStatTests
             new ElementalStatusEffectKey(statusType),
             power,
             duration);
+    }
+    
+    private static SupportSkill CreateSupportSkill(StatType stat, SupportEffectType effect)
+    {
+        return new SupportSkill
+        {
+            Name = "Support Boost",
+            Duration = 3,
+            Cooldown = 5,
+            Power = 4,
+            StatAffected = stat,
+            SupportEffect = effect,
+            TargetType = TargetType.Self,
+            ElapsedTime = 5
+        };
     }
 
     [TestMethod]
@@ -189,7 +205,16 @@ public class MonsterGetStatTests
         var monster = CreateMonster();
         monster.DamageType = DamageType.Martial;
 
-        monster.ModifyStat(StatType.Attack, 10);
+        var skill = CreateSupportSkill(StatType.Attack, SupportEffectType.Boost);
+
+        var effect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill),
+            power: 10,
+            duration: 3,
+            sourceSkill: skill);
+
+        monster.ActiveEffectManager.Register(effect);
 
         Assert.AreEqual(110, monster.GetStat(StatType.Attack));
     }
@@ -200,7 +225,16 @@ public class MonsterGetStatTests
         var monster = CreateMonster();
         monster.DamageType = DamageType.Magical;
 
-        monster.ModifyStat(StatType.Magic, 10);
+        var skill = CreateSupportSkill(StatType.Magic, SupportEffectType.Boost);
+        
+                var effect = new ActiveEffect(
+                    ActiveEffectType.SupportStatModifier,
+                    new SupportSkillEffectKey(skill),
+                    power: 10,
+                    duration: 3,
+                    sourceSkill: skill);
+        
+                monster.ActiveEffectManager.Register(effect);
 
         Assert.AreEqual(110, monster.GetStat(StatType.Magic));
     }
@@ -210,10 +244,97 @@ public class MonsterGetStatTests
     {
         var monster = CreateMonster();
         monster.DamageType = DamageType.Hybrid;
+        monster.AttackPower = 100;
 
-        monster.ModifyStat(StatType.Attack, 10);
-        monster.ModifyStat(StatType.Magic, 20);
+        var attackSkill = CreateSupportSkill(StatType.Attack, SupportEffectType.Boost);
+        var attackEffect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(attackSkill),
+            power: 10,
+            duration: 3,
+            sourceSkill: attackSkill);
+        
+        var magicSkill = CreateSupportSkill(StatType.Magic, SupportEffectType.Boost);
+        var magicEffect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(magicSkill),
+            power: 10,
+            duration: 3,
+            sourceSkill: magicSkill);
 
-        Assert.AreEqual(115, monster.GetStat(StatType.Attack));
+        monster.ActiveEffectManager.Register(attackEffect);
+        monster.ActiveEffectManager.Register(magicEffect);
+
+        Assert.AreEqual(110, monster.GetStat(StatType.Attack));
+    }
+    
+    [TestMethod]
+    public void GetStat_SupportStatModifier_AppliesSpeedBonus()
+    {
+        var monster = CreateMonster();
+        monster.CurrentHealth = 50;
+        monster.AggressionLevel = 0;
+
+        var skill = CreateSupportSkill(StatType.Speed, SupportEffectType.Boost);
+        
+        var effect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill),
+            power: 5,
+            duration: 3,
+            sourceSkill: skill);
+        
+        monster.ActiveEffectManager.Register(effect);
+
+        Assert.AreEqual(5, monster.GetStat(StatType.Speed));
+    }
+    
+    [TestMethod]
+    public void GetStat_SupportStatModifier_AppliesSpeedReduction()
+    {
+        var monster = CreateMonster();
+        monster.AggressionLevel = 10;
+
+        var skill = CreateSupportSkill(StatType.Speed, SupportEffectType.Reduce);
+
+        var effect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill),
+            power: 4,
+            duration: 3,
+            sourceSkill: skill);
+
+        monster.ActiveEffectManager.Register(effect);
+
+        Assert.AreEqual(6, monster.GetStat(StatType.Speed));
+    }
+    
+    [TestMethod]
+    public void GetStat_Hybrid_CombinesAttackAndMagicBoostsAndReductions()
+    {
+        var monster = CreateMonster();
+        monster.DamageType = DamageType.Hybrid;
+        monster.AttackPower = 100;
+
+        var attackBoostSkill = CreateSupportSkill(StatType.Attack, SupportEffectType.Boost);
+        var attackBoost = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(attackBoostSkill),
+            power: 10,
+            duration: 3,
+            sourceSkill: attackBoostSkill);
+
+        var magicReductionSkill = CreateSupportSkill(StatType.Magic, SupportEffectType.Reduce);
+        var magicReduction = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(magicReductionSkill),
+            power: 10,
+            duration: 3,
+            sourceSkill: magicReductionSkill);
+
+        monster.ActiveEffectManager.Register(attackBoost);
+        monster.ActiveEffectManager.Register(magicReduction);
+
+        Assert.AreEqual(100, monster.GetStat(StatType.Attack));
     }
 }

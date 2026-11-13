@@ -22,12 +22,7 @@ public class CombatRoundCoordinator(CombatTurnScheduler turnScheduler)
     /// <param name="playerTurn">Callback that executes the player's turn.</param>
     /// <param name="beforeMonsterTurn">Callback invoked before a monster's turn.</param>
     /// <param name="displayActions">Callback that displays and clears pending combat actions.</param>
-    public void ExecuteRound(
-        Player player,
-        List<Monster> monsters,
-        Action playerTurn,
-        Action<Monster> beforeMonsterTurn,
-        Action displayActions)
+    public void ExecuteRound(Player player, List<Monster> monsters, Action playerTurn, Action<Monster> beforeMonsterTurn, Action displayActions)
     {
         // Process turns in the order determined by the scheduler.
         var scheduledTurns = _turnScheduler.ScheduleTurns(player, monsters);
@@ -37,6 +32,7 @@ public class CombatRoundCoordinator(CombatTurnScheduler turnScheduler)
             if (turn.Type == CombatantType.Player)
             {
                 playerTurn();
+                player.ActiveEffectManager.TickTurnBased();
                 displayActions();
                 continue;
             }
@@ -52,6 +48,7 @@ public class CombatRoundCoordinator(CombatTurnScheduler turnScheduler)
             if (monster.CurrentHealth > 0)
             {
                 monster.Attack(player);
+                monster.ActiveEffectManager.TickTurnBased();
                 displayActions();
             }
         }

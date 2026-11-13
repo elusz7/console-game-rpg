@@ -49,7 +49,7 @@ public class SkillDaoTests
     public void AddSkill_PersistsSkill()
     {
         // Arrange
-        var skill = new Skill
+        var skill = new MartialSkill()
         {
             Name = "Test Skill",
             Description = "A basic test skill.",
@@ -58,7 +58,8 @@ public class SkillDaoTests
             Power = 10,
             Cooldown = 3,
             TargetType = TargetType.SingleEnemy,
-            IsCore = true
+            IsCore = true,
+            DamageType = DamageType.Magical
         };
 
         // Act

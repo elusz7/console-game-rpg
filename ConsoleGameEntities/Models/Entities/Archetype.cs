@@ -49,6 +49,14 @@ public class Archetype : IArchetype
         }
     }
 
+    public virtual void RefundResource(int cost)
+    {
+        CurrentResource += cost;
+
+        if (CurrentResource >= MaxResource)
+            CurrentResource = MaxResource;
+    }
+
     public virtual void RecoverResource()
     {
         CurrentResource = Math.Min(CurrentResource + RecoveryRate, MaxResource);

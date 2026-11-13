@@ -1,5 +1,5 @@
 ﻿using ConsoleGameEntities.Exceptions;
-using ConsoleGameEntities.Models.Combat;
+using ConsoleGameEntities.Models.Combat.ActiveEffects;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
@@ -35,6 +35,21 @@ public class MonsterTests
             Durability = 1
         };
     }
+    
+    private static SupportSkill CreateSupportSkill(StatType stat, SupportEffectType effect)
+    {
+        return new SupportSkill
+        {
+            Name = "Support Boost",
+            Duration = 3,
+            Cooldown = 5,
+            Power = 4,
+            StatAffected = stat,
+            SupportEffect = effect,
+            TargetType = TargetType.Self,
+            ElapsedTime = 5
+        };
+    }
 
     [TestMethod]
     public void SetLevel_SetsExpectedStatRanges_ForThreatLevel()
@@ -51,41 +66,20 @@ public class MonsterTests
         Assert.IsTrue(monster.AttackPower >= level * 3 && monster.AttackPower <= level * 6);
         Assert.IsTrue(monster.DefensePower >= level * 2 && monster.DefensePower <= level * 4);
         Assert.IsTrue(monster.Resistance >= level * 2 && monster.Resistance <= level * 4);
-        Assert.IsTrue(monster.AggressionLevel >= 2 && monster.AggressionLevel <= 4);
+        Assert.IsTrue(monster.AggressionLevel is >= 2 and <= 4);
         Assert.IsTrue(monster.MaxHealth >= level * 8 && monster.MaxHealth <= level * 12);
         Assert.AreEqual(monster.MaxHealth, monster.CurrentHealth);
     }
 
     [TestMethod]
-    public void ModifyStat_Health_Heals()
+    public void Heal_IncreasesCurrentHealth()
     {
         var monster = CreateMonster();
         monster.CurrentHealth = 50;
 
-        monster.ModifyStat(StatType.Health, 20);
+        monster.Heal(20);
 
         Assert.AreEqual(70, monster.CurrentHealth);
-    }
-
-    [TestMethod]
-    public void ModifyStat_OtherStat_ModifiesActiveEffect()
-    {
-        var monster = CreateMonster();
-        monster.CurrentHealth = 50;
-        monster.AggressionLevel = 0;
-
-        monster.ModifyStat(StatType.Speed, 5);
-
-        Assert.AreEqual(5, monster.GetStat(StatType.Speed));
-        Assert.IsTrue(monster.ActionItems.Values.Any(a => a.Contains("is changed by")));
-    }
-
-    [TestMethod]
-    public void ModifyStat_InvalidStat_Throws()
-    {
-        var monster = CreateMonster();
-
-        Assert.ThrowsException<StatTypeException>(() => monster.ModifyStat((StatType)999, 5));
     }
 
     [TestMethod]
@@ -115,7 +109,7 @@ public class MonsterTests
     {
         var monster = CreateMonster();
         monster.CurrentHealth = 10;
-        var skill = new Skill { Name = "Fireball" };
+        var skill = new MartialSkill { Name = "Fireball" };
         monster.AddActionItem(skill);
         Assert.IsTrue(monster.ActionItems.Values.Any(a => a.Contains("uses Fireball")));
     }

@@ -30,16 +30,7 @@ public class Player : IPlayer
     public int? RoomId { get; set; }
     public virtual Room? CurrentRoom { get; set; }
     [NotMapped] public List<IEquippable> Equipment { get; set; } = [];
-
-    [NotMapped] private readonly Dictionary<StatType, int> _activeEffects = new()
-    {
-        { StatType.Defense, 0 },
-        { StatType.Resistance, 0 },
-        { StatType.Speed, 0 },
-        { StatType.Attack, 0 },
-        { StatType.Magic, 0 },
-    };
-
+    
     public void Attack(ITargetable target)
     {
         var damage = CalculatePlayerDamage();
@@ -185,12 +176,6 @@ public class Player : IPlayer
         Inventory.Gold += (Level * Random.Next(8, 13));
         Inventory.Capacity += Math.Round(boost * 0.8M, 2);
         DodgeChance += 0.003;
-        
-        foreach (var kvp in _activeEffects)
-        {
-            var key = kvp.Key;
-            _activeEffects[key] = 0;
-        }
     }
 
     public int GetStat(StatType stat)
@@ -198,13 +183,14 @@ public class Player : IPlayer
         return stat switch
         {
             StatType.Defense => Math.Max(0,
-                EquippedDefense() + Archetype.DefenseBonus + _activeEffects[StatType.Defense] + ActiveEffectManager.GetStatModifier(StatType.Defense)),
-            StatType.Speed => Math.Max(0, Archetype.Speed + _activeEffects[StatType.Speed] + ActiveEffectManager.GetStatModifier(StatType.Speed)),
-            StatType.Attack => Math.Max(0, EquippedAttack() + Archetype.AttackBonus + _activeEffects[StatType.Attack]),
-            StatType.Resistance => Math.Max(0, EquippedResistance() + Archetype.ResistanceBonus + _activeEffects[StatType.Resistance] + ActiveEffectManager.GetStatModifier(StatType.Resistance)),
+                EquippedDefense() + Archetype.DefenseBonus + ActiveEffectManager.GetStatModifier(StatType.Defense)),
+            StatType.Speed => Math.Max(0, Archetype.Speed + ActiveEffectManager.GetStatModifier(StatType.Speed)),
+            StatType.Attack => Math.Max(0,
+                EquippedAttack() + Archetype.AttackBonus + ActiveEffectManager.GetStatModifier(StatType.Attack)),
+            StatType.Magic => Math.Max(0, EquippedAttack() + Archetype.MagicBonus + ActiveEffectManager.GetStatModifier(StatType.Magic)),
+            StatType.Resistance => Math.Max(0, EquippedResistance() + Archetype.ResistanceBonus + ActiveEffectManager.GetStatModifier(StatType.Resistance)),
             StatType.Health => CurrentHealth,
-            StatType.Magic => Math.Max(0, EquippedAttack() + Archetype.MagicBonus + _activeEffects[StatType.Magic]),
-            _ => throw new StatTypeException("Monster Get Stat")
+            _ => throw new StatTypeException("Player Get Stat")
         };
     }
 
@@ -286,19 +272,6 @@ public class Player : IPlayer
         
         if (CurrentHealth <= 0)
             throw new PlayerDeathException();
-    }
-
-    public void ModifyStat(StatType stat, int amount)
-    {
-        if (stat == StatType.Health)
-            Heal(amount);
-        else if (_activeEffects.ContainsKey(stat))
-        {
-            _activeEffects[stat] += amount;
-            AddActionItem($"Your {stat} has been modified by {amount}.");
-        }
-        else
-            throw new StatTypeException("Invalid stat to modify");
     }
 
     private int EquippedDefense()

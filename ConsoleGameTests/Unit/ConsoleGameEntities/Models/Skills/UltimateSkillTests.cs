@@ -1,4 +1,5 @@
 ﻿using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Exceptions.Skills;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
@@ -10,7 +11,7 @@ namespace ConsoleGameTests.Unit.ConsoleGameEntities.Models.Skills;
 [TestClass]
 public class UltimateSkillTests
 {
-    private UltimateSkill GetBasicUltimateSkill(int power = 40, int cooldown = 3)
+    private UltimateSkill GetSingleEnemyUltimateSkill(int power = 40, int cooldown = 3)
     {
         return new UltimateSkill
         {
@@ -23,6 +24,22 @@ public class UltimateSkillTests
             Cost = 10
         };
     }
+    
+    private UltimateSkill getMultipleEnemyUltimateSkill(int power = 40, int cooldown = 3)
+    {
+        return new UltimateSkill
+        {
+            Name = "Divine Cataclysm",
+            Power = power,
+            Cooldown = cooldown,
+            DamageType = DamageType.Hybrid,
+            TargetType = TargetType.SingleEnemy,
+            RequiredLevel = 3,
+            Cost = 10
+        };
+    }
+    
+    
 
     private Player GetPlayerCaster(int level = 5, int resource = 50)
     {
@@ -76,14 +93,14 @@ public class UltimateSkillTests
 
     private List<ITargetable> GetMonsterTargets(int count, int hp = 100)
     {
-        return [.. Enumerable.Range(0, count).Select(_ => GetMonsterTarget(hp)).Cast<ITargetable>()];
+        return [.. Enumerable.Range(0, count).Select(_ => GetMonsterTarget(hp))];
     }
 
 
     [TestMethod]
     public void InitializeSkill_SetsPowerAndResetsCooldown()
     {
-        var skill = GetBasicUltimateSkill();
+        var skill = GetSingleEnemyUltimateSkill();
         skill.ElapsedTime = 99;
 
         skill.InitializeSkill(10);
@@ -95,11 +112,14 @@ public class UltimateSkillTests
     [TestMethod]
     public void Activate_PlayerSingleTarget_DealsDamageAndConsumesResource()
     {
-        var skill = GetBasicUltimateSkill();
+        var skill = GetSingleEnemyUltimateSkill();
         skill.ElapsedTime = 3;
         var player = GetPlayerCaster(level: 5);
         var target = GetMonsterTarget(100);
 
+        skill.InitializeSkill(player.Level);
+        skill.ElapsedTime = skill.Cooldown;
+        
         skill.Activate(player, singleEnemy: target);
 
         if (target.CurrentHealth == target.MaxHealth)
@@ -109,16 +129,19 @@ public class UltimateSkillTests
         }
 
         Assert.IsTrue(target.CurrentHealth < 100);
-        Assert.IsTrue(player.Archetype is Archetype a && a.CurrentResource < 50);
+        Assert.IsTrue(player.Archetype.CurrentResource < 50);
     }
 
     [TestMethod]
     public void Activate_MonsterSingleTarget_DealsDamage()
     {
-        var skill = GetBasicUltimateSkill();
+        var skill = GetSingleEnemyUltimateSkill();
         skill.ElapsedTime = 3;
         var monster = GetMonsterCaster(level: 5);
         var target = GetPlayerTarget(100);
+        
+        skill.InitializeSkill(monster.Level);
+        skill.ElapsedTime = skill.Cooldown;
 
         skill.Activate(monster, singleEnemy: target);
 
@@ -128,12 +151,15 @@ public class UltimateSkillTests
     [TestMethod]
     public void Activate_PlayerAllEnemies_DealsDamageToAll()
     {
-        var skill = GetBasicUltimateSkill();
+        var skill = getMultipleEnemyUltimateSkill();
         skill.TargetType = TargetType.AllEnemies;
         skill.ElapsedTime = 3;
 
         var player = GetPlayerCaster(level: 5);
         var enemies = GetMonsterTargets(3, 100);
+        
+        skill.InitializeSkill(player.Level);
+        skill.ElapsedTime = skill.Cooldown;
 
         skill.Activate(player, multipleEnemies: enemies);
 
@@ -146,10 +172,12 @@ public class UltimateSkillTests
     [TestMethod]
     public void Activate_ThrowsIfSkillNotReady()
     {
-        var skill = GetBasicUltimateSkill();
+        var skill = GetSingleEnemyUltimateSkill();
         skill.ElapsedTime = 1;
         var player = GetPlayerCaster();
         var target = GetMonsterTarget();
+        
+        skill.InitializeSkill(player.Level);
 
         Assert.ThrowsException<SkillCooldownException>(() =>
             skill.Activate(player, singleEnemy: target)
@@ -159,7 +187,7 @@ public class UltimateSkillTests
     [TestMethod]
     public void Activate_ThrowsIfLevelTooLow()
     {
-        var skill = GetBasicUltimateSkill();
+        var skill = GetSingleEnemyUltimateSkill();
         skill.ElapsedTime = 3;
 
         var player = GetPlayerCaster(level: 2); // Below RequiredLevel
@@ -173,7 +201,7 @@ public class UltimateSkillTests
     [TestMethod]
     public void Activate_ThrowsIfNoTargets()
     {
-        var skill = GetBasicUltimateSkill();
+        var skill = GetSingleEnemyUltimateSkill();
         skill.ElapsedTime = 3;
         var player = GetPlayerCaster();
 
@@ -185,7 +213,7 @@ public class UltimateSkillTests
     [TestMethod]
     public void Activate_ThrowsIfInsufficientResource()
     {
-        var skill = GetBasicUltimateSkill();
+        var skill = GetSingleEnemyUltimateSkill();
         skill.ElapsedTime = 3;
         var player = GetPlayerCaster(resource: 0);
         var target = GetMonsterTarget();
@@ -198,12 +226,15 @@ public class UltimateSkillTests
     [TestMethod]
     public void Activate_AllEnemies_ThrowsMonsterDeathIfAnyDie()
     {
-        var skill = GetBasicUltimateSkill(power: 200); // guaranteed kill
+        var skill = getMultipleEnemyUltimateSkill(power: 200); // guaranteed kill
         skill.TargetType = TargetType.AllEnemies;
         skill.ElapsedTime = 3;
 
         var player = GetPlayerCaster();
         var enemies = GetMonsterTargets(2, hp: 50);
+        
+        skill.InitializeSkill(player.Level);
+        skill.ElapsedTime = skill.Cooldown;
 
         Assert.ThrowsException<MonsterDeathException>(() =>
             skill.Activate(player, multipleEnemies: enemies)

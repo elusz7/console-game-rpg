@@ -1,4 +1,5 @@
 ﻿using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Exceptions.Skills;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Entities;
@@ -17,6 +18,7 @@ public class BossSkillTests
         return new BossSkill
         {
             Name = "Inferno Slam",
+            TargetType = TargetType.SingleEnemy,
             Power = power,
             Cooldown = cooldown,
             DamageType = DamageType.Magical
@@ -136,12 +138,13 @@ public class BossSkillTests
             Name = "Boss Strike",
             Power = 20,
             Cooldown = 3,
+            TargetType = TargetType.SingleEnemy,
             DamageType = DamageType.Martial,
             ElapsedTime = 3
         };
 
-        var caster = new Mock<ITargetable>();
-        var target = new Mock<ITargetable>();
+        var caster = new Mock<BossMonster>();
+        var target = new Mock<Player>();
         
         skill.Activate(caster.Object, target.Object);
 

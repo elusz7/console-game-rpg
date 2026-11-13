@@ -566,16 +566,16 @@ The implementation must not retain those dictionaries as parallel storage or mai
 
 ### 1. Remove Existing Modifier Dictionaries
 
-- [ ] Remove the existing `Dictionary<StatType, int>` active-modifier storage from `Player` and `Monster`.
-- [ ] Do not retain these dictionaries as compatibility layers, caches, or secondary sources of truth.
-- [ ] Ensure all active stat modifiers are represented by registered `ActiveEffect` instances managed by the target's `ActiveEffectManager`.
+- [x] Remove the existing `Dictionary<StatType, int>` active-modifier storage from `Player` and `Monster`.
+- [x] Do not retain these dictionaries as compatibility layers, caches, or secondary sources of truth.
+- [x] Ensure all active stat modifiers are represented by registered `ActiveEffect` instances managed by the target's `ActiveEffectManager`.
 
 ### 2. Make ActiveEffectManager the Authoritative Effect Store
 
-- [ ] Ensure each `ITargetable` owns an `ActiveEffectManager`.
-- [ ] Make the manager authoritative for active stat modifiers, elemental statuses, and DoT effects.
-- [ ] Ensure temporary support-skill modifiers and elemental status effects use the same infrastructure.
-- [ ] Ensure effect aggregation and stacking are handled according to approved effect categories and stacking rules.
+- [x] Ensure each `ITargetable` owns an `ActiveEffectManager`.
+- [x] Make the manager authoritative for active stat modifiers, elemental statuses, and DoT effects.
+- [x] Ensure temporary support-skill modifiers and elemental status effects use the same infrastructure.
+- [x] Ensure effect aggregation and stacking are handled according to approved effect categories and stacking rules.
 
 ### 3. Preserve Existing Stat Calculation Responsibilities
 
@@ -586,20 +586,20 @@ The implementation must not retain those dictionaries as parallel storage or mai
 3. Archetype modifiers.
 4. Active-effect modifiers obtained through `Effects.GetStatModifier()`.
 
-- [ ] Preserve base-stat ownership outside `ActiveEffectManager`.
-- [ ] Preserve equipment-stat ownership outside `ActiveEffectManager`.
-- [ ] Preserve archetype-stat ownership outside `ActiveEffectManager`.
-- [ ] Preserve existing stat clamping and established stat-calculation behavior.
+- [x] Preserve base-stat ownership outside `ActiveEffectManager`.
+- [x] Preserve equipment-stat ownership outside `ActiveEffectManager`.
+- [x] Preserve archetype-stat ownership outside `ActiveEffectManager`.
+- [x] Preserve existing stat clamping and established stat-calculation behavior.
 
 ### 4. Migrate Support-Skill Modifiers
 
-- [ ] Migrate support skills that apply temporary stat modifiers to register corresponding `ActiveEffect` instances.
-- [ ] Retain the source skill instance on each effect.
-- [ ] Ensure effects can be identified and cleared by their originating skill.
-- [ ] Ensure expiration removes effects through `ActiveEffectManager`.
-- [ ] Do not reverse expired modifiers through opposite `ModifyStat()` operations.
-- [ ] Preserve SupportSkill per-target duplicate-application protections.
-- [ ] Keep target tracking separate from effect Power, Duration, and expiration state.
+- [x] Migrate support skills that apply temporary stat modifiers to register corresponding `ActiveEffect` instances.
+- [x] Retain the source skill instance on each effect.
+- [x] Ensure effects can be identified and cleared by their originating skill.
+- [x] Ensure expiration removes effects through `ActiveEffectManager`.
+- [x] Do not reverse expired modifiers through opposite `ModifyStat()` operations.
+- [x] Preserve SupportSkill per-target duplicate-application protections.
+- [x] Keep target tracking separate from effect Power, Duration, and expiration state.
 
 **Target-tracking lifecycle:**
 
@@ -611,20 +611,20 @@ The implementation must not retain those dictionaries as parallel storage or mai
 
 ### 5. Remove Duplicate Effect-Lifecycle Responsibilities
 
-- [ ] Make `ActiveEffectManager` responsible for registration, aggregation, duration, stacking, and expiration.
-- [ ] Keep `CombatRoundCoordinator` responsible for scheduling appropriate effect advancement.
-- [ ] Ensure `SupportSkill` does not independently decrement or expire managed effects.
-- [ ] Keep `SupportSkill.UpdateElapsedTime()` responsible for skill cooldown progression, not active-effect duration.
-- [ ] Ensure clearing effects by source or clearing all effects operates through `ActiveEffectManager`.
+- [x] Make `ActiveEffectManager` responsible for registration, aggregation, duration, stacking, and expiration.
+- [x] Keep `CombatRoundCoordinator` responsible for scheduling appropriate effect advancement.
+- [x] Ensure `SupportSkill` does not independently decrement or expire managed effects.
+- [x] Keep `SupportSkill.UpdateElapsedTime()` responsible for skill cooldown progression, not active-effect duration.
+- [x] Ensure clearing effects by source or clearing all effects operates through `ActiveEffectManager`.
 
 ### 6. Define Effect Removal Contracts
 
-- [ ] Make natural expiration expose the removed effect instances.
-- [ ] Make `ClearBySource` expose the removed effect instances.
-- [ ] Make `ClearAll` expose the removed effect instances.
-- [ ] Define the result contracts for `TickRoundBased`, `TickTurnBased`, and `TickDoT`.
-- [ ] Distinguish processed ticks from effects that have expired or been removed.
-- [ ] Keep callbacks and notifications outside `ActiveEffectManager`.
+- [x] Make natural expiration expose the removed effect instances.
+- [x] Make `ClearBySource` expose the removed effect instances.
+- [x] Make `ClearAll` expose the removed effect instances.
+- [x] Define the result contracts for `TickRoundBased`, `TickTurnBased`, and `TickDoT`.
+- [x] Distinguish processed ticks from effects that have expired or been removed.
+- [x] Keep callbacks and notifications outside `ActiveEffectManager`.
 
 ### Acceptance Criteria
 

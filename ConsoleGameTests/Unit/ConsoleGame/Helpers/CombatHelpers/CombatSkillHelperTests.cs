@@ -169,7 +169,7 @@ public class CombatSkillHelperTests
         int cost = 10,
         int cooldown = 2)
     {
-        var skill = new Skill
+        var skill = new SupportSkill
         {
             Name = "Test Skill",
             Description = "A test skill.",

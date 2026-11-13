@@ -1,6 +1,8 @@
 ﻿using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Exceptions.Skills;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
 using Moq;
 
@@ -21,12 +23,21 @@ public class SkillTests
             EffectApplied = true;
             Reset();
         }
+
+        public override Skill Clone()
+        {
+            var clone = new TestSkill();
+            
+            CopyTo(clone);
+
+            return clone;
+        }
     }
 
     [TestMethod]
     public void Activate_Throws_WhenSkillIsOnCooldown()
     {
-        var skill = new Skill { Cooldown = 5, ElapsedTime = 0 };
+        var skill = new MartialSkill { Cooldown = 5, ElapsedTime = 0 };
         var caster = new Player();
 
         var ex = Assert.ThrowsException<SkillCooldownException>(() => skill.Activate(caster));
@@ -38,7 +49,7 @@ public class SkillTests
     {
         var caster = new Player() { Level = 3 };
 
-        var skill = new Skill { RequiredLevel = 5, ElapsedTime = 10 };
+        var skill = new MartialSkill { RequiredLevel = 5, ElapsedTime = 10 };
 
         var ex = Assert.ThrowsException<InvalidSkillLevelException>(() => skill.Activate(caster));
         StringAssert.Contains(ex.Message, "does not meet the required level");
@@ -49,7 +60,7 @@ public class SkillTests
     {
         var player = new Player { Level = 3 };
 
-        var skill = new Skill { RequiredLevel = 1, TargetType = TargetType.SingleEnemy, ElapsedTime = 10 };
+        var skill = new MartialSkill { RequiredLevel = 1, TargetType = TargetType.SingleEnemy, ElapsedTime = 10 };
 
         var ex = Assert.ThrowsException<InvalidTargetException>(() => skill.Activate(player, null, null));
         StringAssert.Contains(ex.Message, "Single enemy target not provided");
@@ -62,9 +73,11 @@ public class SkillTests
 
         var player = new Player() { Level = 3, Archetype = archetype };
 
-        var skill = new Skill { RequiredLevel = 1, Cost = 5, ElapsedTime = 10 };
+        var skill = new MartialSkill { Power = 5, RequiredLevel = 1, Cost = 5, ElapsedTime = 10, TargetType = TargetType.SingleEnemy};
 
-        skill.Activate(player);
+        var monster = new Monster{CurrentHealth = 10, MaxHealth = 10};
+
+        skill.Activate(player, monster);
 
         Assert.AreEqual(5, archetype.CurrentResource);
         Assert.IsTrue(player.ActionItems.Values.Any(a => a.Contains("You use ")));
@@ -79,9 +92,11 @@ public class SkillTests
 
         var player = new Player() { Level = 3, Archetype = archetypeMock.Object };
 
-        var skill = new Skill { RequiredLevel = 1, Cost = 5, ElapsedTime = 10 };
+        var skill = new MartialSkill { Power = 5, TargetType = TargetType.SingleEnemy, RequiredLevel = 1, Cost = 5, ElapsedTime = 10 };
+        
+        var monster = new Monster {CurrentHealth = 10, MaxHealth = 10};
 
-        var ex = Assert.ThrowsException<SkillResourceException>(() => skill.Activate(player));
+        var ex = Assert.ThrowsException<SkillResourceException>(() => skill.Activate(player, monster));
         StringAssert.Contains(ex.Message, "Not enough resource");
     }
 
@@ -102,7 +117,7 @@ public class SkillTests
     [TestMethod]
     public void UpdateElapsedTime_IncrementsElapsedTime()
     {
-        var skill = new Skill { ElapsedTime = 5 };
+        var skill = new MartialSkill { ElapsedTime = 5 };
         skill.UpdateElapsedTime();
         Assert.AreEqual(6, skill.ElapsedTime);
     }
@@ -110,7 +125,7 @@ public class SkillTests
     [TestMethod]
     public void InitializeSkill_SetsElapsedTimeToCooldownPlusOne()
     {
-        var skill = new Skill { Cooldown = 5 };
+        var skill = new MartialSkill { Cooldown = 5 };
         skill.InitializeSkill(1);
         Assert.AreEqual(6, skill.ElapsedTime);
     }
@@ -118,14 +133,14 @@ public class SkillTests
     [TestMethod]
     public void IsOnCooldown_ReturnsTrue_WhenElapsedTimeLessThanCooldown()
     {
-        var skill = new Skill { Cooldown = 5, ElapsedTime = 3 };
+        var skill = new MartialSkill { Cooldown = 5, ElapsedTime = 3 };
         Assert.IsTrue(skill.IsOnCooldown);
     }
 
     [TestMethod]
     public void IsOnCooldown_ReturnsFalse_WhenElapsedTimeEqualsOrGreaterThanCooldown()
     {
-        var skill = new Skill { Cooldown = 5, ElapsedTime = 5 };
+        var skill = new MartialSkill { Cooldown = 5, ElapsedTime = 5 };
         Assert.IsFalse(skill.IsOnCooldown);
 
         skill.ElapsedTime = 10;

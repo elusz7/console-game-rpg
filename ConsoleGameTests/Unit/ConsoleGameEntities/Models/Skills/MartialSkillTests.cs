@@ -1,4 +1,5 @@
 ﻿using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Exceptions.Skills;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;

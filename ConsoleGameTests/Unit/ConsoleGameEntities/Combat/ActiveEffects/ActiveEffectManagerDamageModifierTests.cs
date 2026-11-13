@@ -30,7 +30,7 @@ public class ActiveEffectManagerDamageModifierTests
 
     private ActiveEffect CreateSupportStatModifierEffect(int power, int duration = 3)
     {
-        var skill = new Skill
+        var skill = new SupportSkill
         {
             Name = "TestSupportSkill",
             Power = power,

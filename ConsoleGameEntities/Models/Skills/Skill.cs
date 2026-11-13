@@ -1,15 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Exceptions.Skills;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
+using Microsoft.IdentityModel.Protocols.Configuration;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Skills;
 
-public class Skill : ISkill
+public abstract class Skill : ISkill
 {
     public int Id { get; set; }
     public string Name { get; set; }
@@ -29,37 +31,16 @@ public class Skill : ISkill
     public virtual Archetype? Archetype { get; set; }
     public int? MonsterId { get; set; }
     public virtual Monster? Monster { get; set; }
+    [NotMapped] protected virtual bool AllowsAllyTargets => false;
 
     public virtual void InitializeSkill(int level)
     {
         ElapsedTime = Cooldown + 1;
     }
 
-    public virtual void Activate(ITargetable caster, ITargetable? singleEnemy = null,
-        List<ITargetable>? multipleEnemies = null)
-    {
-        if (IsOnCooldown)
-            throw new SkillCooldownException($"Skill '{Name}' is on cooldown!");
+    public abstract void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null);
 
-        ValidateCasterLevel(caster);
-        ValidateTargets(singleEnemy, multipleEnemies);
-
-        if (caster is Player player)
-        {
-            ConsumePlayerResources(player);
-            player.AddActionItem(this);
-        }
-        else if (caster is Monster monster)
-        {
-            monster.AddActionItem(this);
-        }
-
-        ApplySkillEffect(caster, singleEnemy, multipleEnemies);
-
-        Reset();
-    }
-
-    private void ValidateCasterLevel(ITargetable caster)
+    protected void ValidateCasterLevel(ITargetable caster)
     {
         if (caster is Player p)
         {
@@ -72,28 +53,62 @@ public class Skill : ISkill
                 $"{m.Name} does not meet the required level ({RequiredLevel}) for '{Name}'.");
     }
 
-    private void ValidateTargets(ITargetable? singleEnemy, List<ITargetable>? multipleEnemies)
+    protected void ValidateTargets(
+        ITargetable caster,
+        ITargetable? singleEnemy,
+        List<ITargetable>? multipleEnemies)
     {
+        if (!Enum.IsDefined(TargetType)) //has to be a defined target type
+            throw new InvalidTargetException("Unsupported skill target type.");
+
+        if (!(caster is Player) && !(caster is Monster)) //has to be a player or monster
+            throw new InvalidTargetException("Unsupported skill caster.");
+
         switch (TargetType)
         {
             case TargetType.SingleEnemy:
                 if (singleEnemy == null)
-                    throw new InvalidTargetException("Single enemy target not provided.");
+                    throw new InvalidTargetException("Single enemy target not provided."); //has to provide a single enemy for single enemy targets
+
+                ValidateEnemyTarget(caster, singleEnemy);
                 break;
+
             case TargetType.AllEnemies:
                 if (multipleEnemies == null || multipleEnemies.Count == 0)
-                    throw new InvalidTargetException("Multiple enemies not provided.");
+                    throw new InvalidTargetException("Multiple enemies not provided."); //multiple enemies have to be provided
+
+                foreach (var target in multipleEnemies)
+                {
+                    if (target == null)
+                        throw new InvalidTargetException("Invalid enemy target."); //all enemies have to be valid
+                    if (!AllowsAllyTargets)
+                        ValidateEnemyTarget(caster, target);
+                }
                 break;
+
             case TargetType.Self:
                 break;
+
+            default:
+                throw new InvalidTargetException("Unsupported skill target type.");
         }
     }
 
-    private void ConsumePlayerResources(Player player)
+    private void ValidateEnemyTarget(ITargetable caster, ITargetable target)
     {
-        if (player.Level < RequiredLevel)
-            throw new InvalidSkillLevelException("Your level is too low to use this skill!");
+        bool isValid = caster switch
+        {
+            Player _ => target is Monster, //a player has to target a monster
+            Monster _ => target is Player, //a monster has to target a player
+            _ => false
+        };
 
+        if (!isValid)
+            throw new InvalidTargetException("Invalid enemy target.");
+    }
+
+    protected void ConsumePlayerResources(Player player)
+    {
         try
         {
             player.Archetype.UseResource(Cost);
@@ -103,59 +118,10 @@ public class Skill : ISkill
             throw new SkillResourceException(ex.Message);
         }
     }
-
-    private void ApplySkillEffect(
-        ITargetable caster,
-        ITargetable? singleEnemy,
-        List<ITargetable>? multipleEnemies)
+    
+    protected void RefundPlayerResources(Player player)
     {
-        if (this is SupportSkill support)
-        {
-            switch (TargetType)
-            {
-                case TargetType.Self:
-                    support.ApplyEffect(caster);
-                    break;
-
-                case TargetType.SingleEnemy:
-                    support.ApplyEffect(
-                        singleEnemy ?? throw new InvalidTargetException(
-                            "Single enemy target not provided."));
-                    break;
-
-                case TargetType.AllEnemies:
-                    foreach (var target in multipleEnemies
-                                           ?? throw new InvalidTargetException(
-                                               "Multiple enemies not provided."))
-                    {
-                        support.ApplyEffect(target);
-                    }
-
-                    break;
-            }
-        }
-        else if (this is DamageSkill damageSkill)
-        {
-            var attack = new AttackDamage(Power, damageSkill.DamageType, 0, null);
-            switch (TargetType)
-            {
-                case TargetType.SingleEnemy:
-                    (singleEnemy ?? throw new InvalidTargetException(
-                            "Single enemy target not provided."))
-                        .TakeDamage(attack);
-                    break;
-
-                case TargetType.AllEnemies:
-                    foreach (var target in multipleEnemies
-                                           ?? throw new InvalidTargetException(
-                                               "Multiple enemies not provided."))
-                    {
-                        target.TakeDamage(attack);
-                    }
-
-                    break;
-            }
-        }
+        player.Archetype.RefundResource(Cost);
     }
 
     public virtual void UpdateElapsedTime()
@@ -168,18 +134,19 @@ public class Skill : ISkill
         ElapsedTime = 0;
     }
 
-    public virtual Skill Clone()
+    public abstract Skill Clone();
+
+    protected void CopyTo(Skill clone)
     {
-        return new Skill
-        {
-            Name = this.Name,
-            Description = this.Description,
-            RequiredLevel = this.RequiredLevel,
-            Cost = this.Cost,
-            Power = this.Power,
-            Cooldown = this.Cooldown,
-            TargetType = this.TargetType,
-            SkillCategory = this.SkillCategory
-        };
+        clone.Name = Name;
+        clone.Description = Description;
+        clone.IsCore = IsCore;
+        clone.RequiredLevel = RequiredLevel;
+        clone.Cost = Cost;
+        clone.Power = Power;
+        clone.Cooldown = Cooldown;
+        clone.TargetType = TargetType;
+        clone.SkillType = SkillType;
+        clone.SkillCategory = SkillCategory;
     }
 }

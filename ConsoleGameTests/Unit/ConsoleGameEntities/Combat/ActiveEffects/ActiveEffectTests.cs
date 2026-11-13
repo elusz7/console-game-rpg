@@ -14,7 +14,7 @@ public class ActiveEffectTests
 {
     private ISkill GetTestSkill()
     {
-        return new Skill
+        return new SupportSkill
         {
             Name = "TestSkill",
             Power = 10,

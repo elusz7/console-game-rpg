@@ -1,4 +1,5 @@
 ﻿using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Exceptions.Skills;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
@@ -35,7 +36,6 @@ public class SupportSkillTests
         skill.Activate(player);
 
         Assert.AreEqual(original + skill.Power, player.GetStat(StatType.Attack));
-        Assert.IsTrue(skill.TargetsAffected.ContainsKey(player));
     }
 
     [TestMethod]
@@ -58,8 +58,6 @@ public class SupportSkillTests
         // Simulate turns passing
         skill.UpdateElapsedTime(); // now 1 turn left
         skill.UpdateElapsedTime(); // now 0, should expire
-
-        Assert.IsFalse(skill.TargetsAffected.ContainsKey(player));
     }
 
     [TestMethod]
@@ -84,6 +82,5 @@ public class SupportSkillTests
         skill.Reset();
 
         Assert.AreEqual(boosted - skill.Power, player.GetStat(StatType.Attack));
-        Assert.IsFalse(skill.TargetsAffected.ContainsKey(player));
     }
 }

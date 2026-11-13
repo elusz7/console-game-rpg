@@ -1,7 +1,9 @@
 ﻿using ConsoleGame.Helpers.CombatHelpers;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
+using Moq;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameTests.Unit.ConsoleGame.Helpers.CombatHelpers;
@@ -39,11 +41,33 @@ public class CombatRoundCoordinatorTests
     // Creates a monster with predictable Speed and health.
     private static Monster CreateMonster(string name, int speed, int health = 100)
     {
+        var skillSelector = new Mock<IMonsterSkillSelector>().Object;
+
         return new Monster
         {
             Name = name,
             AggressionLevel = speed,
-            CurrentHealth = health
+            CurrentHealth = health,
+            AttackPower = 1,
+            DamageType = DamageType.Martial,
+            Strategy = Monster.GetStrategyFor(
+                MonsterBehaviorType.Default,
+                skillSelector)
+        };
+    }
+    
+    private static SupportSkill CreateSelfSupportSkill()
+    {
+        return new SupportSkill
+        {
+            Name = "Speed Boost",
+            Duration = 3,
+            Cooldown = 5,
+            Power = 4,
+            StatAffected = StatType.Speed,
+            SupportEffect = SupportEffectType.Boost,
+            TargetType = TargetType.Self,
+            ElapsedTime = 5
         };
     }
 
@@ -138,14 +162,14 @@ public class CombatRoundCoordinatorTests
         var player = CreatePlayer();
         var monster = CreateMonster("Monster A", 5);
 
-        var playerSkill = new Skill
+        var playerSkill = new MartialSkill
         {
             Name = "Player Skill",
             Cooldown = 5,
             ElapsedTime = 1
         };
 
-        var monsterSkill = new Skill
+        var monsterSkill = new MagicSkill
         {
             Name = "Monster Skill",
             Cooldown = 5,
@@ -218,7 +242,7 @@ public class CombatRoundCoordinatorTests
     public void ExecuteRound_DefeatedMonster_ResetsItsSupportSkills()
     {
         var player = CreatePlayer();
-        var defeatedMonster = CreateMonster("Defeated Monster", 8, health: 0);
+        var defeatedMonster = CreateMonster("Defeated Monster", 8);
         var livingMonster = CreateMonster("Living Monster", 5);
 
         var supportSkill = new SupportSkill
@@ -228,20 +252,23 @@ public class CombatRoundCoordinatorTests
             Cooldown = 5,
             Power = 4,
             StatAffected = StatType.Speed,
-            SupportEffect = (int)SupportEffectType.Boost,
-            TargetType = TargetType.Self
+            SupportEffect = SupportEffectType.Boost,
+            TargetType = TargetType.Self,
+            ElapsedTime = 5
         };
 
         defeatedMonster.Skills.Add(supportSkill);
 
-        // Apply the effect before the monster is defeated.
-        supportSkill.ApplyEffect(defeatedMonster);
+        // Apply the effect while the monster is alive.
+        supportSkill.Activate(defeatedMonster);
 
-        int boostedSpeed = defeatedMonster.GetStat(StatType.Speed);
-        Assert.AreEqual(12, boostedSpeed);
-        Assert.AreEqual(1, supportSkill.TargetsAffected.Count);
+        // Verify the effect was registered and applied.
+        Assert.AreEqual(1, defeatedMonster.ActiveEffectManager.ActiveEffects.Count);
+        Assert.AreEqual(12, defeatedMonster.GetStat(StatType.Speed));
 
-        // Include the defeated monster so the coordinator can clean up its effects.
+        // Defeat the monster before the round executes.
+        defeatedMonster.CurrentHealth = 0;
+
         _coordinator.ExecuteRound(
             player,
             [defeatedMonster, livingMonster],
@@ -249,7 +276,122 @@ public class CombatRoundCoordinatorTests
             beforeMonsterTurn: monster => monster.CurrentHealth = 0,
             displayActions: () => { });
 
+        // Verify the defeated monster's support effect was removed.
+        Assert.AreEqual(0, defeatedMonster.ActiveEffectManager.ActiveEffects.Count);
         Assert.AreEqual(8, defeatedMonster.GetStat(StatType.Speed));
-        Assert.AreEqual(0, supportSkill.TargetsAffected.Count);
+
+        // Verify the living monster remains unaffected.
+        Assert.AreEqual(0, livingMonster.ActiveEffectManager.ActiveEffects.Count);
+        Assert.AreEqual(5, livingMonster.GetStat(StatType.Speed));
+    }
+    
+    [TestMethod]
+    public void ExecuteRound_PlayerEffect_DecrementsAfterPlayerTurn()
+    {
+        var player = CreatePlayer(speed: 10);
+        var monster = CreateMonster("Monster A", 5);
+
+        var skill = CreateSelfSupportSkill();
+        skill.Activate(player);
+
+        var effect = player.ActiveEffectManager.ActiveEffects.Single();
+
+        _coordinator.ExecuteRound(
+            player,
+            [monster],
+            playerTurn: () =>
+            {
+                // The effect hasn't expired or decremented before the turn completes.
+                Assert.AreEqual(3, effect.RemainingDuration);
+            },
+            beforeMonsterTurn: m => m.CurrentHealth = 0,
+            displayActions: () => { });
+
+        Assert.AreEqual(2, effect.RemainingDuration);
+    }
+    
+    [TestMethod]
+    public void ExecuteRound_MonsterEffect_DecrementsAfterMonsterTurn()
+    {
+        var player = CreatePlayer(speed: 1);
+        player.MaxHealth = 1000;
+        player.CurrentHealth = 1000;
+        var monster = CreateMonster("Monster A", 10);
+
+        var skill = CreateSelfSupportSkill();
+        skill.Activate(monster);
+
+        var effect = monster.ActiveEffectManager.ActiveEffects.Single();
+
+        _coordinator.ExecuteRound(
+            player,
+            [monster],
+            playerTurn: () => { },
+            beforeMonsterTurn: m =>
+            {
+                // The effect hasn't decremented before the monster acts.
+                Assert.AreEqual(3, effect.RemainingDuration);
+            },
+            displayActions: () => { });
+
+        Assert.AreEqual(2, effect.RemainingDuration);
+    }
+    
+    [TestMethod]
+    public void ExecuteRound_MultipleCombatants_EachEffectDecrementsAfterItsOwnersTurn()
+    {
+        var player = CreatePlayer(speed: 10);
+        var monster = CreateMonster("Monster A", 5);
+
+        var playerSkill = CreateSelfSupportSkill();
+        var monsterSkill = CreateSelfSupportSkill();
+
+        playerSkill.Activate(player);
+        monsterSkill.Activate(monster);
+
+        var playerEffect = player.ActiveEffectManager.ActiveEffects.Single();
+        var monsterEffect = monster.ActiveEffectManager.ActiveEffects.Single();
+
+        _coordinator.ExecuteRound(
+            player,
+            [monster],
+            playerTurn: () =>
+            {
+                Assert.AreEqual(3, playerEffect.RemainingDuration);
+                Assert.AreEqual(3, monsterEffect.RemainingDuration);
+            },
+            beforeMonsterTurn: m =>
+            {
+                Assert.AreEqual(2, playerEffect.RemainingDuration);
+                Assert.AreEqual(3, monsterEffect.RemainingDuration);
+
+                m.CurrentHealth = 0;
+            },
+            displayActions: () => { });
+
+        Assert.AreEqual(2, playerEffect.RemainingDuration);
+        Assert.AreEqual(3, monsterEffect.RemainingDuration);
+    }
+    
+    [TestMethod]
+    public void ExecuteRound_MonsterKilledBeforeAction_DoesNotDecrementEffect()
+    {
+        var player = CreatePlayer(speed: 1);
+        var monster = CreateMonster("Monster A", 10);
+
+        var skill = CreateSelfSupportSkill();
+        skill.Activate(monster);
+
+        var effect = monster.ActiveEffectManager.ActiveEffects.Single();
+
+        _coordinator.ExecuteRound(
+            player,
+            [monster],
+            playerTurn: () => { },
+            beforeMonsterTurn: m => m.CurrentHealth = 0,
+            displayActions: () => { });
+
+        Assert.AreEqual(3, effect.RemainingDuration);
+        Assert.AreEqual(1, monster.ActiveEffectManager.ActiveEffects.Count);
     }
 }

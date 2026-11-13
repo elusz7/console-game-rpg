@@ -3,6 +3,7 @@ using ConsoleGameEntities.Models.Combat.ActiveEffects;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Entities.Inventories;
 using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Models.Skills;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
@@ -77,6 +78,21 @@ public class PlayerGetStatTests
             DefensePower = 10,
             Resistance = 10,
             ArmorType = ArmorType.Head
+        };
+    }
+    
+    private static SupportSkill CreateSupportSkill(StatType stat, SupportEffectType effect)
+    {
+        return new SupportSkill
+        {
+            Name = "Support Boost",
+            Duration = 3,
+            Cooldown = 5,
+            Power = 4,
+            StatAffected = stat,
+            SupportEffect = effect,
+            TargetType = TargetType.Self,
+            ElapsedTime = 5
         };
     }
 
@@ -263,12 +279,21 @@ public class PlayerGetStatTests
     }
     
     [TestMethod]
-    public void GetStat_Charred_CombinesWithLegacyDefenseModifier()
+    public void GetStat_Charred_CombinesWithSupportStatModifier()
     {
         var player = CreatePlayer();
         player.Archetype.DefenseBonus = 10;
 
-        player.ModifyStat(StatType.Defense, -2);
+        var skill = CreateSupportSkill(StatType.Defense, SupportEffectType.Reduce);
+
+        var supportEffect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill), // Unique identity key
+            power: 2,
+            duration: 3,
+            sourceSkill:skill);
+
+        player.ActiveEffectManager.Register(supportEffect);
 
         var effect = new ActiveEffect(
             ActiveEffectType.ElementalStatus,
@@ -315,5 +340,64 @@ public class PlayerGetStatTests
         Assert.AreEqual(8, player.GetStat(StatType.Speed));
     }
     
+    [TestMethod]
+    public void GetStat_Attack_CombinesWeaponArchetypeAndSupportModifier()
+    {
+        var player = CreatePlayer();
+        player.Archetype.AttackBonus = 5;
+
+        var weapon = CreateWeapon();
+        weapon.AttackPower = 12;
+        weapon.RequiredLevel = player.Level;
+
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var skill = CreateSupportSkill(StatType.Attack, SupportEffectType.Boost);
+
+        var effect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill),
+            power: 4,
+            duration: 3,
+            sourceSkill: skill);
+
+        player.ActiveEffectManager.Register(effect);
+
+        Assert.AreEqual(21, player.GetStat(StatType.Attack));
+    }
+    
+    [TestMethod]
+    public void GetStat_SupportBoostAndReduction_Combine()
+    {
+        // Arrange
+        var player = CreatePlayer();
+        player.Archetype.Speed = 10;
+
+        var boostSkill = CreateSupportSkill(StatType.Speed, SupportEffectType.Boost);
+        var boost = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(boostSkill),
+            power: 5,
+            duration: 3,
+            sourceSkill: boostSkill);
+
+        var reductionSkill = CreateSupportSkill(StatType.Speed, SupportEffectType.Reduce);
+        var reduction = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(reductionSkill),
+            power: 3,
+            duration: 3,
+            sourceSkill: reductionSkill);
+
+        player.ActiveEffectManager.Register(boost);
+        player.ActiveEffectManager.Register(reduction);
+
+        // Act
+        var result = player.GetStat(StatType.Speed);
+
+        // Assert
+        Assert.AreEqual(12, result); // 10 + 5 - 3
+    }
     
 }

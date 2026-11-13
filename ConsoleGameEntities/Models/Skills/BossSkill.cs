@@ -1,15 +1,20 @@
-﻿using ConsoleGameEntities.Exceptions;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Exceptions.Skills;
 using ConsoleGameEntities.Interfaces.Attributes;
-using System.ComponentModel.DataAnnotations.Schema;
 using ConsoleGameEntities.Models.Combat;
+using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Monsters;
 
 namespace ConsoleGameEntities.Models.Skills;
 
 public class BossSkill : DamageSkill
 {
-    [NotMapped] public int Phase { get; set; }
-    [NotMapped] public bool IsReady => ElapsedTime >= Cooldown;
+    [NotMapped]
+    public int Phase { get; set; }
+
+    [NotMapped]
+    public bool IsReady => ElapsedTime >= Cooldown;
 
     public override void InitializeSkill(int level)
     {
@@ -17,42 +22,58 @@ public class BossSkill : DamageSkill
         Reset();
     }
 
-    public override void Activate(ITargetable caster, ITargetable? singleEnemy = null,
+    public override void Activate(
+        ITargetable caster,
+        ITargetable? singleEnemy = null,
         List<ITargetable>? multipleEnemies = null)
     {
-        if (!IsReady) throw new SkillCooldownException("This skill is still on cooldown.");
+        if (!IsReady)
+            throw new SkillCooldownException("This skill is still on cooldown.");
 
-        // Start the cooldown when the skill is activated.
-        Reset();
-        
+        ValidateCasterLevel(caster);
+        ValidateBossTargets(caster, singleEnemy, multipleEnemies);
+
         var multiplier = Phase switch
         {
             1 => 1.0,
             2 => 1.5,
             3 => 2.0,
-            _ => 1.0 // fallback in case Phase is invalid
+            _ => 1.0
         };
-
-        caster.AddActionItem(this);
 
         var damage = (int)(Power * multiplier);
         var attack = new AttackDamage(damage, DamageType, 0, null);
-        singleEnemy?.TakeDamage(attack);
+
+        // Start cooldown once activation is committed.
+        Reset();
+
+        caster.AddActionItem(this);
+        singleEnemy!.TakeDamage(attack);
     }
 
-    public override Skill Clone()
+    public override BossSkill Clone()
     {
-        return new BossSkill
+        var clone = new BossSkill
         {
-            Name = this.Name,
-            Description = this.Description,
-            RequiredLevel = this.RequiredLevel,
-            Cost = this.Cost,
-            Power = this.Power,
-            Cooldown = this.Cooldown,
-            TargetType = this.TargetType,
-            SkillCategory = this.SkillCategory,
-            DamageType = this.DamageType
+            DamageType = DamageType,
+            Phase = Phase
         };
+
+        CopyTo(clone);
+
+        return clone;
+    }
+
+    private void ValidateBossTargets(ITargetable caster, ITargetable? singleEnemy, List<ITargetable>? multipleEnemies)
+    {
+        if (caster is not BossMonster)
+            throw new InvalidSkillConfigurationException(
+                "Only boss monsters can use boss skills.");
+
+        ValidateDamageTargets(caster, singleEnemy, multipleEnemies);
+
+        if (singleEnemy is not Player)
+            throw new InvalidTargetException(
+                "Boss skills must target a player.");
     }
 }

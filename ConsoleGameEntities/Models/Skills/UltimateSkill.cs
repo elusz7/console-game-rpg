@@ -4,8 +4,8 @@ using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Exceptions;
 using System.ComponentModel.DataAnnotations.Schema;
+using ConsoleGameEntities.Exceptions.Skills;
 using ConsoleGameEntities.Models.Combat;
-using Microsoft.Extensions.Logging;
 
 namespace ConsoleGameEntities.Models.Skills;
 
@@ -14,92 +14,57 @@ public class UltimateSkill : DamageSkill
     // "Cooldown" here means the charge-up time before the ultimate can be used again.
     // ElapsedTime must meet or exceed Cooldown.
     [NotMapped] public bool IsReady => ElapsedTime >= Cooldown;
-    private int previousScaledLevel;
+    private int _previousScaledLevel;
+    private int _basePower;
+    private int _baseCooldown;
 
     public override void InitializeSkill(int level)
     {
-        previousScaledLevel = RequiredLevel;
+        _basePower = Power;
+        _baseCooldown = Cooldown;
+        _previousScaledLevel = int.MinValue;
+
         Reset();
         ScalePowerWithLevel(level);
     }
 
-    public override void Activate(ITargetable caster, ITargetable? singleEnemy = null,
-        List<ITargetable>? multipleEnemies = null)
+    public override void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
-        if (!IsReady) throw new SkillCooldownException();
+        ValidateCasterLevel(caster);
+        ValidateDamageTargets(caster, singleEnemy, multipleEnemies);
 
-        switch (TargetType)
-        {
-            case TargetType.SingleEnemy:
-                if (singleEnemy == null)
-                    throw new InvalidTargetException("Single enemy target not provided.");
-                break;
+        if (caster is Player p)
+            ScalePowerWithLevel(p.Level);
+        else if (caster is Monster m)
+            ScalePowerWithLevel(m.Level);
 
-            case TargetType.AllEnemies:
-                if (multipleEnemies == null || multipleEnemies.Count == 0)
-                    throw new InvalidTargetException("Multiple enemies not provided.");
-                break;
-        }
-
+        if (!IsReady)
+            throw new SkillCooldownException();
+        
         bool monsterDeath = false;
-
-        var attack = new AttackDamage(Power,  DamageType, 0, null);
+        var attack = new AttackDamage(Power, DamageType, 0, null);
+        
         if (caster is Player player)
         {
-            if (player.Level < RequiredLevel)
-                throw new InvalidSkillLevelException();
-
-            ScalePowerWithLevel(player.Level);
-
-            try
-            {
-                player.Archetype.UseResource(Cost);
-            }
-            catch (InvalidOperationException)
-            {
-                throw new SkillResourceException("Ultimate");
-            }
-
-            player.AddActionItem(this);
-
-            switch (TargetType)
-            {
-                case TargetType.SingleEnemy:
-                    (singleEnemy ?? throw new InvalidTargetException("Single enemy target not provided."))
-                        .TakeDamage(attack);
-                    break;
-
-                case TargetType.AllEnemies:
-                    foreach (var tar in multipleEnemies
-                                        ?? throw new InvalidTargetException("Multiple enemies not provided."))
-                    {
-                        try
-                        {
-                            tar.TakeDamage(attack);
-                        }
-                        catch (MonsterDeathException)
-                        {
-                            monsterDeath = true;
-                        }
-                    }
-
-                    break;
-            }
+            monsterDeath = PlayerCast(player, attack, singleEnemy, multipleEnemies);
         }
         else if (caster is Monster monster)
         {
-            if (monster.Level < RequiredLevel)
-                throw new InvalidSkillLevelException();
-
-            ScalePowerWithLevel(monster.Level);
-
-            monster.AddActionItem(this);
-
-            (singleEnemy ?? throw new InvalidTargetException("Single enemy target not provided."))
-                .TakeDamage(attack);
+            switch (TargetType)
+            {
+                case TargetType.SingleEnemy:
+                    try
+                    {
+                        monster.AddActionItem(this);
+                        singleEnemy!.TakeDamage(attack);
+                    }
+                    finally
+                    {
+                        Reset();
+                    }
+                    break;
+            }
         }
-
-        Reset();
 
         if (monsterDeath)
         {
@@ -107,32 +72,78 @@ public class UltimateSkill : DamageSkill
         }
     }
 
-    public void ScalePowerWithLevel(int level)
+    private bool PlayerCast(Player player, AttackDamage attack, ITargetable? singleEnemy, List<ITargetable>? multipleEnemies)
     {
-        if (level != previousScaledLevel)
+        var monsterDeath = false;
+        ConsumePlayerResources(player);
+
+        try
         {
-            var levelScale = Math.Max(1, level - 3);
-            Power = Power * (int)(1 + (Math.Pow((levelScale), 1.2) / 5));
+            switch (TargetType)
+            {
+                case TargetType.SingleEnemy when singleEnemy is Monster monster:
+                    player.AddActionItem(this);
+                    try
+                    {
+                        monster.TakeDamage(attack);
+                    }
+                    catch (MonsterDeathException)
+                    {
+                        monsterDeath = true;
+                    }
+                    break;
 
-            Cooldown += level % 2;
+                case TargetType.AllEnemies:
+                    player.AddActionItem(this);
 
-            previousScaledLevel = level;
+                    foreach (var target in multipleEnemies!)
+                    {
+                        try
+                        {
+                            target.TakeDamage(attack);
+                        }
+                        catch (MonsterDeathException)
+                        {
+                            monsterDeath = true;
+                        }
+                    }
+                    break;
+            }
         }
+        finally
+        {
+            Reset();
+        }
+
+        return monsterDeath;
     }
 
-    public override Skill Clone()
+    private void ScalePowerWithLevel(int level)
     {
-        return new UltimateSkill
+        if (level == _previousScaledLevel)
+            return;
+    
+        var levelScale = Math.Max(1, level - 3);
+        var powerMultiplier = (int)(1 + (Math.Pow(levelScale, 1.2) / 5));
+    
+        Power = _basePower * powerMultiplier;
+        Cooldown = _baseCooldown + level % 2;
+    
+        _previousScaledLevel = level;
+    }
+
+    public override UltimateSkill Clone()
+    {
+        var clone = new UltimateSkill
         {
-            Name = this.Name,
-            Description = this.Description,
-            RequiredLevel = this.RequiredLevel,
-            Cost = this.Cost,
-            Power = this.Power,
-            Cooldown = this.Cooldown,
-            TargetType = this.TargetType,
-            SkillCategory = this.SkillCategory,
-            DamageType = this.DamageType
+            DamageType = DamageType,
+            _previousScaledLevel = _previousScaledLevel,
+            _basePower = _basePower,
+            _baseCooldown = _baseCooldown
         };
+
+        CopyTo(clone);
+
+        return clone;
     }
 }

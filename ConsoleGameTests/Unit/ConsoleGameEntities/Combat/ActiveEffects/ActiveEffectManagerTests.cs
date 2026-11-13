@@ -12,7 +12,7 @@ public class ActiveEffectManagerTests
 {
     private ISkill GetTestSkill()
     {
-        return new Skill
+        return new SupportSkill
         {
             Name = "TestSkill",
             Power = 10,
@@ -27,7 +27,7 @@ public class ActiveEffectManagerTests
 
     private ISkill GetTestSkill2()
     {
-        return new Skill
+        return new MartialSkill
         {
             Name = "TestSkill2",
             Power = 15,
@@ -639,7 +639,7 @@ public class ActiveEffectManagerTests
         var manager = new ActiveEffectManager();
 
         // Two distinct skill instances with identical properties
-        var skillA = new Skill
+        var skillA = new MagicSkill
         {
             Name = "IdenticalSkill",
             Power = 10,
@@ -651,7 +651,7 @@ public class ActiveEffectManagerTests
             SkillCategory = SkillCategory.Basic
         };
 
-        var skillB = new Skill
+        var skillB = new MagicSkill
         {
             Name = "IdenticalSkill",
             Power = 10,
@@ -1281,7 +1281,7 @@ public class ActiveEffectManagerTests
     {
         var manager = new ActiveEffectManager();
 
-        var skillA = new Skill
+        var skillA = new MartialSkill
         {
             Name = "IdenticalSkill",
             Power = 10,
@@ -1293,7 +1293,7 @@ public class ActiveEffectManagerTests
             SkillCategory = SkillCategory.Basic
         };
 
-        var skillB = new Skill
+        var skillB = new MartialSkill
         {
             Name = "IdenticalSkill",
             Power = 10,
