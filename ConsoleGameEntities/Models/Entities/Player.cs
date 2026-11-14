@@ -37,7 +37,7 @@ public class Player : IPlayer
         var weapon = damage.weapon;
 
         ElementType? element = damage.elemental > 0
-            ? weapon.EquippedRune?.InventoryRune.Rune.Element
+            ? weapon.EquippedRune?.InventoryRune.Rune.Element //go the full path because not sure EquippedRune exists
             : null;
 
         var attack = new AttackDamage(
@@ -49,9 +49,35 @@ public class Player : IPlayer
         AddActionItem($"You attack with {weapon.Name}!");
 
         if (damage.elemental > 0 && element != null)
+        {
             AddActionItem($"Your weapon is charged with primordial energy!\nIt deals an extra {damage.elemental} points of {element} damage!");
+        }
 
         var result = target.TakeDamage(attack);
+
+        if (result is { IsDodged: false, FinalElementalDamage: > 0 })
+        {
+            if (weapon.ApplyEquippedRuneStatusEffect())
+            {
+                //apply status effect
+            }
+            
+            var rune = weapon.GetEquippedRune(); //can take the shortcu now because we know it exists
+
+            var elementalDoTEffect = new ActiveEffect(ActiveEffectType.ElementalDamageOverTime,
+                new ElementalDamageOverTimeEffectKey(rune.Element), weapon.GetEquippedRuneDoT(),
+                rune.Duration, sourceCaster: this, sourceRune: rune);
+
+            var dotResult = target.ActiveEffectManager.Register(elementalDoTEffect);
+            if (dotResult.Registration == RegistrationStatus.Registered)
+            {
+                AddActionItem("Primordial energy lingers after your attack.");
+            }
+            else if (dotResult.Registration == RegistrationStatus.Strengthened)
+            {
+                AddActionItem("The primordial energy clinging to the monster surges with power");
+            }
+        }
 
         CheckWeaponDurability();
 
@@ -70,7 +96,7 @@ public class Player : IPlayer
         var corruptedModifier = ActiveEffectManager.GetOutgoingDamageDecrease();
 
         var actualStandardDamage = Math.Max(0, standardDamage - corruptedModifier);
-        var actualElementalDamage = Math.Max(0, weapon.UseRune() - corruptedModifier);
+        var actualElementalDamage = Math.Max(0, weapon.UseEquippedRune() - corruptedModifier);
 
         if (actualStandardDamage == 0 && actualElementalDamage == 0)
             throw new AttackException("Your attack is completely suppressed!");
@@ -84,7 +110,7 @@ public class Player : IPlayer
             .OfType<Armor>()
             .Where(a => a.EquippedRune != null &&
                         a.EquippedRune.InventoryRune.Rune.Element == attack.Element)
-            .Sum(a => a.UseRune());
+            .Sum(a => a.UseEquippedRune());
         
         var modifiers = new PlayerDamageModifiers(
             GetStat(StatType.Defense),

@@ -100,12 +100,35 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
         RequiredLevel = Math.Max(1, estimatedLevel); // Safety cap
     }
 
-    public virtual int UseRune()
+    public int UseEquippedRune()
     {
         if (EquippedRune == null)
             return 0;
 
-        return EquippedRune.InventoryRune.Tier * EquippedRune.InventoryRune.Rune.Power;
-    } 
-    
+        return EquippedRune.Use();
+    }
+
+    public virtual bool ApplyEquippedRuneStatusEffect()
+    {
+        if (EquippedRune == null)
+            return false;
+
+        return EquippedRune.ApplyStatusEffect();
+    }
+
+    public WeaponRune GetEquippedRune()
+    {
+        if (EquippedRune == null)
+            throw new EquipmentException("No Rune is Equipped");
+
+        return (WeaponRune)EquippedRune.InventoryRune.Rune;
+    }
+
+    public int GetEquippedRuneDoT()
+    {
+        if (EquippedRune == null)
+            throw new EquipmentException("No rune is equipped");
+
+        return EquippedRune.GetDoTDamage();
+    }
 }

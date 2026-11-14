@@ -57,17 +57,28 @@ public class PlayerAttackTests
         return player;
     }
 
-    private static Weapon CreateWeapon()
+    private static Weapon CreateWeapon(bool? statusEffectSucceeds = null)
     {
-        return new Weapon
+        Weapon weapon = statusEffectSucceeds.HasValue
+            ? new TestWeapon(statusEffectSucceeds.Value)
+            : new Weapon();
+
+        weapon.Id = 7;
+        weapon.Name = "Test Weapon";
+        weapon.Value = 4.6M;
+        weapon.RequiredLevel = 1;
+        weapon.AttackPower = 12;
+        weapon.Durability = 3;
+
+        return weapon;
+    }
+    
+    private class TestWeapon(bool statusEffectSucceeds) : Weapon
+    {
+        public override bool ApplyEquippedRuneStatusEffect()
         {
-            Id = 7,
-            Name = "Test Weapon",
-            Value = 4.6M,
-            RequiredLevel = 1,
-            AttackPower = 12,
-            Durability = 3
-        };
+            return statusEffectSucceeds;
+        }
     }
 
     private static ActiveEffect CreateCorruptedEffect(int power)
@@ -78,8 +89,27 @@ public class PlayerAttackTests
             power: power,
             duration: 3);
     }
+    
+    private static Mock<ITargetable> CreateTargetMock(
+        AttackResolutionResult result,
+        ActiveEffectManager effectManager)
+    {
+        var targetMock = new Mock<ITargetable>();
 
-    private static Weapon CreateWeaponWithRune(ElementType element, int tier, int power)
+        targetMock.Setup(t => t.ActiveEffectManager)
+            .Returns(effectManager);
+
+        targetMock.Setup(t => t.TakeDamage(It.IsAny<AttackDamage>()))
+            .Returns(result);
+
+        return targetMock;
+    }
+
+    private static Weapon CreateWeaponWithRune(
+        ElementType element,
+        int tier,
+        int power,
+        bool? statusEffectSucceeds = null)
     {
         var weaponRune = new WeaponRune
         {
@@ -87,7 +117,8 @@ public class PlayerAttackTests
             Name = $"Rune of {element}",
             Element = element,
             Power = power,
-            Rarity = RarityLevel.Common
+            Rarity = RarityLevel.Common,
+            Duration = 3
         };
 
         var inventoryRune = new InventoryRune
@@ -107,10 +138,25 @@ public class PlayerAttackTests
 
         inventoryRune.EquippedRunes.Add(equippedRune);
 
-        var weapon = CreateWeapon();
+        var weapon = CreateWeapon(statusEffectSucceeds);
         weapon.EquippedRune = equippedRune;
 
         return weapon;
+    }
+    
+    private static (Player Player, Weapon Weapon) CreatePlayerWithEquippedRune(
+        ElementType element,
+        int tier,
+        int power)
+    {
+        var player = CreatePlayer();
+        var weapon = CreateWeaponWithRune(element, tier, power);
+        weapon.RequiredLevel = player.Level;
+
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        return (player, weapon);
     }
 
     // ── Basic Attack Tests ──
@@ -578,4 +624,270 @@ public class PlayerAttackTests
         Assert.AreEqual(weapon.AttackPower, capturedAttack.StandardDamage);
         Assert.AreEqual(5, capturedAttack.ElementalDamage);
     }
+    
+    [TestMethod]
+    public void Attack_ElementalRuneHit_RegistersDamageOverTime()
+    {
+        var (player, _) = CreatePlayerWithEquippedRune(
+            ElementType.Fire, tier: 1, power: 5);
+
+        var effectManager = new ActiveEffectManager();
+
+        var targetMock = CreateTargetMock(
+            new AttackResolutionResult(
+                12, 12, DamageType.Martial,
+                5, 5, ElementType.Fire,
+                false, false),
+            effectManager);
+
+        player.Attack(targetMock.Object);
+
+        var effects = effectManager.GetByType(
+            ActiveEffectType.ElementalDamageOverTime);
+
+        Assert.AreEqual(1, effects.Count);
+    }
+    
+    [DataTestMethod]
+    [DataRow(1, 1, 1)]
+    [DataRow(3, 1, 2)]
+    [DataRow(5, 1, 3)]
+    [DataRow(5, 2, 5)]
+    [DataRow(5, 3, 8)]
+    [DataRow(10, 3, 15)]
+    public void Attack_ElementalRuneHit_UsesExpectedDoTPower(
+        int power,
+        int tier,
+        int expectedDoTPower)
+    {
+        var (player, _) = CreatePlayerWithEquippedRune(
+            ElementType.Fire, tier, power);
+
+        var effectManager = new ActiveEffectManager();
+
+        var targetMock = CreateTargetMock(
+            new AttackResolutionResult(
+                12, 12, DamageType.Martial,
+                power * tier, power * tier, ElementType.Fire,
+                false, false),
+            effectManager);
+
+        player.Attack(targetMock.Object);
+
+        var effect = effectManager.GetByType(
+            ActiveEffectType.ElementalDamageOverTime).Single();
+
+        Assert.AreEqual(expectedDoTPower, effect.Power);
+    }
+    
+    [TestMethod]
+    public void Attack_ElementalRuneHit_UsesRuneDuration()
+    {
+        var (player, weapon) = CreatePlayerWithEquippedRune(
+            ElementType.Fire, tier: 1, power: 5);
+
+        ((WeaponRune)weapon.EquippedRune!.InventoryRune.Rune).Duration = 5;
+
+        var effectManager = new ActiveEffectManager();
+
+        var targetMock = CreateTargetMock(
+            new AttackResolutionResult(
+                12, 12, DamageType.Martial,
+                5, 5, ElementType.Fire,
+                false, false),
+            effectManager);
+
+        player.Attack(targetMock.Object);
+
+        var effect = effectManager.GetByType(
+            ActiveEffectType.ElementalDamageOverTime).Single();
+
+        Assert.AreEqual(5, effect.Duration);
+    }
+    
+    [TestMethod]
+    public void Attack_ElementalRuneHit_UsesRuneElement()
+    {
+        var (player, _) = CreatePlayerWithEquippedRune(
+            ElementType.Ice, tier: 1, power: 5);
+
+        var effectManager = new ActiveEffectManager();
+
+        var targetMock = CreateTargetMock(
+            new AttackResolutionResult(
+                12, 12, DamageType.Martial,
+                5, 5, ElementType.Ice,
+                false, false),
+            effectManager);
+
+        player.Attack(targetMock.Object);
+
+        var effect = effectManager.GetByType(
+            ActiveEffectType.ElementalDamageOverTime).Single();
+
+        Assert.AreEqual(
+            new ElementalDamageOverTimeEffectKey(ElementType.Ice),
+            effect.EffectIdentityKey);
+    }
+    
+    [TestMethod]
+    public void Attack_ElementalRuneHit_SetsSourceCasterAndRune()
+    {
+        var (player, weapon) = CreatePlayerWithEquippedRune(
+            ElementType.Fire, tier: 2, power: 5);
+
+        var rune = weapon.GetEquippedRune();
+        var effectManager = new ActiveEffectManager();
+
+        var targetMock = CreateTargetMock(
+            new AttackResolutionResult(
+                12, 12, DamageType.Martial,
+                10, 10, ElementType.Fire,
+                false, false),
+            effectManager);
+
+        player.Attack(targetMock.Object);
+
+        var effect = effectManager.GetByType(
+            ActiveEffectType.ElementalDamageOverTime).Single();
+
+        Assert.AreSame(player, effect.SourceCaster);
+        Assert.AreSame(rune, effect.SourceRune);
+    }
+    
+    [TestMethod]
+    public void Attack_DodgedElementalAttack_DoesNotRegisterEffects()
+    {
+        var (player, _) = CreatePlayerWithEquippedRune(
+            ElementType.Fire, tier: 1, power: 5);
+
+        var effectManager = new ActiveEffectManager();
+
+        var targetMock = CreateTargetMock(
+            new AttackResolutionResult(
+                12, 0, DamageType.Martial,
+                5, 0, ElementType.Fire,
+                true, false),
+            effectManager);
+
+        player.Attack(targetMock.Object);
+
+        Assert.AreEqual(0, effectManager.GetByType(
+            ActiveEffectType.ElementalDamageOverTime).Count);
+
+        Assert.AreEqual(0, effectManager.GetByType(
+            ActiveEffectType.ElementalStatus).Count);
+    }
+
+    [TestMethod]
+    public void Attack_NegatedElementalDamage_DoesNotRegisterEffects()
+    {
+        var (player, _) = CreatePlayerWithEquippedRune(
+            ElementType.Fire, tier: 1, power: 5);
+
+        var effectManager = new ActiveEffectManager();
+
+        var targetMock = CreateTargetMock(
+            new AttackResolutionResult(
+                12, 12, DamageType.Martial,
+                5, 0, ElementType.Fire,
+                false, false),
+            effectManager);
+
+        player.Attack(targetMock.Object);
+
+        Assert.AreEqual(0, effectManager.GetByType(
+            ActiveEffectType.ElementalDamageOverTime).Count);
+
+        Assert.AreEqual(0, effectManager.GetByType(
+            ActiveEffectType.ElementalStatus).Count);
+    }
+    
+    [TestMethod]
+    public void Attack_WithoutEquippedRune_DoesNotRegisterElementalEffects()
+    {
+        var player = CreatePlayer();
+        var weapon = CreateWeapon();
+        weapon.RequiredLevel = player.Level;
+
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var effectManager = new ActiveEffectManager();
+
+        var targetMock = CreateTargetMock(
+            new AttackResolutionResult(
+                12, 12, DamageType.Martial,
+                0, 0, null,
+                false, false),
+            effectManager);
+
+        player.Attack(targetMock.Object);
+
+        Assert.AreEqual(0, effectManager.GetByType(
+            ActiveEffectType.ElementalDamageOverTime).Count);
+
+        Assert.AreEqual(0, effectManager.GetByType(
+            ActiveEffectType.ElementalStatus).Count);
+    }
+    
+    [TestMethod]
+    public void Attack_ElementalRuneHit_StatusChanceSucceeds_DoesNotPreventDamageOverTime()
+    {
+        var player = CreatePlayer();
+        var weapon = CreateWeaponWithRune(
+            ElementType.Fire,
+            tier: 1,
+            power: 5,
+            statusEffectSucceeds: true);
+
+        weapon.RequiredLevel = player.Level;
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var effectManager = new ActiveEffectManager();
+
+        var targetMock = CreateTargetMock(
+            new AttackResolutionResult(
+                12, 12, DamageType.Martial,
+                5, 5, ElementType.Fire,
+                false, false),
+            effectManager);
+
+        player.Attack(targetMock.Object);
+
+        Assert.AreEqual(1, effectManager.GetByType(
+            ActiveEffectType.ElementalDamageOverTime).Count);
+    }
+
+    [TestMethod]
+    public void Attack_ElementalRuneHit_StatusChanceFails_StillRegistersDamageOverTime()
+    {
+        var player = CreatePlayer();
+        var weapon = CreateWeaponWithRune(
+            ElementType.Fire,
+            tier: 1,
+            power: 5,
+            statusEffectSucceeds: false);
+
+        weapon.RequiredLevel = player.Level;
+        player.Inventory.AddItem(weapon);
+        player.Equip(weapon);
+
+        var effectManager = new ActiveEffectManager();
+
+        var targetMock = CreateTargetMock(
+            new AttackResolutionResult(
+                12, 12, DamageType.Martial,
+                5, 5, ElementType.Fire,
+                false, false),
+            effectManager);
+
+        player.Attack(targetMock.Object);
+
+        Assert.AreEqual(1, effectManager.GetByType(
+            ActiveEffectType.ElementalDamageOverTime).Count);
+    }
+    
+    
 }

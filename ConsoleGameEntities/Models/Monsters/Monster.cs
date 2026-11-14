@@ -85,7 +85,33 @@ public class Monster : IMonster
             damage.ElementalDamage,
             damage.ElementalDamage > 0 ? AttackElement : null);
 
-        return target.TakeDamage(attack);
+        var result = target.TakeDamage(attack);
+
+        if (result is { IsDodged: false, FinalElementalDamage: > 0 })
+        {
+            if (ApplyElementalStatusEffect())
+            {
+                //apply status effect
+            }
+
+            var dotPower = Math.Max(1, (ElementalPower!.Value + 3) / 4);
+            
+            var elementalDoTEffect = new ActiveEffect(ActiveEffectType.ElementalDamageOverTime,
+                new ElementalDamageOverTimeEffectKey(AttackElement!.Value), dotPower, 3, sourceCaster: this);
+
+            var dotResult = target.ActiveEffectManager.Register(elementalDoTEffect);
+            if (dotResult.Registration == RegistrationStatus.Registered)
+            {
+                AddActionItem("Primordial energy lingers after the attack.");
+            }
+            else if (dotResult.Registration == RegistrationStatus.Strengthened)
+            {
+                AddActionItem("The primordial energy clinging to you surges with power");
+            }
+        }
+
+
+        return result;
     }
     
     private (int StandardDamage, int ElementalDamage) GetEffectiveDamage(double multiplier = 1.0)
@@ -103,8 +129,23 @@ public class Monster : IMonster
         {
             throw new AttackException($"{Name}'s attack has been completely suppressed!");
         }
-
+        
         return (effectiveStandardDamage, effectiveElementalDamage);
+    }
+
+    private bool ApplyElementalStatusEffect()
+    {
+        var chance = ThreatLevel switch
+        {
+            ThreatLevel.Low => 0.0, //currently isn't assigned an element in the factory 
+            ThreatLevel.Medium => 5.0,
+            ThreatLevel.High => 10.0,
+            ThreatLevel.Elite => 20.0,
+            ThreatLevel.Boss => 30.0,
+            _ => throw new AttackException("Invalid Threat Level for monster")
+        };
+
+        return Random.NextDouble() < chance / 100.0;
     }
 
     public static IMonsterStrategy GetStrategyFor(MonsterBehaviorType behavior, IMonsterSkillSelector skillSelector)

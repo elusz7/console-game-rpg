@@ -2,6 +2,6 @@
 
 public class RuneException : Exception
 {
-    protected RuneException() : base() { }
-    protected RuneException(string message) : base(message) { }
+    public RuneException() : base() { }
+    public RuneException(string message) : base(message) { }
 }
