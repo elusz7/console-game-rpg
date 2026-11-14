@@ -9,7 +9,7 @@ public interface ITargetable
 {
     Dictionary<long, string> ActionItems { get; }
     ActiveEffectManager ActiveEffectManager { get; }
-    void TakeDamage(AttackDamage attack);
+    AttackResolutionResult TakeDamage(AttackDamage attack);
     void Heal(int regainedHealth);
     int GetStat(StatType stat);
     void AddActionItem(Skill skill);

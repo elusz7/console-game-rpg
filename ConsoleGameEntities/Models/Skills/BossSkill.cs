@@ -22,10 +22,7 @@ public class BossSkill : DamageSkill
         Reset();
     }
 
-    public override void Activate(
-        ITargetable caster,
-        ITargetable? singleEnemy = null,
-        List<ITargetable>? multipleEnemies = null)
+    public override SkillResolutionResult Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
         if (!IsReady)
             throw new SkillCooldownException("This skill is still on cooldown.");
@@ -48,7 +45,9 @@ public class BossSkill : DamageSkill
         Reset();
 
         caster.AddActionItem(this);
-        singleEnemy!.TakeDamage(attack);
+        var result = singleEnemy!.TakeDamage(attack);
+
+        return new SkillResolutionResult(this, [result]);
     }
 
     public override BossSkill Clone()

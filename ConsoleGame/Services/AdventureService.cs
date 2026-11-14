@@ -209,7 +209,14 @@ public class AdventureService(
                             _outputManager.WriteLine();
                             break;
                         case AdventureOptions.Equipment:
-                            _equipmentHelper.ManageEquipment(Session.Player);
+                            try
+                            {
+                                _equipmentHelper.ManageEquipment(Session.Player);
+                            }
+                            catch (PlayerDeathException)
+                            {
+                                // The normal post-switch health check handles player death.
+                            }
                             _outputManager.Clear();
                             _outputManager.WriteLine();
                             _mapManager.DisplayMap();

@@ -12,7 +12,7 @@ public abstract class DamageSkill : Skill
 {
     public DamageType DamageType { get; set; }
     
-    protected void ExecuteDamageSkill(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
+    protected SkillResolutionResult ExecuteDamageSkill(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
         if (IsOnCooldown)
             throw new SkillCooldownException("This skill is still on cooldown.");
@@ -20,7 +20,7 @@ public abstract class DamageSkill : Skill
         ValidateCasterLevel(caster);
         ValidateDamageTargets(caster, singleEnemy, multipleEnemies);
         
-        bool monsterDeath = false;
+        List<AttackResolutionResult> results = new();
         
         var attack = new AttackDamage(Power, DamageType, 0, null);
         switch (caster)
@@ -35,27 +35,13 @@ public abstract class DamageSkill : Skill
                     switch (TargetType)
                     {
                         case TargetType.SingleEnemy:
-                            try
-                            {
-                                singleEnemy!.TakeDamage(attack);
-                            }
-                            catch (MonsterDeathException)
-                            {
-                                monsterDeath = true;
-                            }
+                            results.Add(singleEnemy!.TakeDamage(attack));
                             break;
 
                         case TargetType.AllEnemies:
                             foreach (var target in multipleEnemies!)
                             {
-                                try
-                                {
-                                    target.TakeDamage(attack);
-                                }
-                                catch (MonsterDeathException)
-                                {
-                                    monsterDeath = true;
-                                }
+                                results.Add(target.TakeDamage(attack));
                             }
                             break;
                     }
@@ -64,17 +50,13 @@ public abstract class DamageSkill : Skill
                 {
                     Reset();
                 }
-
-                if (monsterDeath)
-                    throw new MonsterDeathException();
-
                 break;
 
             case Monster monster:
                 try
                 {
                     monster.AddActionItem(this);
-                    singleEnemy!.TakeDamage(attack);
+                    results.Add(singleEnemy!.TakeDamage(attack));
                 }
                 finally
                 {
@@ -85,6 +67,8 @@ public abstract class DamageSkill : Skill
             default:
                 throw new InvalidOperationException("Invalid caster type.");
         }
+
+        return new SkillResolutionResult(this, results);
     }
 
     protected void ValidateDamageTargets(ITargetable caster, ITargetable? singleEnemy, List<ITargetable>? multipleEnemies)

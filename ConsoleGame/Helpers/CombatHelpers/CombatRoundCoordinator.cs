@@ -32,7 +32,15 @@ public class CombatRoundCoordinator(CombatTurnScheduler turnScheduler)
             if (turn.Type == CombatantType.Player)
             {
                 playerTurn();
+
+                if (player.CurrentHealth <= 0)
+                    return;
+
                 player.ActiveEffectManager.TickTurnBased();
+
+                if (player.CurrentHealth <= 0)
+                    return;
+
                 displayActions();
                 continue;
             }
@@ -48,6 +56,10 @@ public class CombatRoundCoordinator(CombatTurnScheduler turnScheduler)
             if (monster.CurrentHealth > 0)
             {
                 monster.Attack(player);
+
+                if (player.CurrentHealth <= 0)
+                    return;
+
                 monster.ActiveEffectManager.TickTurnBased();
                 displayActions();
             }

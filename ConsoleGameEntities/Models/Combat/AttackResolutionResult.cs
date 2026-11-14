@@ -1,4 +1,5 @@
-﻿using static ConsoleGameEntities.Models.Entities.ModelEnums;
+﻿using ConsoleGameEntities.Interfaces;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
 namespace ConsoleGameEntities.Models.Combat;
 
 /// <summary>
@@ -12,4 +13,9 @@ public record AttackResolutionResult(
     int FinalElementalDamage,
     ElementType? Element,
     bool IsDodged,
-    bool IsCritical);
+    bool IsCritical)
+
+{
+public bool TargetDied { get; init; }
+public SkillResolutionResult SkillResult { get; init; }
+}

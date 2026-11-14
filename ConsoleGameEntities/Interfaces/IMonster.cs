@@ -1,4 +1,5 @@
 ﻿using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Skills;
@@ -29,11 +30,11 @@ public interface IMonster : ITargetable, ILootable, IElemental
     Item? Treasure { get; set; }
     Room? Room { get; set; }
 
-    void Attack(IPlayer target);
+    AttackResolutionResult Attack(IPlayer target);
     
     Item? Loot();
     void SetLoot(Item item);
 
-    void MakeBasicAttack(IPlayer target, double multiplier = 1.0);
+    AttackResolutionResult MakeBasicAttack(IPlayer target, double multiplier = 1.0);
     bool MoreMartialDamageTaken();
 }

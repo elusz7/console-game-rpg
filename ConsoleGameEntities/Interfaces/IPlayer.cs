@@ -1,5 +1,6 @@
 ﻿using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
+using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 
@@ -14,7 +15,7 @@ public interface IPlayer : ITargetable
     int Level { get; set; }
     Inventory Inventory { get; set; }
     Archetype Archetype { get; set; }
-    void Attack(ITargetable target);
+    AttackResolutionResult Attack(ITargetable target);
     void Equip(Item item);
     void Unequip(Item item);
     void LevelUp();

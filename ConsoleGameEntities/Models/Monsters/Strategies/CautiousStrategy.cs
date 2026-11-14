@@ -1,5 +1,6 @@
 ﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
 
@@ -11,21 +12,27 @@ public class CautiousStrategy(IMonsterSkillSelector skillSelector) : DefaultStra
         CautiousMonsterStrategy:
         debuff > damage > heal > buff
     */
-    public override void ExecuteAttack(IMonster monster, IPlayer target)
+    public override AttackResolutionResult ExecuteAttack(IMonster monster, IPlayer target)
     {
         var debuffSkill = _skillSelector.GetDebuffSkill(monster);
         if (debuffSkill != null)
         {
-            debuffSkill.Activate(monster, target);
-            monster.MakeBasicAttack(target, 0.8);
-            return;
+            var skillResult = debuffSkill.Activate(monster, target);
+            return monster.MakeBasicAttack(target, 0.8) with {SkillResult = skillResult};
         }
 
         var damageSkill = _skillSelector.GetHighestDamageSkill(monster);
         if (damageSkill != null)
         {
-            damageSkill.Activate(monster, target);
-            return;
+            var skillResult = damageSkill.Activate(monster, target);
+            
+            if (skillResult.AttackResults.Count != 1)
+                throw new InvalidOperationException(
+                    "Monster damage skills must produce exactly one attack result."); //this shouldn't ever throw because of all the target validation
+            
+            var attackAction = skillResult.AttackResults[0];
+
+            return attackAction with { SkillResult = skillResult };
         }
 
         var healthLost = monster.MaxHealth - monster.CurrentHealth;
@@ -36,14 +43,16 @@ public class CautiousStrategy(IMonsterSkillSelector skillSelector) : DefaultStra
             var healingSkill = _skillSelector.GetHealingSkill(monster, healthLost);
             if (healingSkill != null)
             {
-                healingSkill.Activate(monster);
-                monster.MakeBasicAttack(target, 0.8);
-                return;
+                var skillResult = healingSkill.Activate(monster);
+                return monster.MakeBasicAttack(target, 0.8) with {SkillResult = skillResult};
             }
         }
 
-        _skillSelector.GetBuffSkill(monster)?.Activate(monster);
+        var buffResult = _skillSelector.GetBuffSkill(monster)?.Activate(monster);
 
-        monster.MakeBasicAttack(target, 0.8);
+        if (buffResult != null)
+            return monster.MakeBasicAttack(target, 0.8) with {SkillResult = buffResult};
+        
+        return monster.MakeBasicAttack(target, 0.8);
     }
 }

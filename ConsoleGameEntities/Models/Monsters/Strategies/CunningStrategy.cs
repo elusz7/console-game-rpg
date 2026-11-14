@@ -1,5 +1,6 @@
 ﻿using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters.Strategies;
@@ -17,7 +18,7 @@ public class CunningStrategy(IMonsterSkillSelector skillSelector) : DefaultStrat
      * - If no damage, heal if low
      * - Else, fallback to basic attack.
      */
-    public override void ExecuteAttack(IMonster monster, IPlayer target)
+    public override AttackResolutionResult ExecuteAttack(IMonster monster, IPlayer target)
     {
         var healthLost = monster.MaxHealth - monster.CurrentHealth;
         var emergencyHealThreshold = monster.MaxHealth * 0.25;
@@ -27,9 +28,8 @@ public class CunningStrategy(IMonsterSkillSelector skillSelector) : DefaultStrat
             var emergencyHeal = _skillSelector.GetHealingSkill(monster, healthLost);
             if (emergencyHeal != null)
             {
-                emergencyHeal.Activate(monster);
-                monster.MakeBasicAttack(target, 1.1);
-                return;
+                var skillResult = emergencyHeal.Activate(monster);
+                return monster.MakeBasicAttack(target, 1.1) with {SkillResult = skillResult};
             }
         }
 
@@ -41,9 +41,8 @@ public class CunningStrategy(IMonsterSkillSelector skillSelector) : DefaultStrat
         var debuffSkill = _skillSelector.GetDebuffSkill(monster, targetStatToDebuff);
         if (debuffSkill != null)
         {
-            debuffSkill.Activate(monster, target);
-            monster.MakeBasicAttack(target, 1.1);
-            return;
+            var skillResult = debuffSkill.Activate(monster, target);
+            return monster.MakeBasicAttack(target, 1.1) with {SkillResult = skillResult};
         }
 
         // Step 2: If no debuff used, try buffing own attack stat
@@ -54,27 +53,33 @@ public class CunningStrategy(IMonsterSkillSelector skillSelector) : DefaultStrat
         var buffSkill = _skillSelector.GetBuffSkill(monster, selfBuffStat);
         if (buffSkill != null)
         {
-            buffSkill.Activate(monster);
-            monster.MakeBasicAttack(target, 1.1);
-            return;
+            var skillResult = buffSkill.Activate(monster);
+            return monster.MakeBasicAttack(target, 1.1) with {SkillResult = skillResult};
         }
 
         // Step 3: If still no support skill used, try a damage skill
         var damageSkill = _skillSelector.GetHighestDamageSkill(monster);
         if (damageSkill != null)
         {
-            damageSkill.Activate(monster, target);
-            return;
+            var skillResult = damageSkill.Activate(monster, target);
+            
+            if (skillResult.AttackResults.Count != 1)
+                throw new InvalidOperationException(
+                    "Monster damage skills must produce exactly one attack result."); //this shouldn't ever throw because of all the target validation
+            
+            var attackAction = skillResult.AttackResults[0];
+
+            return attackAction with { SkillResult = skillResult };
         }
 
         // Step 4: Heal if possible, then perform a basic attack
-        var healingSkill = _skillSelector.GetHealingSkill(monster, healthLost);
+        var healResult = _skillSelector.GetHealingSkill(monster, healthLost)?.Activate(monster);
 
-        if (healingSkill != null)
+        if (healResult != null)
         {
-            healingSkill.Activate(monster);
+            return monster.MakeBasicAttack(target, 1.1) with {SkillResult = healResult};
         }
-
-        monster.MakeBasicAttack(target, 1.1);
+        
+        return monster.MakeBasicAttack(target, 1.1);
     }
 }

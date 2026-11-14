@@ -1129,3 +1129,24 @@ Future Player stat simplification
 
 DamageCalculator.ValidateInputs
 - investigate whether ValidateInputs() should accept an attack when either standard or elemental damage is positive
+  
+- 
+Post-roadmap candidate
+  Deferred
+
+Revisit elemental damage and skill architecture
+- Evaluate whether elemental DoT should remain a weapon-rune mechanic.
+- Evaluate moving elemental DoT into secondary skill effects.
+- Separate base martial/magical damage from optional elemental effects.
+- Preserve the six existing elemental status identities.
+- Reassess whether DoT and stat-debuff effects should coexist on the same rune.
+- Rebalance rune tiers, rarity, and skill power accordingly.
+
+support skills that remove debuffs are a good addition to keep on the later-gameplay list.
+
+For the later support-skill work, I'd keep the initial concept broad:
+- Single-target cleanse: remove one or more debuffs from an ally.
+- Mass cleanse: remove debuffs from the whole party, likely with a higher cost or cooldown.
+- Specific counters: skills that remove particular categories, such as elemental status effects, rather than every negative effect.
+- Cleanse limitations: decide whether powerful effects, boss-applied effects, or damage-over-time effects require special treatment.
+  One important design consideration: distinguish removing an active debuff from healing damage already suffered. A cleanse should stop future effects; it shouldn't automatically undo damage already taken.

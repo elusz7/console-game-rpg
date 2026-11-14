@@ -28,7 +28,7 @@ public class UltimateSkill : DamageSkill
         ScalePowerWithLevel(level);
     }
 
-    public override void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
+    public override SkillResolutionResult Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
         ValidateCasterLevel(caster);
         ValidateDamageTargets(caster, singleEnemy, multipleEnemies);
@@ -41,81 +41,54 @@ public class UltimateSkill : DamageSkill
         if (!IsReady)
             throw new SkillCooldownException();
         
-        bool monsterDeath = false;
         var attack = new AttackDamage(Power, DamageType, 0, null);
+        List<AttackResolutionResult> results = new();
         
         if (caster is Player player)
         {
-            monsterDeath = PlayerCast(player, attack, singleEnemy, multipleEnemies);
+            results.AddRange(PlayerCast(player, attack, singleEnemy, multipleEnemies));
         }
         else if (caster is Monster monster)
         {
             switch (TargetType)
             {
                 case TargetType.SingleEnemy:
-                    try
-                    {
-                        monster.AddActionItem(this);
-                        singleEnemy!.TakeDamage(attack);
-                    }
-                    finally
-                    {
-                        Reset();
-                    }
+                    monster.AddActionItem(this);
+                    results.Add(singleEnemy!.TakeDamage(attack));
+                    Reset();
                     break;
             }
         }
 
-        if (monsterDeath)
-        {
-            throw new MonsterDeathException();
-        }
+        return new SkillResolutionResult(this, results);
     }
 
-    private bool PlayerCast(Player player, AttackDamage attack, ITargetable? singleEnemy, List<ITargetable>? multipleEnemies)
+    private List<AttackResolutionResult> PlayerCast(Player player, AttackDamage attack, ITargetable? singleEnemy, List<ITargetable>? multipleEnemies)
     {
-        var monsterDeath = false;
         ConsumePlayerResources(player);
 
-        try
+        List<AttackResolutionResult> results = new();
+
+        switch (TargetType)
         {
-            switch (TargetType)
-            {
-                case TargetType.SingleEnemy when singleEnemy is Monster monster:
-                    player.AddActionItem(this);
-                    try
-                    {
-                        monster.TakeDamage(attack);
-                    }
-                    catch (MonsterDeathException)
-                    {
-                        monsterDeath = true;
-                    }
-                    break;
+            case TargetType.SingleEnemy when singleEnemy is Monster monster:
+                player.AddActionItem(this);
+                results.Add(monster.TakeDamage(attack));
+                break;
 
-                case TargetType.AllEnemies:
-                    player.AddActionItem(this);
+            case TargetType.AllEnemies:
+                player.AddActionItem(this);
 
-                    foreach (var target in multipleEnemies!)
-                    {
-                        try
-                        {
-                            target.TakeDamage(attack);
-                        }
-                        catch (MonsterDeathException)
-                        {
-                            monsterDeath = true;
-                        }
-                    }
-                    break;
-            }
+                foreach (var target in multipleEnemies!)
+                {
+                    results.Add(target.TakeDamage(attack));
+                }
+                break;
         }
-        finally
-        {
-            Reset();
-        }
-
-        return monsterDeath;
+        
+        Reset();
+        
+        return results;
     }
 
     private void ScalePowerWithLevel(int level)

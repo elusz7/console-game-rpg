@@ -58,12 +58,12 @@ public class Monster : IMonster
 
     public virtual bool MoreMartialDamageTaken() => DamageRecord[DamageType.Martial] > DamageRecord[DamageType.Magical];
 
-    public virtual void Attack(IPlayer target)
+    public virtual AttackResolutionResult Attack(IPlayer target)
     {
-        Strategy.ExecuteAttack(this, target);
+        return Strategy.ExecuteAttack(this, target);
     }
     
-    public void MakeBasicAttack(IPlayer target, double multiplier = 1.0)
+    public AttackResolutionResult MakeBasicAttack(IPlayer target, double multiplier = 1.0)
     {
         var damage = GetEffectiveDamage(multiplier);
 
@@ -85,7 +85,7 @@ public class Monster : IMonster
             damage.ElementalDamage,
             damage.ElementalDamage > 0 ? AttackElement : null);
 
-        target.TakeDamage(attack);
+        return target.TakeDamage(attack);
     }
     
     private (int StandardDamage, int ElementalDamage) GetEffectiveDamage(double multiplier = 1.0)
@@ -208,7 +208,7 @@ public class Monster : IMonster
         DodgeChance = 0.002 * newLevel;
     }
 
-    public virtual void TakeDamage(AttackDamage attack)
+    public virtual AttackResolutionResult TakeDamage(AttackDamage attack)
     {
         var modifiers = new MonsterDamageModifiers(
             GetStat(StatType.Defense),
@@ -230,7 +230,7 @@ public class Monster : IMonster
         if (result.IsDodged)
         {
             AddActionItem($"{Name} dodged the attack and took no damage!");
-            return;
+            return result;
         }
 
         // Preserve damage tracking for successful Martial and Magical hits.
@@ -255,8 +255,10 @@ public class Monster : IMonster
         if (CurrentHealth <= 0)
         {
             AddActionItem($"{Name} is now dead.");
-            throw new MonsterDeathException();
+            return result with {TargetDied = true};
         }
+
+        return result;
     }
     
     private (int StandardBonus, int ElementalBonus) CalculateBlindedBonus(int standardDamage, int elementalDamage)

@@ -38,7 +38,7 @@ public abstract class Skill : ISkill
         ElapsedTime = Cooldown + 1;
     }
 
-    public abstract void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null);
+    public abstract SkillResolutionResult Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null);
 
     protected void ValidateCasterLevel(ITargetable caster)
     {

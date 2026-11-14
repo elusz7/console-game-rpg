@@ -2,6 +2,7 @@
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Exceptions.Skills;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Combat.ActiveEffects;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
@@ -20,7 +21,7 @@ public class SupportSkill : Skill
     [NotMapped]
     private readonly HashSet<ITargetable> _targets = [];
 
-    public override void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
+    public override SkillResolutionResult Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
         if (IsOnCooldown)
             throw new SkillCooldownException();
@@ -28,16 +29,16 @@ public class SupportSkill : Skill
         ValidateCasterLevel(caster);
         ValidateSupportTargets(caster, singleEnemy, multipleEnemies);
 
-        ExecuteSkill(caster, singleEnemy, multipleEnemies);
+        return ExecuteSkill(caster, singleEnemy, multipleEnemies);
     }
 
-    private void ExecuteSkill(ITargetable self, ITargetable? singleEnemy, List<ITargetable>? multipleEnemies)
+    private SkillResolutionResult ExecuteSkill(ITargetable self, ITargetable? singleEnemy, List<ITargetable>? multipleEnemies)
     {
         if (self is Player player)
             ConsumePlayerResources(player);
 
         var appliedCount = 0;
-
+        
         switch (TargetType)
         {
             case TargetType.Self:
@@ -65,6 +66,8 @@ public class SupportSkill : Skill
 
         self.AddActionItem(this);
         ElapsedTime = 0;
+
+        return new SkillResolutionResult(this, []);
     }
 
     public override void UpdateElapsedTime()

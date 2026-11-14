@@ -1,6 +1,8 @@
-﻿namespace ConsoleGameEntities.Interfaces.Attributes;
+﻿using ConsoleGameEntities.Models.Combat;
+
+namespace ConsoleGameEntities.Interfaces.Attributes;
 
 public interface IMonsterStrategy
 {
-    void ExecuteAttack(IMonster monster, IPlayer target);
+    AttackResolutionResult ExecuteAttack(IMonster monster, IPlayer target);
 }

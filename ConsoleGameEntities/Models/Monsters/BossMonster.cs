@@ -28,9 +28,9 @@ public class BossMonster : Monster
         Strategy = new BossStrategy(skillSelector);
     }
 
-    public override void Attack(IPlayer target)
+    public override AttackResolutionResult Attack(IPlayer target)
     {
-        Strategy.ExecuteAttack(this, target);
+        return Strategy.ExecuteAttack(this, target);
     }
 
     private void CheckPhaseChange()
@@ -73,17 +73,26 @@ public class BossMonster : Monster
         AddActionItem($"Boss [{Name}] has entered phase {_currentPhase}!");
     }
 
-    public override void TakeDamage(AttackDamage attack)
+    public override AttackResolutionResult TakeDamage(AttackDamage attack)
     {
-        try
+        var result = base.TakeDamage(attack);
+
+        if (result.TargetDied)
         {
-            base.TakeDamage(attack);
+            try
+            {
+                CheckPhaseChange();
+
+                // The boss survived by transitioning to another phase.
+                result = result with { TargetDied = false };
+            }
+            catch (MonsterDeathException)
+            {
+                // No phases remain. The boss is actually defeated.
+            }
         }
-        catch (MonsterDeathException)
-        {
-            // Bosses transition phases instead of dying immediately.
-            CheckPhaseChange();
-        }
+
+        return result;
     }
 
     public override void SetLevel(int newLevel)

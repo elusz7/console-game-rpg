@@ -30,50 +30,42 @@ public class CombatHelper(
 
     public void CombatRunner(Player player, List<Monster> monsters)
     {
-        try
+        while (true)
         {
-            while (true)
-            {
-                // Get the living monsters for this round.
-                var aliveMonsters = monsters
-                    .Where(m => m.CurrentHealth > 0)
-                    .ToList();
+            // Get the living monsters for this round.
+            var aliveMonsters = monsters
+                .Where(m => m.CurrentHealth > 0)
+                .ToList();
 
-                if (aliveMonsters.Count == 0)
-                    break;
+            if (aliveMonsters.Count == 0)
+                break;
 
-                // Delegate round execution to the coordinator.
-                _roundCoordinator.ExecuteRound(
-                    player,
-                    aliveMonsters,
+            // Delegate round execution to the coordinator.
+            _roundCoordinator.ExecuteRound(
+                player,
+                aliveMonsters,
 
-                    // Execute the player's turn and preserve the display behavior.
-                    () =>
-                    {
-                        _outputManager.Display();
-                        PlayerCombatTurn(player, aliveMonsters);
-                        _outputManager.Clear();
-                    },
+                // Execute the player's turn and preserve the display behavior.
+                () =>
+                {
+                    _outputManager.Display();
+                    PlayerCombatTurn(player, aliveMonsters);
+                    _outputManager.Clear();
+                },
 
-                    // Display monster information before its scheduled turn.
-                    monster =>
-                    {
-                        System.Diagnostics.Debug.WriteLine(
-                            $"[{monster.Name}] ({monster.CurrentHealth}/{monster.MaxHealth}) {monster.DamageType}: {monster.GetStat(StatType.Attack)}, DEF: {monster.GetStat(StatType.Defense)}, RES: {monster.GetStat(StatType.Resistance)}");
-                    },
+                // Display monster information before its scheduled turn.
+                monster =>
+                {
+                    System.Diagnostics.Debug.WriteLine(
+                        $"[{monster.Name}] ({monster.CurrentHealth}/{monster.MaxHealth}) {monster.DamageType}: {monster.GetStat(StatType.Attack)}, DEF: {monster.GetStat(StatType.Defense)}, RES: {monster.GetStat(StatType.Resistance)}");
+                },
 
-                    // Display and clear pending combat action messages.
-                    () => _actionDisplayHelper.DisplayActionItems(player, aliveMonsters)
-                );
-            }
-
-            _actionDisplayHelper.DisplayActionItems(player, monsters);
+                // Display and clear pending combat action messages.
+                () => _actionDisplayHelper.DisplayActionItems(player, aliveMonsters)
+            );
         }
-        catch (PlayerDeathException)
-        {
-            _actionDisplayHelper.DisplayActionItems(player, monsters);
-            _outputManager.Display();
-        }
+
+        _actionDisplayHelper.DisplayActionItems(player, monsters);
     }
 
     /// <summary>
@@ -237,13 +229,8 @@ public class CombatHelper(
     {
         try
         {
-            player.Attack(target);
+            var result = player.Attack(target);
             _outputManager.WriteLine();
-            return CombatActionResult.Success();
-        }
-        catch (MonsterDeathException)
-        {
-            // The attack succeeded even though the target was defeated.
             return CombatActionResult.Success();
         }
         catch (EquipmentException)
@@ -288,21 +275,18 @@ public class CombatHelper(
                     break;
             }
         }
-        catch (MonsterDeathException)
-        {
-            skill.Reset();
-
-            // The skill was successfully used even though it defeated a monster.
-            return CombatActionResult.Success();
-        }
         catch (Exception ex)
         {
             _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
             return CombatActionResult.Failed();
         }
 
-        if (skill.SkillCategory == SkillCategory.Support)
-            OfferFollowUpAttack(player, targets);
+        var livingTargets = targets
+            .Where(target => target.CurrentHealth > 0)
+            .ToList();
+        
+        if (skill.SkillCategory == SkillCategory.Support && livingTargets.Count > 0)
+            OfferFollowUpAttack(player, livingTargets);
 
         return CombatActionResult.Success();
     }

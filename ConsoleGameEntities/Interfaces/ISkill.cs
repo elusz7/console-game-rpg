@@ -1,4 +1,5 @@
 ﻿using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
@@ -29,7 +30,7 @@ public interface ISkill
     Monster? Monster { get; set; }
 
     void InitializeSkill(int level);
-    void Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null);
+    SkillResolutionResult Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null);
     void UpdateElapsedTime();
     void Reset();
     Skill Clone();

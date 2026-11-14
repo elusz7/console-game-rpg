@@ -31,7 +31,7 @@ public class Player : IPlayer
     public virtual Room? CurrentRoom { get; set; }
     [NotMapped] public List<IEquippable> Equipment { get; set; } = [];
     
-    public void Attack(ITargetable target)
+    public AttackResolutionResult Attack(ITargetable target)
     {
         var damage = CalculatePlayerDamage();
         var weapon = damage.weapon;
@@ -51,9 +51,11 @@ public class Player : IPlayer
         if (damage.elemental > 0 && element != null)
             AddActionItem($"Your weapon is charged with primordial energy!\nIt deals an extra {damage.elemental} points of {element} damage!");
 
-        target.TakeDamage(attack);
+        var result = target.TakeDamage(attack);
 
         CheckWeaponDurability();
+
+        return result;
     }
 
     private (Weapon weapon, int standard, int elemental) CalculatePlayerDamage()
@@ -76,7 +78,7 @@ public class Player : IPlayer
         return (weapon, actualStandardDamage, actualElementalDamage);
     }
 
-    public virtual void TakeDamage(AttackDamage attack)
+    public virtual AttackResolutionResult TakeDamage(AttackDamage attack)
     {
         var equippedResilience = Equipment
             .OfType<Armor>()
@@ -99,7 +101,7 @@ public class Player : IPlayer
         if (result.IsDodged)
         {
             AddActionItem("You dodged the attack and took no damage!");
-            return;
+            return result;
         }
         AddActionItem($"You've taken {result.FinalStandardDamage} damage! [{CurrentHealth} / {MaxHealth}]");
 
@@ -114,10 +116,13 @@ public class Player : IPlayer
         }
         
         CurrentHealth -= (result.FinalStandardDamage + result.FinalElementalDamage);
-        if (CurrentHealth <= 0)
-            throw new PlayerDeathException();
-
+        
         CheckArmorDurability(result.StandardDamageType);
+        
+        if (CurrentHealth <= 0)
+            return result with {TargetDied = true};
+
+        return result;
     }
 
     private (int StandardBonus, int ElementalBonus) CalculateBlindedBonus(int standardDamage, int elementalDamage)
