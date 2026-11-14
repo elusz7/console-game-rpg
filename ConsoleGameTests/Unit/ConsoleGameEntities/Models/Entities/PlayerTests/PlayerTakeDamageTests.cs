@@ -193,7 +193,9 @@ public class PlayerTakeDamageTests
         
         var attack = new AttackDamage(250, DamageType.Magical, 0, null);
 
-        Assert.ThrowsException<PlayerDeathException>(() => player.TakeDamage(attack));
+        var result = player.TakeDamage(attack);
+
+        Assert.IsTrue(result.TargetDied);
     }
 
     [TestMethod]

@@ -1,4 +1,5 @@
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Combat.ActiveEffects;
 using ConsoleGameEntities.Models.Monsters.Strategies;
 using ConsoleGameEntities.Models.Skills;
@@ -20,10 +21,12 @@ public class EliteStrategyTests
             Cooldown = 999; // ElapsedTime defaults to 0, so IsReady = 0 >= 999 = false
         }
 
-        public override void Activate(ITargetable caster, ITargetable? singleEnemy = null,
+        public override SkillResolutionResult Activate(ITargetable caster, ITargetable? singleEnemy = null,
             List<ITargetable>? multipleEnemies = null)
         {
             Activated = true;
+
+            return new SkillResolutionResult(this, []);
         }
     }
     [TestMethod]

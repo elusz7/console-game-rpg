@@ -22,9 +22,9 @@ public static class StrategyHelper
             ElementalPower = elementalPower;
         }
 
-        public override void Attack(IPlayer target)
+        public override AttackResolutionResult Attack(IPlayer target)
         {
-            Strategy.ExecuteAttack(this, target);
+            return Strategy.ExecuteAttack(this, target);
         }
 
         public override bool MoreMartialDamageTaken() => TookMoreMartial;
@@ -38,9 +38,9 @@ public static class StrategyHelper
             AttackPower = 50;
         }
 
-        public override void Attack(IPlayer target)
+        public override AttackResolutionResult Attack(IPlayer target)
         {
-            Strategy.ExecuteAttack(this, target);
+            return Strategy.ExecuteAttack(this, target);
         }
     }
 
@@ -50,11 +50,24 @@ public static class StrategyHelper
         public int ElementalDamageTaken { get; private set; }
         public ElementType? ElementDealt { get; private set; }
 
-        public override void TakeDamage(AttackDamage attack)
+        public override AttackResolutionResult TakeDamage(AttackDamage attack)
         {
             DamageTaken += attack.StandardDamage;
             ElementalDamageTaken += attack.ElementalDamage;
             ElementDealt = attack.Element;
+            CurrentHealth -= attack.StandardDamage + attack.ElementalDamage;
+            var result = new AttackResolutionResult(
+                attack.StandardDamage,
+                attack.StandardDamage,
+                attack.DamageType,
+                attack.ElementalDamage,
+                attack.ElementalDamage,
+                attack.Element,
+                false,
+                false);
+            if (CurrentHealth <= 0)
+                result = result with { TargetDied = true };
+            return result;
         }
     }
 
@@ -63,12 +76,13 @@ public static class StrategyHelper
         public DummyAttackSkill() => Power = 20;
         public bool Activated { get; private set; } = false;
 
-        public override void Activate(ITargetable caster, ITargetable? singleEnemy = null,
+        public override SkillResolutionResult Activate(ITargetable caster, ITargetable? singleEnemy = null,
             List<ITargetable>? multipleEnemies = null)
         {
             Activated = true;
             var attack = new AttackDamage(Power, ModelEnums.DamageType.Martial, 0, null);
-            singleEnemy?.TakeDamage(attack);
+            var result = singleEnemy?.TakeDamage(attack);
+            return new SkillResolutionResult(this, result != null ? [result] : []);
         }
     }
 
@@ -76,10 +90,11 @@ public static class StrategyHelper
     {
         public bool Activated { get; private set; } = false;
 
-        public override void Activate(ITargetable caster, ITargetable? singleEnemy = null,
+        public override SkillResolutionResult Activate(ITargetable caster, ITargetable? singleEnemy = null,
             List<ITargetable>? multipleEnemies = null)
         {
             Activated = true;
+            return new SkillResolutionResult(this, []);
         }
     }
 
@@ -87,10 +102,24 @@ public static class StrategyHelper
     {
         public bool Activated { get; private set; } = false;
 
-        public override void Activate(ITargetable caster, ITargetable? singleEnemy = null,
+        public override SkillResolutionResult Activate(
+            ITargetable caster,
+            ITargetable? singleEnemy = null,
             List<ITargetable>? multipleEnemies = null)
         {
             Activated = true;
+
+            var attack = new AttackDamage(
+                Power,
+                ModelEnums.DamageType.Martial,
+                0,
+                null);
+
+            var result = singleEnemy?.TakeDamage(attack);
+
+            return new SkillResolutionResult(
+                this,
+                result != null ? [result] : []);
         }
     }
 
@@ -98,10 +127,24 @@ public static class StrategyHelper
     {
         public bool Activated { get; private set; } = false;
 
-        public override void Activate(ITargetable caster, ITargetable? singleEnemy = null,
+        public override SkillResolutionResult Activate(
+            ITargetable caster,
+            ITargetable? singleEnemy = null,
             List<ITargetable>? multipleEnemies = null)
         {
             Activated = true;
+
+            var attack = new AttackDamage(
+                Power,
+                ModelEnums.DamageType.Martial,
+                0,
+                null);
+
+            var result = singleEnemy?.TakeDamage(attack);
+
+            return new SkillResolutionResult(
+                this,
+                result != null ? [result] : []);
         }
     }
 
@@ -109,10 +152,11 @@ public static class StrategyHelper
     {
         public bool AttackExecuted { get; private set; } = false;
 
-        public void ExecuteAttack(IMonster monster, IPlayer target)
+        public AttackResolutionResult ExecuteAttack(IMonster monster, IPlayer target)
         {
             AttackExecuted = true;
             // Optionally, you can simulate some effect on target
+            return new AttackResolutionResult(0, 0, DamageType.Martial, null, 0, null, false, false);
         }
     }
 

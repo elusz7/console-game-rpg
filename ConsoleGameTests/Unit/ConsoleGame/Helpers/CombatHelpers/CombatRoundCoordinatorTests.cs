@@ -28,6 +28,8 @@ public class CombatRoundCoordinatorTests
     {
         return new Player
         {
+            MaxHealth = 100,
+            CurrentHealth = 100,
             Archetype = new Archetype
             {
                 Speed = speed,
@@ -187,7 +189,7 @@ public class CombatRoundCoordinatorTests
 
     // Player resource recovery occurs exactly once at the end of the round.
     [TestMethod]
-    public void ExecuteRound_PlayerSkipsTurn_RecoversResourceOnce()
+    public void ExecuteRound_PlayerTurnCompletes_RecoversResourceOnce()
     {
         var player = CreatePlayer(
             currentResource: 3,
@@ -232,8 +234,7 @@ public class CombatRoundCoordinatorTests
             beforeMonsterTurn: m => m.CurrentHealth = 0,
             displayActions: () => displayCount++);
 
-        // Once after the player turn, once after the monster turn is skipped? No:
-        // the monster attack is skipped, so only the final round display follows.
+        // Once after the player turn and once at the end of the round.
         Assert.AreEqual(2, displayCount);
     }
 

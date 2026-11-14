@@ -123,7 +123,9 @@ public class MagicSkillTests
             Archetype = new Archetype { CurrentResource = 10, MaxResource = 10 }
         };
 
-        Assert.ThrowsException<MonsterDeathException>(() => skill.Activate(caster, null, monsters));
+        var results = skill.Activate(caster, null, monsters);
+
+        Assert.AreEqual(1, results.AttackResults.Count(ar => ar.TargetDied));
     }
 
     [TestMethod]

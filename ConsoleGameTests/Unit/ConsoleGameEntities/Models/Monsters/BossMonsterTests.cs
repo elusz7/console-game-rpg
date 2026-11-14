@@ -217,9 +217,9 @@ public class BossMonsterTests
         boss.AggressionLevel = 0;
 
         // Final lethal hit should defeat the boss.
-        Assert.ThrowsException<MonsterDeathException>(
-            () => boss.TakeDamage(attack));
+        var result = boss.TakeDamage(attack);
 
+        Assert.IsTrue(result.TargetDied);
         Assert.IsTrue(boss.CurrentHealth <= 0);
     }
 
@@ -423,9 +423,9 @@ public class BossMonsterTests
         boss.AggressionLevel = 0;
 
         // Final lethal elemental hit should defeat the boss.
-        Assert.ThrowsException<MonsterDeathException>(
-            () => boss.TakeDamage(attack));
+        var result = boss.TakeDamage(attack);
 
+        Assert.IsTrue(result.TargetDied);
         Assert.IsTrue(boss.CurrentHealth <= 0);
     }
 
@@ -448,9 +448,10 @@ public class BossMonsterTests
 
         // Final combined hit should defeat the boss.
         var combinedAttack = new AttackDamage(50000, DamageType.Martial, 50000, ElementType.Fire);
-        Assert.ThrowsException<MonsterDeathException>(
-            () => boss.TakeDamage(combinedAttack));
 
+        var result = boss.TakeDamage(combinedAttack);
+
+        Assert.IsTrue(result.TargetDied);
         Assert.IsTrue(boss.CurrentHealth <= 0);
     }
 

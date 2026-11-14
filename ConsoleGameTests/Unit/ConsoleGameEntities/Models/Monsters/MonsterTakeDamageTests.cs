@@ -124,7 +124,9 @@ public class MonsterTakeDamageTests
         
         var attack = new AttackDamage(1000, DamageType.Magical, 0, null);
 
-        Assert.ThrowsException<MonsterDeathException>(() => monster.TakeDamage(attack));
+        var result = monster.TakeDamage(attack);
+
+        Assert.IsTrue(result.TargetDied);
     }
     
     [TestMethod]

@@ -236,8 +236,8 @@ public class UltimateSkillTests
         skill.InitializeSkill(player.Level);
         skill.ElapsedTime = skill.Cooldown;
 
-        Assert.ThrowsException<MonsterDeathException>(() =>
-            skill.Activate(player, multipleEnemies: enemies)
-        );
+        var results = skill.Activate(player, null, enemies);
+
+        Assert.AreEqual(2, results.AttackResults.Count(ar => ar.TargetDied));
     }
 }

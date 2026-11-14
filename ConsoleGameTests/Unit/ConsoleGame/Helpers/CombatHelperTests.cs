@@ -2,6 +2,7 @@
 using ConsoleGame.Helpers.CombatHelpers;
 using ConsoleGame.Managers.Interfaces;
 using ConsoleGameEntities.Interfaces;
+using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Monsters;
@@ -165,9 +166,10 @@ public class CombatHelperTests
     /// </summary>
     private sealed class EndingCombatMonster : Monster
     {
-        public override void Attack(IPlayer target)
+        public override AttackResolutionResult Attack(IPlayer target)
         {
             CurrentHealth = 0;
+            return new AttackResolutionResult(0, 0, DamageType.Martial, 0, 0, null, false, false);
         }
     }
 

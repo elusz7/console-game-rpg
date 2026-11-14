@@ -1,6 +1,7 @@
 ﻿using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Exceptions.Skills;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
@@ -17,11 +18,12 @@ public class SkillTests
     {
         public bool EffectApplied { get; private set; }
 
-        public override void Activate(ITargetable caster, ITargetable? singleEnemy = null,
+        public override SkillResolutionResult Activate(ITargetable caster, ITargetable? singleEnemy = null,
             List<ITargetable>? multipleEnemies = null)
         {
             EffectApplied = true;
             Reset();
+            return new SkillResolutionResult(this, []);
         }
 
         public override Skill Clone()

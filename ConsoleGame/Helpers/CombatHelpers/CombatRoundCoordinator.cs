@@ -81,6 +81,7 @@ public class CombatRoundCoordinator(CombatTurnScheduler turnScheduler)
             {
                 foreach (var skill in monster.Skills?.OfType<SupportSkill>().ToList() ?? [])
                 {
+                    monster.ActiveEffectManager.ClearBySource(skill);
                     skill.Reset();
                 }
             }
