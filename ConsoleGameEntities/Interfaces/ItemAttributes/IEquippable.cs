@@ -10,5 +10,5 @@ public interface IEquippable
     bool IsEquipped();
     
     EquippedRune? EquippedRune { get; set; }
-    int UseEquippedRune();
+    int GetEquippedRuneElementalPower();
 }

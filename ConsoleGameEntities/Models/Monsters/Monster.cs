@@ -30,16 +30,16 @@ public class Monster : IMonster
     public int AggressionLevel { get; set; }
     [NotMapped] public virtual double DodgeChance { get; set; } = 0.01;
     public string MonsterType { get; set; }
-    public bool IsCore {get; set;}
-    
+    public bool IsCore { get; set; }
+
     public ElementType? AttackElement { get; set; }
     public int? ElementalPower { get; set; }
     public ElementType? Vulnerability { get; set; }
-    public ElementType? Resilience  { get; set; }
+    public ElementType? Resilience { get; set; }
 
     [NotMapped] public bool TreasureLooted { get; set; }
     [NotMapped] public bool IngredientsLooted { get; set; }
-    
+
     public virtual List<Skill> Skills { get; set; } = [];
     public int? RoomId { get; set; }
     public virtual Room? Room { get; set; }
@@ -62,7 +62,7 @@ public class Monster : IMonster
     {
         return Strategy.ExecuteAttack(this, target);
     }
-    
+
     public AttackResolutionResult MakeBasicAttack(IPlayer target, double multiplier = 1.0)
     {
         var damage = GetEffectiveDamage(multiplier);
@@ -89,29 +89,69 @@ public class Monster : IMonster
 
         if (result is { IsDodged: false, FinalElementalDamage: > 0 })
         {
-            if (ApplyElementalStatusEffect())
+            if (ApplyStatusEffect())
             {
-                //apply status effect
+                RegisterElementalStatusEffect(target);
             }
 
-            var dotPower = Math.Max(1, (ElementalPower!.Value + 3) / 4);
-            
-            var elementalDoTEffect = new ActiveEffect(ActiveEffectType.ElementalDamageOverTime,
-                new ElementalDamageOverTimeEffectKey(AttackElement!.Value), dotPower, 3, sourceCaster: this);
-
-            var dotResult = target.ActiveEffectManager.Register(elementalDoTEffect);
-            if (dotResult.Registration == RegistrationStatus.Registered)
-            {
-                AddActionItem("Primordial energy lingers after the attack.");
-            }
-            else if (dotResult.Registration == RegistrationStatus.Strengthened)
-            {
-                AddActionItem("The primordial energy clinging to you surges with power");
-            }
+            RegisterElementalDoTEffect(target);
         }
 
-
         return result;
+    }
+
+    private void RegisterElementalStatusEffect(IPlayer target)
+    {
+        var statusDuration = ThreatLevel switch
+        {
+            ThreatLevel.Medium => 2,
+            ThreatLevel.High => 3,
+            ThreatLevel.Elite => 4,
+            ThreatLevel.Boss => 6,
+            _ => 0 //by now, theatlevel should be clearly defined, so this is just a throwaway value
+        };
+
+        var statusPower = ThreatLevel switch
+        {
+            ThreatLevel.Medium => 3,
+            ThreatLevel.High => 4,
+            ThreatLevel.Elite => 5,
+            ThreatLevel.Boss => 7,
+            _ => 0 //by now, theatlevel should be clearly defined, so this is just a throwaway value
+        };
+
+        var statusEffect = new ActiveEffect(ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(GetStatusEffectType(AttackElement!.Value)), statusPower,
+            statusDuration, sourceCaster: this);
+
+        var statusResult = target.ActiveEffectManager.Register(statusEffect);
+
+        if (statusResult.Registration == RegistrationStatus.Registered)
+        {
+            AddActionItem($"Primordial {GetStatusEffectType(AttackElement.Value)} energy saps your strength after the attack.");
+        }
+        else if (statusResult.Registration == RegistrationStatus.Strengthened)
+        {
+            AddActionItem($"The primordial {GetStatusEffectType(AttackElement.Value)} energy sapping your strength surges with power");
+        }
+    }
+
+    private void RegisterElementalDoTEffect(IPlayer target)
+    {
+        var dotPower = Math.Max(1, (ElementalPower!.Value + 3) / 4);
+
+        var elementalDoTEffect = new ActiveEffect(ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(AttackElement!.Value), dotPower, 3, sourceCaster: this);
+
+        var dotResult = target.ActiveEffectManager.Register(elementalDoTEffect);
+        if (dotResult.Registration == RegistrationStatus.Registered)
+        {
+            AddActionItem($"Primordial {GetElementDotType(AttackElement.Value)} energy lingers after the attack.");
+        }
+        else if (dotResult.Registration == RegistrationStatus.Strengthened)
+        {
+            AddActionItem($"The primordial {GetElementDotType(AttackElement.Value)} energy clinging to you surges with power");
+        }
     }
     
     private (int StandardDamage, int ElementalDamage) GetEffectiveDamage(double multiplier = 1.0)
@@ -129,15 +169,23 @@ public class Monster : IMonster
         {
             throw new AttackException($"{Name}'s attack has been completely suppressed!");
         }
-        
+
         return (effectiveStandardDamage, effectiveElementalDamage);
     }
-
-    private bool ApplyElementalStatusEffect()
+    
+    protected virtual bool ApplyStatusEffect()
     {
+        return ApplyElementalStatusEffect(Random.NextDouble());
+    }
+
+    internal bool ApplyElementalStatusEffect(double roll)
+    {
+        if (roll is < 0.0 or >= 1.0)
+            throw new ArgumentOutOfRangeException(nameof(roll));
+
         var chance = ThreatLevel switch
         {
-            ThreatLevel.Low => 0.0, //currently isn't assigned an element in the factory 
+            ThreatLevel.Low => 0.0,
             ThreatLevel.Medium => 5.0,
             ThreatLevel.High => 10.0,
             ThreatLevel.Elite => 20.0,
@@ -145,7 +193,7 @@ public class Monster : IMonster
             _ => throw new AttackException("Invalid Threat Level for monster")
         };
 
-        return Random.NextDouble() < chance / 100.0;
+        return roll < chance / 100.0;
     }
 
     public static IMonsterStrategy GetStrategyFor(MonsterBehaviorType behavior, IMonsterSkillSelector skillSelector)
@@ -257,12 +305,12 @@ public class Monster : IMonster
             Resilience,
             Vulnerability
         );
-        
+
         var blindedBonus = CalculateBlindedBonus(attack.StandardDamage, attack.ElementalDamage);
 
         var updatedAttack = new AttackDamage(attack.StandardDamage + blindedBonus.StandardBonus, attack.DamageType,
             attack.ElementalDamage + blindedBonus.ElementalBonus, attack.Element);
-        
+
         var result = DamageResolver.ResolveMonsterDamage(
             updatedAttack,
             modifiers,
@@ -296,12 +344,12 @@ public class Monster : IMonster
         if (CurrentHealth <= 0)
         {
             AddActionItem($"{Name} is now dead.");
-            return result with {TargetDied = true};
+            return result with { TargetDied = true };
         }
 
         return result;
     }
-    
+
     private (int StandardBonus, int ElementalBonus) CalculateBlindedBonus(int standardDamage, int elementalDamage)
     {
         var blindedBonus = ActiveEffectManager.GetIncomingDamageIncrease();
@@ -353,7 +401,8 @@ public class Monster : IMonster
             DamageType.Martial => ActiveEffectManager.GetStatModifier(StatType.Attack),
             DamageType.Magical => ActiveEffectManager.GetStatModifier(StatType.Magic),
             DamageType.Hybrid =>
-                (int)Math.Round((ActiveEffectManager.GetStatModifier(StatType.Attack) + ActiveEffectManager.GetStatModifier(StatType.Magic)) / 2.0),
+                (int)Math.Round((ActiveEffectManager.GetStatModifier(StatType.Attack) +
+                                 ActiveEffectManager.GetStatModifier(StatType.Magic)) / 2.0),
             _ => throw new InvalidDataException("Damage Type not properly mapped to a enum")
         };
 

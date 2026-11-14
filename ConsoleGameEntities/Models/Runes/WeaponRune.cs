@@ -8,26 +8,6 @@ public class WeaponRune : Rune
     [NotMapped]
     public virtual EquippedRune? EquippedRune { get; set; }
     
-    public ElementDamageType Description => Element switch
-    {
-        ElementType.Fire => ElementDamageType.Burning,
-        ElementType.Lightning => ElementDamageType.Static,
-        ElementType.Ice => ElementDamageType.Frostbite,
-        ElementType.Nature => ElementDamageType.Poisoned,
-        ElementType.Radiance => ElementDamageType.Weakened,
-        ElementType.Abyssal => ElementDamageType.Despair,
-        _ => throw new ArgumentOutOfRangeException()
-    };
-    public ElementalStatusEffectType StatusEffect => Element switch
-    {
-        ElementType.Fire => ElementalStatusEffectType.Charred,
-        ElementType.Lightning => ElementalStatusEffectType.Shocked,
-        ElementType.Ice => ElementalStatusEffectType.Frozen,
-        ElementType.Nature => ElementalStatusEffectType.Snared,
-        ElementType.Radiance => ElementalStatusEffectType.Blinded,
-        ElementType.Abyssal => ElementalStatusEffectType.Corrupted,
-        _ => throw new ArgumentOutOfRangeException()
-    };
     public int Duration { get; set; }
 
     public double StatusEffectChance => Rarity switch

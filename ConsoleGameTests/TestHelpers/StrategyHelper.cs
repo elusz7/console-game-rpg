@@ -30,7 +30,7 @@ public static class StrategyHelper
         public override bool MoreMartialDamageTaken() => TookMoreMartial;
         public bool TookMoreMartial { get; set; } = true;
     }
-
+    
     public class DummyBossMonster : BossMonster
     {
         public DummyBossMonster(IMonsterSkillSelector skillSelector) : base(skillSelector)

@@ -144,7 +144,7 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
         RequiredLevel = Math.Max(1, estimatedLevel); // Safety cap
     }
     
-    public virtual int UseEquippedRune()
+    public virtual int GetEquippedRuneElementalPower()
     {
         if (EquippedRune == null)
             return 0;

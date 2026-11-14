@@ -2,7 +2,7 @@ using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 
-namespace ConsoleGameTests.Unit.ConsoleGameEntities.Models.Items;
+namespace ConsoleGameTests.Unit.ConsoleGameEntities.Models.Items.Weapons;
 
 [TestClass]
 public class WeaponTests

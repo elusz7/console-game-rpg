@@ -100,12 +100,12 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
         RequiredLevel = Math.Max(1, estimatedLevel); // Safety cap
     }
 
-    public int UseEquippedRune()
+    public int GetEquippedRuneElementalPower()
     {
         if (EquippedRune == null)
             return 0;
 
-        return EquippedRune.Use();
+        return EquippedRune.GetElementalAttack();
     }
 
     public virtual bool ApplyEquippedRuneStatusEffect()
@@ -116,6 +116,22 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
         return EquippedRune.ApplyStatusEffect();
     }
 
+    public ElementalStatusEffectType GetEquippedRuneElementalStatusEffect()
+    {
+        if (EquippedRune == null)
+            throw new EquipmentException("No Rune is Equipped");
+        
+        return EquippedRune.GetElementalStatusEffect();
+    }
+
+    public int GetEquippedRuneStatusEffectPower()
+    {
+        if (EquippedRune == null)
+            throw new EquipmentException("No Rune is Equipped");
+        
+        return EquippedRune.GetStatusEffectPower();
+    }
+
     public WeaponRune GetEquippedRune()
     {
         if (EquippedRune == null)
@@ -124,7 +140,7 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
         return (WeaponRune)EquippedRune.InventoryRune.Rune;
     }
 
-    public int GetEquippedRuneDoT()
+    public (int dotDamage, ElementDamageType dotDamageType) GetEquippedRuneDoT()
     {
         if (EquippedRune == null)
             throw new EquipmentException("No rune is equipped");

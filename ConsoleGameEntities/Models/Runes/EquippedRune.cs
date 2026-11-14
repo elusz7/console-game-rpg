@@ -5,21 +5,21 @@ using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGameEntities.Models.Runes;
 
-public class EquippedRune
+public sealed class EquippedRune
 {
-    public int Id { get; set; }
-    public int InventoryId { get; set; }
-    public int RuneId { get; set; }
+    public int Id { get; init; }
+    public int InventoryId { get; init; }
+    public int RuneId { get; init; }
     public int Tier { get; set; }
     
-    public int? ArmorId { get; set; }
-    public virtual Armor? Armor { get; set; }
+    public int? ArmorId { get; init; }
+    public Armor? Armor { get; set; }
 
-    public int? WeaponId { get; set; }
-    public virtual Weapon? Weapon { get; set; }
-    public virtual InventoryRune InventoryRune { get; set; } = null!;
+    public int? WeaponId { get; init; }
+    public Weapon? Weapon { get; set; }
+    public InventoryRune InventoryRune { get; init; } = null!;
 
-    public int Use()
+    public int GetElementalAttack()
     {
         return InventoryRune.Rune.Power * Tier;
     }
@@ -47,9 +47,19 @@ public class EquippedRune
 
         return roll < chance / 100.0;
     }
-    
-    public int GetDoTDamage()
+
+    public int GetStatusEffectPower()
     {
-        return Math.Max(1, (InventoryRune.Rune.Power * Tier + 1) / 2);
+        return (int)InventoryRune.Rune.Rarity + Tier;
+    }
+    
+    public (int dotDamage, ElementDamageType dotDamageType) GetDoTDamage()
+    {
+        return (Math.Max(1, (InventoryRune.Rune.Power * Tier + 1) / 2), GetElementDotType(InventoryRune.Rune.Element));
+    }
+
+    public ElementalStatusEffectType GetElementalStatusEffect()
+    {
+        return GetStatusEffectType(InventoryRune.Rune.Element);
     }
 }

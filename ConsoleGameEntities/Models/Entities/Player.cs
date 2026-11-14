@@ -9,6 +9,7 @@ using ConsoleGameEntities.Helpers;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Combat.ActiveEffects;
+using ConsoleGameEntities.Models.Monsters;
 
 namespace ConsoleGameEntities.Models.Entities;
 
@@ -59,24 +60,10 @@ public class Player : IPlayer
         {
             if (weapon.ApplyEquippedRuneStatusEffect())
             {
-                //apply status effect
+                RegisterStatusEffect(weapon, target);
             }
             
-            var rune = weapon.GetEquippedRune(); //can take the shortcu now because we know it exists
-
-            var elementalDoTEffect = new ActiveEffect(ActiveEffectType.ElementalDamageOverTime,
-                new ElementalDamageOverTimeEffectKey(rune.Element), weapon.GetEquippedRuneDoT(),
-                rune.Duration, sourceCaster: this, sourceRune: rune);
-
-            var dotResult = target.ActiveEffectManager.Register(elementalDoTEffect);
-            if (dotResult.Registration == RegistrationStatus.Registered)
-            {
-                AddActionItem("Primordial energy lingers after your attack.");
-            }
-            else if (dotResult.Registration == RegistrationStatus.Strengthened)
-            {
-                AddActionItem("The primordial energy clinging to the monster surges with power");
-            }
+            RegisterDotEffect(weapon, target);
         }
 
         CheckWeaponDurability();
@@ -96,12 +83,54 @@ public class Player : IPlayer
         var corruptedModifier = ActiveEffectManager.GetOutgoingDamageDecrease();
 
         var actualStandardDamage = Math.Max(0, standardDamage - corruptedModifier);
-        var actualElementalDamage = Math.Max(0, weapon.UseEquippedRune() - corruptedModifier);
+        var actualElementalDamage = Math.Max(0, weapon.GetEquippedRuneElementalPower() - corruptedModifier);
 
         if (actualStandardDamage == 0 && actualElementalDamage == 0)
             throw new AttackException("Your attack is completely suppressed!");
 
         return (weapon, actualStandardDamage, actualElementalDamage);
+    }
+
+    private void RegisterDotEffect(Weapon weapon, ITargetable target)
+    {
+        var rune = weapon.GetEquippedRune(); //can take the shortcu now because we know it exists
+        var dotEffects = weapon.GetEquippedRuneDoT();
+
+        var elementalDoTEffect = new ActiveEffect(ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(rune.Element), dotEffects.dotDamage,
+            rune.Duration, sourceCaster: this, sourceRune: rune);
+
+        var dotResult = target.ActiveEffectManager.Register(elementalDoTEffect);
+        if (dotResult.Registration == RegistrationStatus.Registered)
+        {
+            AddActionItem($"The {dotEffects.dotDamageType} energy from your weapon lingers on the monster!");
+        }
+        else if (dotResult.Registration == RegistrationStatus.Strengthened)
+        {
+            AddActionItem($"The {dotEffects.dotDamageType} energy surges, intensifying its effect on the monster!");
+        } //Other Registration Statuses don't really matter here since they don't have any effect 
+    }
+    
+    private void RegisterStatusEffect(Weapon weapon, ITargetable target)
+    {
+        var rune = weapon.GetEquippedRune();
+        var statusEffect = weapon.GetEquippedRuneElementalStatusEffect();
+
+        var statusActiveEffect = new ActiveEffect(ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(statusEffect),
+            weapon.GetEquippedRuneStatusEffectPower(),
+            rune.Duration, sourceCaster: this, sourceRune: rune); //what did we decide on for the power of the effect?
+
+        var statusResult = target.ActiveEffectManager.Register(statusActiveEffect);
+        
+        if (statusResult.Registration == RegistrationStatus.Registered)
+        {
+            AddActionItem($"The monster is afflicted with {statusEffect}!");
+        }
+        else if (statusResult.Registration == RegistrationStatus.Strengthened)
+        {
+            AddActionItem($"The monster's {statusEffect} effect grows stronger!");
+        }
     }
 
     public virtual AttackResolutionResult TakeDamage(AttackDamage attack)
@@ -110,7 +139,7 @@ public class Player : IPlayer
             .OfType<Armor>()
             .Where(a => a.EquippedRune != null &&
                         a.EquippedRune.InventoryRune.Rune.Element == attack.Element)
-            .Sum(a => a.UseEquippedRune());
+            .Sum(a => a.GetEquippedRuneElementalPower());
         
         var modifiers = new PlayerDamageModifiers(
             GetStat(StatType.Defense),
