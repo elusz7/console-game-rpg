@@ -1,8 +1,6 @@
-﻿using ConsoleGame.Helpers.CombatHelpers;
-using ConsoleGameEntities.Models.Entities;
+﻿using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
-using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Helpers.CombatHelpers;
 
@@ -26,7 +24,7 @@ public class CombatRoundCoordinator(CombatTurnScheduler turnScheduler)
     {
         // Process turns in the order determined by the scheduler.
         var scheduledTurns = _turnScheduler.ScheduleTurns(player, monsters);
-
+        
         foreach (var turn in scheduledTurns)
         {
             if (turn.Type == CombatantType.Player)
@@ -89,7 +87,7 @@ public class CombatRoundCoordinator(CombatTurnScheduler turnScheduler)
         {
             if (monster.CurrentHealth <= 0)
             {
-                foreach (var skill in monster.Skills?.OfType<SupportSkill>().ToList() ?? [])
+                foreach (var skill in monster.Skills.OfType<SupportSkill>().ToList())
                 {
                     monster.ActiveEffectManager.ClearBySource(skill);
                     skill.Reset();
@@ -105,13 +103,13 @@ public class CombatRoundCoordinator(CombatTurnScheduler turnScheduler)
     {
         foreach (var monster in monsters)
         {
-            foreach (var skill in monster.Skills ?? [])
+            foreach (var skill in monster.Skills)
             {
                 skill.UpdateElapsedTime();
             }
         }
 
-        foreach (var skill in player.Archetype.Skills ?? [])
+        foreach (var skill in player.Archetype.Skills)
         {
             skill.UpdateElapsedTime();
         }

@@ -30,49 +30,60 @@ public class CombatHelper(
 
     public void CombatRunner(Player player, List<Monster> monsters)
     {
-        while (player.CurrentHealth > 0)
+        try
         {
-            // Get the living monsters for this round.
-            var aliveMonsters = monsters
-                .Where(m => m.CurrentHealth > 0)
-                .ToList();
+            while (player.CurrentHealth > 0)
+            {
+                // Get the living monsters for this round.
+                var aliveMonsters = monsters
+                    .Where(m => m.CurrentHealth > 0)
+                    .ToList();
 
-            if (aliveMonsters.Count == 0)
-                break;
+                if (aliveMonsters.Count == 0)
+                    break;
 
-            // Delegate round execution to the coordinator.
-            _roundCoordinator.ExecuteRound(
-                player,
-                aliveMonsters,
+                // Delegate round execution to the coordinator.
+                _roundCoordinator.ExecuteRound(
+                    player,
+                    aliveMonsters,
 
-                // Execute the player's turn and preserve the display behavior.
-                () =>
-                {
-                    _outputManager.Display();
-
-                    try
+                    // Execute the player's turn and preserve the display behavior.
+                    () =>
                     {
-                        PlayerCombatTurn(player, aliveMonsters);
-                    }
-                    finally
+                        _outputManager.Display();
+
+                        try
+                        {
+                            PlayerCombatTurn(player, aliveMonsters);
+                        }
+                        finally
+                        {
+                            _outputManager.Clear();
+                        }
+                    },
+
+                    // Display monster information before its scheduled turn.
+                    monster =>
                     {
-                        _outputManager.Clear();
-                    }
-                },
+                        System.Diagnostics.Debug.WriteLine(
+                            $"[{monster.Name}] ({monster.CurrentHealth}/{monster.MaxHealth}) {monster.DamageType}: {monster.GetStat(StatType.Attack)}, DEF: {monster.GetStat(StatType.Defense)}, RES: {monster.GetStat(StatType.Resistance)}");
+                    },
 
-                // Display monster information before its scheduled turn.
-                monster =>
-                {
-                    System.Diagnostics.Debug.WriteLine(
-                        $"[{monster.Name}] ({monster.CurrentHealth}/{monster.MaxHealth}) {monster.DamageType}: {monster.GetStat(StatType.Attack)}, DEF: {monster.GetStat(StatType.Defense)}, RES: {monster.GetStat(StatType.Resistance)}");
-                },
-
-                // Display and clear pending combat action messages.
-                () => _actionDisplayHelper.DisplayActionItems(player, aliveMonsters)
-            );
+                    // Display and clear pending combat action messages.
+                    () => _actionDisplayHelper.DisplayActionItems(player, aliveMonsters)
+                );
+            }
+            
+            _actionDisplayHelper.DisplayActionItems(player, monsters);
         }
-
-        _actionDisplayHelper.DisplayActionItems(player, monsters);
+        finally
+        {
+            // Clear all active effects when combat ends to prevent them from leaking
+            // into subsequent encounters.
+            player.ActiveEffectManager.ClearAll();
+            foreach (var monster in monsters)
+                monster.ActiveEffectManager.ClearAll();
+        }
     }
 
     /// <summary>
@@ -243,7 +254,7 @@ public class CombatHelper(
     {
         try
         {
-            var result = player.Attack(target);
+            player.Attack(target);
             _outputManager.WriteLine();
             return CombatActionResult.Success();
         }

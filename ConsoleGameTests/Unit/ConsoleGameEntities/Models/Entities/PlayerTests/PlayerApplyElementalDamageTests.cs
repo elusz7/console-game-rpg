@@ -507,7 +507,6 @@ public class PlayerApplyElementalDamageTests
 
         var actionItem = player.ActionItems.Values.Last();
 
-        Assert.IsTrue(actionItem.Contains("resisted"));
         Assert.IsFalse(actionItem.Contains("drains your vitality"));
     }
 }

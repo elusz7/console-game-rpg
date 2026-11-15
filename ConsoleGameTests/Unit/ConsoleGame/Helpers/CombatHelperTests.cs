@@ -174,7 +174,7 @@ public class CombatHelperTests
         }
     }
 
-    /// <summary>`
+    /// <summary>
     /// Creates a living monster for combat tests.
     /// </summary>
     private static Monster CreateTestMonster()
@@ -502,8 +502,9 @@ public class CombatHelperTests
 
         _combatHelper.CombatRunner(player, [monster]);
 
+        // DoT dealt 10 damage on the first tick (100 - 10 = 90).
+        // Effects are cleared after combat ends, so we verify health instead.
         Assert.AreEqual(90, player.CurrentHealth);
-        Assert.AreEqual(2, player.ActiveEffectManager.ActiveEffects.Single().RemainingDuration);
 
         _outputManagerMock.Verify(
             x => x.WriteLine(
@@ -538,5 +539,129 @@ public class CombatHelperTests
 
         // The monster should not get to attack after the lethal player DoT.
         Assert.AreEqual(100, monster.CurrentHealth);
+    }
+
+    // ------- Effect cleanup tests
+
+    [TestMethod]
+    public void CombatRunner_Victory_ClearsPlayerEffects()
+    {
+        // Arrange
+        var player = CreateTestPlayer();
+        var monster = CreateTestMonster();
+        monster.CurrentHealth = 1;
+
+        EquipTestWeapon(player);
+
+        // Register an active effect on the player before combat.
+        player.ActiveEffectManager.Register(
+            CreateDoT(ElementType.Fire, 10, 3));
+
+        // Select Attack (1) to defeat the monster
+        var choices = new Queue<int>([1]);
+
+        _inputManagerMock
+            .Setup(x => x.ReadInt(
+                It.IsAny<string>(),
+                It.IsAny<int>(),
+                It.IsAny<bool>()))
+            .Returns(choices.Dequeue);
+
+        // Act
+        _combatHelper.CombatRunner(player, [monster]);
+
+        // Assert
+        Assert.IsTrue(monster.CurrentHealth <= 0,
+            "The monster should be defeated by the player's attack.");
+        Assert.AreEqual(0, player.ActiveEffectManager.ActiveEffects.Count,
+            "The player's active effects should be cleared after combat ends.");
+    }
+
+    [TestMethod]
+    public void CombatRunner_PlayerDeath_ClearsPlayerEffects()
+    {
+        // Arrange
+        var player = CreateTestPlayer();
+        player.CurrentHealth = 5;
+
+        var monster = CreateTestMonster();
+        monster.AggressionLevel = 0; // Monster won't attack, DoT kills the player
+
+        // Register a DoT effect that will kill the player.
+        player.ActiveEffectManager.Register(
+            CreateDoT(ElementType.Fire, 10, 3));
+
+        // Act
+        _combatHelper.CombatRunner(player, [monster]);
+
+        // Assert
+        Assert.IsTrue(player.CurrentHealth <= 0,
+            "The player should die from the DoT effect.");
+        Assert.AreEqual(0, player.ActiveEffectManager.ActiveEffects.Count,
+            "The player's active effects should be cleared after combat ends.");
+    }
+
+    [TestMethod]
+    public void CombatRunner_Victory_ClearsMonsterEffects()
+    {
+        // Arrange
+        var player = CreateTestPlayer();
+        var monster = CreateTestMonster();
+        monster.CurrentHealth = 1;
+
+        EquipTestWeapon(player);
+
+        // Register an active effect on the monster before combat.
+        monster.ActiveEffectManager.Register(
+            CreateDoT(ElementType.Fire, 10, 3));
+
+        // Select Attack (1) to defeat the monster
+        var choices = new Queue<int>([1]);
+
+        _inputManagerMock
+            .Setup(x => x.ReadInt(
+                It.IsAny<string>(),
+                It.IsAny<int>(),
+                It.IsAny<bool>()))
+            .Returns(choices.Dequeue);
+
+        // Act
+        _combatHelper.CombatRunner(player, [monster]);
+
+        // Assert
+        Assert.IsTrue(monster.CurrentHealth <= 0,
+            "The monster should be defeated by the player's attack.");
+        Assert.AreEqual(0, monster.ActiveEffectManager.ActiveEffects.Count,
+            "The monster's active effects should be cleared after combat ends.");
+    }
+
+    [TestMethod]
+    public void CombatRunner_PlayerDeath_ClearsMonsterEffects()
+    {
+        // Arrange
+        var player = CreateTestPlayer();
+        player.CurrentHealth = 5;
+
+        var monster = CreateTestMonster();
+        monster.AggressionLevel = 0; // Monster won't attack, DoT kills the player
+
+        // Register a DoT effect on the player that will kill the player.
+        player.ActiveEffectManager.Register(
+            CreateDoT(ElementType.Fire, 10, 3));
+
+        // Register an active effect on the monster.
+        monster.ActiveEffectManager.Register(
+            CreateDoT(ElementType.Fire, 10, 3));
+
+        // Act
+        _combatHelper.CombatRunner(player, [monster]);
+
+        // Assert
+        Assert.IsTrue(player.CurrentHealth <= 0,
+            "The player should die from the DoT effect.");
+        Assert.AreEqual(0, monster.ActiveEffectManager.ActiveEffects.Count,
+            "The monster's active effects should be cleared after combat ends.");
+        Assert.IsTrue(monster.CurrentHealth > 0,
+            "The monster should remain alive when the player dies.");
     }
 }
