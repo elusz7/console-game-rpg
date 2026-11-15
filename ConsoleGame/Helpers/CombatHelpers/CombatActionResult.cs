@@ -1,4 +1,7 @@
-﻿namespace ConsoleGame.Helpers.CombatHelpers;
+﻿using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Monsters;
+
+namespace ConsoleGame.Helpers.CombatHelpers;
 
 /// <summary>
 /// Describes the outcome of executing a combat action.
@@ -18,6 +21,8 @@ public record CombatActionResult(
     CombatActionOutcome Outcome,
     bool TurnConsumed)
 {
+    public List<Monster> DeadTargets { get; init; } = new();
+    
     public static CombatActionResult Success() =>
         new(CombatActionOutcome.Success, true);
 

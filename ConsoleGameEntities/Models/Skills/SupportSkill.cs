@@ -16,11 +16,7 @@ public class SupportSkill : Skill
     public StatType StatAffected { get; set; }
     public SupportEffectType SupportEffect { get; set; }
     [NotMapped] protected override bool AllowsAllyTargets => true;
-
-    // Track how many turns each target has left under the effect
-    [NotMapped]
-    private readonly HashSet<ITargetable> _targets = [];
-
+    
     public override SkillResolutionResult Activate(ITargetable caster, ITargetable? singleEnemy = null, List<ITargetable>? multipleEnemies = null)
     {
         if (IsOnCooldown)
@@ -75,15 +71,6 @@ public class SupportSkill : Skill
         ElapsedTime++;
     }
 
-    public override void Reset()
-    {
-        foreach (var target in _targets)
-            ClearEffectFromTarget(target);
-
-        _targets.Clear();
-        ElapsedTime = 0;
-    }
-
     private bool TryApplyEffect(ITargetable caster, ITargetable target)
     {
         if (StatAffected == StatType.Health)
@@ -110,17 +97,9 @@ public class SupportSkill : Skill
         if (result.Registration == RegistrationStatus.RejectedDuplicate)
             return false;
 
-        _targets.Add(target);
         return true;
     }
-
-    private void ClearEffectFromTarget(ITargetable target)
-    {
-        var result = target.ActiveEffectManager.ClearBySource(this);
-        if (result.HasRemovedEffects)
-            target.AddActionItem($"{Name} effect removed");
-    }
-
+    
     public override SupportSkill Clone()
     {
         var clone = new SupportSkill

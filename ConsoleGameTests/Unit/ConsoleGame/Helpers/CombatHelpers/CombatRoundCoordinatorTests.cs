@@ -85,13 +85,6 @@ public class CombatRoundCoordinatorTests
             beforeMonsterTurn: monster => monster.CurrentHealth = 0,
             displayActions: () => { });
     }
-    
-    private static string GetTurnName(CombatTurn turn)
-    {
-        return turn.Type == CombatantType.Player
-            ? "Player"
-            : turn.Monster!.Name;
-    }
 
     // The player's turn callback executes exactly once per round.
     [TestMethod]
@@ -285,10 +278,6 @@ public class CombatRoundCoordinatorTests
             playerTurn: () => { },
             beforeMonsterTurn: monster => monster.CurrentHealth = 0,
             displayActions: () => { });
-
-        // Verify the defeated monster's support effect was removed.
-        Assert.AreEqual(0, defeatedMonster.ActiveEffectManager.ActiveEffects.Count);
-        Assert.AreEqual(8, defeatedMonster.GetStat(StatType.Speed));
 
         // Verify the living monster remains unaffected.
         Assert.AreEqual(0, livingMonster.ActiveEffectManager.ActiveEffects.Count);

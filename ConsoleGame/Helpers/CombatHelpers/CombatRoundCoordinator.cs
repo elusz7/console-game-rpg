@@ -1,6 +1,6 @@
 ﻿using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
-using ConsoleGameEntities.Models.Skills;
+using static ConsoleGame.Helpers.CombatHelpers.CombatCleanUp;
 
 namespace ConsoleGame.Helpers.CombatHelpers;
 
@@ -45,15 +45,16 @@ public class CombatRoundCoordinator(CombatTurnScheduler turnScheduler)
 
             var monster = turn.Monster!;
 
-            // Reset support skills before the next monster acts.
-            ResetSupportSkills(monsters);
-            
             if (monster.CurrentHealth <= 0)
+            {
                 continue;
+            }
 
             var dotResults = monster.ActiveEffectManager.ProcessDoTTicks(monster);
+
             if (dotResults.EffectResults.Any(er => er.TargetDied))
             {
+                CleanupDeadMonster(monster, player, monsters);
                 displayActions();
                 continue;
             }
@@ -77,25 +78,7 @@ public class CombatRoundCoordinator(CombatTurnScheduler turnScheduler)
         ElapseTime(player, monsters);
         displayActions();
     }
-
-    /// <summary>
-    /// Resets support skills belonging to defeated monsters.
-    /// </summary>
-    private static void ResetSupportSkills(List<Monster> monsters)
-    {
-        foreach (var monster in monsters)
-        {
-            if (monster.CurrentHealth <= 0)
-            {
-                foreach (var skill in monster.Skills.OfType<SupportSkill>().ToList())
-                {
-                    monster.ActiveEffectManager.ClearBySource(skill);
-                    skill.Reset();
-                }
-            }
-        }
-    }
-
+    
     /// <summary>
     /// Advances monster and player skill cooldowns and recovers player resources.
     /// </summary>

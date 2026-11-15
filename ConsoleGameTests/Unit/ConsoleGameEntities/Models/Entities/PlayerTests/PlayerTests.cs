@@ -1,10 +1,12 @@
 using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Combat.ActiveEffects;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
+using static ConsoleGameTests.TestHelpers.ModelCreationHelper;
 
 namespace ConsoleGameTests.Unit.ConsoleGameEntities.Models.Entities.PlayerTests;
 
@@ -584,5 +586,77 @@ public class PlayerTests
 
         Assert.IsTrue(player.CurrentHealth <= 0);
         Assert.IsFalse(weapon.IsCursed());
+    }
+    
+    [TestMethod]
+    public void LevelUp_AllSkillsOnCooldown_ResetsAllSkillCooldowns()
+    {
+        // Arrange
+        var player = CreatePlayer();
+        var attackSkill = CreateSkill("Test Skill", TestSkillType.Martial);
+        var supportSkill = CreateSupportSkill(StatType.Speed, SupportEffectType.Boost);
+
+        attackSkill.ElapsedTime = 3;
+        supportSkill.ElapsedTime = 2;
+
+        player.Archetype.Skills.Add(attackSkill);
+        player.Archetype.Skills.Add(supportSkill);
+
+        // Act
+        player.LevelUp();
+
+        // Assert
+        Assert.AreEqual(0, attackSkill.ElapsedTime);
+        Assert.AreEqual(0, supportSkill.ElapsedTime);
+    }
+    
+    [TestMethod]
+    public void LevelUp_ResetsCooldowns_DoesNotRemoveSkills()
+    {
+        // Arrange
+        var player = CreatePlayer();
+        var attackSkill = CreateSkill("Test Skill", TestSkillType.Martial);
+        var supportSkill = CreateSupportSkill(StatType.Speed, SupportEffectType.Boost);
+
+        attackSkill.ElapsedTime = 3;
+        supportSkill.ElapsedTime = 2;
+
+        player.Archetype.Skills.Add(attackSkill);
+        player.Archetype.Skills.Add(supportSkill);
+
+        // Act
+        player.LevelUp();
+
+        // Assert
+        Assert.AreEqual(2, player.Archetype.Skills.Count);
+        Assert.IsTrue(player.Archetype.Skills.Contains(attackSkill));
+        Assert.IsTrue(player.Archetype.Skills.Contains(supportSkill));
+    }
+    
+    [TestMethod]
+    public void LevelUp_ClearsActiveEffectsAndResetsSkillCooldowns()
+    {
+        // Arrange
+        var player = CreatePlayer();
+        var skill = CreateSupportSkill(StatType.Attack, SupportEffectType.Reduce);
+
+        skill.ElapsedTime = 2;
+        player.Archetype.Skills.Add(skill);
+
+        // Add an active effect using your existing test helper.
+        var effect = new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(ElementalStatusEffectType.Charred),
+            power: 4,
+            duration: 3);
+
+        player.ActiveEffectManager.Register(effect);
+
+        // Act
+        player.LevelUp();
+
+        // Assert
+        Assert.AreEqual(0, skill.ElapsedTime);
+        Assert.AreEqual(0, player.ActiveEffectManager.ActiveEffects.Count);
     }
 }

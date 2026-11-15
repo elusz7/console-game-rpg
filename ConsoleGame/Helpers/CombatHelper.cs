@@ -3,11 +3,13 @@ using ConsoleGame.Helpers.DisplayHelpers;
 using ConsoleGame.Managers.Interfaces;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGame.Helpers.AdventureEnums;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
+using static ConsoleGame.Helpers.CombatHelpers.CombatCleanUp;
 
 namespace ConsoleGame.Helpers;
 
@@ -113,6 +115,14 @@ public class CombatHelper(
                 continue;
 
             var result = ExecuteCombatAction(player, action, validTargets);
+
+            if (result.DeadTargets.Count > 0)
+            {
+                foreach (var deadMonster in result.DeadTargets)
+                {
+                    CleanupDeadMonster(deadMonster, player, validTargets);
+                }
+            }
 
             if (result.TurnConsumed)
                 return;
@@ -256,8 +266,13 @@ public class CombatHelper(
     {
         try
         {
-            player.Attack(target);
+            var result = player.Attack(target);
+            
             _outputManager.WriteLine();
+
+            if (result.TargetDied)
+                return CombatActionResult.Success() with { DeadTargets = [target] };
+            
             return CombatActionResult.Success();
         }
         catch (EquipmentException)
@@ -277,12 +292,10 @@ public class CombatHelper(
     /// <summary>
     /// Activates a selected skill and handles any optional follow-up attack.
     /// </summary>
-    private CombatActionResult ExecuteSkill(
-        Player player,
-        UseSkillAction action,
-        List<Monster> targets)
+    private CombatActionResult ExecuteSkill(Player player, UseSkillAction action, List<Monster> targets)
     {
         var skill = action.Skill;
+        var killedMonsters = new List<Monster>();
 
         try
         {
@@ -293,29 +306,50 @@ public class CombatHelper(
                     break;
 
                 case TargetType.SingleEnemy:
-                    skill.Activate(player, singleEnemy: action.Target);
+                {
+                    var singleEnemyResult = skill.Activate(player, singleEnemy: action.Target);
+
+                    if (singleEnemyResult.AttackResults.Any(ar => ar.TargetDied))
+                        killedMonsters.Add(action.Target!);
+
                     break;
+                }
 
                 case TargetType.AllEnemies:
+                {
                     List<ITargetable> enemyTargets = [.. targets];
-                    skill.Activate(player, multipleEnemies: enemyTargets);
+                    var allEnemiesResult = skill.Activate(player, multipleEnemies: enemyTargets);
+
+                    List<Monster> resultingDeaths =
+                        allEnemiesResult.AttackResults
+                            .Select((attackResult, index) => new { attackResult, index })
+                            .Where(x => x.attackResult.TargetDied)
+                            .Select(x => (Monster)enemyTargets[x.index])
+                            .ToList();
+                    
+                    killedMonsters.AddRange(resultingDeaths);
                     break;
+                }
             }
         }
         catch (Exception ex)
         {
             _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
-            return CombatActionResult.Failed();
+            return CombatActionResult.Failed() with {DeadTargets = killedMonsters};
         }
 
         var livingTargets = targets
             .Where(target => target.CurrentHealth > 0)
             .ToList();
-        
-        if (skill.SkillCategory == SkillCategory.Support && livingTargets.Count > 0)
-            OfferFollowUpAttack(player, livingTargets);
 
-        return CombatActionResult.Success();
+        if (skill.SkillCategory == SkillCategory.Support && livingTargets.Count > 0)
+        {
+            var result = OfferFollowUpAttack(player, livingTargets);
+            
+            killedMonsters.AddRange(result.DeadTargets);
+        }
+        
+        return CombatActionResult.Success() with {DeadTargets = killedMonsters };
     }
 
     /// <summary>
@@ -345,9 +379,9 @@ public class CombatHelper(
         if (!used)
             return CombatActionResult.Failed();
 
-        OfferFollowUpAttack(player, validTargets);
+        var result = OfferFollowUpAttack(player, validTargets);
 
-        return CombatActionResult.Success();
+        return CombatActionResult.Success() with {DeadTargets = result.DeadTargets};
     }
 
     /// <summary>
@@ -394,7 +428,7 @@ public class CombatHelper(
     /// Offers the player an optional follow-up attack after using
     /// a support skill or consumable.
     /// </summary>
-    private void OfferFollowUpAttack(Player player, List<Monster> targets)
+    private CombatActionResult OfferFollowUpAttack(Player player, List<Monster> targets)
     {
         bool wantsToAttack =
             _inputManager.ReadString(
@@ -405,7 +439,9 @@ public class CombatHelper(
         {
             // The preceding action already consumed the player's turn.
             // The follow-up attack does not change that outcome.
-            Attack(player, targets);
+            return Attack(player, targets);
         }
+        
+        return CombatActionResult.Skipped();
     }
 }

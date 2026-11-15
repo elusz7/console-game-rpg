@@ -4,6 +4,7 @@ using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Skills;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Helpers;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
@@ -226,11 +227,19 @@ public class Player : IPlayer
                 "Healing amount cannot be negative.");
 
         var frozenReduction = ActiveEffectManager.GetHealingReduction();
+        
+        Debug.WriteLine($"Potion power: {regainedHealth}");
+        Debug.WriteLine($"Frozen healing reduction: {frozenReduction}");
+        Debug.WriteLine($"Player health before healing: {CurrentHealth}");
+        
         var actualHealing = Math.Max(0, regainedHealth - frozenReduction);
 
         var healedAmount = Math.Min(actualHealing, MaxHealth - CurrentHealth);
 
         CurrentHealth += healedAmount;
+        
+        Debug.WriteLine($"MaxHealth: {MaxHealth}");
+        Debug.WriteLine($"Heal resulting health: {CurrentHealth}");
 
         AddActionItem($"You healed for {healedAmount} health! [{CurrentHealth} / {MaxHealth}]");
     }
@@ -246,6 +255,13 @@ public class Player : IPlayer
         Inventory.Gold += (Level * Random.Next(8, 13));
         Inventory.Capacity += Math.Round(boost * 0.8M, 2);
         DodgeChance += 0.003;
+
+        ActiveEffectManager.ClearAll();
+
+        foreach (var skill in Archetype.Skills)
+        {
+            skill.Reset();
+        }
     }
 
     public int GetStat(StatType stat)

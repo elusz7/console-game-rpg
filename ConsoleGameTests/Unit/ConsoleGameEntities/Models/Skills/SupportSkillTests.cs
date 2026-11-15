@@ -58,6 +58,8 @@ public class SupportSkillTests
         // Simulate turns passing
         skill.UpdateElapsedTime(); // now 1 turn left
         skill.UpdateElapsedTime(); // now 0, should expire
+        
+        Assert.AreEqual(2, skill.ElapsedTime);
     }
 
     [TestMethod]
@@ -69,18 +71,5 @@ public class SupportSkillTests
         skill.Activate(player);
         skill.ElapsedTime = 6;
         Assert.ThrowsException<InvalidTargetException>(() => skill.Activate(player));
-    }
-
-    [TestMethod]
-    public void Reset_RevertsAllEffects()
-    {
-        var skill = GetBasicSupportSkill();
-        var player = new Player { Level = 2, Archetype = new Archetype { AttackBonus = 0 } };
-        skill.Activate(player);
-        int boosted = player.GetStat(StatType.Attack);
-
-        skill.Reset();
-
-        Assert.AreEqual(boosted - skill.Power, player.GetStat(StatType.Attack));
     }
 }

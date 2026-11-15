@@ -1,5 +1,4 @@
-﻿
-using ConsoleGameEntities.Models.Entities;
+﻿using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 

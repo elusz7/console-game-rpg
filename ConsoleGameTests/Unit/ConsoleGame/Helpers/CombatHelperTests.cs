@@ -88,7 +88,7 @@ public class CombatHelperTests
     /// <summary>
     /// Creates and equips a valid weapon for the test player.
     /// </summary>
-    private static Weapon EquipTestWeapon(Player player)
+    private static void EquipTestWeapon(Player player)
     {
         var weapon = new Weapon
         {
@@ -102,8 +102,6 @@ public class CombatHelperTests
 
         player.Inventory.Items.Add(weapon);
         player.Equip(weapon);
-
-        return weapon;
     }
 
     /// <summary>
@@ -240,7 +238,7 @@ public class CombatHelperTests
                 It.IsAny<string>(),
                 It.IsAny<int>(),
                 It.IsAny<bool>()))
-            .Returns(() => choices.Dequeue());
+            .Returns(choices.Dequeue);
 
         // Act
         _combatHelper.CombatRunner(player, [monster]);
@@ -278,7 +276,7 @@ public class CombatHelperTests
                 It.IsAny<string>(),
                 It.IsAny<int>(),
                 It.IsAny<bool>()))
-            .Returns(() => choices.Dequeue());
+            .Returns(choices.Dequeue);
 
         // Act
         _combatHelper.CombatRunner(player, [monster]);
@@ -379,7 +377,7 @@ public class CombatHelperTests
                 It.IsAny<string>(),
                 It.IsAny<int>(),
                 It.IsAny<bool>()))
-            .Returns(() => choices.Dequeue());
+            .Returns(choices.Dequeue);
 
         _inputManagerMock
             .Setup(x => x.SelectItem(
@@ -423,7 +421,7 @@ public class CombatHelperTests
                 It.IsAny<string>(),
                 It.IsAny<int>(),
                 It.IsAny<bool>()))
-            .Returns(() => choices.Dequeue());
+            .Returns(choices.Dequeue);
 
         _inputManagerMock
             .Setup(x => x.SelectItem(
@@ -471,7 +469,7 @@ public class CombatHelperTests
                 It.IsAny<string>(),
                 It.IsAny<int>(),
                 It.IsAny<bool>()))
-            .Returns(() => choices.Dequeue());
+            .Returns(choices.Dequeue);
 
         _inputManagerMock
             .Setup(x => x.SelectItem(

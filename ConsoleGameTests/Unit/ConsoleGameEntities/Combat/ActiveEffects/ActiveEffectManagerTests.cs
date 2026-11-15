@@ -1925,4 +1925,53 @@ public class ActiveEffectManagerTests
         Assert.AreSame(effectA, result.RemovedEffect);
         Assert.AreSame(effectB, manager.ActiveEffects.Single());
     }
+    
+    [TestMethod]
+    public void ClearSupportSkillEffectsBySourceCaster_PreservesElementalEffectsFromSameCaster()
+    {
+        var manager = new ActiveEffectManager();
+
+        var caster = Mock.Of<ITargetable>();
+        var skill = GetTestSkill();
+        var rune = Mock.Of<IRune>();
+
+        var supportEffect = new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(skill),
+            10,
+            5,
+            sourceCaster: caster,
+            sourceSkill: skill);
+
+        var statusEffect = new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(ElementalStatusEffectType.Charred),
+            15,
+            3,
+            sourceCaster: caster,
+            sourceRune: rune);
+
+        var dotEffect = new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(ElementType.Fire),
+            20,
+            4,
+            sourceCaster: caster,
+            sourceRune: rune);
+
+        manager.Register(supportEffect);
+        manager.Register(statusEffect);
+        manager.Register(dotEffect);
+
+        var result = manager.ClearSupportSkillEffectsBySourceCaster(caster);
+
+        Assert.IsTrue(result.HasRemovedEffects);
+        Assert.AreEqual(1, result.Count);
+        Assert.AreSame(supportEffect, result.RemovedEffect);
+
+        Assert.AreEqual(2, manager.ActiveEffects.Count);
+        CollectionAssert.Contains(manager.ActiveEffects.ToList(), statusEffect);
+        CollectionAssert.Contains(manager.ActiveEffects.ToList(), dotEffect);
+        CollectionAssert.DoesNotContain(manager.ActiveEffects.ToList(), supportEffect);
+    }
 }

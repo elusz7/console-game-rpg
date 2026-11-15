@@ -211,6 +211,20 @@ public class ActiveEffectManager
         return new ActiveEffectRemovalResult(effectsToRemove);
     }
 
+    public ActiveEffectRemovalResult ClearSupportSkillEffectsBySourceCaster(ITargetable sourceCaster)
+    {
+        ArgumentNullException.ThrowIfNull(sourceCaster);
+
+        var effectsToRemove = _activeEffects.Where(ae => ReferenceEquals(ae.SourceCaster, sourceCaster)
+                                                         && ae.EffectType == ActiveEffectType.SupportStatModifier)
+            .ToList();
+        
+        foreach (var effect in effectsToRemove)
+            _activeEffects.Remove(effect);
+        
+        return new ActiveEffectRemovalResult(effectsToRemove);
+    }
+
     public ActiveEffectRemovalResult ClearAll()
     {
         var effectsToRemove = _activeEffects.ToList();

@@ -702,29 +702,29 @@ The implementation must not retain those dictionaries as parallel storage or mai
 ### Effect Scheduling
 
 - [x] Integrate effect ticking with `CombatRoundCoordinator`.
-- [ ] Implement round-based and turn-based effect advancement.
+- [x] Implement round-based and turn-based effect advancement.
 - [x] Integrate DoT processing at the beginning of the affected combatant's turn.
 - [x] Ensure non-DoT turn-based effects decrement according to their defined end-of-turn lifecycle.
 - [x] Ensure DoT duration is consumed exclusively by scheduled ticks.
 
 ### Round-Based Speed Scheduling
 
-- [ ] Update `CombatTurnScheduler` to capture effective Speed for every living combatant at the beginning of each round.
-- [ ] Use captured Speed values for the entire round.
-- [ ] Ensure Speed changes during a round do not reorder remaining turns.
-- [ ] Ensure Speed changes affect turn order beginning with the next round.
-- [ ] Test Speed changes during a round.
-- [ ] Test Speed-effect expiration during a round.
+- [x] Update `CombatTurnScheduler` to capture effective Speed for every living combatant at the beginning of each round.
+- [x] Use captured Speed values for the entire round.
+- [x] Ensure Speed changes during a round do not reorder remaining turns.
+- [x] Ensure Speed changes affect turn order beginning with the next round.
+- [x] Test Speed changes during a round.
+- [x] Test Speed-effect expiration during a round.
 
 ### Death and Encounter Cleanup
 
-- [ ] Clear effects when combatants die.
-- [ ] Stop processing effects for dead combatants.
-- [ ] Clear player and monster effects when an encounter terminates.
-- [ ] Use guaranteed cleanup, including when combat exits through exceptions.
-- [ ] Preserve effects across boss phase transitions.
-- [ ] Clear player effects during level-up as specified.
-- [ ] Ensure historical SupportSkill target tracking cannot cause effects to survive encounter cleanup.
+- [x] Clear effects when combatants die.
+- [x] Stop processing effects for dead combatants.
+- [x] Clear player and monster effects when an encounter terminates.
+- [x] Use guaranteed cleanup, including when combat exits through exceptions.
+- [x] Preserve effects across boss phase transitions.
+- [x] Clear player effects during level-up as specified.
+- [x] Ensure historical SupportSkill target tracking cannot cause effects to survive encounter cleanup. [target tracking completely removed]
 - [x] Verify that `Reset()` safely clears previously affected targets.
 
 **Acceptance:** Effects cannot leak between encounters, survive death, or produce inconsistent turn scheduling.~~
@@ -736,14 +736,14 @@ Partially complete
 - [x] Integrate DoT processing at the beginning of the affected combatant's turn.
 - [x] Ensure non-DoT turn-based effects decrement according to their defined end-of-turn lifecycle.
 - [x] Ensure DoT duration is consumed exclusively by scheduled ticks.
-- [ ] Implement genuine round-start Speed snapshots.
-- [ ] Ensure Speed changes cannot reorder remaining turns.
-- [ ] Test Speed changes and effect expiration during a round.
-- [ ] Clear effects on death.
-- [ ] Implement guaranteed encounter cleanup.
-- [ ] Preserve effects across boss phase transitions (verify).
-- [ ] Clear player effects during level-up.
-- [ ] Complete SupportSkill target cleanup verification.
+- [x] Implement genuine round-start Speed snapshots.
+- [x] Ensure Speed changes cannot reorder remaining turns.
+- [x] Test Speed changes and effect expiration during a round.
+- [x] Clear effects on death.
+- [x] Implement guaranteed encounter cleanup.
+- [x] Preserve effects across boss phase transitions (verify).
+- [x] Clear player effects during level-up.
+~~- [] Complete SupportSkill target cleanup verification.~~
 
 ~~## C8. Preserve Dedicated Health Modification Paths
 
@@ -752,7 +752,7 @@ Partially complete
 - [x] Do not use `ModifyStat(Health, negativeAmount)` as a substitute for direct health damage.
 - [x] Ensure any retained Health compatibility behavior rejects or explicitly handles negative values.
 - [x] Preserve death and boss-phase-transition handling for direct health damage.
-- [ ] Ensure health-affecting SupportSkills distinguish healing from direct health damage and life drain.
+- [ ] Ensure health-affecting SupportSkills distinguish healing from direct health damage and life drain. DEFERRED
 
 **Acceptance:** Health modification does not bypass established damage, healing, or death behavior.~~
 
@@ -763,26 +763,26 @@ Substantially implemented
 - [x] Avoid negative ModifyStat(Health, amount) damage.
 - [x] Reject negative healing.
 - [x] Preserve death and boss phase-transition handling.
-- [ ] Explicitly distinguish healing, direct damage, and life drain in SupportSkills.
+- [ ] Explicitly distinguish healing, direct damage, and life drain in SupportSkills. DEFERRED
 
 ~~## C9. Phase C Integration Verification
 
 - [x] Test all six elemental status effects.
-- [ ] Test all six elemental DoT types.
+- [x] Test all six elemental DoT types.
 - [x] Test status-effect application.
 - [x] Test stacking and refresh behavior.
 - [x] Test original DoT source ownership.
-- [ ] Test Corrupted and Blinded interactions.
+- [x] Test Corrupted and Blinded interactions.
 - [x] Test armor mitigation.
 - [x] Test duration and expiration.
 - [ ] Test a duration-three DoT applied during the target's turn produces three ticks.
 - [x] Test damage reduced to zero by mitigation still consumes a DoT tick.
 - [x] Test death during DoT processing.
 - [x] Test boss phase transitions.
-- [ ] Test encounter cleanup and exceptions.
-- [ ] Test SupportSkill cleanup.
-- [ ] Test Speed snapshot scheduling.
-- [ ] Run focused and integration test suites.~~
+- [x] Test encounter cleanup and exceptions.
+- [x] Test SupportSkill cleanup.
+- [x] Test Speed snapshot scheduling.
+- [x] Run focused and integration test suites.~~
 
 C9 — Phase C Integration Verification
 Partially complete
@@ -793,14 +793,14 @@ Partially complete
 - [x] Death during DoT processing.
 - [x] Boss phase transitions at unit level.
 - [x] Armor mitigation at unit level.
-- [ ] Complete six-element DoT integration verification.
-- [ ] Verify all six status effects together with their combat interactions.
-- [ ] Verify Corrupted and Blinded integration.
-- [ ] Verify duration-three real combat scenario.
-- [ ] Test encounter cleanup and exceptions.
-- [ ] Complete SupportSkill cleanup tests.
-- [ ] Complete Speed snapshot tests.
-- [ ] Run focused and integration test suites.
+- [x] Complete six-element DoT integration verification.
+- [x] Verify all six status effects together with their combat interactions.
+- [x] Verify Corrupted and Blinded integration.
+- [x] Verify duration-three real combat scenario.
+- [x] Test encounter cleanup and exceptions.
+- [x] Complete SupportSkill cleanup tests.
+- [x] Complete Speed snapshot tests.
+- [x] Run focused and integration test suites.
 
 
 **Phase C exit condition:** Weapon rune status effects, armor mitigation, active-effect storage, temporary modifiers, DoT, scheduling, and cleanup are fully integrated.
