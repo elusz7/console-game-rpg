@@ -686,26 +686,26 @@ The implementation must not retain those dictionaries as parallel storage or mai
 **Status:** Armor rune power is already connected to elemental damage mitigation. Verify that the implementation conforms to the approved mechanics.
 
 - [x] Connect armor rune power to elemental damage mitigation.
-- [ ] Verify that all equipped matching armor runes contribute their `Use(tier)` values.
-- [ ] Verify that nonmatching armor runes contribute nothing.
-- [ ] Verify that affinity multipliers are applied before armor mitigation.
-- [ ] Verify that matching armor mitigation is summed.
-- [ ] Verify that final elemental damage is clamped to zero.
-- [ ] Verify that mitigation cannot cause healing.
-- [ ] Test multiple matching runes and nonmatching runes.
-- [ ] Verify mitigation for both player and monster targets.
+- [x] Verify that all equipped matching armor runes contribute their `Use(tier)` values.
+- [x] Verify that nonmatching armor runes contribute nothing.
+- [x] Verify that affinity multipliers are applied before armor mitigation.
+- [x] Verify that matching armor mitigation is summed.
+- [x] Verify that final elemental damage is clamped to zero.
+- [x] Verify that mitigation cannot cause healing.
+- [x] Test multiple matching runes and nonmatching runes.
+- [x] Verify mitigation for both player and monster targets.
 
 **Acceptance:** Armor runes mitigate elemental damage consistently without causing negative damage or healing.
 
-## C7. Implement Effect Scheduling and Lifecycle Cleanup
+~~## C7. Implement Effect Scheduling and Lifecycle Cleanup
 
 ### Effect Scheduling
 
-- [ ] Integrate effect ticking with `CombatRoundCoordinator`.
+- [x] Integrate effect ticking with `CombatRoundCoordinator`.
 - [ ] Implement round-based and turn-based effect advancement.
-- [ ] Integrate DoT processing at the beginning of the affected combatant's turn.
-- [ ] Ensure non-DoT turn-based effects decrement according to their defined end-of-turn lifecycle.
-- [ ] Ensure DoT duration is consumed exclusively by scheduled ticks.
+- [x] Integrate DoT processing at the beginning of the affected combatant's turn.
+- [x] Ensure non-DoT turn-based effects decrement according to their defined end-of-turn lifecycle.
+- [x] Ensure DoT duration is consumed exclusively by scheduled ticks.
 
 ### Round-Based Speed Scheduling
 
@@ -725,39 +725,83 @@ The implementation must not retain those dictionaries as parallel storage or mai
 - [ ] Preserve effects across boss phase transitions.
 - [ ] Clear player effects during level-up as specified.
 - [ ] Ensure historical SupportSkill target tracking cannot cause effects to survive encounter cleanup.
-- [ ] Verify that `Reset()` safely clears previously affected targets.
+- [x] Verify that `Reset()` safely clears previously affected targets.
 
-**Acceptance:** Effects cannot leak between encounters, survive death, or produce inconsistent turn scheduling.
+**Acceptance:** Effects cannot leak between encounters, survive death, or produce inconsistent turn scheduling.~~
 
-## C8. Preserve Dedicated Health Modification Paths
+C7 — Effect Scheduling and Lifecycle Cleanup
+Partially complete
+- [x] Integrate effect ticking with CombatRoundCoordinator.
+- [x] Implement round-based and turn-based effect advancement.
+- [x] Integrate DoT processing at the beginning of the affected combatant's turn.
+- [x] Ensure non-DoT turn-based effects decrement according to their defined end-of-turn lifecycle.
+- [x] Ensure DoT duration is consumed exclusively by scheduled ticks.
+- [ ] Implement genuine round-start Speed snapshots.
+- [ ] Ensure Speed changes cannot reorder remaining turns.
+- [ ] Test Speed changes and effect expiration during a round.
+- [ ] Clear effects on death.
+- [ ] Implement guaranteed encounter cleanup.
+- [ ] Preserve effects across boss phase transitions (verify).
+- [ ] Clear player effects during level-up.
+- [ ] Complete SupportSkill target cleanup verification.
 
-- [ ] Keep healing routed through `Heal()`.
-- [ ] Keep direct health damage routed through its dedicated damage path.
-- [ ] Do not use `ModifyStat(Health, negativeAmount)` as a substitute for direct health damage.
-- [ ] Ensure any retained Health compatibility behavior rejects or explicitly handles negative values.
-- [ ] Preserve death and boss-phase-transition handling for direct health damage.
+~~## C8. Preserve Dedicated Health Modification Paths
+
+- [x] Keep healing routed through `Heal()`.
+- [x] Keep direct health damage routed through its dedicated damage path.
+- [x] Do not use `ModifyStat(Health, negativeAmount)` as a substitute for direct health damage.
+- [x] Ensure any retained Health compatibility behavior rejects or explicitly handles negative values.
+- [x] Preserve death and boss-phase-transition handling for direct health damage.
 - [ ] Ensure health-affecting SupportSkills distinguish healing from direct health damage and life drain.
 
-**Acceptance:** Health modification does not bypass established damage, healing, or death behavior.
+**Acceptance:** Health modification does not bypass established damage, healing, or death behavior.~~
 
-## C9. Phase C Integration Verification
+C8 — Dedicated Health Modification Paths
+Substantially implemented
+- [x] Keep healing routed through Heal().
+- [x] Keep direct health damage routed through its dedicated damage path.
+- [x] Avoid negative ModifyStat(Health, amount) damage.
+- [x] Reject negative healing.
+- [x] Preserve death and boss phase-transition handling.
+- [ ] Explicitly distinguish healing, direct damage, and life drain in SupportSkills.
 
-- [ ] Test all six elemental status effects.
+~~## C9. Phase C Integration Verification
+
+- [x] Test all six elemental status effects.
 - [ ] Test all six elemental DoT types.
-- [ ] Test status-effect application.
-- [ ] Test stacking and refresh behavior.
-- [ ] Test original DoT source ownership.
+- [x] Test status-effect application.
+- [x] Test stacking and refresh behavior.
+- [x] Test original DoT source ownership.
 - [ ] Test Corrupted and Blinded interactions.
-- [ ] Test armor mitigation.
-- [ ] Test duration and expiration.
+- [x] Test armor mitigation.
+- [x] Test duration and expiration.
 - [ ] Test a duration-three DoT applied during the target's turn produces three ticks.
-- [ ] Test damage reduced to zero by mitigation still consumes a DoT tick.
-- [ ] Test death during DoT processing.
-- [ ] Test boss phase transitions.
+- [x] Test damage reduced to zero by mitigation still consumes a DoT tick.
+- [x] Test death during DoT processing.
+- [x] Test boss phase transitions.
 - [ ] Test encounter cleanup and exceptions.
 - [ ] Test SupportSkill cleanup.
 - [ ] Test Speed snapshot scheduling.
+- [ ] Run focused and integration test suites.~~
+
+C9 — Phase C Integration Verification
+Partially complete
+- [x] Status-effect application and stacking/refresh coverage.
+- [x] DoT duration and expiration coverage.
+- [x] Original DoT source ownership.
+- [x] Zero-damage DoT tick consumption.
+- [x] Death during DoT processing.
+- [x] Boss phase transitions at unit level.
+- [x] Armor mitigation at unit level.
+- [ ] Complete six-element DoT integration verification.
+- [ ] Verify all six status effects together with their combat interactions.
+- [ ] Verify Corrupted and Blinded integration.
+- [ ] Verify duration-three real combat scenario.
+- [ ] Test encounter cleanup and exceptions.
+- [ ] Complete SupportSkill cleanup tests.
+- [ ] Complete Speed snapshot tests.
 - [ ] Run focused and integration test suites.
+
 
 **Phase C exit condition:** Weapon rune status effects, armor mitigation, active-effect storage, temporary modifiers, DoT, scheduling, and cleanup are fully integrated.
 

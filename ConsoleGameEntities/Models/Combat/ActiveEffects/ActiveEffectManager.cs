@@ -98,9 +98,7 @@ public class ActiveEffectManager
         }
     }
 
-    private RegistrationStatus UpdateEffect(
-        ActiveEffect existingEffect,
-        ActiveEffect newEffect)
+    private static RegistrationStatus UpdateEffect(ActiveEffect existingEffect, ActiveEffect newEffect)
     {
         switch (existingEffect.EffectType)
         {
@@ -135,7 +133,7 @@ public class ActiveEffectManager
         return RegistrationStatus.Registered;
     }
 
-    private RegistrationStatus UpdateElementalStatus(ActiveEffect existingEffect, ActiveEffect newEffect)
+    private static RegistrationStatus UpdateElementalStatus(ActiveEffect existingEffect, ActiveEffect newEffect)
     {
         /*
          *  Category	        Stronger	                Equal	            Weaker
@@ -156,7 +154,7 @@ public class ActiveEffectManager
         return RegistrationStatus.Retained;
     }
     
-    private RegistrationStatus UpdateElementalDamageOverTime(ActiveEffect existingEffect, ActiveEffect newEffect)
+    private static RegistrationStatus UpdateElementalDamageOverTime(ActiveEffect existingEffect, ActiveEffect newEffect)
     {
         /*
          *  Category	    Stronger	                Equal	            Weaker

@@ -32,6 +32,8 @@ public class CombatHelper(
     {
         try
         {
+            player.RecoverAllResourcePower();
+            
             while (player.CurrentHealth > 0)
             {
                 // Get the living monsters for this round.

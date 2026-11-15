@@ -561,4 +561,6 @@ public class Player : IPlayer
     {
         Archetype.RecoverResource(recoveryPower);
     }
+    
+    public void RecoverAllResourcePower() => Archetype.CurrentResource = Archetype.MaxResource;
 }

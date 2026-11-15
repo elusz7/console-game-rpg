@@ -1,4 +1,3 @@
-using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Combat.ActiveEffects;

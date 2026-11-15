@@ -152,10 +152,10 @@ public class CombatTurnSchedulerTests
         Assert.AreSame(monsters[0], turns[0].Monster);
         Assert.AreEqual(CombatantType.Player, turns[1].Type);
     }
-
-    // A Speed change during enumeration affects the player's placement.
+    
+    // A player Speed change after scheduling does not change the captured turn order.
     [TestMethod]
-    public void ScheduleTurns_PlayerSpeedChangesDuringRound_UsesUpdatedSpeed()
+    public void ScheduleTurns_PlayerSpeedChangesDuringRound_UsesCapturedSpeed()
     {
         var player = CreatePlayer(5);
         var monsters = new List<Monster>
@@ -164,16 +164,12 @@ public class CombatTurnSchedulerTests
             CreateMonster("Monster B", 7)
         };
 
-        using var enumerator = _scheduler.ScheduleTurns(player, monsters).GetEnumerator();
+        // Schedule the round before changing Speed.
+        var turns = _scheduler.ScheduleTurns(player, monsters);
 
-        // First turn: Monster A acts because it is faster.
-        Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual(CombatantType.Monster, enumerator.Current.Type);
-        Assert.AreSame(monsters[0], enumerator.Current.Monster);
-
-        // Increase player Speed before Monster B's turn.
+        // Increase player Speed from 5 to 9.
         var supportSkill = CreateSelfSupportSkill();
-        
+
         player.ActiveEffectManager.Register(new ActiveEffect(
             ActiveEffectType.SupportStatModifier,
             new SupportSkillEffectKey(supportSkill),
@@ -182,15 +178,15 @@ public class CombatTurnSchedulerTests
             sourceCaster: player,
             sourceSkill: supportSkill));
 
-        // The player now ties Monster B and acts first.
-        Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual(CombatantType.Player, enumerator.Current.Type);
+        // The original snapshot must determine the entire turn order.
+        var scheduledTurns = turns.ToList();
 
-        Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreSame(monsters[1], enumerator.Current.Monster);
-
-        Assert.IsFalse(enumerator.MoveNext());
+        Assert.AreEqual(3, scheduledTurns.Count);
+        Assert.AreSame(monsters[0], scheduledTurns[0].Monster);
+        Assert.AreSame(monsters[1], scheduledTurns[1].Monster);
+        Assert.AreEqual(CombatantType.Player, scheduledTurns[2].Type);
     }
+
 
     // Dead monsters are excluded from the scheduled turns.
     [TestMethod]
@@ -207,5 +203,87 @@ public class CombatTurnSchedulerTests
         Assert.AreEqual(2, turns.Count);
         Assert.AreSame(aliveMonster, turns[0].Monster);
         Assert.AreEqual(CombatantType.Player, turns[1].Type);
+    }
+    
+    
+    // A monster Speed change after scheduling does not change the captured turn order.
+    [TestMethod]
+    public void ScheduleTurns_MonsterSpeedChangesDuringRound_UsesCapturedSpeed()
+    {
+        var player = CreatePlayer(5);
+        var monsters = new List<Monster>
+        {
+            CreateMonster("Monster A", 10),
+            CreateMonster("Monster B", 7)
+        };
+
+        // Schedule the round using the original Speeds.
+        var turns = _scheduler.ScheduleTurns(player, monsters);
+
+        // Increase Monster B's Speed from 7 to 11.
+        var supportSkill = CreateSelfSupportSkill();
+
+        monsters[1].ActiveEffectManager.Register(new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(supportSkill),
+            supportSkill.Power,
+            supportSkill.Duration,
+            sourceCaster: monsters[1],
+            sourceSkill: supportSkill));
+
+        var scheduledTurns = turns.ToList();
+
+        // Monster B must not overtake Monster A.
+        Assert.AreEqual(3, scheduledTurns.Count);
+        Assert.AreSame(monsters[0], scheduledTurns[0].Monster);
+        Assert.AreSame(monsters[1], scheduledTurns[1].Monster);
+        Assert.AreEqual(CombatantType.Player, scheduledTurns[2].Type);
+    }
+
+    
+    // Multiple Speed changes after scheduling cannot alter the established order.
+    [TestMethod]
+    public void ScheduleTurns_MultipleSpeedChangesDuringRound_PreservesOriginalOrder()
+    {
+        var player = CreatePlayer(5);
+        var monsters = new List<Monster>
+        {
+            CreateMonster("Monster A", 10),
+            CreateMonster("Monster B", 7),
+            CreateMonster("Monster C", 3)
+        };
+
+        var turns = _scheduler.ScheduleTurns(player, monsters);
+
+        // Increase player Speed from 5 to 9.
+        var playerSkill = CreateSelfSupportSkill();
+
+        player.ActiveEffectManager.Register(new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(playerSkill),
+            playerSkill.Power,
+            playerSkill.Duration,
+            sourceCaster: player,
+            sourceSkill: playerSkill));
+
+        // Increase Monster B's Speed from 7 to 11.
+        var monsterSkill = CreateSelfSupportSkill();
+
+        monsters[1].ActiveEffectManager.Register(new ActiveEffect(
+            ActiveEffectType.SupportStatModifier,
+            new SupportSkillEffectKey(monsterSkill),
+            monsterSkill.Power,
+            monsterSkill.Duration,
+            sourceCaster: monsters[1],
+            sourceSkill: monsterSkill));
+
+        var scheduledTurns = turns.ToList();
+
+        // Original order must be preserved despite both Speed changes.
+        Assert.AreEqual(4, scheduledTurns.Count);
+        Assert.AreSame(monsters[0], scheduledTurns[0].Monster);
+        Assert.AreSame(monsters[1], scheduledTurns[1].Monster);
+        Assert.AreEqual(CombatantType.Player, scheduledTurns[2].Type);
+        Assert.AreSame(monsters[2], scheduledTurns[3].Monster);
     }
 }

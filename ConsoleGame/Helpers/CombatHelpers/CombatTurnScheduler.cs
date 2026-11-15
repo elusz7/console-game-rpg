@@ -27,38 +27,49 @@ public class CombatTurnScheduler
 {
     public IEnumerable<CombatTurn> ScheduleTurns(Player player, List<Monster> monsters)
     {
-        // Sort living monsters by their Speed at the beginning of the round.
-        // ThenBy preserves their original list order when Speeds are equal.
+        // Capture the player's effective Speed at the beginning of the round.
+        var roundStartPlayerSpeed = player.GetStat(StatType.Speed);
+
+        // Capture each living monster's effective Speed and original list index.
         var orderedMonsters = monsters
-            .Where(m => m.CurrentHealth > 0)
             .Select((monster, index) => new { Monster = monster, Index = index })
-            .OrderByDescending(x => x.Monster.GetStat(StatType.Speed))
+            .Where(x => x.Monster.CurrentHealth > 0)
+            .Select(x => new
+            {
+                x.Monster,
+                x.Index,
+                Speed = x.Monster.GetStat(StatType.Speed)
+            })
+            .OrderByDescending(x => x.Speed)
             .ThenBy(x => x.Index)
-            .Select(x => x.Monster)
             .ToList();
 
         // No living monsters means there is no combat round to schedule.
         if (orderedMonsters.Count == 0)
-            yield break;
+            return Array.Empty<CombatTurn>();
 
+        // Build the complete turn sequence immediately using captured Speeds.
+        var scheduledTurns = new List<CombatTurn>();
         bool playerTurnScheduled = false;
 
-        foreach (var monster in orderedMonsters)
+        foreach (var entry in orderedMonsters)
         {
-            // Check current Speeds immediately before this monster's turn.
-            // The player wins ties but only receives one turn per round.
+            // The player wins ties, using the round-start Speed snapshot.
             if (!playerTurnScheduled &&
-                player.GetStat(StatType.Speed) >= monster.GetStat(StatType.Speed))
+                roundStartPlayerSpeed >= entry.Speed)
             {
                 playerTurnScheduled = true;
-                yield return new CombatTurn(CombatantType.Player);
+                scheduledTurns.Add(new CombatTurn(CombatantType.Player));
             }
 
-            yield return new CombatTurn(CombatantType.Monster, monster);
+            scheduledTurns.Add(
+                new CombatTurn(CombatantType.Monster, entry.Monster));
         }
 
         // If every monster was faster, the player acts last.
         if (!playerTurnScheduled)
-            yield return new CombatTurn(CombatantType.Player);
+            scheduledTurns.Add(new CombatTurn(CombatantType.Player));
+
+        return scheduledTurns;
     }
 }

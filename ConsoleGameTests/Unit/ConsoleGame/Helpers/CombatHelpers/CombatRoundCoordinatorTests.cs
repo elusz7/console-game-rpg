@@ -85,6 +85,13 @@ public class CombatRoundCoordinatorTests
             beforeMonsterTurn: monster => monster.CurrentHealth = 0,
             displayActions: () => { });
     }
+    
+    private static string GetTurnName(CombatTurn turn)
+    {
+        return turn.Type == CombatantType.Player
+            ? "Player"
+            : turn.Monster!.Name;
+    }
 
     // The player's turn callback executes exactly once per round.
     [TestMethod]
@@ -620,4 +627,131 @@ public class CombatRoundCoordinatorTests
         Assert.AreEqual(1, playerTurnCount);
     }
     
+    
+    [TestMethod]
+    public void ExecuteRound_PlayerSpeedChangesDuringRound_PreservesOriginalTurnOrder()
+    {
+        var player = CreatePlayer(speed: 5);
+        var monsterA = CreateMonster("Monster A", 10);
+        var monsterB = CreateMonster("Monster B", 7);
+
+        var monsters = new List<Monster> { monsterA, monsterB };
+        var turnOrder = new List<string>();
+
+        _coordinator.ExecuteRound(
+            player,
+            monsters,
+            playerTurn: () => turnOrder.Add("Player"),
+            beforeMonsterTurn: monster =>
+            {
+                turnOrder.Add(monster.Name);
+
+                if (monster == monsterA)
+                {
+                    var skill = CreateSelfSupportSkill();
+                    skill.Activate(player);
+
+                    Assert.AreEqual(9, player.GetStat(StatType.Speed));
+                }
+
+                monster.CurrentHealth = 0;
+            },
+            displayActions: () => { });
+
+        CollectionAssert.AreEqual(
+            new[] { "Monster A", "Monster B", "Player" },
+            turnOrder);
+    }
+
+    [TestMethod]
+    public void ExecuteRound_MonsterSpeedChangesDuringRound_PreservesOriginalTurnOrder()
+    {
+        var player = CreatePlayer(speed: 5);
+        var monsterA = CreateMonster("Monster A", 10);
+        var monsterB = CreateMonster("Monster B", 7);
+
+        var monsters = new List<Monster> { monsterA, monsterB };
+        var turnOrder = new List<string>();
+
+        _coordinator.ExecuteRound(
+            player,
+            monsters,
+            playerTurn: () => turnOrder.Add("Player"),
+            beforeMonsterTurn: monster =>
+            {
+                turnOrder.Add(monster.Name);
+
+                if (monster == monsterA)
+                {
+                    var skill = CreateSelfSupportSkill();
+                    skill.Activate(monsterB);
+
+                    Assert.AreEqual(11, monsterB.GetStat(StatType.Speed));
+                }
+
+                monster.CurrentHealth = 0;
+            },
+            displayActions: () => { });
+
+        CollectionAssert.AreEqual(
+            new[] { "Monster A", "Monster B", "Player" },
+            turnOrder);
+    }
+
+    [TestMethod]
+    public void ExecuteRound_SpeedEffectExpiresDuringRound_AffectsNextRoundOnly()
+    {
+        var player = CreatePlayer(speed: 5);
+        var monster = CreateMonster("Monster A", 7);
+
+        var skill = CreateSelfSupportSkill();
+        skill.Duration = 1;
+        skill.Activate(player);
+
+        var firstRoundOrder = new List<string>();
+
+        _coordinator.ExecuteRound(
+            player,
+            [monster],
+            playerTurn: () =>
+            {
+                firstRoundOrder.Add("Player");
+            },
+            beforeMonsterTurn: m =>
+            {
+                firstRoundOrder.Add(m.Name);
+                m.CurrentHealth = 0;
+            },
+            displayActions: () => { });
+
+        // Player started with Speed 9 and therefore acted before the monster.
+        CollectionAssert.AreEqual(
+            new[] { "Player", "Monster A" },
+            firstRoundOrder);
+
+        // The Speed effect expired after the player's turn.
+        Assert.AreEqual(0, player.ActiveEffectManager.ActiveEffects.Count);
+        Assert.AreEqual(5, player.GetStat(StatType.Speed));
+
+        // Restore the monster for the next round.
+        monster.CurrentHealth = 100;
+
+        var secondRoundOrder = new List<string>();
+
+        _coordinator.ExecuteRound(
+            player,
+            [monster],
+            playerTurn: () => secondRoundOrder.Add("Player"),
+            beforeMonsterTurn: m =>
+            {
+                secondRoundOrder.Add(m.Name);
+                m.CurrentHealth = 0;
+            },
+            displayActions: () => { });
+
+        // The next round captures the player's base Speed of 5.
+        CollectionAssert.AreEqual(
+            new[] { "Monster A", "Player" },
+            secondRoundOrder);
+    }
 }

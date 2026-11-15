@@ -289,6 +289,31 @@ public class CombatHelperTests
 
         Assert.AreEqual(90, player.Archetype.CurrentResource);
     }
+    
+    [TestMethod]
+    public void CombatRunner_EncounterStartsWithFullResources()
+    {
+        // Arrange
+        var player = CreateTestPlayer();
+        var monster = CreateTestMonster();
+
+        player.Archetype.CurrentResource = 25;
+
+        _inputManagerMock
+            .Setup(x => x.ReadInt(
+                It.IsAny<string>(),
+                It.IsAny<int>(),
+                It.IsAny<bool>()))
+            .Returns(3); // Skip Turn
+
+        // Act
+        _combatHelper.CombatRunner(player, [monster]);
+
+        // Assert
+        Assert.AreEqual(
+            player.Archetype.MaxResource,
+            player.Archetype.CurrentResource);
+    }
 
     /// <summary>
     /// Verifies that a skill failure does not consume the player's turn.
@@ -304,6 +329,7 @@ public class CombatHelperTests
         player.Archetype.Skills.Add(skill);
 
         // Not enough resources to use the skill.
+        player.Archetype.MaxResource = 5;
         player.Archetype.CurrentResource = 5;
 
         // Select Use Skill (2), select the skill (1), then Skip Turn (3).
@@ -314,7 +340,7 @@ public class CombatHelperTests
                 It.IsAny<string>(),
                 It.IsAny<int>(),
                 It.IsAny<bool>()))
-            .Returns(() => choices.Dequeue());
+            .Returns(choices.Dequeue);
 
         // Act
         _combatHelper.CombatRunner(player, [monster]);
