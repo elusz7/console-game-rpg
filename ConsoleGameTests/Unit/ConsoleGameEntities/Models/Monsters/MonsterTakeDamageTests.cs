@@ -276,4 +276,51 @@ public class MonsterTakeDamageTests
 
         Assert.AreEqual(190, monster.CurrentHealth);
     }
+    
+    private static ActiveEffect CreateStatusEffect(
+        ElementalStatusEffectType status,
+        int power)
+    {
+        return new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(status),
+            power,
+            duration: 3);
+    }
+    
+    [TestMethod]
+    public void TakeDamage_Charred_ReducesEffectiveDefense_IncreasesDamageTaken()
+    {
+        var monster = CreateMonster();
+        monster.DefensePower = 10;
+        monster.CurrentHealth = monster.MaxHealth;
+
+        monster.ActiveEffectManager.Register(
+            CreateStatusEffect(ElementalStatusEffectType.Charred, 5));
+
+        var attack = new AttackDamage(20, DamageType.Martial, 0, null);
+        monster.TakeDamage(attack);
+
+        // Defense: 10 - 5 Charred = 5.
+        // Damage: 20 - 5 = 15.
+        Assert.AreEqual(monster.MaxHealth - 15, monster.CurrentHealth);
+    }
+
+    [TestMethod]
+    public void TakeDamage_Shocked_ReducesEffectiveResistance_IncreasesDamageTaken()
+    {
+        var monster = CreateMonster();
+        monster.Resistance = 10;
+        monster.CurrentHealth = monster.MaxHealth;
+
+        monster.ActiveEffectManager.Register(
+            CreateStatusEffect(ElementalStatusEffectType.Shocked, 5));
+
+        var attack = new AttackDamage(20, DamageType.Magical, 0, null);
+        monster.TakeDamage(attack);
+
+        // Resistance: 10 - 5 Shocked = 5.
+        // Damage: 20 - 5 = 15.
+        Assert.AreEqual(monster.MaxHealth - 15, monster.CurrentHealth);
+    }
 }

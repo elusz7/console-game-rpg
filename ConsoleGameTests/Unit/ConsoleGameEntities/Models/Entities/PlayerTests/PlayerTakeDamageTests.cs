@@ -531,4 +531,61 @@ public class PlayerTakeDamageTests
         Assert.IsTrue(headDamaged ^ chestDamaged,
             "Exactly one armor piece should lose durability.");
     }
+    
+    private static ActiveEffect CreateStatusEffect(
+        ElementalStatusEffectType status,
+        int power)
+    {
+        return new ActiveEffect(
+            ActiveEffectType.ElementalStatus,
+            new ElementalStatusEffectKey(status),
+            power,
+            duration: 3);
+    }
+    
+    [TestMethod]
+    public void TakeDamage_Charred_ReducesEffectiveDefense_IncreasesDamageTaken()
+    {
+        var player = CreatePlayer();
+        player.Archetype.Speed = 0;
+        player.Archetype.DefenseBonus = 0;
+
+        var armor = CreateArmor();
+        armor.RequiredLevel = player.Level;
+        player.Inventory.AddItem(armor);
+        player.Equip(armor);
+
+        player.ActiveEffectManager.Register(
+            CreateStatusEffect(ElementalStatusEffectType.Charred, 5));
+
+        var attack = new AttackDamage(20, DamageType.Martial, 0, null);
+        player.TakeDamage(attack);
+
+        // Defense: 10 armor - 5 Charred = 5.
+        // Damage: 20 - 5 = 15.
+        Assert.AreEqual(85, player.CurrentHealth);
+    }
+
+    [TestMethod]
+    public void TakeDamage_Shocked_ReducesEffectiveResistance_IncreasesDamageTaken()
+    {
+        var player = CreatePlayer();
+        player.Archetype.Speed = 0;
+        player.Archetype.ResistanceBonus = 0;
+
+        var armor = CreateArmor();
+        armor.RequiredLevel = player.Level;
+        player.Inventory.AddItem(armor);
+        player.Equip(armor);
+
+        player.ActiveEffectManager.Register(
+            CreateStatusEffect(ElementalStatusEffectType.Shocked, 5));
+
+        var attack = new AttackDamage(20, DamageType.Magical, 0, null);
+        player.TakeDamage(attack);
+
+        // Resistance: 10 armor - 5 Shocked = 5.
+        // Damage: 20 - 5 = 15.
+        Assert.AreEqual(85, player.CurrentHealth);
+    }
 }
