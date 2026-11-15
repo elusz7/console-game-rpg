@@ -318,7 +318,9 @@ public class ActiveEffectManager
     
     public ActiveEffectTickResult TickTurnBased()
     {
-        var effectsToProcess = _activeEffects.ToList();
+        var effectsToProcess = _activeEffects
+            .Where(ae => ae.EffectType != ActiveEffectType.ElementalDamageOverTime)
+            .ToList();
 
         var processedEffects = new List<ActiveEffect>();
         var expiredEffects = new List<ActiveEffect>();
@@ -336,5 +338,42 @@ public class ActiveEffectManager
         }
 
         return new ActiveEffectTickResult(processedEffects, expiredEffects);
+    }
+
+    public ActiveEffectDoTDamageResults ProcessDoTTicks(ITargetable affectedTarget)
+    {
+        ArgumentNullException.ThrowIfNull(affectedTarget);
+        
+        var effectsToProcess = _activeEffects
+            .Where(ae => ae.EffectType == ActiveEffectType.ElementalDamageOverTime)
+            .ToList();
+
+        var results = new List<DoTEffectResult>();
+        var processedEffects = new List<ActiveEffect>();
+        var expiredEffects = new List<ActiveEffect>();
+        
+        foreach (var effect in effectsToProcess)
+        {
+            var element = ((ElementalDamageOverTimeEffectKey)effect.EffectIdentityKey).Element;
+
+            var dotResult = affectedTarget.ApplyElementalDamage(effect.Power, element);
+            results.Add(dotResult);
+            
+            effect.DecrementRemainingDuration();
+            processedEffects.Add(effect);
+
+            if (effect.RemainingDuration == 0)
+            {
+                expiredEffects.Add(effect);
+                RemoveById(effect.EffectId);
+            }
+
+            if (dotResult.TargetDied)
+                break;
+        }
+
+        return new ActiveEffectDoTDamageResults(results, processedEffects, expiredEffects);
+
+
     }
 }

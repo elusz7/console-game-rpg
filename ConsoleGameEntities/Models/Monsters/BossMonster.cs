@@ -94,6 +94,27 @@ public class BossMonster : Monster
 
         return result;
     }
+    
+    public override DoTEffectResult ApplyElementalDamage(int damage, ElementType element)
+    {
+        var baseResult = base.ApplyElementalDamage(damage, element);
+
+        if (baseResult.TargetDied)
+        {
+            try
+            {
+                CheckPhaseChange();
+            }
+            catch (MonsterDeathException)
+            {
+                // No phases remain. The boss is actually defeated.
+            }
+        }
+
+        var actuallyDead = CurrentHealth <= 0;
+
+        return new DoTEffectResult(damage, baseResult.FinalDamage, element, actuallyDead);
+    }
 
     public override void SetLevel(int newLevel)
     {

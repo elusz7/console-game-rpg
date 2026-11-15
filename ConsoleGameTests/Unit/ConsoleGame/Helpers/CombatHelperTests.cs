@@ -3,6 +3,7 @@ using ConsoleGame.Helpers.CombatHelpers;
 using ConsoleGame.Managers.Interfaces;
 using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Combat;
+using ConsoleGameEntities.Models.Combat.ActiveEffects;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Monsters;
@@ -468,5 +469,74 @@ public class CombatHelperTests
                 It.Is<string>(message => message.Contains("cannot attack with your bare hands")),
                 ConsoleColor.Red),
             Times.Once);
+    }
+    
+    // ------- player DOT effects
+    private static ActiveEffect CreateDoT(
+        ElementType element,
+        int power,
+        int duration)
+    {
+        return new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(element),
+            power,
+            duration);
+    }
+    
+    [TestMethod]
+    public void CombatRunner_PlayerDoT_ProcessesAtBeginningOfPlayerTurn()
+    {
+        var player = CreateTestPlayer();
+        var monster = CreateTestMonster();
+
+        player.ActiveEffectManager.Register(
+            CreateDoT(ElementType.Fire, 10, 3));
+
+        _inputManagerMock
+            .Setup(x => x.ReadInt(
+                It.IsAny<string>(),
+                It.IsAny<int>(),
+                It.IsAny<bool>()))
+            .Returns(3); // Skip Turn
+
+        _combatHelper.CombatRunner(player, [monster]);
+
+        Assert.AreEqual(90, player.CurrentHealth);
+        Assert.AreEqual(2, player.ActiveEffectManager.ActiveEffects.Single().RemainingDuration);
+
+        _outputManagerMock.Verify(
+            x => x.WriteLine(
+                It.Is<string>(message => message.Contains("Burning")),
+                It.IsAny<ConsoleColor>()),
+            Times.AtLeastOnce);
+    }
+    
+    [TestMethod]
+    public void CombatRunner_PlayerDoT_KillsPlayer_SkipsPlayerAction()
+    {
+        var player = CreateTestPlayer();
+        player.CurrentHealth = 5;
+
+        var monster = CreateTestMonster();
+        monster.AggressionLevel = 0;
+
+        player.ActiveEffectManager.Register(
+            CreateDoT(ElementType.Fire, 10, 3));
+
+        _combatHelper.CombatRunner(player, [monster]);
+
+        Assert.IsTrue(player.CurrentHealth <= 0);
+
+        // The player should never reach the combat menu.
+        _inputManagerMock.Verify(
+            x => x.ReadInt(
+                It.IsAny<string>(),
+                It.IsAny<int>(),
+                It.IsAny<bool>()),
+            Times.Never);
+
+        // The monster should not get to attack after the lethal player DoT.
+        Assert.AreEqual(100, monster.CurrentHealth);
     }
 }

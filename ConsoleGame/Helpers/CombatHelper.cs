@@ -30,7 +30,7 @@ public class CombatHelper(
 
     public void CombatRunner(Player player, List<Monster> monsters)
     {
-        while (true)
+        while (player.CurrentHealth > 0)
         {
             // Get the living monsters for this round.
             var aliveMonsters = monsters
@@ -49,8 +49,15 @@ public class CombatHelper(
                 () =>
                 {
                     _outputManager.Display();
-                    PlayerCombatTurn(player, aliveMonsters);
-                    _outputManager.Clear();
+
+                    try
+                    {
+                        PlayerCombatTurn(player, aliveMonsters);
+                    }
+                    finally
+                    {
+                        _outputManager.Clear();
+                    }
                 },
 
                 // Display monster information before its scheduled turn.
@@ -73,10 +80,17 @@ public class CombatHelper(
     /// </summary>
     private void PlayerCombatTurn(Player player, List<Monster> validTargets)
     {
+        var dotEffects = player.ActiveEffectManager.ProcessDoTTicks(player);
+
+        var died = dotEffects.EffectResults.Any(er => er.TargetDied);
+        
+        if (died)
+            return;
+        
         _outputManager.WriteLine(
             $"\nYour turn! You have {player.CurrentHealth} health and {player.Archetype.CurrentResource} {player.Archetype.ResourceName}.\n",
             ConsoleColor.Green);
-
+        
         while (true)
         {
             var action = SelectCombatAction(player, validTargets);

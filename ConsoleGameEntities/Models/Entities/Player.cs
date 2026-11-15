@@ -135,16 +135,12 @@ public class Player : IPlayer
 
     public virtual AttackResolutionResult TakeDamage(AttackDamage attack)
     {
-        var equippedResilience = Equipment
-            .OfType<Armor>()
-            .Where(a => a.EquippedRune != null &&
-                        a.EquippedRune.InventoryRune.Rune.Element == attack.Element)
-            .Sum(a => a.GetEquippedRuneElementalPower());
+        var resilience = EquippedResilience(attack.Element);
         
         var modifiers = new PlayerDamageModifiers(
             GetStat(StatType.Defense),
             GetStat(StatType.Resistance),
-            equippedResilience);
+            resilience);
 
         var blindedBonus = CalculateBlindedBonus(attack.StandardDamage, attack.ElementalDamage);
 
@@ -206,7 +202,21 @@ public class Player : IPlayer
 
         return (standardBlindedBonus, elementalBlindedBonus);
     }
-    
+
+    public DoTEffectResult ApplyElementalDamage(int damage, ElementType element)
+    {
+        var resilience = EquippedResilience(element);
+        
+        var actualDamage = Math.Max(0, damage - resilience);
+        
+        CurrentHealth -= actualDamage;
+        bool dead = CurrentHealth <= 0;
+
+        if (actualDamage > 0)
+            AddActionItem($"A {GetElementDotType(element)} effect drains your vitality! [{CurrentHealth} / {MaxHealth}]");
+        
+        return new DoTEffectResult(damage, actualDamage, element, dead);
+    }
 
     public virtual void Heal(int regainedHealth)
     {
@@ -360,6 +370,17 @@ public class Player : IPlayer
         return averageResistance;
     }
 
+    private int EquippedResilience(ElementType? element)
+    {
+        if (element == null)
+            return 0;
+        
+        return EquippedArmor()
+            .Where(a => a.EquippedRune != null &&
+                        a.EquippedRune.InventoryRune.Rune.Element == element)
+            .Sum(a => a.GetEquippedRuneElementalPower());
+    }
+
     private List<Armor> EquippedArmor()
     {
         return [..Equipment.OfType<Armor>()];
@@ -444,10 +465,6 @@ public class Player : IPlayer
         }
     }
     
-    /// <summary>
-    /// Selects armor that contributes to the higher defense or resistance
-    /// value used when mitigating hybrid damage.
-    /// </summary>
     private Armor? GetHybridDamageArmor(IEnumerable<Armor> armor)
     {
         var defense = GetStat(StatType.Defense);
@@ -503,7 +520,7 @@ public class Player : IPlayer
         ActionItems.Add(key, $"You use {skill.Name}!");
     }
 
-    public virtual void Sell(Item item)
+    public void Sell(Item item)
     {
         if (item is IEquippable e && e.IsEquipped())
             throw new InvalidOperationException("Cannot sell an equipped item.");
@@ -511,12 +528,12 @@ public class Player : IPlayer
         Inventory.Sell(item);
     }
 
-    public virtual void Buy(Item item)
+    public void Buy(Item item)
     {
         Inventory.Buy(item);
     }
 
-    public virtual void Initialize()
+    public void Initialize()
     {
         Level = 1;
         MaxHealth = (int)Math.Round(Archetype.HealthBase * 1.5);

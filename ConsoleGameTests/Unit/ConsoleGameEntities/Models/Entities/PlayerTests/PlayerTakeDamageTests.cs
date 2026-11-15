@@ -2,7 +2,9 @@ using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Combat;
 using ConsoleGameEntities.Models.Combat.ActiveEffects;
 using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Entities.Inventories;
 using ConsoleGameEntities.Models.Items;
+using ConsoleGameEntities.Models.Runes;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameTests.Unit.ConsoleGameEntities.Models.Entities.PlayerTests;
@@ -73,6 +75,40 @@ public class PlayerTakeDamageTests
             new ElementalStatusEffectKey(ElementalStatusEffectType.Blinded),
             power: power,
             duration: 3);
+    }
+
+    private static Armor CreateArmorWithRune(ElementType element, int tier, int power)
+    {
+        var armorRune = new ArmorRune
+        {
+            Id = 1,
+            Name = $"Rune of {element}",
+            Element = element,
+            Power = power,
+            Rarity = RarityLevel.Common
+        };
+
+        var inventoryRune = new InventoryRune
+        {
+            InventoryId = 1,
+            Rune = armorRune,
+            Tier = tier,
+            Quantity = 1
+        };
+
+        var equippedRune = new EquippedRune
+        {
+            Id = 1,
+            Tier = tier,
+            InventoryRune = inventoryRune
+        };
+
+        inventoryRune.EquippedRunes.Add(equippedRune);
+
+        var armor = CreateArmor();
+        armor.EquippedRune = equippedRune;
+
+        return armor;
     }
 
     [TestMethod]

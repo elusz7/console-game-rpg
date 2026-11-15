@@ -172,6 +172,24 @@ public class Monster : IMonster
 
         return (effectiveStandardDamage, effectiveElementalDamage);
     }
+
+    public virtual DoTEffectResult ApplyElementalDamage(int damage, ElementType element)
+    {
+        var actualDamage = damage;
+        if (Resilience != null && element == Resilience)
+            actualDamage = 0;
+        else if (Vulnerability != null && element == Vulnerability)
+            actualDamage = (int)Math.Round(damage * 1.5, MidpointRounding.AwayFromZero);
+        
+        CurrentHealth -= actualDamage;
+        var died = CurrentHealth <= 0;
+
+        AddActionItem(actualDamage > 0
+            ? $"A {GetElementDotType(element)} hits {Name} for {actualDamage}!"
+            : $"{Name} resists the {GetElementDotType(element)} effect!");
+
+        return new DoTEffectResult(damage, actualDamage, element, died);
+    }
     
     protected virtual bool ApplyStatusEffect()
     {

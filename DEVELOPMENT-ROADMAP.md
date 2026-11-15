@@ -639,37 +639,37 @@ The implementation must not retain those dictionaries as parallel storage or mai
 
 ## C4. Connect Weapon Rune Status-Effect Application to Combat
 
-- [ ] Connect weapon rune status-effect application to successful player attacks.
-- [ ] Preserve the existing rarity-based status-effect probabilities:
+- [x] Connect weapon rune status-effect application to successful player attacks.
+- [x] Preserve the existing rarity-based status-effect probabilities:
     - Common: 1%
     - Uncommon: 3%
     - Rare: 8%
     - Epic: 12%
     - Legendary: 20%
     - Mythic: 35%
-- [ ] Calculate status Power using `(int)Rarity + Tier`.
-- [ ] Use the rune's configured Duration.
-- [ ] Keep immediate elemental damage independent of the status-effect roll.
-- [ ] Keep DoT application independent of the probabilistic status-effect roll.
-- [ ] Ensure dodged attacks do not apply status effects.
-- [ ] Add tests for status-effect application and probability boundaries.
+- [x] Calculate status Power using `(int)Rarity + Tier`.
+- [x] Use the rune's configured Duration.
+- [x] Keep immediate elemental damage independent of the status-effect roll.
+- [x] Keep DoT application independent of the probabilistic status-effect roll.
+- [x] Ensure dodged attacks do not apply status effects.
+- [x] Add tests for status-effect application and probability boundaries.
 
 **Acceptance:** Weapon runes independently apply immediate elemental damage, guaranteed DoT, and probabilistic status effects on successful hits.
 
 ## C5. Implement Damage-over-Time Lifecycle
 
-- [ ] Implement DoT registration through `ActiveEffectManager`.
-- [ ] Tick DoT at the beginning of the affected combatant's turn.
-- [ ] Ensure newly applied DoT never ticks immediately.
-- [ ] Ensure a duration of three produces three scheduled ticks.
-- [ ] Decrement RemainingDuration only after a scheduled tick has been processed.
-- [ ] Consume duration even when mitigation reduces tick damage to zero.
-- [ ] Expire the effect after its final scheduled tick.
-- [ ] Implement stronger/equal/weaker refresh behavior.
-- [ ] Preserve original source ownership during stronger refreshes.
-- [ ] Stop processing subsequent effects if a DoT tick kills its target.
-- [ ] Clear effects through the normal death and cleanup paths.
-- [ ] Route DoT damage through `ITargetable.ApplyElementalDamage()`.
+- [x] Implement DoT registration through `ActiveEffectManager`.
+- [x] Tick DoT at the beginning of the affected combatant's turn.
+- [x] Ensure newly applied DoT never ticks immediately.
+- [x] Ensure a duration of three produces three scheduled ticks.
+- [x] Decrement RemainingDuration only after a scheduled tick has been processed.
+- [x] Consume duration even when mitigation reduces tick damage to zero.
+- [x] Expire the effect after its final scheduled tick.
+- [x] Implement stronger/equal/weaker refresh behavior.
+- [x] Preserve original source ownership during stronger refreshes.
+- [x] Stop processing subsequent effects if a DoT tick kills its target.
+- [x] Clear effects through the normal death and cleanup paths.
+- [x] Route DoT damage through `ITargetable.ApplyElementalDamage()`.
 
 **DoT damage rules:**
 

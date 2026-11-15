@@ -1,7 +1,9 @@
 ﻿using ConsoleGame.Helpers.CombatHelpers;
 using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Combat.ActiveEffects;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
+using ConsoleGameEntities.Models.Monsters.Strategies;
 using ConsoleGameEntities.Models.Skills;
 using Moq;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
@@ -153,7 +155,7 @@ public class CombatRoundCoordinatorTests
 
         // The callback still runs for the scheduled monster, but its attack is skipped.
         CollectionAssert.AreEqual(
-            new[] { fasterMonster, slowerMonster },
+            new[] { fasterMonster },
             processedMonsters);
     }
 
@@ -395,4 +397,227 @@ public class CombatRoundCoordinatorTests
         Assert.AreEqual(3, effect.RemainingDuration);
         Assert.AreEqual(1, monster.ActiveEffectManager.ActiveEffects.Count);
     }
+    
+    // ---- DOT Ticks
+    private static ActiveEffect CreateDoT(
+        ElementType element,
+        int power,
+        int duration)
+    {
+        return new ActiveEffect(
+            ActiveEffectType.ElementalDamageOverTime,
+            new ElementalDamageOverTimeEffectKey(element),
+            power,
+            duration);
+    }
+    
+    [TestMethod]
+    public void ExecuteRound_PlayerDoT_ProcessesAtBeginningOfPlayerTurn()
+    {
+        var player = CreatePlayer(speed: 10);
+        var monster = CreateMonster("Monster A", 5);
+
+        player.ActiveEffectManager.Register(CreateDoT(ElementType.Fire, 10, 3));
+
+        var actionExecuted = false;
+
+        _coordinator.ExecuteRound(
+            player,
+            [monster],
+            playerTurn: () =>
+            {
+                var result = player.ActiveEffectManager.ProcessDoTTicks(player);
+
+                Assert.AreEqual(90, player.CurrentHealth);
+                Assert.AreEqual(2, player.ActiveEffectManager.ActiveEffects.Single().RemainingDuration);
+
+                actionExecuted = !result.EffectResults.Any(r => r.TargetDied);
+            },
+            beforeMonsterTurn: m => m.CurrentHealth = 0,
+            displayActions: () => { });
+
+        Assert.IsTrue(actionExecuted);
+    }
+
+    [TestMethod]
+    public void ExecuteRound_PlayerDoT_KillsPlayer_SkipsPlayerActionAndStopsRound()
+    {
+        var player = CreatePlayer(speed: 10);
+        player.CurrentHealth = 5;
+
+        var monster = CreateMonster("Monster A", 5);
+        int playerActionCount = 0;
+        int monsterTurnCount = 0;
+
+        player.ActiveEffectManager.Register(CreateDoT(ElementType.Fire, 10, 3));
+
+        _coordinator.ExecuteRound(
+            player,
+            [monster],
+            playerTurn: () =>
+            {
+                var result = player.ActiveEffectManager.ProcessDoTTicks(player);
+
+                if (result.EffectResults.Any(r => r.TargetDied))
+                    return;
+
+                playerActionCount++;
+            },
+            beforeMonsterTurn: _ => monsterTurnCount++,
+            displayActions: () => { });
+
+        Assert.IsTrue(player.CurrentHealth <= 0);
+        Assert.AreEqual(0, playerActionCount);
+        Assert.AreEqual(0, monsterTurnCount);
+    }
+    
+    [TestMethod]
+    public void ExecuteRound_MonsterDoT_ProcessesAtBeginningOfMonsterTurn()
+    {
+        var player = CreatePlayer(speed: 1);
+        player.MaxHealth = 1000;
+        player.CurrentHealth = 1000;
+
+        var monster = CreateMonster("Monster A", 10);
+
+        var effect = CreateDoT(ElementType.Fire, 10, 3);
+        monster.ActiveEffectManager.Register(effect);
+
+        _coordinator.ExecuteRound(
+            player,
+            [monster],
+            playerTurn: () => { },
+            beforeMonsterTurn: m =>
+            {
+                // The DoT has already ticked before this callback.
+                Assert.AreEqual(90, m.CurrentHealth);
+                Assert.AreEqual(2, effect.RemainingDuration);
+            },
+            displayActions: () => { });
+
+        Assert.AreEqual(90, monster.CurrentHealth);
+        Assert.AreEqual(2, effect.RemainingDuration);
+    }
+
+    [TestMethod]
+    public void ExecuteRound_MonsterDoT_KillsMonster_SkipsMonsterTurnButContinuesRound()
+    {
+        var player = CreatePlayer(speed: 1);
+        var monster = CreateMonster("Monster A", 10, health: 5);
+
+        monster.ActiveEffectManager.Register(CreateDoT(ElementType.Fire, 10, 3));
+
+        int playerTurnCount = 0;
+        int monsterTurnCount = 0;
+
+        _coordinator.ExecuteRound(
+            player,
+            [monster],
+            playerTurn: () => playerTurnCount++,
+            beforeMonsterTurn: _ => monsterTurnCount++,
+            displayActions: () => { });
+
+        Assert.IsTrue(monster.CurrentHealth <= 0);
+
+        // The round continues to the player's scheduled turn.
+        Assert.AreEqual(1, playerTurnCount);
+
+        // A monster killed by its DoT never reaches its pre-action callback.
+        Assert.AreEqual(0, monsterTurnCount);
+    }
+
+    [TestMethod]
+    public void ExecuteRound_MonsterKilledBeforeTurn_DoesNotProcessDoT()
+    {
+        var player = CreatePlayer(speed: 10);
+        var monster = CreateMonster("Monster A", 5);
+
+        var effect = CreateDoT(ElementType.Fire, 10, 3);
+        monster.ActiveEffectManager.Register(effect);
+
+        _coordinator.ExecuteRound(
+            player,
+            [monster],
+            playerTurn: () => monster.CurrentHealth = 0,
+            beforeMonsterTurn: _ => Assert.Fail("A defeated monster should not take a turn."),
+            displayActions: () => { });
+
+        Assert.AreEqual(0, monster.CurrentHealth);
+        Assert.AreEqual(3, effect.RemainingDuration);
+        Assert.AreEqual(1, monster.ActiveEffectManager.ActiveEffects.Count);
+    }
+    
+    private static BossMonster CreateBoss(int speed = 10)
+    {
+        return new BossMonster(new MonsterSkillSelector())
+        {
+            Name = "Boss",
+            Level = 1,
+            AttackPower = 10,
+            DefensePower = 0,
+            Resistance = 0,
+            AggressionLevel = speed,
+            MaxHealth = 300,
+            CurrentHealth = 300,
+            DamageType = DamageType.Martial,
+            Skills = []
+        };
+    }
+    
+    [TestMethod]
+    public void ExecuteRound_BossDoT_TriggersPhaseTransitionAndBossGetsTurn()
+    {
+        var player = CreatePlayer(speed: 1);
+        player.MaxHealth = 1000;
+        player.CurrentHealth = 1000;
+
+        var boss = CreateBoss();
+        boss.CurrentHealth = 10;
+
+        boss.ActiveEffectManager.Register(CreateDoT(ElementType.Fire, 10, 3));
+
+        int bossTurnCount = 0;
+
+        _coordinator.ExecuteRound(
+            player,
+            [boss],
+            playerTurn: () => { },
+            beforeMonsterTurn: _ => bossTurnCount++,
+            displayActions: () => { });
+
+        Assert.IsTrue(boss.CurrentHealth > 0);
+        Assert.AreEqual(225, boss.MaxHealth);
+        Assert.AreEqual(1, bossTurnCount);
+    }
+
+    [TestMethod]
+    public void ExecuteRound_BossFinalPhaseDoT_KillsBossAndSkipsBossTurn()
+    {
+        var player = CreatePlayer(speed: 1);
+        var boss = CreateBoss();
+
+        // Advance the boss through phases two and three.
+        boss.ApplyElementalDamage(100000, ElementType.Fire);
+        boss.ApplyElementalDamage(100000, ElementType.Fire);
+
+        Assert.AreEqual(150, boss.MaxHealth);
+        Assert.AreEqual(150, boss.CurrentHealth);
+
+        boss.ActiveEffectManager.Register(CreateDoT(ElementType.Fire, 200, 3));
+
+        int bossTurnCount = 0;
+        int playerTurnCount = 0;
+
+        _coordinator.ExecuteRound(
+            player,
+            [boss],
+            playerTurn: () => playerTurnCount++,
+            beforeMonsterTurn: _ => bossTurnCount++,
+            displayActions: () => { });
+
+        Assert.IsTrue(boss.CurrentHealth <= 0);
+        Assert.AreEqual(0, bossTurnCount);
+        Assert.AreEqual(1, playerTurnCount);
+    }
+    
 }

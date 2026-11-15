@@ -49,6 +49,16 @@ public class CombatRoundCoordinator(CombatTurnScheduler turnScheduler)
 
             // Reset support skills before the next monster acts.
             ResetSupportSkills(monsters);
+            
+            if (monster.CurrentHealth <= 0)
+                continue;
+
+            var dotResults = monster.ActiveEffectManager.ProcessDoTTicks(monster);
+            if (dotResults.EffectResults.Any(er => er.TargetDied))
+            {
+                displayActions();
+                continue;
+            }
 
             beforeMonsterTurn(monster);
 
@@ -59,7 +69,7 @@ public class CombatRoundCoordinator(CombatTurnScheduler turnScheduler)
 
                 if (player.CurrentHealth <= 0)
                     return;
-
+                
                 monster.ActiveEffectManager.TickTurnBased();
                 displayActions();
             }
