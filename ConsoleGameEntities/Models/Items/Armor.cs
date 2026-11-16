@@ -84,7 +84,7 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
 
         RequiredLevel++;
 
-        var newStats = _rng.Next(RequiredLevel, RequiredLevel * 2 + 1);
+        var newStats = Math.Max(2, _rng.Next(RequiredLevel, RequiredLevel * 2 + 1));
 
         var newDefensePower = _rng.Next(1, newStats);
         var newResistance = newStats - newDefensePower;
@@ -139,7 +139,7 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
     public override void CalculateLevelByStats()
     {
         var total = DefensePower + Resistance;
-        var estimatedLevel = (int)Math.Round(total / 8.5M);
+        var estimatedLevel = (int)Math.Round(total / 6.5M);
 
         RequiredLevel = Math.Max(1, estimatedLevel); // Safety cap
     }

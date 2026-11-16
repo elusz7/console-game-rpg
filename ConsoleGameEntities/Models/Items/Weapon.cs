@@ -95,7 +95,7 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
 
     public override void CalculateLevelByStats()
     {
-        var estimatedLevel = (int)Math.Round(AttackPower / 9.5M);
+        var estimatedLevel = (int)Math.Round(AttackPower / 7.5M);
 
         RequiredLevel = Math.Max(1, estimatedLevel); // Safety cap
     }

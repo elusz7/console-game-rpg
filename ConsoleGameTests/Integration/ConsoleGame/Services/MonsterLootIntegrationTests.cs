@@ -85,7 +85,6 @@ public class MonsterLootIntegrationTests
             Rooms = [],
             Monsters = [],
             Loot = [],
-            NumberOfCursedItems = 0,
             ItemFactory = null!
         };
     }

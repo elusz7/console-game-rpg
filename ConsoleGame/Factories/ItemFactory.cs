@@ -1,5 +1,6 @@
 ﻿using ConsoleGame.Factories.Interfaces;
 using ConsoleGame.GameDao.Interfaces;
+using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Items;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
@@ -10,27 +11,29 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
     private static readonly Random Random = Random.Shared;
     private readonly IItemDao _itemDao = itemDao;
 
-    public (List<Item>, int) GenerateLoot(int level, int numMonsters, bool campaign)
+    public List<Item> GenerateLoot(int level, int numMonsters, bool campaign)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(level);
+        ArgumentOutOfRangeException.ThrowIfNegative(numMonsters);
+        
         var lootMaxValue = CalculateLootValue(level, numMonsters, campaign);
 
         var availableItems = _itemDao.GetItemsAvailableAtLevel(level)
             .Where(i => i.Value < (lootMaxValue / 2.0M)).ToList();
 
+        if (availableItems.Count == 0)
+            return [];
+        
         var loot = GatherTribute(lootMaxValue, availableItems, numMonsters);
-        foreach (var item in loot)
-        {
-            var itemTrueValue = CalculateItemTrueValue(item);
-        }
 
         if (loot.Sum(i => i.Value) < lootMaxValue * 0.75M && loot.Count == numMonsters)
         {
-            TryRemoveLowestValue(loot, [.. availableItems.OfType<Valuable>()], lootMaxValue);
+            TryReplaceLowestValueValuableWithJackpot(loot, [.. availableItems.OfType<Valuable>()], lootMaxValue);
         }
 
-        var numberOfCursedItems = ALittlePoisonNeverHurtNoOne(loot.Count, campaign, loot);
+        ApplyRandomCurses(loot, campaign);
 
-        return (loot, numberOfCursedItems);
+        return loot;
     }
 
     private static Item CreateItem(Item itemBase)
@@ -92,7 +95,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         return Math.Max(total, numMonsters);
     }
 
-    private static void TryRemoveLowestValue(List<Item> loot, List<Valuable> valuables, decimal lootMaxValue)
+    private static void TryReplaceLowestValueValuableWithJackpot(List<Item> loot, List<Valuable> valuables, decimal lootMaxValue)
     {
         var itemToRemove = loot.OfType<Valuable>().OrderBy(i => i.Value).FirstOrDefault();
 
@@ -140,30 +143,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
 
         while (currentValue < lootMaxValue && loot.Count < numMonsters)
         {
-            double roll = Random.NextDouble();
-
-            Item itemBase;
-            if (roll < 0.65 && valuables.Count > 0) // 65%
-            {
-                itemBase = valuables[Random.Next(valuables.Count)];
-            }
-            else if (roll < 0.75 && weapons.Count > 0) // 15%
-            {
-                itemBase = weapons[Random.Next(weapons.Count)];
-            }
-            else if (roll < 0.90 && armors.Count > 0) // 15%
-            {
-                itemBase = armors[Random.Next(armors.Count)];
-            }
-            else if (consumables.Count > 0) // 5%
-            {
-                itemBase = consumables[Random.Next(consumables.Count)];
-            }
-            else
-            {
-                // fallback if one of the lists is empty
-                itemBase = availableItems[Random.Next(availableItems.Count)];
-            }
+            var itemBase = SelectLootItem(valuables, weapons, armors, consumables);
 
             var item = CreateItem(itemBase);
 
@@ -176,14 +156,81 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         return loot;
     }
 
-    private static int ALittlePoisonNeverHurtNoOne(int lootCount, bool campaign, List<Item> loot)
+    private static Item SelectLootItem(List<Valuable> valuables, List<Weapon> weapons, List<Armor> armors, List<Consumable> consumables)
     {
-        var curseChance = campaign ? 0.05 : 0.01;
+        const int valuableWeight = 65;
+        const int weaponWeight = 15;
+        const int armorWeight = 15;
+        const int consumableWeight = 5;
 
-        var estimatedCurseCount = Math.Max(1, (int)Math.Floor(lootCount * curseChance));
-        var eligibleItemCount = loot.Count(i => i is Armor || i is Weapon);
+        int totalWeight =
+            (valuables.Count > 0 ? valuableWeight : 0) +
+            (weapons.Count > 0 ? weaponWeight : 0) +
+            (armors.Count > 0 ? armorWeight : 0) +
+            (consumables.Count > 0 ? consumableWeight : 0);
 
-        return Math.Min(estimatedCurseCount, eligibleItemCount);
+        int roll = Random.Next(totalWeight);
+
+        if (valuables.Count > 0)
+        {
+            if (roll < valuableWeight)
+                return valuables[Random.Next(valuables.Count)];
+
+            roll -= valuableWeight;
+        }
+
+        if (weapons.Count > 0)
+        {
+            if (roll < weaponWeight)
+                return weapons[Random.Next(weapons.Count)];
+
+            roll -= weaponWeight;
+        }
+
+        if (armors.Count > 0)
+        {
+            if (roll < armorWeight)
+                return armors[Random.Next(armors.Count)];
+
+            roll -= armorWeight;
+        }
+
+        return consumables[Random.Next(consumables.Count)];
+    }
+    
+    private static void ApplyRandomCurses(List<Item> loot, bool campaign)
+    {
+        const double normalCurseChance = 0.02;
+        const double campaignCurseChance = 0.05;
+        const int maxCursedItems = 2;
+
+        double curseChance = campaign
+            ? campaignCurseChance
+            : normalCurseChance;
+
+        var eligibleItems = loot.OfType<ICursable>().ToList();
+
+        // Randomize which equipment gets considered first.
+        for (int i = eligibleItems.Count - 1; i > 0; i--)
+        {
+            int j = Random.Next(i + 1);
+            (eligibleItems[i], eligibleItems[j]) =
+                (eligibleItems[j], eligibleItems[i]);
+        }
+
+        int cursedCount = 0;
+
+        foreach (var item in eligibleItems)
+        {
+            if (cursedCount >= maxCursedItems)
+                break;
+
+            if (Random.NextDouble() < curseChance)
+            {
+                item.Curse();
+                cursedCount++;
+            }
+        }
     }
 
     private static decimal CalculateItemTrueValue(Item item)
@@ -213,39 +260,41 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
             merchantItems.Add(CreateItem(consumable));
         }
 
-        // Ensure at least one Martial and one Magical weapon
-        var martialWeapons = weapons.Where(w => w.DamageType == DamageType.Martial).ToList();
-        var magicalWeapons = weapons.Where(w => w.DamageType == DamageType.Magical).ToList();
-
-        int weaponsToAdd = Math.Min(3, weapons.Count);
+        var selectedWeapons = new List<Weapon>();
 
         // Add one Martial weapon if available
-        if (martialWeapons.Count > 0)
+        var martial = weapons
+            .Where(w => w.DamageType == DamageType.Martial)
+            .ToList();
+
+        if (martial.Count > 0)
         {
-            var martial = martialWeapons[Random.Next(martialWeapons.Count)];
-            merchantItems.Add(CreateItem(martial));
-            weapons.Remove(martial);
-            weaponsToAdd--;
+            var weapon = martial[Random.Next(martial.Count)];
+            selectedWeapons.Add(weapon);
+            weapons.Remove(weapon);
         }
 
         // Add one Magical weapon if available
-        if (weaponsToAdd > 0 && magicalWeapons.Count > 0)
-        {
-            var magical = magicalWeapons[Random.Next(magicalWeapons.Count)];
-            merchantItems.Add(CreateItem(magical));
-            weapons.Remove(magical);
-            weaponsToAdd--;
-        }
+        var magical = weapons
+            .Where(w => w.DamageType == DamageType.Magical)
+            .ToList();
 
-        // Fill the rest with random weapons
-        for (int i = 0; i < weaponsToAdd; i++)
+        if (magical.Count > 0 && selectedWeapons.Count < 3)
         {
-            if (weapons.Count == 0) break;
-
-            var weapon = weapons[Random.Next(weapons.Count)];
-            merchantItems.Add(CreateItem(weapon));
+            var weapon = magical[Random.Next(magical.Count)];
+            selectedWeapons.Add(weapon);
             weapons.Remove(weapon);
         }
+
+        // Fill remaining slots randomly
+        while (selectedWeapons.Count < 3 && weapons.Count > 0)
+        {
+            var weapon = weapons[Random.Next(weapons.Count)];
+            selectedWeapons.Add(weapon);
+            weapons.Remove(weapon);
+        }
+
+        merchantItems.AddRange(selectedWeapons.Select(CreateItem));
 
         int armorsToAdd = Math.Min(3, armors.Count);
         for (int i = 0; i < armorsToAdd; i++)
@@ -262,9 +311,11 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
     {
         var availableItems = _itemDao.GetItemsAvailableAtLevel(level).ToList();
 
+        var weaponType = type == ArchetypeType.Martial ? DamageType.Martial : DamageType.Magical;
+
         var weapons = availableItems
             .OfType<Weapon>()
-            .Where(w => w.DamageType.ToString() == type.ToString())
+            .Where(w => w.DamageType == weaponType)
             .ToList();
 
         var armors = availableItems.OfType<Armor>().ToList();

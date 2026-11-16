@@ -14,7 +14,7 @@ public class FloorFactory(IMapFactory mapFactory, IMonsterFactory monsterFactory
     {
         var rooms = _mapFactory.GenerateMap(level, campaign, randomMap);
         var monsters = _monsterFactory.GenerateMonsters(level, campaign);
-        var (loot, numberOfCursedItems) = _itemFactory.GenerateLoot(level, monsters.Count, campaign);
+        var loot = _itemFactory.GenerateLoot(level, monsters.Count, campaign);
 
         var floor = new Floor
         {
@@ -22,11 +22,9 @@ public class FloorFactory(IMapFactory mapFactory, IMonsterFactory monsterFactory
             Rooms = rooms,
             Monsters = monsters,
             Loot = loot,
-            NumberOfCursedItems = numberOfCursedItems,
             ItemFactory = _itemFactory,
         };
 
-        floor.AssignCursesToItems();
         floor.AssignItemsToMonsters();
         floor.AssignMonstersToRooms();
         floor.UpdateMerchantItems();

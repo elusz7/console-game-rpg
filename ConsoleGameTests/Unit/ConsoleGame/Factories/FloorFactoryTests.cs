@@ -48,7 +48,7 @@ public class FloorFactoryTests
 
         _mockItemFactory
             .Setup(m => m.GenerateLoot(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<bool>()))
-            .Returns((_loot, _curseCount));
+            .Returns(_loot);
     }
 
     [TestMethod]
@@ -62,7 +62,6 @@ public class FloorFactoryTests
         CollectionAssert.AreEqual(_rooms, floor.Rooms);
         CollectionAssert.AreEqual(_monsters, floor.Monsters);
         CollectionAssert.AreEqual(_loot, floor.Loot);
-        Assert.AreEqual(_curseCount, floor.NumberOfCursedItems);
         Assert.AreEqual(_mockItemFactory.Object, floor.ItemFactory);
     }
 

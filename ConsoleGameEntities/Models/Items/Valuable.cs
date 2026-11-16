@@ -15,18 +15,6 @@ public class Valuable : Item
 
     public override decimal GetSellPrice() => Value; // values sell for full price
 
-    public override void CalculateValue()
-    {
-        var baseValue = (decimal)Math.Pow(RequiredLevel, 1.15) * 1.5M;
-        var durabilityValue = Durability * 1.5M;
-
-        var variance = (decimal)(_rng.NextDouble() * 0.2) + 0.9M;
-
-        var calculation = (baseValue + durabilityValue) * variance;
-
-        Value = Math.Round(calculation, 2);
-    }
-
     public override void CalculateStatsByLevel()
     {
         Durability = RequiredLevel % 2 + 1;

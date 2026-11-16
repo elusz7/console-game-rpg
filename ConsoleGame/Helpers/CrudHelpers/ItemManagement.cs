@@ -84,7 +84,7 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
     {
         string name = _inputManager.ReadString("\nEnter item name: ");
         string description = _inputManager.ReadString("Enter item description: ");
-        int durability = _inputManager.ReadInt("Enter item durability: ");
+        //int durability = _inputManager.ReadInt("Enter item durability: ");
         decimal weight = _inputManager.ReadDecimal("Enter item weight: ");
         int level = _inputManager.ReadInt("Enter item required level: ");
 
@@ -94,7 +94,7 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
             {
                 Name = name,
                 Description = description,
-                Durability = durability,
+                //Durability = durability,
                 Weight = weight,
                 RequiredLevel = level,
                 DamageType = _inputManager.GetEnumChoice<DamageType>("\nSelect item damage type")
@@ -103,7 +103,7 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
             {
                 Name = name,
                 Description = description,
-                Durability = durability,
+                //Durability = durability,
                 Weight = weight,
                 RequiredLevel = level,
                 ArmorType = _inputManager.GetEnumChoice<ArmorType>("\nSelect item armor type")
@@ -112,7 +112,7 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
             {
                 Name = name,
                 Description = description,
-                Durability = durability,
+                //Durability = durability,
                 Weight = weight,
                 RequiredLevel = level
             } as Item,
@@ -120,7 +120,7 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
             {
                 Name = name,
                 Description = description,
-                Durability = durability,
+                //Durability = durability,
                 Weight = weight,
                 RequiredLevel = level,
                 ConsumableType = _inputManager.GetEnumChoice<ConsumableType>("\nSelect item consumable type")
@@ -128,7 +128,7 @@ public class ItemManagement(IInputManager inputManager, IOutputManager outputMan
             _ => throw new ArgumentException("Invalid item type")
         };
 
-        item.CalculateStatsByLevel();
+        item.CalculateStatsByLevel(); //removed durability prompt above bc this method overwrites it anyway
         item.CalculateValue();
 
         _outputManager.WriteLine($"\nBased on the level provided, stats have been automatically generated.",

@@ -15,7 +15,6 @@ public class Floor
     public int Level { get; set; }
     public List<Monster> Monsters { get; set; } = [];
     public List<Room> Rooms { get; set; } = [];
-    public int NumberOfCursedItems { get; set; }
     public List<Item> Loot { get; set; } = [];
     public bool HasMetMerchant { get; set; } = false;
     private List<Item> MerchantItems { get; set; } = [];
@@ -59,23 +58,6 @@ public class Floor
         for (int i = 0; i < shuffledItems.Count; i++)
         {
             availableMonsters[i].Treasure = shuffledItems[i];
-        }
-    }
-
-    public void AssignCursesToItems()
-    {
-        var availableItems = Loot.OfType<ICursable>().ToList();
-
-        if (NumberOfCursedItems > availableItems.Count)
-        {
-            throw new InvalidOperationException(
-                $"Not enough items to assign cursed items. Cursed Items: {NumberOfCursedItems}, Available Items: {availableItems.Count}");
-        }
-
-        var shuffledItems = availableItems.OrderBy(_ => _rng.Next()).ToList();
-        for (int i = 0; i < NumberOfCursedItems; i++)
-        {
-            shuffledItems[i].Curse();
         }
     }
 
