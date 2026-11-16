@@ -7,7 +7,7 @@ namespace ConsoleGame.Factories;
 
 public class ItemFactory(IItemDao itemDao) : IItemFactory
 {
-    private static readonly Random _rng = Random.Shared;
+    private static readonly Random Random = Random.Shared;
     private readonly IItemDao _itemDao = itemDao;
 
     public (List<Item>, int) GenerateLoot(int level, int numMonsters, bool campaign)
@@ -82,7 +82,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         decimal total = baseGold + monsterBonus;
 
         // Variance
-        decimal variance = (decimal)_rng.NextDouble() * 0.2M + 0.9M;
+        decimal variance = (decimal)Random.NextDouble() * 0.2M + 0.9M;
         total *= variance;
 
         // Campaign bonus
@@ -104,7 +104,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
             //Try to find a random valuable in the ideal range
             var jackpot = valuables
                 .Where(v => v.Value > newValue && v.Value <= (lootMaxValue - newValue))
-                .OrderBy(_ => _rng.Next())
+                .OrderBy(_ => Random.Next())
                 .FirstOrDefault();
 
             // if no item found in ideal range, find the best one
@@ -140,29 +140,29 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
 
         while (currentValue < lootMaxValue && loot.Count < numMonsters)
         {
-            double roll = _rng.NextDouble();
+            double roll = Random.NextDouble();
 
             Item itemBase;
             if (roll < 0.65 && valuables.Count > 0) // 65%
             {
-                itemBase = valuables[_rng.Next(valuables.Count)];
+                itemBase = valuables[Random.Next(valuables.Count)];
             }
             else if (roll < 0.75 && weapons.Count > 0) // 15%
             {
-                itemBase = weapons[_rng.Next(weapons.Count)];
+                itemBase = weapons[Random.Next(weapons.Count)];
             }
             else if (roll < 0.90 && armors.Count > 0) // 15%
             {
-                itemBase = armors[_rng.Next(armors.Count)];
+                itemBase = armors[Random.Next(armors.Count)];
             }
             else if (consumables.Count > 0) // 5%
             {
-                itemBase = consumables[_rng.Next(consumables.Count)];
+                itemBase = consumables[Random.Next(consumables.Count)];
             }
             else
             {
                 // fallback if one of the lists is empty
-                itemBase = availableItems[_rng.Next(availableItems.Count)];
+                itemBase = availableItems[Random.Next(availableItems.Count)];
             }
 
             var item = CreateItem(itemBase);
@@ -209,7 +209,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
 
         if (consumables.Count > 0)
         {
-            var consumable = consumables[_rng.Next(consumables.Count)];
+            var consumable = consumables[Random.Next(consumables.Count)];
             merchantItems.Add(CreateItem(consumable));
         }
 
@@ -222,7 +222,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         // Add one Martial weapon if available
         if (martialWeapons.Count > 0)
         {
-            var martial = martialWeapons[_rng.Next(martialWeapons.Count)];
+            var martial = martialWeapons[Random.Next(martialWeapons.Count)];
             merchantItems.Add(CreateItem(martial));
             weapons.Remove(martial);
             weaponsToAdd--;
@@ -231,7 +231,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         // Add one Magical weapon if available
         if (weaponsToAdd > 0 && magicalWeapons.Count > 0)
         {
-            var magical = magicalWeapons[_rng.Next(magicalWeapons.Count)];
+            var magical = magicalWeapons[Random.Next(magicalWeapons.Count)];
             merchantItems.Add(CreateItem(magical));
             weapons.Remove(magical);
             weaponsToAdd--;
@@ -242,7 +242,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         {
             if (weapons.Count == 0) break;
 
-            var weapon = weapons[_rng.Next(weapons.Count)];
+            var weapon = weapons[Random.Next(weapons.Count)];
             merchantItems.Add(CreateItem(weapon));
             weapons.Remove(weapon);
         }
@@ -250,7 +250,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         int armorsToAdd = Math.Min(3, armors.Count);
         for (int i = 0; i < armorsToAdd; i++)
         {
-            var armor = armors[_rng.Next(armors.Count)];
+            var armor = armors[Random.Next(armors.Count)];
             merchantItems.Add(CreateItem(armor));
             armors.Remove(armor);
         }
@@ -273,14 +273,16 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         var gifts = new List<Item>();
 
         if (weapons.Count > 0)
-            gifts.Add(CreateItem(weapons[_rng.Next(weapons.Count)]));
+            gifts.Add(CreateItem(weapons[Random.Next(weapons.Count)]));
 
         if (armors.Count > 0)
-            gifts.Add(CreateItem(armors[_rng.Next(armors.Count)]));
+            gifts.Add(CreateItem(armors[Random.Next(armors.Count)]));
 
         if (consumables.Count > 0)
-            gifts.Add(CreateItem(consumables[_rng.Next(consumables.Count)]));
+            gifts.Add(CreateItem(consumables[Random.Next(consumables.Count)]));
 
         return gifts;
+        
+        //this might not be the method for it, but I would like to add a random weapon or armor common rune and some basic ingredients ?
     }
 }

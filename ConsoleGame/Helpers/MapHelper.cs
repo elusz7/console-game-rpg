@@ -2,13 +2,13 @@
 using ConsoleGame.Helpers.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 
-namespace ConsoleGame.Managers;
+namespace ConsoleGame.Helpers;
 
 public class MapHelper : IMapHelper
 {
-    private static readonly Random _rng = Random.Shared;
+    private static readonly Random Random = Random.Shared;
 
-    private record RoomPosition(Room Room, int X, int Y);
+    sealed record RoomPosition(Room Room, int X, int Y);
 
 
     public List<Room> CreateCampaignMap(int totalRoomsAllowed, Room entrance, List<Room> availableRooms)
@@ -33,12 +33,12 @@ public class MapHelper : IMapHelper
 
         while (connectedRooms.Count < totalRoomsAllowed && frontier.Count > 0 && nextRoomIndex < availableRooms.Count)
         {
-            int frontierIndex = _rng.Next(frontier.Count);
+            int frontierIndex = Random.Next(frontier.Count);
             var current = frontier[frontierIndex];
             frontier.RemoveAt(frontierIndex);
 
             var availableDirections = GetAvailableDirectionsForRoom(current, connectedRooms)
-                .OrderBy(_ => _rng.Next())
+                .OrderBy(_ => Random.Next())
                 .ToList();
 
             foreach (var direction in availableDirections)
@@ -75,10 +75,8 @@ public class MapHelper : IMapHelper
         while (n > 1)
         {
             n--;
-            int k = _rng.Next(n + 1);
-            T value = list[k];
-            list[k] = list[n];
-            list[n] = value;
+            int k = Random.Next(n + 1);
+            (list[k], list[n]) = (list[n], list[k]);
         }
     }
 
@@ -162,11 +160,14 @@ public class MapHelper : IMapHelper
     public List<string> GetAvailableDirectionsForRoom(Room room, List<Room> connectedRooms)
     {
         var directions = new List<string>();
-        var grid = GetRoomGrid(connectedRooms.First()); // assumes root is the entrance
+        
+        if (connectedRooms.Count == 0)
+            return [];
+        
         try
         {
+            var grid = GetRoomGrid(connectedRooms.First()); // assumes root is the entrance
             var (x, y) = FindRoomCoordinates(room, grid);
-
 
             foreach (var dir in new[] { "North", "South", "East", "West" })
             {
@@ -191,7 +192,7 @@ public class MapHelper : IMapHelper
 
     public Dictionary<(int x, int y), Room> GetRoomGrid(Room rootRoom)
     {
-        Dictionary<(int x, int y), Room> _gridCache = [];
+        Dictionary<(int x, int y), Room> gridCache = [];
         var root = rootRoom;
         var visited = new HashSet<Room>();
 
@@ -204,7 +205,7 @@ public class MapHelper : IMapHelper
             var current = queue.Dequeue();
             if (!visited.Add(current.Room)) continue;
 
-            _gridCache[(current.X, current.Y)] = current.Room;
+            gridCache[(current.X, current.Y)] = current.Room;
 
             if (current.Room.North != null)
                 queue.Enqueue(new RoomPosition(current.Room.North, current.X, current.Y - 1)); // Y-1 for north
@@ -216,14 +217,14 @@ public class MapHelper : IMapHelper
                 queue.Enqueue(new RoomPosition(current.Room.West, current.X - 1, current.Y));
         }
 
-        return _gridCache;
+        return gridCache;
     }
 
     public (int x, int y) FindRoomCoordinates(Room room, Dictionary<(int x, int y), Room> grid)
     {
         foreach (var kvp in grid)
         {
-            if (kvp.Value.Id == room.Id)
+            if (ReferenceEquals(kvp.Value, room))
                 return kvp.Key;
         }
 
@@ -254,29 +255,6 @@ public class MapHelper : IMapHelper
         });
     }
 
-    public List<Room> FindUnconnectedRooms(Room rootRoom, List<Room> rooms)
-    {
-        var list = new List<Room>();
-
-        var grid = GetRoomGrid(rootRoom);
-
-        foreach (var room in rooms)
-        {
-            try
-            {
-                FindRoomCoordinates(room, grid);
-            }
-            catch (InvalidOperationException)
-            {
-                Console.WriteLine($"Unconnected: {room.Name}");
-                list.Add(room);
-            }
-        }
-
-
-        return list;
-    }
-
     public Room? GetNeighbor(Room room, string direction)
     {
         return direction switch
@@ -301,125 +279,101 @@ public class MapHelper : IMapHelper
         };
     }
 
-    public int CountPathsToEntranceThroughRoom(Room startRoom, Room requiredRoom, Room entrance)
-    {
-        int pathCount = 0;
-
-        var queue = new Queue<Room>();
-        var visitedRooms = new HashSet<Room>();
-
-        // Start BFS from the startRoom
-        queue.Enqueue(startRoom);
-
-        // Keep track of the rooms that are visited as part of the current path
-        var roomParents = new Dictionary<Room, Room>();
-
-        while (queue.Count > 0)
-        {
-            var currentRoom = queue.Dequeue();
-
-            if (currentRoom == entrance)
-            {
-                // Check if the requiredRoom is part of the path by walking back from entrance
-                var pathContainsRequired = false;
-                var parent = currentRoom;
-
-                // Walk backwards through parent map to see if requiredRoom is part of the path
-                while (parent != null)
-                {
-                    if (parent == requiredRoom)
-                    {
-                        pathContainsRequired = true;
-                        break;
-                    }
-
-                    parent = roomParents.GetValueOrDefault(parent);
-                }
-
-                if (pathContainsRequired)
-                {
-                    pathCount++;
-                }
-
-                continue; // If reached entrance, no need to explore further
-            }
-
-            if (visitedRooms.Contains(currentRoom)) continue;
-
-            visitedRooms.Add(currentRoom);
-
-            // Enqueue neighbors (only unvisited rooms)
-            if (currentRoom.North != null && !visitedRooms.Contains(currentRoom.North))
-            {
-                roomParents[currentRoom.North] = currentRoom;
-                queue.Enqueue(currentRoom.North);
-            }
-
-            if (currentRoom.South != null && !visitedRooms.Contains(currentRoom.South))
-            {
-                roomParents[currentRoom.South] = currentRoom;
-                queue.Enqueue(currentRoom.South);
-            }
-
-            if (currentRoom.East != null && !visitedRooms.Contains(currentRoom.East))
-            {
-                roomParents[currentRoom.East] = currentRoom;
-                queue.Enqueue(currentRoom.East);
-            }
-
-            if (currentRoom.West != null && !visitedRooms.Contains(currentRoom.West))
-            {
-                roomParents[currentRoom.West] = currentRoom;
-                queue.Enqueue(currentRoom.West);
-            }
-        }
-
-        return pathCount;
-    }
-
-    public List<Room>? SinglePathThrough(Room requiredRoom, List<Room> rooms)
-    {
-        var entrance = rooms.Where(r => r.Id == 1).First();
-
-        var singlePathRooms = new ConcurrentBag<Room>();
-
-        Parallel.ForEach(rooms, room =>
-        {
-            int pathCount = CountPathsToEntranceThroughRoom(room, requiredRoom, entrance);
-            if (pathCount == 1)
-            {
-                singlePathRooms.Add(room);
-            }
-        });
-
-        return [.. singlePathRooms];
-    }
-
     public Dictionary<Room, List<string>> GetAvailableDirections2(List<Room> rooms, Room? editingRoom = null)
     {
         var availableRooms = new Dictionary<Room, List<string>>();
-        var singlePathRooms = editingRoom == null ? [] : SinglePathThrough(editingRoom, rooms);
 
-        foreach (Room room in rooms)
+        foreach (var room in rooms)
         {
-            if (room == editingRoom) continue;
-            if (editingRoom != null && singlePathRooms != null && singlePathRooms.Contains(room)) continue;
+            if (ReferenceEquals(room, editingRoom))
+                continue;
 
             var availableDirections = GetAvailableDirectionsForRoom(room, rooms);
 
-            if (availableDirections.Count == 0) continue;
-
-            availableRooms.Add(room, availableDirections);
+            if (availableDirections.Count > 0)
+                availableRooms.Add(room, availableDirections);
         }
 
         return availableRooms;
+    }
+    
+    public List<Room> FindRoomsDisconnectedByMove(Room entrance, Room roomToMove, Room newParent, string direction, List<Room> rooms)
+    {
+        string[] validDirections = ["North", "South", "East", "West"];
+
+        if (!validDirections.Contains(direction))
+            throw new ArgumentException("Invalid direction.", nameof(direction));
+
+        if (ReferenceEquals(roomToMove, entrance))
+            throw new ArgumentException("The entrance cannot be moved.", nameof(roomToMove));
+
+        if (!rooms.Any(r => ReferenceEquals(r, roomToMove)) ||
+            !rooms.Any(r => ReferenceEquals(r, newParent)) ||
+            !rooms.Any(r => ReferenceEquals(r, entrance)))
+        {
+            throw new ArgumentException("All rooms must belong to the supplied room collection.");
+        }
+
+        if (GetNeighbor(newParent, direction) != null &&
+            !ReferenceEquals(GetNeighbor(newParent, direction), roomToMove))
+        {
+            throw new InvalidOperationException("The selected direction is already occupied.");
+        }
+
+        // Rooms reachable before the proposed move.
+        var reachableBefore = GetReachableRooms(entrance);
+
+        // Simulate the move without changing any actual room connections.
+        var reachableAfter = new HashSet<Room>();
+        var queue = new Queue<Room>();
+
+        queue.Enqueue(entrance);
+
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+
+            if (!reachableAfter.Add(current))
+                continue;
+
+            if (ReferenceEquals(current, roomToMove))
+            {
+                // The moved room will only retain its new connection.
+                queue.Enqueue(newParent);
+                continue;
+            }
+
+            // Existing connections remain, except connections to the moved room.
+            foreach (var neighbor in new[]
+                     {
+                         current.North,
+                         current.South,
+                         current.East,
+                         current.West
+                     })
+            {
+                if (neighbor != null && !ReferenceEquals(neighbor, roomToMove))
+                    queue.Enqueue(neighbor);
+            }
+
+            // The new parent gains a connection to the moved room.
+            if (ReferenceEquals(current, newParent))
+                queue.Enqueue(roomToMove);
+        }
+
+        // Only report rooms that were reachable before but won't be afterward.
+        return rooms
+            .Where(room =>
+                reachableBefore.Contains(room) &&
+                !reachableAfter.Contains(room))
+            .ToList();
     }
 
     public Dictionary<string, string> FindUnlinkedNeighbors(List<Room> rooms)
     {
         Dictionary<string, string> unlinkedNeighbors = [];
 
-        var grid = GetRoomGrid(rooms.Where(r => r.Name.Equals("Entrance")).First());
+        var grid = GetRoomGrid(rooms.First(r => r.Name.Equals("Entrance")));
 
         foreach (var room in rooms)
         {
@@ -439,9 +393,7 @@ public class MapHelper : IMapHelper
 
                     // Next, check if there is a room at the target location
                     var targetCoords = (x + dx, y + dy);
-                    if (!grid.ContainsKey(targetCoords)) continue; // no room there
-
-                    var neighborRoom = grid[targetCoords];
+                    if (!grid.TryGetValue(targetCoords, out var neighborRoom)) continue; // no room there
 
                     // Check if neighborRoom already links back toward this room
                     var reverseDirection = GetReverseDirection(direction);
@@ -468,31 +420,7 @@ public class MapHelper : IMapHelper
 
         return unlinkedNeighbors;
     }
-
-    public List<Room> CheckForDisconnectedRooms(List<Room> rooms)
-    {
-        var disconnectedRooms = new List<Room>();
-
-        var grid = GetRoomGrid(rooms.Where(r => r.Id == 1).First());
-
-        foreach (var room in rooms)
-        {
-            try
-            {
-                FindRoomCoordinates(room, grid);
-            }
-            catch (InvalidOperationException)
-            {
-                //set disconnected room connects to null
-                room.North = room.South = room.East = room.West = null;
-
-                disconnectedRooms.Add(room);
-            }
-        }
-
-        return disconnectedRooms;
-    }
-
+    
     public (string name, string direction) ParseKey(string key)
     {
         var parts = key.Split("-");
@@ -507,9 +435,7 @@ public class MapHelper : IMapHelper
 
         //determine how many to connect out of how many available
         //connect 1 in every 3?
-        int neighborCount = unlinkedNeighbors.Values
-            .Select(v => v.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length)
-            .Sum();
+        int neighborCount = unlinkedNeighbors.Count;
 
         var ratio = 3.0;
         var rawCount = neighborCount / ratio;
@@ -517,15 +443,66 @@ public class MapHelper : IMapHelper
 
         for (int i = 0; i < connectionCount && unlinkedNeighbors.Count > 0; i++)
         {
-            var randomElement = unlinkedNeighbors.ElementAt(_rng.Next(unlinkedNeighbors.Count));
+            var randomElement = unlinkedNeighbors.ElementAt(Random.Next(unlinkedNeighbors.Count));
             var (roomName1, direction) = ParseKey(randomElement.Key);
             var roomName2 = randomElement.Value;
 
-            var room1 = rooms.Where(r => r.Name.Equals(roomName1)).First();
-            var room2 = rooms.Where(r => r.Name.Equals(roomName2)).First();
+            var room1 = rooms.First(r => r.Name.Equals(roomName1));
+            var room2 = rooms.First(r => r.Name.Equals(roomName2));
 
             LinkRooms(room1, room2, direction);
             unlinkedNeighbors.Remove(randomElement.Key);
         }
+    }
+    
+    
+    
+    //Find All Rooms That Are Connected to the Entrance
+    private static HashSet<Room> GetReachableRooms(Room entrance)
+    {
+        var visited = new HashSet<Room>();
+        var queue = new Queue<Room>();
+
+        queue.Enqueue(entrance);
+
+        while (queue.Count > 0)
+        {
+            var room = queue.Dequeue();
+
+            if (!visited.Add(room))
+                continue;
+
+            if (room.North != null) queue.Enqueue(room.North);
+            if (room.South != null) queue.Enqueue(room.South);
+            if (room.East != null) queue.Enqueue(room.East);
+            if (room.West != null) queue.Enqueue(room.West);
+        }
+
+        return visited;
+    }
+    
+    //Find All Rooms That Aren't Connected to the root room
+    public List<Room> FindUnconnectedRooms(Room rootRoom, List<Room> rooms)
+    {
+        var reachableRooms = GetReachableRooms(rootRoom);
+
+        return rooms
+            .Where(room => !reachableRooms.Contains(room))
+            .ToList();
+    }
+    
+    //Find all rooms that aren't connected to the entrance and remove any connections they might still have
+    public List<Room> CheckForDisconnectedRooms(List<Room> rooms)
+    {
+        var entrance = rooms.First(r => r.Id == 1);
+
+        var disconnectedRooms = FindUnconnectedRooms(entrance, rooms);
+
+        foreach (var room in disconnectedRooms)
+        {
+            UnlinkRoom(room);
+        }
+
+        return disconnectedRooms;
     }
 }

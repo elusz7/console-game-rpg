@@ -807,7 +807,7 @@ Partially complete
 
 ---
 
-# D. Expand Elemental Gameplay
+# D. Expand Elemental Gameplay - DEFERRED! Move to new feature for post refactor work
 
 **Status:** Pending
 
@@ -970,9 +970,9 @@ The following decisions are authoritative throughout implementation:
 When an earlier implementation detail or design description conflicts with these decisions, follow the approved `Elemental Mechanics Specification` and the final reconciliation section of `C0.2.2`.
 
 
-## Step 12 --- Implement Additional Combat Features
+## Step 12 --- Implement Additional Combat Features -- DEFERRED! Move to new feature for post refactor work
 
-**Status: Not started**
+**Status: Not Started**
 
 **Goal:** Extend combat after the foundational damage and elemental
 systems are stable.

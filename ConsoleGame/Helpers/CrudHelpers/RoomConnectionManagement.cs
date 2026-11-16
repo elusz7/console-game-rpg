@@ -87,7 +87,13 @@ public class RoomConnectionManagement(
 
     private void MoveRoom(Room roomToMove)
     {
-        //Dictionary<string, string[]> availableRooms = _mapHelper.GetAvailableDirections(_roomDao.GetAllRooms(), roomToMove);
+        if (roomToMove.Id == 1)
+        {
+            _outputManager.WriteLine(
+                "\nThe entrance cannot be moved.\n",
+                ConsoleColor.Red);
+            return;
+        }
 
         var availableRooms = _mapHelper.GetAvailableDirections2(_roomDao.GetAllRooms(), roomToMove);
 
@@ -96,12 +102,6 @@ public class RoomConnectionManagement(
             _outputManager.WriteLine("\nNo valid rooms to place this room next to.\n", ConsoleColor.Red);
             return;
         }
-
-        //for (int i = 0; i < availableRooms.Count; i++)
-        //{
-        //    var entry = availableRooms.ElementAt(i);
-        //    _outputManager.WriteLine($"{i + 1}. {entry.Key} ({string.Join(", ", entry.Value)})");
-        //}
 
         var roomToAddOnto = _inputManager.Selector(
             availableRooms.Keys.ToList(),
@@ -131,9 +131,31 @@ public class RoomConnectionManagement(
             return;
         }
 
+        var rooms = _roomDao.GetAllRooms();
+        var entrance = rooms.First(r => r.Id == 1);
+
+        var disconnectedRooms = _mapHelper.FindRoomsDisconnectedByMove(
+            entrance, roomToMove, roomToAddOnto, directionToAddOnto, rooms);
+
+        if (disconnectedRooms.Count > 0)
+        {
+            _outputManager.WriteLine(
+                "\nWARNING: Moving this room will disconnect the following rooms from the entrance:",
+                ConsoleColor.Yellow);
+
+            foreach (var disconnectedRoom in disconnectedRooms)
+            {
+                _outputManager.WriteLine($"- {disconnectedRoom.Name}", ConsoleColor.Yellow);
+            }
+
+            _outputManager.WriteLine(
+                "\nTheir existing connections will be preserved.",
+                ConsoleColor.Yellow);
+        }
+
         string confirm = _inputManager.ReadString(
             $"\nAre you sure you want to move {roomToMove.Name} to the {directionToAddOnto} of {roomToAddOnto.Name}? (y/n): ",
-            new[] { "y", "n" });
+            ["y", "n"]);
 
         if (confirm == "n")
         {
@@ -141,22 +163,31 @@ public class RoomConnectionManagement(
             return;
         }
 
+        // Capture old neighbors so their changed connections are persisted.
+        var affectedRooms = new[]
+            {
+                roomToMove.North,
+                roomToMove.South,
+                roomToMove.East,
+                roomToMove.West,
+                roomToMove,
+                roomToAddOnto
+            }
+            .Where(r => r != null)
+            .Cast<Room>()
+            .Distinct()
+            .ToList();
+
+        // Perform the move.
         _mapHelper.UnlinkRoom(roomToMove);
         _mapHelper.LinkRooms(roomToAddOnto, roomToMove, directionToAddOnto);
 
-        _roomDao.UpdateRoom(roomToMove);
-        _roomDao.UpdateRoom(roomToAddOnto);
+        // Persist all rooms whose connections may have changed.
+        _roomDao.UpdateAllRooms(affectedRooms);
 
-        var disconnectedRooms = _mapHelper.CheckForDisconnectedRooms(_roomDao.GetAllRooms());
-        if (disconnectedRooms.Count > 0)
-        {
-            _outputManager.WriteLine(
-                $"\nThe following rooms are now disconnected from the map: {string.Join(", ", disconnectedRooms.Select(r => r.Name))}",
-                ConsoleColor.Yellow);
-            _roomDao.UpdateAllRooms(disconnectedRooms);
-        }
-
-        _outputManager.WriteLine($"\n{roomToMove.Name} successfully moved!\n", ConsoleColor.Green);
+        _outputManager.WriteLine(
+            $"\n{roomToMove.Name} successfully moved!\n",
+            ConsoleColor.Green);
     }
 
     private void LinkNeighbors()
