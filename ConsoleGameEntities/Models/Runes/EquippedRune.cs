@@ -5,7 +5,7 @@ using ConsoleGameEntities.Models.Items;
 
 namespace ConsoleGameEntities.Models.Runes;
 
-public sealed class EquippedRune
+public class EquippedRune
 {
     public int Id { get; init; }
     public int InventoryId { get; init; }
@@ -13,11 +13,11 @@ public sealed class EquippedRune
     public int Tier { get; set; }
     
     public int? ArmorId { get; init; }
-    public Armor? Armor { get; set; }
+    public virtual Armor? Armor { get; set; }
 
     public int? WeaponId { get; init; }
-    public Weapon? Weapon { get; set; }
-    public InventoryRune InventoryRune { get; init; } = null!;
+    public virtual Weapon? Weapon { get; set; }
+    public virtual InventoryRune InventoryRune { get; init; } = null!;
 
     public int GetElementalAttack()
     {

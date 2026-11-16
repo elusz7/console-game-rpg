@@ -43,7 +43,7 @@ public class FloorFactoryTests
             .Returns(_rooms);
 
         _mockMonsterFactory
-            .Setup(m => m.GenerateMonsters(It.IsAny<int>(), It.IsAny<bool>()))
+            .Setup(m => m.GenerateMonsters(It.IsAny<int>(), It.IsAny<bool>(), It.IsAny<int>()))
             .Returns(_monsters);
 
         _mockItemFactory
@@ -73,7 +73,7 @@ public class FloorFactoryTests
 
         // Assert
         _mockMapFactory.Verify(m => m.GenerateMap(5, false, true), Times.Once);
-        _mockMonsterFactory.Verify(m => m.GenerateMonsters(5, false), Times.Once);
+        _mockMonsterFactory.Verify(m => m.GenerateMonsters(5, false, 1), Times.Once);
         _mockItemFactory.Verify(m => m.GenerateLoot(5, _monsters.Count, false), Times.Once);
     }
 }

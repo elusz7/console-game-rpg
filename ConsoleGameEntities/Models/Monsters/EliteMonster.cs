@@ -4,7 +4,7 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Monsters;
 
-public sealed class EliteMonster : Monster
+public class EliteMonster : Monster
 {
     public EliteMonster()
     {

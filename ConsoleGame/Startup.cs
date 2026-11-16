@@ -19,6 +19,8 @@ using ConsoleGame.Factories.Interfaces;
 using ConsoleGame.Helpers.CombatHelpers;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGame.Managers.Interfaces;
+using ConsoleGame.Models;
+using ConsoleGame.Models.Attributes;
 using ConsoleGame.Services.Interfaces;
 
 namespace ConsoleGame;
@@ -113,6 +115,7 @@ public static class Startup
         services.AddTransient<IMonsterFactory, MonsterFactory>();
         services.AddTransient<IItemFactory, ItemFactory>();
         services.AddTransient<IMapFactory, MapFactory>();
+        services.AddScoped<IRandomProvider, RandomProvider>();
 
         services.AddTransient<AdventureService>();
         // Handles player leveling, automatic loot, and floor transitions.

@@ -19,21 +19,73 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         var lootMaxValue = CalculateLootValue(level, numMonsters, campaign);
 
         var availableItems = _itemDao.GetItemsAvailableAtLevel(level)
-            .Where(i => i.Value < (lootMaxValue / 2.0M)).ToList();
+            .Where(i => CalculateItemTrueValue(CreateItem(i)) < lootMaxValue / 2.0M)
+            .ToList();
 
         if (availableItems.Count == 0)
             return [];
         
         var loot = GatherTribute(lootMaxValue, availableItems, numMonsters);
 
-        if (loot.Sum(i => i.Value) < lootMaxValue * 0.75M && loot.Count == numMonsters)
+        if (loot.Sum(CalculateItemTrueValue) < lootMaxValue * 0.75M && loot.Count == numMonsters)
         {
             TryReplaceLowestValueValuableWithJackpot(loot, [.. availableItems.OfType<Valuable>()], lootMaxValue);
         }
 
         ApplyRandomCurses(loot, campaign);
+        
+        //LootDiagnosticLoop();
 
         return loot;
+    }
+
+    public void LootDiagnosticLoop()
+    {
+        for (int i = 1; i < 21; i++)
+        {
+            var testNumMonsters = i * 7;
+            var targetValue = CalculateLootValue(i, testNumMonsters, false);
+
+            var testItems = _itemDao
+                .GetItemsAvailableAtLevel(i)
+                .Where(item => CalculateItemTrueValue(CreateItem(item)) < targetValue / 2.0M)
+                .ToList();
+
+            var tempLoot = GatherTribute(
+                targetValue,
+                testItems,
+                testNumMonsters);
+
+            if (tempLoot.Sum(CalculateItemTrueValue) < targetValue * 0.75M &&
+                tempLoot.Count == testNumMonsters)
+            {
+                TryReplaceLowestValueValuableWithJackpot(
+                    tempLoot,
+                    [.. testItems.OfType<Valuable>()],
+                    targetValue);
+            }
+
+            ApplyRandomCurses(tempLoot, false);
+
+            var actualValue = tempLoot.Sum(item => item.Value);
+            var actualTrueValue = tempLoot.Sum(CalculateItemTrueValue);
+
+            var valuables = tempLoot.OfType<Valuable>().Count();
+            var weapons = tempLoot.OfType<Weapon>().Count();
+            var armor = tempLoot.OfType<Armor>().Count();
+            var consumables = tempLoot.OfType<Consumable>().Count();
+            var cursed = tempLoot.OfType<ICursable>().Count(item => item.IsCursed());
+
+            System.Diagnostics.Debug.WriteLine(
+                $"Level {i} ({testNumMonsters} monsters) | " +
+                $"Target: {targetValue:F2} | " +
+                $"Actual: {actualValue:F2} | " +
+                $"True Value: {actualTrueValue:F2} | " +
+                $"Loot: {tempLoot.Count} " +
+                $"(Valuables: {valuables}, Weapons: {weapons}, " +
+                $"Armor: {armor}, Consumables: {consumables}) | " +
+                $"Cursed: {cursed}");
+        }
     }
 
     private static Item CreateItem(Item itemBase)
@@ -132,6 +184,9 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
 
     private static List<Item> GatherTribute(decimal lootMaxValue, List<Item> availableItems, int numMonsters)
     {
+        if (availableItems.Count == 0)
+            return [];
+        
         var loot = new List<Item>();
 
         decimal currentValue = 0.0M;

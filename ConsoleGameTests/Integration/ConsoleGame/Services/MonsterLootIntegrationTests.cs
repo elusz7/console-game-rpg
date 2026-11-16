@@ -5,6 +5,7 @@ using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Managers;
 using ConsoleGame.Managers.Interfaces;
 using ConsoleGame.Models;
+using ConsoleGame.Models.Attributes;
 using ConsoleGame.Services;
 using ConsoleGame.Services.Interfaces;
 using ConsoleGameEntities.Data;
@@ -15,9 +16,9 @@ using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 using ConsoleGameEntities.Models.Monsters.Strategies;
-using ConsoleGameEntities.Models.Runes.Recipes;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 
 namespace ConsoleGameTests.Integration.ConsoleGame.Services;
 
@@ -33,11 +34,14 @@ public class MonsterLootIntegrationTests
     private IMonsterDao _monsterDao = null!;
     private ISkillDao _skillDao = null!;
     private IMonsterSkillSelector _skillSelector = null!;
+    private readonly Mock<IRandomProvider> _randomProviderMock = new();
 
     private ITransactionManager _transactionManager = null!;
 
     private ILootService _lootService = null!;
     private IMonsterFactory _monsterFactory = null!;
+    
+    private const int TestRoomCount = 10;
 
     [TestInitialize]
     public void Initialize()
@@ -60,7 +64,18 @@ public class MonsterLootIntegrationTests
         _skillSelector = new MonsterSkillSelector();
         _monsterDao = new MonsterDao(_context);
         _skillDao = new SkillDao(_context);
-        _monsterFactory = new MonsterFactory(_monsterDao, _skillDao, _skillSelector);
+        
+        var elementIndex = 0;
+
+        _randomProviderMock
+            .Setup(r => r.Next(It.IsAny<int>()))
+            .Returns((int max) => elementIndex++ % max);
+
+        _randomProviderMock
+            .Setup(r => r.Next(It.IsAny<int>(), It.IsAny<int>()))
+            .Returns((int min, int max) => min);
+        
+        _monsterFactory = new MonsterFactory(_monsterDao, _skillDao, _skillSelector, _randomProviderMock.Object);
 
         //Set Up Loot Service
         _ingredientDao = new IngredientDao(_context);
@@ -94,7 +109,7 @@ public class MonsterLootIntegrationTests
         return new GameSession(player, floor, isCampaign);
     }
 
-    private void AddMonsterToFloor(GameSession session, Monster monster)
+    private static void AddMonsterToFloor(GameSession session, Monster monster)
     {
         session.CurrentFloor.Monsters.Add(monster);
     }
@@ -118,7 +133,7 @@ public class MonsterLootIntegrationTests
         var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true, TestRoomCount);
         Assert.IsTrue(campaignMonsters.Any());
 
         // Pick a monster with AttackElement (Medium+ threat)
@@ -168,7 +183,7 @@ public class MonsterLootIntegrationTests
         var floor = CreateFloor(5);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(5, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(5, true, TestRoomCount);
         Assert.IsTrue(campaignMonsters.Any());
 
         // Pick a High threat monster (has both AttackElement and Vulnerability)
@@ -181,7 +196,7 @@ public class MonsterLootIntegrationTests
         
         var drop1 = CreateMonsterDrop(campaignMonster.AttackElement!.Value,  campaignMonster.ThreatLevel, ingredient1, 100.0M); //match both
         var drop2 = CreateMonsterDrop(campaignMonster.Vulnerability!.Value, campaignMonster.ThreatLevel, ingredient2, 100.0M); //match ThreatLevel
-        var drop3 = CreateMonsterDrop(campaignMonster.AttackElement!.Value, ThreatLevel.Boss, ingredient3, 100.0M); //match Element
+        var drop3 = CreateMonsterDrop(campaignMonster.AttackElement.Value, ThreatLevel.Boss, ingredient3, 100.0M); //match Element
 
         _context.MonsterDrops.AddRange(drop1, drop2, drop3);
         _context.SaveChanges();
@@ -223,7 +238,7 @@ public class MonsterLootIntegrationTests
         var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true, TestRoomCount);
         Assert.IsTrue(campaignMonsters.Any());
 
         // Pick a monster with AttackElement (Medium+ threat)
@@ -270,7 +285,7 @@ public class MonsterLootIntegrationTests
         var floor = CreateFloor(5);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(5, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(5, true, TestRoomCount);
         Assert.IsTrue(campaignMonsters.Any());
 
         // Pick a High threat monster (has Vulnerability)
@@ -317,7 +332,7 @@ public class MonsterLootIntegrationTests
         var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true, TestRoomCount);
         Assert.IsTrue(campaignMonsters.Any());
 
         // Pick a monster with AttackElement (Medium+ threat)
@@ -329,8 +344,8 @@ public class MonsterLootIntegrationTests
         var ingredient3 = CreateIngredient("Test Ingredient 3", ComponentType.MonsterPart);
         
         var drop1 = CreateMonsterDrop(campaignMonster.AttackElement!.Value,  campaignMonster.ThreatLevel, ingredient1, 100.0M); 
-        var drop2 = CreateMonsterDrop(campaignMonster.AttackElement!.Value, campaignMonster.ThreatLevel, ingredient2, 100.0M); 
-        var drop3 = CreateMonsterDrop(campaignMonster.AttackElement!.Value, campaignMonster.ThreatLevel, ingredient3, 100.0M); 
+        var drop2 = CreateMonsterDrop(campaignMonster.AttackElement.Value, campaignMonster.ThreatLevel, ingredient2, 100.0M); 
+        var drop3 = CreateMonsterDrop(campaignMonster.AttackElement.Value, campaignMonster.ThreatLevel, ingredient3, 100.0M); 
 
         _context.MonsterDrops.AddRange(drop1, drop2, drop3);
         _context.SaveChanges();
@@ -380,7 +395,7 @@ public class MonsterLootIntegrationTests
         var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true, TestRoomCount);
         Assert.IsTrue(campaignMonsters.Any());
 
         // Pick a monster with AttackElement (Medium+ threat)
@@ -434,7 +449,7 @@ public class MonsterLootIntegrationTests
         var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true, TestRoomCount);
         Assert.IsTrue(campaignMonsters.Any());
 
         // Pick a monster with AttackElement (Medium+ threat)
@@ -485,7 +500,7 @@ public class MonsterLootIntegrationTests
         var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true, TestRoomCount);
         Assert.IsTrue(campaignMonsters.Any());
 
         // Pick a monster with AttackElement (Medium+ threat)
@@ -524,7 +539,7 @@ public class MonsterLootIntegrationTests
         var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true, TestRoomCount);
         Assert.IsTrue(campaignMonsters.Any());
 
         // Pick a monster with AttackElement (Medium+ threat)
@@ -577,7 +592,7 @@ public class MonsterLootIntegrationTests
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
         var player = CreatePlayer("Test Player", archetype, inventory);
-        var room = CreateRoom("Test Room");
+        var room = CreateRoom();
         player.CurrentRoom = room;
         
         _context.Monsters.AddRange(lowMonster, mediumMonster, highMonster);
@@ -588,7 +603,7 @@ public class MonsterLootIntegrationTests
         var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true, TestRoomCount);
         Assert.IsTrue(campaignMonsters.Any());
 
         // Pick a monster with AttackElement (Medium+ threat)
@@ -632,7 +647,7 @@ public class MonsterLootIntegrationTests
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
         var player = CreatePlayer("Test Player", archetype, inventory);
-        var room = CreateRoom("Test Room");
+        var room = CreateRoom();
         player.CurrentRoom = room;
         
         _context.Monsters.AddRange(lowMonster, mediumMonster, highMonster);
@@ -643,7 +658,7 @@ public class MonsterLootIntegrationTests
         var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true, TestRoomCount);
         Assert.IsTrue(campaignMonsters.Any());
 
         // Pick a monster with AttackElement (Medium+ threat)
@@ -680,7 +695,7 @@ public class MonsterLootIntegrationTests
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
         var player = CreatePlayer("Test Player", archetype, inventory);
-        var room = CreateRoom("Test Room");
+        var room = CreateRoom();
         player.CurrentRoom = room;
         
         _context.Monsters.AddRange(lowMonster, mediumMonster, highMonster);
@@ -691,7 +706,7 @@ public class MonsterLootIntegrationTests
         var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true, TestRoomCount);
         Assert.IsTrue(campaignMonsters.Any());
 
         // Pick a monster with AttackElement (Medium+ threat)
@@ -739,7 +754,7 @@ public class MonsterLootIntegrationTests
         var archetype = CreateArchetype("Test Archetype", ArchetypeType.Martial);
         var inventory = CreateInventory(100);
         var player = CreatePlayer("Test Player", archetype, inventory);
-        var room = CreateRoom("Test Room");
+        var room = CreateRoom();
         player.CurrentRoom = room;
         
         _context.Monsters.AddRange(lowMonster, mediumMonster, highMonster);
@@ -750,7 +765,7 @@ public class MonsterLootIntegrationTests
         var floor = CreateFloor(3);
         var session = CreateSession(player, floor, true);
         
-        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true);
+        var campaignMonsters = _monsterFactory.GenerateMonsters(3, true, TestRoomCount);
         Assert.IsTrue(campaignMonsters.Any());
 
         // Pick a monster with AttackElement (Medium+ threat)
