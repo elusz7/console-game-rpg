@@ -1,19 +1,26 @@
-﻿using ConsoleGame.Helpers.DisplayHelpers;
+﻿using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Managers.Interfaces;
 using ConsoleGame.Models;
 using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
-using Microsoft.Extensions.Logging;
+using static ConsoleGameEntities.Models.Entities.ModelEnums;
+using ConsoleGameEntities.Models.Runes.Recipes;
 using static ConsoleGame.Helpers.AdventureEnums;
 
 namespace ConsoleGame.Helpers;
 
-public class MerchantHelper(IInputManager inputManager, IOutputManager outputManager)
+public class MerchantHelper(IInputManager inputManager, IOutputManager outputManager, IRandomProvider randomProvider, IRecipeDao recipeDao, IRuneDao runeDao, IIngredientDao ingredientDao)
 {
     private readonly IInputManager _inputManager = inputManager;
     private readonly IOutputManager _outputManager = outputManager;
+    private readonly IRandomProvider _randomProvider = randomProvider;
+
+    private readonly IRecipeDao _recipeDao = recipeDao;
+    private readonly IRuneDao _runeDao = runeDao;
+    private readonly IIngredientDao _ingredientDao = ingredientDao;
 
     private Floor _floor;
     private Player _player;
@@ -44,29 +51,90 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
         _outputManager.WriteLine("\nI also have some other services you might be interested in. Come back soon.");
         _outputManager.WriteLine($"{_floor.GetMerchantName()} smiles and waves goodbye as you leave.");
     }
-
+    
     private void Gift()
     {
-        var items = _floor.GetMerchantGifts(_player.Archetype.ArchetypeType, _player.Level);
-        if (items.Count == 0)
-        {
-            return;
-        }
+        _outputManager.WriteLine(
+            "Take these items as a token of our new friendship.\n");
 
-        _outputManager.WriteLine("Take these items as a token of our new friendship.\n");
+        var items = _floor.GetMerchantGifts(
+            _player.Archetype.ArchetypeType,
+            _player.Level);
 
         foreach (var item in items)
         {
             try
             {
                 _player.Inventory.AddItem(item);
-                _outputManager.WriteLine($"{item.Name} has been gifted to you!", ConsoleColor.Green);
+
+                _outputManager.WriteLine(
+                    $"{item.Name} has been gifted to you!",
+                    ConsoleColor.Green);
             }
             catch (InventoryException)
             {
             }
         }
+
+        GiftRuneStarterPack();
     }
+
+
+   
+    private void GiftRuneStarterPack()
+    {
+        var commonRecipes = _recipeDao.GetAllRecipes()
+            .Where(r => r.Rune.Rarity == RarityLevel.Common)
+            .ToList();
+
+        if (commonRecipes.Count == 0)
+            return;
+
+        // Gift one random Common rune at Tier 1.
+        var runeRecipe = commonRecipes[
+            _randomProvider.Next(commonRecipes.Count)];
+
+        _runeDao.AddRuneToPlayer(
+            runeRecipe.RuneId,
+            _player.Id,
+            tier: 1);
+
+        _outputManager.WriteLine(
+            $"{runeRecipe.Rune.Name} (Tier 1) has been gifted to you!",
+            ConsoleColor.Green);
+
+        // Select up to three distinct Common rune recipes.
+        var availableRecipes = commonRecipes.ToList();
+        var selectedRecipes = new List<Recipe>();
+
+        while (selectedRecipes.Count < 3 && availableRecipes.Count > 0)
+        {
+            var index = _randomProvider.Next(availableRecipes.Count);
+
+            selectedRecipes.Add(availableRecipes[index]);
+            availableRecipes.RemoveAt(index);
+        }
+
+        // Collect one copy of each distinct ingredient.
+        var ingredients = selectedRecipes
+            .SelectMany(r => r.Ingredients)
+            .Select(ri => ri.Ingredient)
+            .DistinctBy(i => i.Id)
+            .ToList();
+
+        foreach (var ingredient in ingredients)
+        {
+            _ingredientDao.AddIngredientToPlayer(
+                ingredient.Id,
+                _player.Id,
+                quantity: 1);
+
+            _outputManager.WriteLine(
+                $"{ingredient.Name} has been gifted to you!",
+                ConsoleColor.Green);
+        }
+    }
+
 
     private void StandardMerchantMeeting()
     {
@@ -81,11 +149,11 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
             }
 
             _outputManager.WriteLine($"\nAvailable Gold: {_player.Inventory.Gold}\n", ConsoleColor.DarkYellow);
-
+            
             var index = 1;
             foreach (var option in options)
             {
-                _outputManager.WriteLine($"{index}. {option.Value}", ConsoleColor.Yellow);
+                _outputManager.WriteLine($"{index}. {option.Key}", ConsoleColor.Yellow);
                 index++;
             }
 
@@ -162,9 +230,13 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
             _player.Sell(item);
             _outputManager.WriteLine($"\n{item.Name} has been sold!", ConsoleColor.Green);
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex) when (
+            ex is InvalidOperationException or ItemNotFoundException)
         {
-            _outputManager.WriteLine("\nIt seems there was an issue with your sale.", ConsoleColor.Red);
+            _outputManager.WriteLine(
+                "\nIt seems there was an issue with your sale.",
+                ConsoleColor.Red);
+
             _outputManager.WriteLine(ex.Message, ConsoleColor.Red);
         }
     }
