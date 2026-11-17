@@ -15,7 +15,8 @@ public class MonsterFactoryCampaignTests
     private readonly Mock<ISkillDao> _skillDaoMock = new();
     private readonly Mock<IMonsterSkillSelector> _skillSelectorMock = new();
     private readonly Mock<IRandomProvider> _randomProviderMock = new();
-    
+    private MonsterFactory _monsterFactory = null!;
+
     private static readonly ElementType[] ValidElements =
     [
         ElementType.Fire,
@@ -26,7 +27,8 @@ public class MonsterFactoryCampaignTests
         ElementType.Abyssal
     ];
 
-    private MonsterFactory CreateFactory()
+    [TestInitialize]
+    public void Setup()
     {
         var elementIndex = 0;
 
@@ -36,20 +38,21 @@ public class MonsterFactoryCampaignTests
 
         _randomProviderMock
             .Setup(r => r.Next(It.IsAny<int>(), It.IsAny<int>()))
-            .Returns((int min, int max) => min);
+            .Returns((int min, int _) => min);
 
         _randomProviderMock
             .Setup(r => r.Next(It.IsAny<int>(), It.IsAny<int>()))
-            .Returns((int min, int max) => min);
+            .Returns((int min, int _) => min);
 
-        return new MonsterFactory(
+        _monsterFactory = new MonsterFactory(
             _monsterDaoMock.Object,
             _skillDaoMock.Object,
             _skillSelectorMock.Object,
             _randomProviderMock.Object);
     }
 
-    private static Monster CreateMonster(string name, int level, ThreatLevel threat, DamageType damageType = DamageType.Martial)
+    private static Monster CreateMonster(string name, int level, ThreatLevel threat,
+        DamageType damageType = DamageType.Martial)
     {
         return new Monster
         {
@@ -67,7 +70,7 @@ public class MonsterFactoryCampaignTests
             DamageType = damageType
         };
     }
-    
+
     private BossMonster CreateBossMonster(int level, params Skill[] skills)
     {
         return new BossMonster(_skillSelectorMock.Object)
@@ -132,6 +135,12 @@ public class MonsterFactoryCampaignTests
     }
 
     [TestMethod]
+    public void GenerateMonsters_CampaignLevel21_ThrowsArgumentOutOfRangeException()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _monsterFactory.GenerateMonsters(21, true, 10));
+    }
+
+    [TestMethod]
     public void GenerateMonsters_CampaignMode_ReturnsExpectedMonsters()
     {
         // Arrange
@@ -145,13 +154,12 @@ public class MonsterFactoryCampaignTests
         _monsterDaoMock
             .Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Medium))
             .Returns([mediumMonster]);
-        
+
         _skillDaoMock.Setup(s => s.GetUnassignedSkillsByMaxLevel(level)).Returns([]);
 
-        var factory = CreateFactory();
 
         // Act
-        var monsters = factory.GenerateMonsters(level, campaign: true, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: true, roomCount: 10);
 
         // Assert
         Assert.AreEqual(3, monsters.Count(m => m.ThreatLevel == ThreatLevel.Low));
@@ -172,10 +180,10 @@ public class MonsterFactoryCampaignTests
             .Returns([]);
         _skillDaoMock.Setup(s => s.GetUnassignedSkillsByMaxLevel(level)).Returns([]);
 
-        var factory = CreateFactory();
 
         // Act & Assert
-        Assert.ThrowsException<InvalidOperationException>(() => factory.GenerateMonsters(level, campaign: true, roomCount: 10));
+        Assert.ThrowsException<InvalidOperationException>(() =>
+            _monsterFactory.GenerateMonsters(level, campaign: true, roomCount: 10));
     }
 
     [TestMethod]
@@ -193,15 +201,14 @@ public class MonsterFactoryCampaignTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
 
-        var factory = CreateFactory();
 
-        var monsters = factory.GenerateMonsters(level, campaign: true, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: true, roomCount: 10);
 
         Assert.AreEqual(2, monsters.Count);
         Assert.IsTrue(monsters.Any(m => m.Name.StartsWith("Goblin I the ")));
         Assert.IsTrue(monsters.Any(m => m.Name.StartsWith("Goblin II the ")));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_NamesDifferentBaseMonstersIndependently()
     {
@@ -224,9 +231,8 @@ public class MonsterFactoryCampaignTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
 
-        var factory = CreateFactory();
 
-        var monsters = factory.GenerateMonsters(level, campaign: true, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: true, roomCount: 10);
 
         Assert.AreEqual(4, monsters.Count);
 
@@ -236,7 +242,7 @@ public class MonsterFactoryCampaignTests
 
         Assert.IsTrue(monsters.Any(m => m.Name.StartsWith("Orc I the ")));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_BossReceivesUpToThreeBossSkills()
     {
@@ -260,15 +266,14 @@ public class MonsterFactoryCampaignTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns(skills);
 
-        var factory = CreateFactory();
 
-        var monsters = factory.GenerateMonsters(level, campaign: true, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: true, roomCount: 10);
 
         var generatedBoss = monsters.Single();
 
         Assert.AreEqual(3, generatedBoss.Skills.OfType<BossSkill>().Count());
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_BossDoesNotReceiveMoreThanThreeBossSkills()
     {
@@ -297,9 +302,8 @@ public class MonsterFactoryCampaignTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns(availableSkills);
 
-        var factory = CreateFactory();
 
-        var monsters = factory.GenerateMonsters(level, campaign: true, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: true, roomCount: 10);
 
         var bossSkills = monsters.Single().Skills.OfType<BossSkill>().ToList();
 
@@ -307,7 +311,7 @@ public class MonsterFactoryCampaignTests
         Assert.IsTrue(bossSkills.Any(s => s.Name == "Dragon Breath"));
         Assert.IsTrue(bossSkills.Any(s => s.Name == "Tail Swipe"));
     }
-    
+
     private static BossSkill CreateBossSkill(string name) =>
         new() { Name = name, RequiredLevel = 1 };
 
@@ -322,10 +326,10 @@ public class MonsterFactoryCampaignTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns(availableSkills);
 
-        var factory = CreateFactory();
-        return factory.GenerateMonsters(level, campaign: true, roomCount: 10);
+
+        return _monsterFactory.GenerateMonsters(level, campaign: true, roomCount: 10);
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_DoesNotAssignSkillsAboveMonsterLevel()
     {
@@ -343,7 +347,7 @@ public class MonsterFactoryCampaignTests
         Assert.IsTrue(monsters.All(m =>
             m.Skills.All(s => s.Name != skill.Name)));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_DoesNotAssignDuplicateSkillNames()
     {
@@ -367,7 +371,7 @@ public class MonsterFactoryCampaignTests
         Assert.IsTrue(monsters.All(m =>
             m.Skills.Count(s => s.Name == "Heal") == 1));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_AssignsClonedSkills()
     {
@@ -392,7 +396,7 @@ public class MonsterFactoryCampaignTests
         Assert.AreEqual(assignedSkills.Count,
             assignedSkills.Distinct(ReferenceEqualityComparer.Instance).Count());
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_InsufficientAvailableSkills_DoesNotThrow()
     {
@@ -411,7 +415,7 @@ public class MonsterFactoryCampaignTests
         Assert.IsTrue(monsters.All(m =>
             m.Skills.Count(s => s.Name == "Heal") == 1));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_NoAvailableSkills_GeneratesSuccessfully()
     {
@@ -432,16 +436,14 @@ public class MonsterFactoryCampaignTests
     [TestMethod]
     public void GenerateMonsters_InvalidLevel_ThrowsArgumentOutOfRangeException()
     {
-        var factory = CreateFactory();
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+            _monsterFactory.GenerateMonsters(0, campaign: true, roomCount: 10));
 
-        Assert.ThrowsException<ArgumentOutOfRangeException>(
-            () => factory.GenerateMonsters(0, campaign: true, roomCount: 10));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+            _monsterFactory.GenerateMonsters(-1, campaign: true, roomCount: 10));
 
-        Assert.ThrowsException<ArgumentOutOfRangeException>(
-            () => factory.GenerateMonsters(-1, campaign: true, roomCount: 10));
-
-        Assert.ThrowsException<ArgumentOutOfRangeException>(
-            () => factory.GenerateMonsters(21, campaign: true, roomCount: 10));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+            _monsterFactory.GenerateMonsters(21, campaign: true, roomCount: 10));
     }
 
     [TestMethod]
@@ -455,14 +457,15 @@ public class MonsterFactoryCampaignTests
         var highMonster = CreateMonster("Troll", level, ThreatLevel.High);
 
         _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Low)).Returns([lowMonster]);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Medium)).Returns([mediumMonster]);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.High)).Returns([highMonster]);
+        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Medium))
+            .Returns([mediumMonster]);
+        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.High))
+            .Returns([highMonster]);
         _skillDaoMock.Setup(s => s.GetUnassignedSkillsByMaxLevel(level)).Returns([]);
 
-        var factory = CreateFactory();
 
         // Act
-        var monsters = factory.GenerateMonsters(level, campaign: true, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: true, roomCount: 10);
 
         // Assert
         Assert.AreEqual(3, monsters.Count(m => m.ThreatLevel == ThreatLevel.Low));
@@ -483,14 +486,15 @@ public class MonsterFactoryCampaignTests
         var highMonster = CreateMonster("Troll", level, ThreatLevel.High);
 
         _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Low)).Returns([lowMonster]);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Medium)).Returns([mediumMonster]);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.High)).Returns([highMonster]);
+        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Medium))
+            .Returns([mediumMonster]);
+        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.High))
+            .Returns([highMonster]);
         _skillDaoMock.Setup(s => s.GetUnassignedSkillsByMaxLevel(level)).Returns([]);
 
-        var factory = CreateFactory();
 
         // Act
-        var monsters = factory.GenerateMonsters(level, campaign: true, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: true, roomCount: 10);
 
         // Assert
         Assert.AreEqual(5, monsters.Count(m => m.ThreatLevel == ThreatLevel.Low));
@@ -511,14 +515,15 @@ public class MonsterFactoryCampaignTests
         var highMonster = CreateMonster("Troll", level, ThreatLevel.High);
 
         _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Low)).Returns([lowMonster]);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Medium)).Returns([mediumMonster]);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.High)).Returns([highMonster]);
+        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Medium))
+            .Returns([mediumMonster]);
+        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.High))
+            .Returns([highMonster]);
         _skillDaoMock.Setup(s => s.GetUnassignedSkillsByMaxLevel(level)).Returns([]);
 
-        var factory = CreateFactory();
 
         // Act
-        var monsters = factory.GenerateMonsters(level, campaign: true, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: true, roomCount: 10);
 
         // Assert
         Assert.AreEqual(6, monsters.Count(m => m.ThreatLevel == ThreatLevel.Low));
@@ -541,15 +546,17 @@ public class MonsterFactoryCampaignTests
         var eliteMonster = CreateMonster("Warlord", level, ThreatLevel.Elite);
 
         _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Low)).Returns([lowMonster]);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Medium)).Returns([mediumMonster]);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.High)).Returns([highMonster]);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Elite)).Returns([eliteMonster]);
+        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Medium))
+            .Returns([mediumMonster]);
+        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.High))
+            .Returns([highMonster]);
+        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Elite))
+            .Returns([eliteMonster]);
         _skillDaoMock.Setup(s => s.GetUnassignedSkillsByMaxLevel(level)).Returns([]);
 
-        var factory = CreateFactory();
 
         // Act
-        var monsters = factory.GenerateMonsters(level, campaign: true, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: true, roomCount: 10);
 
         // Assert
         Assert.AreEqual(10, monsters.Count(m => m.ThreatLevel == ThreatLevel.Low));
@@ -573,16 +580,19 @@ public class MonsterFactoryCampaignTests
         var bossMonster = CreateBossMonster(level);
 
         _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Low)).Returns([lowMonster]);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Medium)).Returns([mediumMonster]);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.High)).Returns([highMonster]);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Elite)).Returns([eliteMonster]);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Boss)).Returns([bossMonster]);
+        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Medium))
+            .Returns([mediumMonster]);
+        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.High))
+            .Returns([highMonster]);
+        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Elite))
+            .Returns([eliteMonster]);
+        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Boss))
+            .Returns([bossMonster]);
         _skillDaoMock.Setup(s => s.GetUnassignedSkillsByMaxLevel(level)).Returns([]);
 
-        var factory = CreateFactory();
 
         // Act
-        var monsters = factory.GenerateMonsters(level, campaign: true, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: true, roomCount: 10);
 
         // Assert
         Assert.AreEqual(8, monsters.Count(m => m.ThreatLevel == ThreatLevel.Low));
@@ -606,16 +616,19 @@ public class MonsterFactoryCampaignTests
         var bossMonster = CreateBossMonster(level);
 
         _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Low)).Returns([lowMonster]);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Medium)).Returns([mediumMonster]);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.High)).Returns([highMonster]);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Elite)).Returns([eliteMonster]);
-        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Boss)).Returns([bossMonster]);
+        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Medium))
+            .Returns([mediumMonster]);
+        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.High))
+            .Returns([highMonster]);
+        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Elite))
+            .Returns([eliteMonster]);
+        _monsterDaoMock.Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(level, ThreatLevel.Boss))
+            .Returns([bossMonster]);
         _skillDaoMock.Setup(s => s.GetUnassignedSkillsByMaxLevel(level)).Returns([]);
 
-        var factory = CreateFactory();
 
         // Act
-        var monsters = factory.GenerateMonsters(level, campaign: true, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: true, roomCount: 10);
 
         // Assert
         Assert.AreEqual(5, monsters.Count(m => m.ThreatLevel == ThreatLevel.Low));
@@ -624,7 +637,7 @@ public class MonsterFactoryCampaignTests
         Assert.AreEqual(3, monsters.Count(m => m.ThreatLevel == ThreatLevel.Elite));
         Assert.AreEqual(1, monsters.Count(m => m.ThreatLevel == ThreatLevel.Boss));
     }
-    
+
     private EliteMonster CreateEliteMonster(int level, params Skill[] skills)
     {
         return new EliteMonster(
@@ -645,35 +658,34 @@ public class MonsterFactoryCampaignTests
             DamageType = DamageType.Martial
         };
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_CampaignMode_Level10GeneratesOnlyBoss()
     {
         // Arrange
         var level = 10;
         var boss = CreateBossMonster(level);
-    
+
         _monsterDaoMock
             .Setup(m => m.GetMonstersByMaxLevelAndThreatLevel(
                 level, ThreatLevel.Boss))
             .Returns([boss]);
-    
+
         _skillDaoMock
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
-    
-        var factory = CreateFactory();
-    
+
+
         // Act
-        var monsters = factory.GenerateMonsters(
+        var monsters = _monsterFactory.GenerateMonsters(
             level, campaign: true, roomCount: 10);
-    
+
         // Assert
         Assert.AreEqual(1, monsters.Count);
         Assert.IsInstanceOfType<BossMonster>(monsters[0]);
         Assert.AreEqual(ThreatLevel.Boss, monsters[0].ThreatLevel);
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_CampaignMode_EliteReceivesOneUltimate()
     {
@@ -715,10 +727,9 @@ public class MonsterFactoryCampaignTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([ultimate]);
 
-        var factory = CreateFactory();
 
         // Act
-        var monsters = factory.GenerateMonsters(
+        var monsters = _monsterFactory.GenerateMonsters(
             level, campaign: true, roomCount: 10);
 
         // Assert
@@ -733,7 +744,7 @@ public class MonsterFactoryCampaignTests
         Assert.AreEqual(1, ultimateSkills.Count);
         Assert.AreEqual("Apocalypse", ultimateSkills[0].Name);
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_CampaignMode_EliteWithExistingUltimateKeepsOne()
     {
@@ -782,10 +793,9 @@ public class MonsterFactoryCampaignTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([additionalUltimate]);
 
-        var factory = CreateFactory();
 
         // Act
-        var monsters = factory.GenerateMonsters(
+        var monsters = _monsterFactory.GenerateMonsters(
             level, campaign: true, roomCount: 10);
 
         // Assert
@@ -800,7 +810,7 @@ public class MonsterFactoryCampaignTests
         Assert.AreEqual(1, ultimateSkills.Count);
         Assert.AreEqual("Inferno", ultimateSkills[0].Name);
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_CampaignMode_NonBossDoesNotReceiveBossSkills()
     {
@@ -819,10 +829,9 @@ public class MonsterFactoryCampaignTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([bossSkill]);
 
-        var factory = CreateFactory();
 
         // Act
-        var monsters = factory.GenerateMonsters(
+        var monsters = _monsterFactory.GenerateMonsters(
             level, campaign: true, roomCount: 10);
 
         // Assert
@@ -831,6 +840,4 @@ public class MonsterFactoryCampaignTests
         Assert.IsTrue(monsters.All(m =>
             m.Skills.All(s => s is not BossSkill)));
     }
-    
-    
 }

@@ -1,7 +1,6 @@
 ﻿using ConsoleGame.Factories;
 using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers;
-using ConsoleGame.Helpers.Interfaces;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using Moq;
@@ -23,6 +22,32 @@ public class MapFactoryTests
         _mapFactory = new MapFactory(
             _roomDaoMock.Object,
             new MapHelper(_randomProvider.Object));
+    }
+
+    [TestMethod]
+    public void GenerateMap_ZeroLevel_ThrowsArgumentOutOfRangeException()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _mapFactory.GenerateMap(0, true, false));
+    }
+    
+    [TestMethod]
+    public void GenerateMap_NegativeLevel_ThrowsArgumentOutOfRangeException()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _mapFactory.GenerateMap(-5, true, false));
+    }
+    
+    [TestMethod]
+    public void GenerateMap_NoEntranceFound_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var throne = new Room { Name = "Throne" };
+        var chamber = new Room { Name = "Chamber" };
+        var rooms = new List<Room> { throne, chamber };
+
+        _roomDaoMock.Setup(d => d.GetAllRooms()).Returns(rooms);
+
+        // Act/Assert
+        Assert.ThrowsException<InvalidOperationException>(() => _mapFactory.GenerateMap(5, true, true));
     }
 
     [TestMethod]
@@ -199,12 +224,12 @@ public class MapFactoryTests
 
         // Act
         var result = _mapFactory.GenerateMap(
-            level: 0,
+            level: 1,
             campaign: true,
             randomMap: false);
 
         // Assert
-        Assert.AreEqual(2, result.Count);
+        Assert.AreEqual(5, result.Count);
         Assert.IsTrue(result.Any(r => r.Name == "Entrance"));
     }
 }

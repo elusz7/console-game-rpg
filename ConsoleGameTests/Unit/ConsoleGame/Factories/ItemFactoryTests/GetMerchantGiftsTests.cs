@@ -31,13 +31,32 @@ public class GetMerchantGiftsTests
 
         _randomProviderMock
             .Setup(r => r.Next(It.IsAny<int>()))
-            .Returns((int max) => 0);
+            .Returns((int _) => 0);
 
         _randomProviderMock
             .Setup(r => r.Next(It.IsAny<int>(), It.IsAny<int>()))
-            .Returns((int min, int max) => min);
+            .Returns((int min, int _) => min);
 
         SetupAvailableItems();
+    }
+    
+    //parameter validation
+    [TestMethod]
+    public void GetMerchantGifts_ZeroLevel_ThrowsArgumentOutOfRangeException()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _factory.GetMerchantGifts(ArchetypeType.Martial, 0));
+    }
+    
+    [TestMethod]
+    public void GetMerchantGifts_NegativeLevel_ThrowsArgumentOutOfRangeException()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _factory.GetMerchantGifts(ArchetypeType.Magical, -5));
+    }
+    
+    [TestMethod]
+    public void GetMerchantGifts_InvalidArchetypeType_ThrowsArgumentOutOfRangeExceptionException()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _factory.GetMerchantGifts((ArchetypeType)999, 5));
     }
 
     // Martial archetype
@@ -46,7 +65,7 @@ public class GetMerchantGiftsTests
     public void GetMerchantGifts_MartialArchetype_ReturnsMartialWeapon()
     {
         SetupAvailableItems(
-            CreateWeapon("Sword", DamageType.Martial),
+            CreateWeapon("Sword"),
             CreateWeapon("Staff", DamageType.Magical));
 
         var gifts = _factory.GetMerchantGifts(ArchetypeType.Martial, 1);
@@ -62,7 +81,7 @@ public class GetMerchantGiftsTests
     public void GetMerchantGifts_MartialArchetype_DoesNotReturnMagicalWeapon()
     {
         SetupAvailableItems(
-            CreateWeapon("Sword", DamageType.Martial),
+            CreateWeapon("Sword"),
             CreateWeapon("Staff", DamageType.Magical));
 
         var gifts = _factory.GetMerchantGifts(ArchetypeType.Martial, 1);
@@ -77,7 +96,7 @@ public class GetMerchantGiftsTests
     public void GetMerchantGifts_MagicalArchetype_ReturnsMagicalWeapon()
     {
         SetupAvailableItems(
-            CreateWeapon("Sword", DamageType.Martial),
+            CreateWeapon("Sword"),
             CreateWeapon("Staff", DamageType.Magical));
 
         var gifts = _factory.GetMerchantGifts(ArchetypeType.Magical, 1);
@@ -93,7 +112,7 @@ public class GetMerchantGiftsTests
     public void GetMerchantGifts_MagicalArchetype_DoesNotReturnMartialWeapon()
     {
         SetupAvailableItems(
-            CreateWeapon("Sword", DamageType.Martial),
+            CreateWeapon("Sword"),
             CreateWeapon("Staff", DamageType.Magical));
 
         var gifts = _factory.GetMerchantGifts(ArchetypeType.Magical, 1);
@@ -132,7 +151,7 @@ public class GetMerchantGiftsTests
     public void GetMerchantGifts_NoArmorAvailable_ReturnsOtherAvailableGifts()
     {
         SetupAvailableItems(
-            CreateWeapon("Sword", DamageType.Martial),
+            CreateWeapon("Sword"),
             CreateConsumable("Health Potion"));
 
         var gifts = _factory.GetMerchantGifts(ArchetypeType.Martial, 1);
@@ -147,7 +166,7 @@ public class GetMerchantGiftsTests
     public void GetMerchantGifts_NoConsumablesAvailable_ReturnsOtherAvailableGifts()
     {
         SetupAvailableItems(
-            CreateWeapon("Sword", DamageType.Martial),
+            CreateWeapon("Sword"),
             CreateArmor("Chestplate"));
 
         var gifts = _factory.GetMerchantGifts(ArchetypeType.Martial, 1);
@@ -162,7 +181,7 @@ public class GetMerchantGiftsTests
     public void GetMerchantGifts_OnlyMatchingWeaponAvailable_ReturnsOneGift()
     {
         SetupAvailableItems(
-            CreateWeapon("Sword", DamageType.Martial));
+            CreateWeapon("Sword"));
 
         var gifts = _factory.GetMerchantGifts(ArchetypeType.Martial, 1);
 
@@ -197,7 +216,7 @@ public class GetMerchantGiftsTests
     [TestMethod]
     public void GetMerchantGifts_ReturnsCreatedItemsWithGeneratedStatsAndValue()
     {
-        var weaponTemplate = CreateWeapon("Sword", DamageType.Martial);
+        var weaponTemplate = CreateWeapon("Sword");
         var armorTemplate = CreateArmor("Chestplate");
         var consumableTemplate = CreateConsumable("Health Potion");
 

@@ -1,7 +1,6 @@
 ﻿using ConsoleGame.Factories.Interfaces;
 using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers.Interfaces;
-using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Factories;
@@ -13,11 +12,15 @@ public class MapFactory(IRoomDao roomDao, IMapHelper mapHelper) : IMapFactory
 
     public List<Room> GenerateMap(int level, bool campaign, bool randomMap)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(level);
+        
         var rooms = (campaign || randomMap)
             ? [.. _roomDao.GetAllRooms().Select(r => r.Clone())]
             : _roomDao.GetAllRooms() /*.Select(r => r.DeepClone())*/.ToList();
 
-        var entrance = rooms.First(r => r.Name.Equals("Entrance", StringComparison.OrdinalIgnoreCase));
+        var entrance = rooms.FirstOrDefault(r => r.Name.Equals("Entrance", StringComparison.OrdinalIgnoreCase))
+                       ?? throw new InvalidOperationException("Cannot generate a map without an entrance");
+        
         var totalRoomsAllowed = Math.Min(level * 3, rooms.Count) + 2;
 
         if (campaign || randomMap)
@@ -27,7 +30,7 @@ public class MapFactory(IRoomDao roomDao, IMapHelper mapHelper) : IMapFactory
         else
         {
             var unconnectedRooms = _mapHelper.FindUnconnectedRooms(entrance, rooms);
-            rooms.RemoveAll(r => unconnectedRooms.Contains(r));
+            rooms.RemoveAll(unconnectedRooms.Contains);
         }
 
         return rooms;

@@ -9,14 +9,12 @@ using Moq;
 namespace ConsoleGameTests.Unit.ConsoleGame.Factories.ItemFactoryTests;
 
 [TestClass]
-public class ItemFactoryGenerateLootTests
+public class GenerateLootTests
 {
     private Mock<IItemDao> _itemDaoMock = null!;
     private Mock<IRandomProvider> _randomProviderMock = null!;
     private ItemFactory _factory = null!;
     
-    public TestContext TestContext { get; set; } = null!;
-
     [TestInitialize]
     public void Setup()
     {
@@ -33,11 +31,11 @@ public class ItemFactoryGenerateLootTests
         
         _randomProviderMock
             .Setup(r => r.Next(It.IsAny<int>()))
-            .Returns((int max) => 0);
+            .Returns((int _) => 0);
         
         _randomProviderMock
             .Setup(r => r.Next(It.IsAny<int>(), It.IsAny<int>()))
-            .Returns((int min, int max) => min);
+            .Returns((int min, int _) => min);
 
         _itemDaoMock
             .Setup(d => d.GetItemsAvailableAtLevel(It.IsAny<int>()))
@@ -299,12 +297,11 @@ public class ItemFactoryGenerateLootTests
 
         _randomProviderMock
             .Setup(r => r.NextDouble())
-            .Returns(() =>
-            {
-                return randomCallCount++ == 0
-                    ? budgetVariance
-                    : 0.5;
-            });
+            // ReSharper disable once AccessToModifiedClosure
+            .Returns(() => randomCallCount++ == 0
+                // ReSharper disable once AccessToModifiedClosure
+                ? budgetVariance
+                : 0.5);
 
         var lowVarianceLoot = _factory.GenerateLoot(1, 20, false);
 
@@ -366,12 +363,6 @@ public class ItemFactoryGenerateLootTests
             .Returns(0);
 
         var loot = _factory.GenerateLoot(10, 2, false);
-
-        foreach (var item in loot)
-        {
-            TestContext.WriteLine(
-                $"{item.Name}: Value={item.Value}, Level={item.RequiredLevel}");
-        }
 
         Assert.AreEqual(2, loot.Count);
         Assert.AreEqual(

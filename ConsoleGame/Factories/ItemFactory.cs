@@ -295,6 +295,8 @@ public class ItemFactory(IItemDao itemDao, IRandomProvider randomProvider) : IIt
 
     public List<Item> CreateMerchantItems(int level)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(level);
+        
         var merchantItems = new List<Item>();
         var availableItems = _itemDao.GetItemsAvailableAtLevel(level).ToList();
 
@@ -357,9 +359,16 @@ public class ItemFactory(IItemDao itemDao, IRandomProvider randomProvider) : IIt
 
     public List<Item> GetMerchantGifts(ArchetypeType type, int level)
     {
-        var availableItems = _itemDao.GetItemsAvailableAtLevel(level).ToList();
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(level);
 
-        var weaponType = type == ArchetypeType.Martial ? DamageType.Martial : DamageType.Magical;
+        var weaponType = type switch
+        {
+            ArchetypeType.Martial => DamageType.Martial,
+            ArchetypeType.Magical => DamageType.Magical,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), "Archtetype type must be Martial or Magical")
+        };
+        
+        var availableItems = _itemDao.GetItemsAvailableAtLevel(level).ToList();
 
         var weapons = availableItems
             .OfType<Weapon>()
@@ -381,7 +390,5 @@ public class ItemFactory(IItemDao itemDao, IRandomProvider randomProvider) : IIt
             gifts.Add(CreateItem(consumables[_randomProvider.Next(consumables.Count)]));
 
         return gifts;
-        
-        //this might not be the method for it, but I would like to add a random weapon or armor common rune and some basic ingredients ?
     }
 }

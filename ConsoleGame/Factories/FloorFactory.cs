@@ -14,6 +14,12 @@ public class FloorFactory(IMapFactory mapFactory, IMonsterFactory monsterFactory
 
     public Floor CreateFloor(int level, bool campaign, bool randomMap)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(level);
+        
+        if (campaign && level > 20)
+            throw new ArgumentOutOfRangeException(
+                nameof(level), "Campaign levels cannot exceed 20.");
+        
         var rooms = _mapFactory.GenerateMap(level, campaign, randomMap);
         var monsters = _monsterFactory.GenerateMonsters(level, campaign, rooms.Count);
         var loot = _itemFactory.GenerateLoot(level, monsters.Count, campaign);

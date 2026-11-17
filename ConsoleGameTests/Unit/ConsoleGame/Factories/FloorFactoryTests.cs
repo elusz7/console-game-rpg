@@ -36,7 +36,7 @@ public class FloorFactoryTests
 
         _randomProviderMock
             .Setup(r => r.Next(It.IsAny<int>(), It.IsAny<int>()))
-            .Returns((int min, int max) => min);
+            .Returns((int min, int _) => min);
 
         _floorFactory = new FloorFactory(
             _mockMapFactory.Object,
@@ -64,6 +64,24 @@ public class FloorFactoryTests
         _mockItemFactory
             .Setup(m => m.GenerateLoot(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<bool>()))
             .Returns(_loot);
+    }
+    
+    [TestMethod]
+    public void CreateFloor_ZeroLevel_ThrowsArgumentOutOfRangeException()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _floorFactory.CreateFloor(0, true, false));
+    }
+
+    [TestMethod]
+    public void CreateFloor_NegativeLevel_ThrowsArgumentOutOfRangeException()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _floorFactory.CreateFloor(-5, true, false));
+    }
+    
+    [TestMethod]
+    public void CreateFloor_Campaign_Level21_ThrowsArgumentOutOfRangeException()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _floorFactory.CreateFloor(21, true, false));
     }
 
     [TestMethod]

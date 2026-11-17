@@ -27,16 +27,13 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skillDao, IMonster
         ElementType.Abyssal
     ];
     
-    const double Tolerance = 0.0001;
-
     // Dictionary to hold the number of monsters for each threat level in each campaign level
     private readonly Dictionary<int, Dictionary<ThreatLevel, int>> _campaignMonsters = Enumerable.Range(1, 20)
         .ToDictionary(level => level, GenerateMonstersForLevel);
 
     public List<Monster> GenerateMonsters(int level, bool campaign, int roomCount)
     {
-        if (level < 1)
-            throw new ArgumentOutOfRangeException(nameof(level));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(level);
         
         if (campaign && level > 20)
             throw new ArgumentOutOfRangeException(
@@ -90,7 +87,8 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skillDao, IMonster
 
             if (availableMonsters.Count == 0)
                 throw new InvalidOperationException(
-                    "No available monsters found for the given level and threat.");
+                    $"No monsters available for campaign level {level} " +
+                    $"with threat level {threatLevel}.");
 
             for (int i = 0; i < monsterCount; i++)
             {
@@ -106,14 +104,11 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skillDao, IMonster
     
    private List<Monster> GenerateRandomMonsters(int level, Dictionary<string, int> nameCounts, int roomCount)
     {
-        if (roomCount < 1)
-            throw new ArgumentOutOfRangeException(nameof(roomCount));
-
         var availableMonsters = _monsterDao.GetNonBossMonstersByMaxLevel(level);
 
         if (availableMonsters.Count == 0)
             throw new InvalidOperationException(
-                "No available monsters found for the given level.");
+               $"No non-boss monsters available for level {level}.");
 
         var targetWeight = level * roomCount * 3.5;
         var maxMonsterCount = roomCount * 2;
@@ -417,7 +412,7 @@ public class MonsterFactory(IMonsterDao monsterDao, ISkillDao skillDao, IMonster
             DamageType.Martial => martialSkills,
             DamageType.Magical => magicSkills,
             DamageType.Hybrid => [.. martialSkills, .. magicSkills],
-            _ => []
+            _ => throw new ArgumentOutOfRangeException(nameof(monster), monster.DamageType, "Unsupported monster damage type.")
         };
 
         AddRandomSkills(usableSkills, deficit, monster, selectedSkills);

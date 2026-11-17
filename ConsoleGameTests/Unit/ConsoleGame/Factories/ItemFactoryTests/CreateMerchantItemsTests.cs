@@ -9,7 +9,7 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 namespace ConsoleGameTests.Unit.ConsoleGame.Factories.ItemFactoryTests;
 
 [TestClass]
-public class ItemFactoryCreateMerchantItemsTests
+public class CreateMerchantItemsTests
 {
     private Mock<IItemDao> _itemDaoMock = null!;
     private Mock<IRandomProvider> _randomProviderMock = null!;
@@ -31,13 +31,26 @@ public class ItemFactoryCreateMerchantItemsTests
 
         _randomProviderMock
             .Setup(r => r.Next(It.IsAny<int>()))
-            .Returns((int max) => 0);
+            .Returns((int _) => 0);
 
         _randomProviderMock
             .Setup(r => r.Next(It.IsAny<int>(), It.IsAny<int>()))
-            .Returns((int min, int max) => min);
+            .Returns((int min, int _) => min);
 
         SetupAvailableItems();
+    }
+    //validate level
+    
+    [TestMethod]
+    public void CreateMerchantItems_ZeroLevel_ThrowsArgumentOutOfRangeException()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _factory.CreateMerchantItems(0));
+    }
+    
+    [TestMethod]
+    public void CreateMerchantItems_NegativeLevel_ThrowsArgumentOutOfRangeException()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _factory.CreateMerchantItems(0));
     }
 
     // Available item categories
@@ -98,9 +111,9 @@ public class ItemFactoryCreateMerchantItemsTests
     {
         SetupAvailableItems(
             CreateConsumable("Health Potion"),
-            CreateWeapon("Sword", DamageType.Martial),
+            CreateWeapon("Sword"),
             CreateWeapon("Staff", DamageType.Magical),
-            CreateWeapon("Dagger", DamageType.Martial),
+            CreateWeapon("Dagger"),
             CreateArmor("Helmet"),
             CreateArmor("Chestplate"),
             CreateArmor("Boots"));
@@ -119,7 +132,7 @@ public class ItemFactoryCreateMerchantItemsTests
     public void CreateMerchantItems_IncludesMartialWeaponWhenAvailable()
     {
         SetupAvailableItems(
-            CreateWeapon("Sword", DamageType.Martial),
+            CreateWeapon("Sword"),
             CreateWeapon("Staff", DamageType.Magical));
 
         var items = _factory.CreateMerchantItems(1);
@@ -132,7 +145,7 @@ public class ItemFactoryCreateMerchantItemsTests
     public void CreateMerchantItems_IncludesMagicalWeaponWhenAvailable()
     {
         SetupAvailableItems(
-            CreateWeapon("Sword", DamageType.Martial),
+            CreateWeapon("Sword"),
             CreateWeapon("Staff", DamageType.Magical));
 
         var items = _factory.CreateMerchantItems(1);
@@ -178,9 +191,9 @@ public class ItemFactoryCreateMerchantItemsTests
     public void CreateMerchantItems_FillsRemainingWeaponSlotsWhenPossible()
     {
         SetupAvailableItems(
-            CreateWeapon("Sword", DamageType.Martial),
-            CreateWeapon("Axe", DamageType.Martial),
-            CreateWeapon("Dagger", DamageType.Martial));
+            CreateWeapon("Sword"),
+            CreateWeapon("Axe"),
+            CreateWeapon("Dagger"));
 
         var weapons = _factory.CreateMerchantItems(1)
             .OfType<Weapon>()

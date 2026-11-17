@@ -15,7 +15,9 @@ public class MonsterFactoryAdventureTests
     private readonly Mock<ISkillDao> _skillDaoMock = new();
     private readonly Mock<IMonsterSkillSelector> _skillSelectorMock = new();
     private readonly Mock<IRandomProvider> _randomProviderMock = new();
-    
+    private MonsterFactory _monsterFactory = null!;
+
+
     private static readonly ElementType[] ValidElements =
     [
         ElementType.Fire,
@@ -26,7 +28,8 @@ public class MonsterFactoryAdventureTests
         ElementType.Abyssal
     ];
 
-    private MonsterFactory CreateFactory()
+    [TestInitialize]
+    public void Setup()
     {
         var elementIndex = 0;
 
@@ -36,16 +39,17 @@ public class MonsterFactoryAdventureTests
 
         _randomProviderMock
             .Setup(r => r.Next(It.IsAny<int>(), It.IsAny<int>()))
-            .Returns((int min, int max) => min);
+            .Returns((int min, int _) => min);
 
-        return new MonsterFactory(
+        _monsterFactory = new MonsterFactory(
             _monsterDaoMock.Object,
             _skillDaoMock.Object,
             _skillSelectorMock.Object,
             _randomProviderMock.Object);
     }
 
-    private static Monster CreateMonster(string name, int level, ThreatLevel threat, DamageType damageType = DamageType.Martial)
+    private static Monster CreateMonster(string name, int level, ThreatLevel threat,
+        DamageType damageType = DamageType.Martial)
     {
         return new Monster
         {
@@ -63,7 +67,7 @@ public class MonsterFactoryAdventureTests
             DamageType = damageType
         };
     }
-    
+
     private EliteMonster CreateEliteMonster(int level, params Skill[] skills)
     {
         return new EliteMonster(
@@ -85,6 +89,18 @@ public class MonsterFactoryAdventureTests
     }
 
     [TestMethod]
+    public void GenerateMonsters_ZeroLevel_ThrowsArgumentOutOfRangeException()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _monsterFactory.GenerateMonsters(0, false, 10));
+    }
+
+    [TestMethod]
+    public void GenerateMonsters_NegativeLevel_ThrowsArgumentOutOfRangeException()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _monsterFactory.GenerateMonsters(-5, false, 10));
+    }
+
+    [TestMethod]
     public void GenerateMonsters_NonCampaignMode_GeneratesAvailableMonsters()
     {
         // Arrange
@@ -95,17 +111,14 @@ public class MonsterFactoryAdventureTests
             monster1
         };
 
-
         _monsterDaoMock.Setup(m => m.GetNonBossMonstersByMaxLevel(level))
             .Returns(availableMonsters);
 
         _skillDaoMock.Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
 
-        var factory = CreateFactory(); // make sure this uses _monsterDaoMock.Object
-
         // Act
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         // Assert
         Assert.IsTrue(monsters.Count > 0);
@@ -124,7 +137,8 @@ public class MonsterFactoryAdventureTests
             {
                 Assert.IsTrue(monster.AttackElement.HasValue);
                 Assert.IsTrue(ValidElements.Contains(monster.AttackElement.Value));
-                var expectedPower = Math.Max(1, (int)Math.Round(monster.AttackPower * 0.15, MidpointRounding.AwayFromZero));
+                var expectedPower = Math.Max(1,
+                    (int)Math.Round(monster.AttackPower * 0.15, MidpointRounding.AwayFromZero));
                 Assert.AreEqual(expectedPower, monster.ElementalPower,
                     $"ElementalPower {monster.ElementalPower} should be {expectedPower} for AttackPower {monster.AttackPower}");
 
@@ -153,7 +167,6 @@ public class MonsterFactoryAdventureTests
         }
     }
 
-
     [TestMethod]
     public void GenerateMonsters_NonCampaignMode_ThrowsIfNoMonsters()
     {
@@ -163,10 +176,9 @@ public class MonsterFactoryAdventureTests
             .Returns([]);
         _skillDaoMock.Setup(s => s.GetUnassignedSkillsByMaxLevel(level)).Returns([]);
 
-        var factory = CreateFactory();
-
         // Act & Assert
-        Assert.ThrowsException<InvalidOperationException>(() => factory.GenerateMonsters(level, campaign: false, roomCount: 10));
+        Assert.ThrowsException<InvalidOperationException>(() =>
+            _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10));
     }
 
     [TestMethod]
@@ -188,9 +200,7 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([skill]);
 
-        var factory = CreateFactory();
-
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         Assert.IsTrue(monsters.Count > 0);
         Assert.IsTrue(monsters.All(m =>
@@ -200,7 +210,7 @@ public class MonsterFactoryAdventureTests
         Assert.IsFalse(monsters.Any(m =>
             m.Skills.Any(s => ReferenceEquals(s, skill))));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_AssignsValidAttackElement()
     {
@@ -215,15 +225,13 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
 
-        var factory = CreateFactory();
-
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         Assert.IsTrue(monsters.All(m =>
             m.AttackElement.HasValue &&
             ValidElements.Contains(m.AttackElement.Value)));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_AssignsValidVulnerability()
     {
@@ -238,15 +246,13 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
 
-        var factory = CreateFactory();
-
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         Assert.IsTrue(monsters.All(m =>
             m.Vulnerability.HasValue &&
             ValidElements.Contains(m.Vulnerability.Value)));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_AssignsValidResilience()
     {
@@ -261,15 +267,13 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
 
-        var factory = CreateFactory();
-
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         Assert.IsTrue(monsters.All(m =>
             m.Resilience.HasValue &&
             ValidElements.Contains(m.Resilience.Value)));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_AttackElementAndVulnerabilityAreDifferent()
     {
@@ -284,14 +288,12 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
 
-        var factory = CreateFactory();
-
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         Assert.IsTrue(monsters.All(m =>
             m.AttackElement != m.Vulnerability));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_ResilienceElementAndVulnerabilityAreDifferent()
     {
@@ -306,14 +308,13 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
 
-        var factory = CreateFactory();
 
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         Assert.IsTrue(monsters.All(m =>
             m.Resilience != m.Vulnerability));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_AssignsValidElementalPower()
     {
@@ -328,9 +329,8 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
 
-        var factory = CreateFactory();
 
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         Assert.IsTrue(monsters.All(m =>
             m.ElementalPower.HasValue &&
@@ -340,7 +340,7 @@ public class MonsterFactoryAdventureTests
                     m.AttackPower * 0.15,
                     MidpointRounding.AwayFromZero))));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_LowThreat_HasNoElementalProperties()
     {
@@ -355,9 +355,8 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
 
-        var factory = CreateFactory();
 
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         Assert.IsTrue(monsters.All(m =>
             !m.AttackElement.HasValue &&
@@ -365,7 +364,7 @@ public class MonsterFactoryAdventureTests
             !m.Vulnerability.HasValue &&
             !m.Resilience.HasValue));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_MediumThreat_HasNoVulnerabilityOrResilience()
     {
@@ -380,17 +379,13 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
 
-        var factory = CreateFactory();
 
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         Assert.IsTrue(monsters.All(m =>
-            m.AttackElement.HasValue &&
-            m.ElementalPower.HasValue &&
-            !m.Vulnerability.HasValue &&
-            !m.Resilience.HasValue));
+            m is { AttackElement: not null, ElementalPower: not null, Vulnerability: null, Resilience: null }));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_HighThreat_HasNoResilience()
     {
@@ -405,23 +400,19 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
 
-        var factory = CreateFactory();
 
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         Assert.IsTrue(monsters.All(m =>
-            m.AttackElement.HasValue &&
-            m.ElementalPower.HasValue &&
-            m.Vulnerability.HasValue &&
-            !m.Resilience.HasValue));
+            m is { AttackElement: not null, ElementalPower: not null, Vulnerability: not null, Resilience: null }));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_MartialMonsterReceivesMartialSkills()
     {
         var level = 2;
         var monster = CreateMonster(
-            "Goblin", level, ThreatLevel.Medium, DamageType.Martial);
+            "Goblin", level, ThreatLevel.Medium);
 
         var martialSkill = new MartialSkill
         {
@@ -443,9 +434,8 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([martialSkill, magicSkill]);
 
-        var factory = CreateFactory();
 
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         Assert.IsTrue(monsters.All(m =>
             m.Skills.OfType<MartialSkill>().Any()));
@@ -453,7 +443,7 @@ public class MonsterFactoryAdventureTests
         Assert.IsFalse(monsters.Any(m =>
             m.Skills.OfType<MagicSkill>().Any()));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_MagicalMonsterReceivesMagicSkills()
     {
@@ -481,9 +471,8 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([martialSkill, magicSkill]);
 
-        var factory = CreateFactory();
 
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         Assert.IsTrue(monsters.All(m =>
             m.Skills.OfType<MagicSkill>().Any()));
@@ -491,7 +480,7 @@ public class MonsterFactoryAdventureTests
         Assert.IsFalse(monsters.Any(m =>
             m.Skills.OfType<MartialSkill>().Any()));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_HybridMonsterReceivesAttackSkills()
     {
@@ -515,14 +504,13 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns(skills);
 
-        var factory = CreateFactory();
 
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         Assert.IsTrue(monsters.All(m =>
             m.Skills.Any(s => s is MartialSkill || s is MagicSkill)));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_DoesNotAssignAttackSkillsToUnsupportedDamageType()
     {
@@ -543,18 +531,14 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns(skills);
 
-        var factory = CreateFactory();
 
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
-
-        Assert.IsFalse(monsters
-            .SelectMany(m => m.Skills)
-            .Any(s => s is MartialSkill || s is MagicSkill));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+            _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10));
     }
-    
+
     private static UltimateSkill CreateUltimateSkill(string name) =>
         new() { Name = name, RequiredLevel = 1 };
-    
+
     [TestMethod]
     public void GenerateMonsters_EliteWithoutUltimateReceivesUltimateSkill()
     {
@@ -571,20 +555,19 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([ultimate]);
 
-        var factory = CreateFactory();
 
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         Assert.IsTrue(monsters.All(m =>
             m.Skills.OfType<UltimateSkill>().Count() == 1));
-        
+
         var generatedElite = monsters.OfType<EliteMonster>().Single();
 
         Assert.AreEqual(
             1,
             generatedElite.Skills.OfType<UltimateSkill>().Count());
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_EliteWithOneUltimateDoesNotReceiveAnother()
     {
@@ -603,9 +586,8 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([availableUltimate]);
 
-        var factory = CreateFactory();
 
-        var monsters = factory.GenerateMonsters(
+        var monsters = _monsterFactory.GenerateMonsters(
             level, campaign: false, roomCount: 10);
 
         var generatedElite = monsters.OfType<EliteMonster>().Single();
@@ -617,7 +599,7 @@ public class MonsterFactoryAdventureTests
         Assert.AreEqual(1, ultimateSkills.Count);
         Assert.AreEqual("Apocalypse", ultimateSkills[0].Name);
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_EliteWithTwoUltimatesDoesNotReceiveAnother()
     {
@@ -638,14 +620,13 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([availableUltimate]);
 
-        var factory = CreateFactory();
 
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         Assert.IsTrue(monsters.All(m =>
             m.Skills.OfType<UltimateSkill>().Count() == 2));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_NonEliteDoesNotReceiveUltimateSkills()
     {
@@ -662,20 +643,19 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([ultimate]);
 
-        var factory = CreateFactory();
 
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         Assert.IsTrue(monsters.All(m =>
             !m.Skills.OfType<UltimateSkill>().Any()));
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_ElementalPowerIs15PercentOfAttackPower()
     {
         // Arrange
         var level = 20;
-        var factory = CreateFactory();
+
 
         var attackPowers = new[] { 10, 20, 50, 100 };
         var expectedPowers = new List<int>();
@@ -693,7 +673,7 @@ public class MonsterFactoryAdventureTests
                 .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
                 .Returns([]);
 
-            var generated = factory.GenerateMonsters(
+            var generated = _monsterFactory.GenerateMonsters(
                 level, campaign: false, roomCount: 10);
 
             var expectedPower = Math.Max(
@@ -734,14 +714,14 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
 
-        var factory = CreateFactory();
-        var monsters = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+
+        var monsters = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         // Act & Assert: Even with very low AttackPower, ElementalPower should be at least 1
         Assert.IsTrue(monsters.All(m => m.ElementalPower!.Value == 1),
             "ElementalPower should be at least 1 for low-level monsters with elemental properties");
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_AttackElementCanEqualResilience()
     {
@@ -774,16 +754,10 @@ public class MonsterFactoryAdventureTests
 
         _randomProviderMock
             .Setup(r => r.Next(It.IsAny<int>(), It.IsAny<int>()))
-            .Returns((int min, int max) => min);
-
-        var factory = new MonsterFactory(
-            _monsterDaoMock.Object,
-            _skillDaoMock.Object,
-            _skillSelectorMock.Object,
-            _randomProviderMock.Object);
-
+            .Returns((int min, int _) => min);
+        
         // Act
-        var generated = factory.GenerateMonsters(
+        var generated = _monsterFactory.GenerateMonsters(
             level, campaign: false, roomCount: 1);
 
         // Assert
@@ -818,11 +792,10 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
 
-        var factory = CreateFactory();
 
         // Act: Generate two batches, each should have independent clones of the base skill
-        var firstBatch = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
-        var secondBatch = factory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var firstBatch = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
+        var secondBatch = _monsterFactory.GenerateMonsters(level, campaign: false, roomCount: 10);
 
         var firstBaseSkills = firstBatch.SelectMany(m => m.Skills)
             .Where(s => s.Name == "Regenerate").ToList();
@@ -842,7 +815,7 @@ public class MonsterFactoryAdventureTests
                 "Clones from different batches should be independent references");
         }
     }
-    
+
     [TestMethod]
     public void GenerateMonsters_DoesNotExceedTwiceTheRoomCount()
     {
@@ -859,16 +832,15 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
 
-        var factory = CreateFactory();
 
         // Act
-        var generated = factory.GenerateMonsters(
+        var generated = _monsterFactory.GenerateMonsters(
             level, campaign: false, roomCount);
 
         // Assert
         Assert.AreEqual(roomCount * 2, generated.Count);
     }
-    
+
     [DataTestMethod]
     [DataRow(1, 1)]
     [DataRow(9, 1)]
@@ -890,10 +862,9 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
 
-        var factory = CreateFactory();
 
         // Act
-        var generated = factory.GenerateMonsters(
+        var generated = _monsterFactory.GenerateMonsters(
             level, campaign: false, roomCount);
 
         // Assert
@@ -903,8 +874,8 @@ public class MonsterFactoryAdventureTests
 
         Assert.AreEqual(expectedEliteCount, generated.Count);
     }
-    
-    
+
+
     [TestMethod]
     public void GenerateMonsters_StopsWhenNoCandidateFitsRemainingBudget()
     {
@@ -926,10 +897,9 @@ public class MonsterFactoryAdventureTests
             .Setup(s => s.GetUnassignedSkillsByMaxLevel(level))
             .Returns([]);
 
-        var factory = CreateFactory();
 
         // Act
-        var generated = factory.GenerateMonsters(
+        var generated = _monsterFactory.GenerateMonsters(
             level, campaign: false, roomCount);
 
         // Assert
