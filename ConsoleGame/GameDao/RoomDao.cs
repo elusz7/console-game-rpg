@@ -33,6 +33,10 @@ public class RoomDao(GameContext context) : IRoomDao
 
     public void DeleteRoom(Room room)
     {
+        if (room.IsCore)
+            throw new InvalidOperationException(
+                "Core game rooms cannot be deleted.");
+
         _context.Rooms.Remove(room);
         _context.SaveChanges();
     }
@@ -57,7 +61,9 @@ public class RoomDao(GameContext context) : IRoomDao
 
     public Room GetEntrance()
     {
-        return _context.Rooms.First(r => r.Id == 1) ?? throw new InvalidOperationException("Entrance room not found.");
+        return _context.Rooms.FirstOrDefault(r => r.Id == 1)
+               ?? throw new InvalidOperationException(
+                   "Entrance room not found.");
     }
 
     public List<Room> GetAllEditableRooms()

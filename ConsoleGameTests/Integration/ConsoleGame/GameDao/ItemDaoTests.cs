@@ -77,7 +77,7 @@ public class ItemDaoTests
 
         _context.ChangeTracker.Clear();
 
-        var result = _context.Items!.Single(i => i.Name == "Test Item");
+        var result = _context.Items.Single(i => i.Name == "Test Item");
 
         // Assert
         Assert.AreNotEqual(0, result.Id);
@@ -99,7 +99,7 @@ public class ItemDaoTests
         _itemDao.AddItem(weapon);
         _context.ChangeTracker.Clear();
 
-        var result = _context.Items!.OfType<Weapon>()
+        var result = _context.Items.OfType<Weapon>()
             .Single(i => i.Name == "Test Weapon");
 
         // Assert
@@ -117,13 +117,13 @@ public class ItemDaoTests
     public void AddItem_PersistsArmorWithArmorProperties()
     {
         // Arrange
-        var armor = CreateItem("Test Armor", 3, 20, TestItemType.Armor, ArmorType.Head);
+        var armor = CreateItem("Test Armor", 3, 20, TestItemType.Armor);
 
         // Act
         _itemDao.AddItem(armor);
         _context.ChangeTracker.Clear();
 
-        var result = _context.Items!.OfType<Armor>()
+        var result = _context.Items.OfType<Armor>()
             .Single(i => i.Name == "Test Armor");
 
         // Assert
@@ -150,7 +150,7 @@ public class ItemDaoTests
 
         _context.ChangeTracker.Clear();
 
-        var result = _context.Items!.OfType<Consumable>()
+        var result = _context.Items.OfType<Consumable>()
             .Single(i => i.Name == "Test Consumable");
 
         // Assert
@@ -174,7 +174,7 @@ public class ItemDaoTests
         _itemDao.AddItem(valuable);
         _context.ChangeTracker.Clear();
 
-        var result = _context.Items!.OfType<Valuable>()
+        var result = _context.Items.OfType<Valuable>()
             .Single(i => i.Name == "Test Valuable");
 
         // Assert
@@ -204,7 +204,7 @@ public class ItemDaoTests
         _itemDao.UpdateItem(item);
         _context.ChangeTracker.Clear();
 
-        var result = _context.Items!.Single(i => i.Id == item.Id);
+        var result = _context.Items.Single(i => i.Id == item.Id);
 
         // Assert
         Assert.AreEqual("Updated Item", result.Name);
@@ -231,7 +231,7 @@ public class ItemDaoTests
         _itemDao.UpdateItem(weapon);
         _context.ChangeTracker.Clear();
 
-        var result = _context.Items!.OfType<Weapon>()
+        var result = _context.Items.OfType<Weapon>()
             .Single(i => i.Id == weapon.Id);
 
         // Assert
@@ -257,7 +257,7 @@ public class ItemDaoTests
         _itemDao.UpdateItem(armor);
         _context.ChangeTracker.Clear();
 
-        var result = _context.Items!.OfType<Armor>()
+        var result = _context.Items.OfType<Armor>()
             .Single(i => i.Id == armor.Id);
 
         // Assert
@@ -283,7 +283,7 @@ public class ItemDaoTests
         _itemDao.UpdateItem(consumable);
         _context.ChangeTracker.Clear();
 
-        var result = _context.Items!.OfType<Consumable>()
+        var result = _context.Items.OfType<Consumable>()
             .Single(i => i.Id == consumable.Id);
 
         // Assert
@@ -309,7 +309,7 @@ public class ItemDaoTests
         _itemDao.UpdateItem(valuable);
         _context.ChangeTracker.Clear();
 
-        var result = _context.Items!.OfType<Valuable>()
+        var result = _context.Items.OfType<Valuable>()
             .Single(i => i.Id == valuable.Id);
 
         // Assert
@@ -334,7 +334,7 @@ public class ItemDaoTests
         _itemDao.UpdateItem(item);
         _context.ChangeTracker.Clear();
 
-        var result = _context.Items!.Single(i => i.Id == item.Id);
+        var result = _context.Items.Single(i => i.Id == item.Id);
 
         // Assert
         Assert.IsTrue(result.IsCore);
@@ -353,7 +353,7 @@ public class ItemDaoTests
         _itemDao.DeleteItem(item);
 
         // Assert
-        Assert.IsFalse(_context.Items!.Any(i => i.Id == itemId));
+        Assert.IsFalse(_context.Items.Any(i => i.Id == itemId));
     }
 
     [TestMethod]
@@ -374,7 +374,7 @@ public class ItemDaoTests
 
         _context.ChangeTracker.Clear();
 
-        var result = _context.Items!.SingleOrDefault(i => i.Id == itemId);
+        var result = _context.Items.SingleOrDefault(i => i.Id == itemId);
 
         // Assert
         Assert.IsNotNull(result);
@@ -437,7 +437,7 @@ public class ItemDaoTests
         var item = CreateItem("Iron Sword", 1, 10, TestItemType.Weapon);
         inventory.AddItem(item);
 
-        _context.Players!.Add(player);
+        _context.Players.Add(player);
         _context.SaveChanges();
 
         _context.ChangeTracker.Clear();
@@ -537,7 +537,7 @@ public class ItemDaoTests
         var item = CreateItem("Iron Sword", 1, 10, TestItemType.Weapon);
 
         inventory.AddItem(item);
-        _context.Players!.Add(player);
+        _context.Players.Add(player);
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
 
@@ -653,7 +653,7 @@ public class ItemDaoTests
         var item = CreateItem("Iron Sword", 1, 10, TestItemType.Weapon);
 
         inventory.AddItem(item);
-        _context.Players!.Add(player);
+        _context.Players.Add(player);
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
 
@@ -974,17 +974,17 @@ public class ItemDaoTests
     }
 
     [TestMethod]
-    public void GetItemsByType_ReturnsEmptyListForInvalidType()
+    public void GetItemsByType_InvalidType_ThrowsArgumentOutOfRangeException()
     {
         // Arrange
-        _itemDao.AddItem(CreateItem("Iron Sword", 1, 10, TestItemType.Weapon));
-        _itemDao.AddItem(CreateItem("Iron Armor", 1, 10, TestItemType.Armor));
+        var invalidType = (ItemType)999;
 
-        // Act
-        var result = _itemDao.GetItemsByType((ItemType)999);
+        // Act & Assert
+        var exception = Assert.ThrowsException<ArgumentOutOfRangeException>(
+            () => _itemDao.GetItemsByType(invalidType));
 
-        // Assert
-        Assert.AreEqual(0, result.Count);
+        Assert.IsTrue(exception.ParamName == "type");
+        Assert.AreEqual(invalidType, exception.ActualValue);
     }
 
     [TestMethod]
@@ -997,7 +997,7 @@ public class ItemDaoTests
         var item = CreateItem("Iron Sword", 1, 10, TestItemType.Weapon);
 
         inventory.AddItem(item);
-        _context.Players!.Add(player);
+        _context.Players.Add(player);
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
 

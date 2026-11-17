@@ -85,7 +85,7 @@ public class RuneDao(GameContext context) : IRuneDao
         {
             //If a player already has 2, the quantity is 3, now they have 5
             //No overwriting
-            inventoryRune.Quantity += quantity; 
+            inventoryRune.Quantity = checked(inventoryRune.Quantity + quantity); 
         }
         else
         {

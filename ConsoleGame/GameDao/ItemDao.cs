@@ -62,7 +62,6 @@ public class ItemDao(GameContext context) : IItemDao
 
     public List<Item> GetAllNonCoreItems()
     {
-        if (_context.Items == null) throw new InvalidOperationException("Items collection is null.");
         var query = _context.Items
             .Where(i => !i.IsCore);
 
@@ -83,12 +82,9 @@ public class ItemDao(GameContext context) : IItemDao
 
     public List<Item> GetItemsByType(ItemType type)
     {
-        if (_context.Items == null)
-            throw new InvalidOperationException("Items collection is null.");
-
         var ascending = SortOrder == "ASC";
 
-        var query = type switch
+        IQueryable<Item> query = type switch
         {
             ItemType.Weapon => ascending
                 ? _context.Items.OfType<Weapon>().OrderBy(w => w.AttackPower)
@@ -106,7 +102,7 @@ public class ItemDao(GameContext context) : IItemDao
                 ? _context.Items.OfType<Consumable>().OrderBy(c => c.Power)
                 : _context.Items.OfType<Consumable>().OrderByDescending(c => c.Power),
 
-            _ => Enumerable.Empty<Item>().AsQueryable()
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported item type.")
         };
 
         return

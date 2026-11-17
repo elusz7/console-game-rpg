@@ -188,6 +188,35 @@ public class RuneDaoTests
         Assert.ThrowsException<ArgumentOutOfRangeException>(
             () => _runeDao.AddRuneToPlayer(rune.Id, player.Id, 0));
     }
+
+    [TestMethod]
+    public void AddRuneToPlayer_QuantityOverflow_ThrowsOverflowException()
+    {
+        // Arrange
+        var player = CreateAndSavePlayer("RuneTestPlayer");
+        var rune = CreateRune("Ember Rune", 5, ElementType.Fire, RarityLevel.Rare, TestRuneType.Armor);
+
+        _context.Runes.Add(rune);
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+        
+        _runeDao.AddRuneToPlayer(rune.Id, player.Id, 1, int.MaxValue);
+        _context.ChangeTracker.Clear();
+        
+        //Act/Assert
+        Assert.ThrowsException<OverflowException>(
+            () => _runeDao.AddRuneToPlayer(rune.Id, player.Id, 1, 5));
+        
+        _context.ChangeTracker.Clear();
+
+        var persistedQuantity = _context.InventoryRunes
+            .Single(ii =>
+                ii.Inventory.PlayerId == player.Id &&
+                ii.RuneId == rune.Id)
+            .Quantity;
+
+        Assert.AreEqual(int.MaxValue, persistedQuantity);
+    }
     
     [TestMethod]
     public void AddRuneToPlayer_DefaultQuantity_AddsRuneToInventory()

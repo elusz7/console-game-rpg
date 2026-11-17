@@ -25,6 +25,10 @@ public class SkillDao(GameContext context) : ISkillDao
 
     public void DeleteSkill(Skill skill)
     {
+        if (skill.IsCore)
+            throw new InvalidOperationException(
+                "Core game skills cannot be deleted.");
+
         _context.Skills.Remove(skill);
         _context.SaveChanges();
     }

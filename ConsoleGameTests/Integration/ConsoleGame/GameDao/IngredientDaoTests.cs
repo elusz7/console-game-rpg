@@ -164,6 +164,33 @@ public class IngredientDaoTests
     }
 
     [TestMethod]
+    public void AddIngredientToPlayer_QuantityOverflow_ThrowsOverflowException()
+    {
+        var player = CreateAndSavePlayer("Test Player");
+        var ingredient = CreateIngredient("Test Ingredient", ComponentType.MonsterPart);
+
+        _context.Ingredients.Add(ingredient);
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+
+        _ingredientDao.AddIngredientToPlayer(ingredient.Id, player.Id, int.MaxValue);
+        _context.ChangeTracker.Clear();
+        
+        Assert.ThrowsException<OverflowException>(() =>
+            _ingredientDao.AddIngredientToPlayer(ingredient.Id, player.Id, 5));
+        
+        _context.ChangeTracker.Clear();
+
+        var persistedQuantity = _context.InventoryIngredients
+            .Single(ii =>
+                ii.Inventory.PlayerId == player.Id &&
+                ii.IngredientId == ingredient.Id)
+            .Quantity;
+
+        Assert.AreEqual(int.MaxValue, persistedQuantity);
+    }
+
+    [TestMethod]
     public void AddIngredientToPlayer_AddsIngredient_WhenPlayerDoesNotOwnIt()
     {
         var player = CreateAndSavePlayer("Test Player");

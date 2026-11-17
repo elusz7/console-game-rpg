@@ -363,6 +363,7 @@ public class RoomDaoTests
     {
         // Arrange
         var room = CreateRoom();
+        room.IsCore = false;
         _roomDao.AddRoom(room);
 
         // Act
@@ -376,6 +377,24 @@ public class RoomDaoTests
         Assert.IsNull(persistedRoom);
     }
 
+    [TestMethod]
+    public void DeleteRoom_DoesNotDeleteCoreRoom()
+    {
+        var room = CreateRoom("Core Room");
+        room.IsCore = true;
+        _roomDao.AddRoom(room);
+
+        Assert.ThrowsException<InvalidOperationException>(
+            () => _roomDao.DeleteRoom(room));
+
+        _context.ChangeTracker.Clear();
+
+        var dbRoom = _roomDao.FindRoomByName(room.Name);
+
+        Assert.IsNotNull(dbRoom);
+        Assert.IsTrue(dbRoom.IsCore);
+    }
+    
     [TestMethod]
     public void DeleteRoom_DoesNotRemoveOtherRooms()
     {

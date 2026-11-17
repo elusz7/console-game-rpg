@@ -414,6 +414,7 @@ public class SkillDaoTests
     {
         // Arrange
         var skill = CreateSkill("Test Skill", TestSkillType.Martial);
+        skill.IsCore = false;
         _skillDao.AddSkill(skill);
 
         var skillId = skill.Id;
@@ -428,6 +429,25 @@ public class SkillDaoTests
 
         // Assert
         Assert.IsNull(persistedSkill);
+    }
+    
+    [TestMethod]
+    public void DeleteSkill_DoesNotRemoveCoreSkill()
+    {
+        // Arrange
+        var skill = CreateSkill("Core Skill", TestSkillType.Martial);
+        skill.IsCore = true;
+        _skillDao.AddSkill(skill);
+
+        var skillId = skill.Id;
+        _context.ChangeTracker.Clear();
+
+        // Act
+        Assert.ThrowsException<InvalidOperationException>(() => _skillDao.DeleteSkill(skill));        
+
+        var persistedSkill = _context.Skills.SingleOrDefault(s => s.Id == skillId);        
+        Assert.IsNotNull(persistedSkill);
+        Assert.IsTrue(persistedSkill.IsCore);
     }
 
     [TestMethod]

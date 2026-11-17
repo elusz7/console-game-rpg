@@ -140,6 +140,42 @@ public class PlayerDaoTests
         Assert.AreEqual(5, result.Level);
         Assert.AreEqual(75, result.MaxHealth);
     }
+    
+    [TestMethod]
+    public void UpdatePlayer_DetachedPlayer_DoesNotPersistChanges()
+    {
+        // Arrange
+        var archetype = CreateArchetype("Warrior", ArchetypeType.Martial);
+        var inventory = CreateInventory(100);
+        var player = CreatePlayer("TestPlayer", archetype, inventory);
+
+        _playerDao.AddPlayer(player);
+
+        var playerId = player.Id;
+
+        _context.ChangeTracker.Clear();
+
+        var detachedPlayer = _playerDao.GetPlayerByIdNoTracking(playerId);
+        Assert.IsNotNull(detachedPlayer);
+
+        var originalLevel = detachedPlayer.Level;
+        var originalMaxHealth = detachedPlayer.MaxHealth;
+
+        // Act
+        detachedPlayer.Level = 5;
+        detachedPlayer.MaxHealth = 75;
+
+        _playerDao.UpdatePlayer(detachedPlayer);
+
+        _context.ChangeTracker.Clear();
+
+        var persistedPlayer = _context.Players
+            .Single(p => p.Id == playerId);
+
+        // Assert
+        Assert.AreEqual(originalLevel, persistedPlayer.Level);
+        Assert.AreEqual(originalMaxHealth, persistedPlayer.MaxHealth);
+    }
 
     [TestMethod]
     public void UpdatePlayer_PersistsTrackedInventoryChanges()

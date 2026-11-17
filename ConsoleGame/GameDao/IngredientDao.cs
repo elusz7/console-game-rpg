@@ -69,7 +69,7 @@ public class IngredientDao(GameContext context) : IIngredientDao
 
         if (inventoryIngredient != null)
         {
-            inventoryIngredient.Quantity += quantity;
+            inventoryIngredient.Quantity = checked(inventoryIngredient.Quantity + quantity);
         }
         else
         {
