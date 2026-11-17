@@ -1,5 +1,7 @@
 ﻿using ConsoleGame.Helpers;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
+using Moq;
 
 namespace ConsoleGameTests.Unit.ConsoleGame.Helpers.MapHelperTests;
 
@@ -7,11 +9,13 @@ namespace ConsoleGameTests.Unit.ConsoleGame.Helpers.MapHelperTests;
 public class MapHelperAvailableDirectionsTests
 {
     private MapHelper _mapHelper = null!;
+    private Mock<IRandomProvider> _randomProvider = null!;
 
     [TestInitialize]
     public void TestInitialize()
     {
-        _mapHelper = new MapHelper();
+        _randomProvider = new Mock<IRandomProvider>();
+        _mapHelper = new MapHelper(_randomProvider.Object);
     }
 
     private static Room CreateRoom(string name, int id = 0)

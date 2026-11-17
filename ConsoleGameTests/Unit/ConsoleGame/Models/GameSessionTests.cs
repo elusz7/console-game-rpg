@@ -1,12 +1,18 @@
-﻿using ConsoleGame.Models;
+﻿using ConsoleGame.Factories.Interfaces;
+using ConsoleGame.Models;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
+using Moq;
 
 namespace ConsoleGameTests.Unit.ConsoleGame.Models;
 
 [TestClass]
 public class GameSessionTests
 {
+    private Mock<IItemFactory> _itemFactory = new();
+    private Mock<IRandomProvider> _randomProvider = new();
+    
     // Creates a player with the dependencies required by Player.Initialize().
     private static Player CreatePlayer()
     {
@@ -31,7 +37,7 @@ public class GameSessionTests
     public void IsFloorCleared_WhenLivingMonsterExists_ReturnsFalse()
     {
         // Arrange
-        var floor = new Floor();
+        var floor = new Floor(_itemFactory.Object, _randomProvider.Object);
 
         // Add a living monster to the floor.
         floor.Monsters.Add(new Monster
@@ -53,7 +59,7 @@ public class GameSessionTests
     public void IsFloorCleared_WhenNoLivingMonstersExist_ReturnsTrue()
     {
         // Arrange
-        var floor = new Floor();
+        var floor = new Floor(_itemFactory.Object, _randomProvider.Object);
 
         // Add a defeated monster to confirm dead monsters don't prevent completion.
         floor.Monsters.Add(new Monster
@@ -77,7 +83,7 @@ public class GameSessionTests
     {
         // Arrange
         var player = CreatePlayer();
-        var floor = new Floor();
+        var floor = new Floor(_itemFactory.Object, _randomProvider.Object);
 
         // Act
         var session = new GameSession(player, floor, false);
@@ -90,7 +96,8 @@ public class GameSessionTests
     public void End_WithQuit_SetsStatusToQuit()
     {
         // Arrange
-        var session = new GameSession(CreatePlayer(), new Floor(), false);
+        var floor = new Floor(_itemFactory.Object, _randomProvider.Object);
+        var session = new GameSession(CreatePlayer(), floor, false);
 
         // Act
         session.End(AdventureStatus.Quit);
@@ -103,7 +110,8 @@ public class GameSessionTests
     public void End_WithPlayerDead_SetsStatusToPlayerDead()
     {
         // Arrange
-        var session = new GameSession(CreatePlayer(), new Floor(), false);
+        var floor = new Floor(_itemFactory.Object, _randomProvider.Object);
+        var session = new GameSession(CreatePlayer(), floor, false);
 
         // Act
         session.End(AdventureStatus.PlayerDead);
@@ -117,7 +125,8 @@ public class GameSessionTests
     )
     {
         // Arrange
-        var session = new GameSession(CreatePlayer(), new Floor(), false);
+        var floor = new Floor(_itemFactory.Object, _randomProvider.Object);
+        var session = new GameSession(CreatePlayer(), floor, false);
 
         // Act and Assert
         Assert.ThrowsException<ArgumentException>(() => session.End(AdventureStatus.Running));

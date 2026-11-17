@@ -1,25 +1,27 @@
 ﻿using ConsoleGame.Factories.Interfaces;
 using ConsoleGame.GameDao.Interfaces;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
 using ConsoleGameEntities.Models.Items;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Factories;
 
-public class ItemFactory(IItemDao itemDao) : IItemFactory
+public class ItemFactory(IItemDao itemDao, IRandomProvider randomProvider) : IItemFactory
 {
-    private static readonly Random Random = Random.Shared;
+    private readonly IRandomProvider _randomProvider = randomProvider;
     private readonly IItemDao _itemDao = itemDao;
 
     public List<Item> GenerateLoot(int level, int numMonsters, bool campaign)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(level);
-        ArgumentOutOfRangeException.ThrowIfNegative(numMonsters);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(numMonsters);
         
         var lootMaxValue = CalculateLootValue(level, numMonsters, campaign);
 
         var availableItems = _itemDao.GetItemsAvailableAtLevel(level)
-            .Where(i => CalculateItemTrueValue(CreateItem(i)) < lootMaxValue / 2.0M)
+            .Select(CreateItem)
+            .Where(i => CalculateItemTrueValue(i) < lootMaxValue / 2.0M)
             .ToList();
 
         if (availableItems.Count == 0)
@@ -88,26 +90,26 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         }
     }
 
-    private static Item CreateItem(Item itemBase)
+    private Item CreateItem(Item itemBase)
     {
         Item newItem = itemBase switch
         {
-            Weapon weapon => SetBaseProperties(new Weapon
+            Weapon weapon => SetBaseProperties(new Weapon(_randomProvider)
             {
                 DamageType = weapon.DamageType
             }, weapon),
 
-            Armor armor => SetBaseProperties(new Armor
+            Armor armor => SetBaseProperties(new Armor(_randomProvider)
             {
                 ArmorType = armor.ArmorType
             }, armor),
 
-            Consumable consumable => SetBaseProperties(new Consumable
+            Consumable consumable => SetBaseProperties(new Consumable(_randomProvider)
             {
                 ConsumableType = consumable.ConsumableType
             }, consumable),
 
-            Valuable valuable => SetBaseProperties(new Valuable(), valuable),
+            Valuable valuable => SetBaseProperties(new Valuable(_randomProvider), valuable),
 
             _ => throw new ArgumentException("Unknown item type", nameof(itemBase))
         };
@@ -128,7 +130,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         return item;
     }
 
-    private static decimal CalculateLootValue(int level, int numMonsters, bool campaign)
+    private decimal CalculateLootValue(int level, int numMonsters, bool campaign)
     {
         decimal baseGold = 0.75M * level * level + 14.25M;
 
@@ -137,7 +139,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         decimal total = baseGold + monsterBonus;
 
         // Variance
-        decimal variance = (decimal)Random.NextDouble() * 0.2M + 0.9M;
+        decimal variance = (decimal)_randomProvider.NextDouble() * 0.2M + 0.9M;
         total *= variance;
 
         // Campaign bonus
@@ -147,42 +149,33 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         return Math.Max(total, numMonsters);
     }
 
-    private static void TryReplaceLowestValueValuableWithJackpot(List<Item> loot, List<Valuable> valuables, decimal lootMaxValue)
+    private void TryReplaceLowestValueValuableWithJackpot(List<Item> loot, List<Valuable> valuables, decimal lootMaxValue)
     {
         var itemToRemove = loot.OfType<Valuable>().OrderBy(i => i.Value).FirstOrDefault();
 
         if (itemToRemove != null)
         {
             loot.Remove(itemToRemove);
-            var newValue = loot.Sum(i => i.Value);
+            var newValue = loot.Sum(CalculateItemTrueValue);
 
             //Try to find a random valuable in the ideal range
             var jackpot = valuables
-                .Where(v => v.Value > newValue && v.Value <= (lootMaxValue - newValue))
-                .OrderBy(_ => Random.Next())
+                .Where(v => CalculateItemTrueValue(v) > CalculateItemTrueValue(itemToRemove) &&
+                            CalculateItemTrueValue(v) <= lootMaxValue - newValue)
+                .OrderBy(_ => _randomProvider.Next())
                 .FirstOrDefault();
 
-            // if no item found in ideal range, find the best one
             jackpot ??= valuables
-                .Where(v => v.Value <= (lootMaxValue - newValue))
-                .OrderByDescending(v => v.Value)
+                .Where(v => CalculateItemTrueValue(v) > CalculateItemTrueValue(itemToRemove) &&
+                            CalculateItemTrueValue(v) <= lootMaxValue - newValue)
+                .OrderByDescending(CalculateItemTrueValue)
                 .FirstOrDefault();
 
-            if (jackpot != null)
-            {
-                var retainValue = jackpot.Value; //we want the original value, since it was used for calculations
-                var newJackpot = CreateItem(jackpot);
-                newJackpot.Value = retainValue;
-                loot.Add(newJackpot); // Add the jackpot item
-            }
-            else
-            {
-                loot.Add(itemToRemove); // No better item found — restore the original
-            }
+            loot.Add(jackpot ?? itemToRemove); // If no better item found — restore the original
         }
     }
 
-    private static List<Item> GatherTribute(decimal lootMaxValue, List<Item> availableItems, int numMonsters)
+    private List<Item> GatherTribute(decimal lootMaxValue, List<Item> availableItems, int numMonsters)
     {
         if (availableItems.Count == 0)
             return [];
@@ -211,7 +204,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         return loot;
     }
 
-    private static Item SelectLootItem(List<Valuable> valuables, List<Weapon> weapons, List<Armor> armors, List<Consumable> consumables)
+    private Item SelectLootItem(List<Valuable> valuables, List<Weapon> weapons, List<Armor> armors, List<Consumable> consumables)
     {
         const int valuableWeight = 65;
         const int weaponWeight = 15;
@@ -224,12 +217,12 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
             (armors.Count > 0 ? armorWeight : 0) +
             (consumables.Count > 0 ? consumableWeight : 0);
 
-        int roll = Random.Next(totalWeight);
+        int roll = _randomProvider.Next(totalWeight);
 
         if (valuables.Count > 0)
         {
             if (roll < valuableWeight)
-                return valuables[Random.Next(valuables.Count)];
+                return valuables[_randomProvider.Next(valuables.Count)];
 
             roll -= valuableWeight;
         }
@@ -237,23 +230,23 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         if (weapons.Count > 0)
         {
             if (roll < weaponWeight)
-                return weapons[Random.Next(weapons.Count)];
+                return weapons[_randomProvider.Next(weapons.Count)];
 
             roll -= weaponWeight;
         }
 
-        if (armors.Count > 0)
+        if (armors.Count > 0 && roll < armorWeight)
         {
-            if (roll < armorWeight)
-                return armors[Random.Next(armors.Count)];
-
-            roll -= armorWeight;
+            return armors[_randomProvider.Next(armors.Count)];
         }
 
-        return consumables[Random.Next(consumables.Count)];
+        if (consumables.Count > 0)
+            return consumables[_randomProvider.Next(consumables.Count)];
+
+        throw new InvalidOperationException("No loot categories available");
     }
     
-    private static void ApplyRandomCurses(List<Item> loot, bool campaign)
+    private void ApplyRandomCurses(List<Item> loot, bool campaign)
     {
         const double normalCurseChance = 0.02;
         const double campaignCurseChance = 0.05;
@@ -268,7 +261,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         // Randomize which equipment gets considered first.
         for (int i = eligibleItems.Count - 1; i > 0; i--)
         {
-            int j = Random.Next(i + 1);
+            int j = _randomProvider.Next(i + 1);
             (eligibleItems[i], eligibleItems[j]) =
                 (eligibleItems[j], eligibleItems[i]);
         }
@@ -280,7 +273,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
             if (cursedCount >= maxCursedItems)
                 break;
 
-            if (Random.NextDouble() < curseChance)
+            if (_randomProvider.NextDouble() < curseChance)
             {
                 item.Curse();
                 cursedCount++;
@@ -311,7 +304,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
 
         if (consumables.Count > 0)
         {
-            var consumable = consumables[Random.Next(consumables.Count)];
+            var consumable = consumables[_randomProvider.Next(consumables.Count)];
             merchantItems.Add(CreateItem(consumable));
         }
 
@@ -324,7 +317,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
 
         if (martial.Count > 0)
         {
-            var weapon = martial[Random.Next(martial.Count)];
+            var weapon = martial[_randomProvider.Next(martial.Count)];
             selectedWeapons.Add(weapon);
             weapons.Remove(weapon);
         }
@@ -336,7 +329,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
 
         if (magical.Count > 0 && selectedWeapons.Count < 3)
         {
-            var weapon = magical[Random.Next(magical.Count)];
+            var weapon = magical[_randomProvider.Next(magical.Count)];
             selectedWeapons.Add(weapon);
             weapons.Remove(weapon);
         }
@@ -344,7 +337,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         // Fill remaining slots randomly
         while (selectedWeapons.Count < 3 && weapons.Count > 0)
         {
-            var weapon = weapons[Random.Next(weapons.Count)];
+            var weapon = weapons[_randomProvider.Next(weapons.Count)];
             selectedWeapons.Add(weapon);
             weapons.Remove(weapon);
         }
@@ -354,7 +347,7 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         int armorsToAdd = Math.Min(3, armors.Count);
         for (int i = 0; i < armorsToAdd; i++)
         {
-            var armor = armors[Random.Next(armors.Count)];
+            var armor = armors[_randomProvider.Next(armors.Count)];
             merchantItems.Add(CreateItem(armor));
             armors.Remove(armor);
         }
@@ -379,13 +372,13 @@ public class ItemFactory(IItemDao itemDao) : IItemFactory
         var gifts = new List<Item>();
 
         if (weapons.Count > 0)
-            gifts.Add(CreateItem(weapons[Random.Next(weapons.Count)]));
+            gifts.Add(CreateItem(weapons[_randomProvider.Next(weapons.Count)]));
 
         if (armors.Count > 0)
-            gifts.Add(CreateItem(armors[Random.Next(armors.Count)]));
+            gifts.Add(CreateItem(armors[_randomProvider.Next(armors.Count)]));
 
         if (consumables.Count > 0)
-            gifts.Add(CreateItem(consumables[Random.Next(consumables.Count)]));
+            gifts.Add(CreateItem(consumables[_randomProvider.Next(consumables.Count)]));
 
         return gifts;
         

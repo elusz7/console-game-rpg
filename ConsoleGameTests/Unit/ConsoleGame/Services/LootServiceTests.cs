@@ -1,4 +1,5 @@
-﻿using ConsoleGame.Models;
+﻿using ConsoleGame.Factories.Interfaces;
+using ConsoleGame.Models;
 using ConsoleGame.Services;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Models.Entities;
@@ -6,6 +7,7 @@ using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Managers.Interfaces;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Runes.Recipes;
 using Moq;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
@@ -19,6 +21,9 @@ public class LootServiceTests
     private readonly Mock<IMonsterDropDao> _monsterDropDaoMock = new();
     private readonly Mock<IIngredientDao> _ingredientDaoMock = new();
     private readonly Mock<ITransactionManager> _transactionManager = new();
+    
+    private Mock<IItemFactory> _itemFactory = new();
+    private Mock<IRandomProvider> _randomProvider = new();
 
     private LootService _service;
 
@@ -99,14 +104,14 @@ public class LootServiceTests
     }
 
     // Creates a session with the monster in both monster collections.
-    private static GameSession CreateSession(
+    private GameSession CreateSession(
         Player player,
         Monster monster)
     {
         var room = new Room("Entrance", "The entrance room.");
         room.Monsters.Add(monster);
 
-        var floor = new Floor
+        var floor = new Floor(_itemFactory.Object, _randomProvider.Object)
         {
             Rooms = [room],
             Monsters = [monster],

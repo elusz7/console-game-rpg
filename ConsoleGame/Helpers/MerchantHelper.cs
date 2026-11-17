@@ -126,7 +126,7 @@ public class MerchantHelper(IInputManager inputManager, IOutputManager outputMan
         }
 
         _outputManager.WriteLine();
-        var item = _inputManager.SelectItem("Select an item to purchase", items, purpose: "buy");
+        var item = _inputManager.SelectItem("Select an item to purchase", items.ToList(), purpose: "buy");
 
         if (item == null) return;
 

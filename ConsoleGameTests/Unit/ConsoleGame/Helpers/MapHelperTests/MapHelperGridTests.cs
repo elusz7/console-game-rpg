@@ -1,17 +1,21 @@
 ﻿using ConsoleGame.Helpers;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
+using Moq;
 
 namespace ConsoleGameTests.Unit.ConsoleGame.Helpers.MapHelperTests;
 
 [TestClass]
 public class MapHelperTests
 {
+    private Mock<IRandomProvider> _randomProvider = null!;
     private MapHelper _mapHelper = null!;
 
     [TestInitialize]
     public void Setup()
     {
-        _mapHelper = new MapHelper();
+        _randomProvider = new Mock<IRandomProvider>();
+        _mapHelper = new MapHelper(_randomProvider.Object);
     }
 
     private static Room CreateRoom(string name, int id)

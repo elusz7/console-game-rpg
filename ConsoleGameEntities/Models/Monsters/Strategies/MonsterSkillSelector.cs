@@ -18,7 +18,13 @@ public class MonsterSkillSelector : IMonsterSkillSelector
     public virtual Skill? GetHighestDamageSkill(IMonster monster)
     {
         return GetAvailableSkills(monster)
-            .Where(s => s.SkillCategory == SkillCategory.Basic)
+            .Where(s => monster.DamageType switch
+            {
+                DamageType.Martial => s is MartialSkill,
+                DamageType.Magical => s is MagicSkill,
+                DamageType.Hybrid => s is MartialSkill or MagicSkill,
+                _ => false
+            })
             .Where(s => s.TargetType != TargetType.AllEnemies)
             .OrderByDescending(s => s.Power)
             .FirstOrDefault();
@@ -27,7 +33,7 @@ public class MonsterSkillSelector : IMonsterSkillSelector
     public virtual BossSkill? GetStrongestBossSkill(IMonster monster)
     {
         return monster.Skills.OfType<BossSkill>()
-            .Where(s => s.IsReady)
+            .Where(s => s.IsReady && s.RequiredLevel <= monster.Level)
             .OrderByDescending(s => s.Power).FirstOrDefault();
     }
 
@@ -48,7 +54,7 @@ public class MonsterSkillSelector : IMonsterSkillSelector
     public virtual SupportSkill? GetHealingSkill(IMonster monster, int desiredHealingPower)
     {
         return GetSupportSkills(monster)
-            .Where(s => s.StatAffected == StatType.Health)
+            .Where(s => s is { StatAffected: StatType.Health, TargetType: TargetType.Self })
             .OrderBy(skill => Math.Abs(skill.Power - desiredHealingPower))
             .FirstOrDefault();
     }
@@ -56,14 +62,16 @@ public class MonsterSkillSelector : IMonsterSkillSelector
     public virtual SupportSkill? GetBuffSkill(IMonster monster, StatType? affectedStat = null)
     {
         return GetSupportSkills(monster)
+            .Where(s => s.StatAffected != StatType.Health)
             .Where(s => affectedStat == null || s.StatAffected == affectedStat)
             .Where(s => s.TargetType == TargetType.Self)
-            .OrderByDescending(s => s.Power).FirstOrDefault();
+            .OrderByDescending(s => s.Power)
+            .FirstOrDefault();
     }
 
     public virtual UltimateSkill? GetUltimateSkill(IMonster monster)
     {
         return monster.Skills.OfType<UltimateSkill>()
-            .FirstOrDefault(s => s.IsReady);
+            .FirstOrDefault(s => s.IsReady && s.RequiredLevel <= monster.Level);
     }
 }

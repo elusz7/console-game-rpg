@@ -1,12 +1,13 @@
 ﻿using System.Collections.Concurrent;
 using ConsoleGame.Helpers.Interfaces;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Helpers;
 
-public class MapHelper : IMapHelper
+public class MapHelper(IRandomProvider randomProvider) : IMapHelper
 {
-    private static readonly Random Random = Random.Shared;
+    private readonly IRandomProvider _randomProvider = randomProvider;
 
     sealed record RoomPosition(Room Room, int X, int Y);
 
@@ -33,12 +34,12 @@ public class MapHelper : IMapHelper
 
         while (connectedRooms.Count < totalRoomsAllowed && frontier.Count > 0 && nextRoomIndex < availableRooms.Count)
         {
-            int frontierIndex = Random.Next(frontier.Count);
+            int frontierIndex = _randomProvider.Next(frontier.Count);
             var current = frontier[frontierIndex];
             frontier.RemoveAt(frontierIndex);
 
             var availableDirections = GetAvailableDirectionsForRoom(current, connectedRooms)
-                .OrderBy(_ => Random.Next())
+                .OrderBy(_ => _randomProvider.Next())
                 .ToList();
 
             foreach (var direction in availableDirections)
@@ -69,13 +70,13 @@ public class MapHelper : IMapHelper
     }
 
     // Fisher-Yates shuffle helper method
-    private static void Shuffle<T>(List<T> list)
+    private void Shuffle<T>(List<T> list)
     {
         int n = list.Count;
         while (n > 1)
         {
             n--;
-            int k = Random.Next(n + 1);
+            int k = _randomProvider.Next(n + 1);
             (list[k], list[n]) = (list[n], list[k]);
         }
     }
@@ -443,7 +444,7 @@ public class MapHelper : IMapHelper
 
         for (int i = 0; i < connectionCount && unlinkedNeighbors.Count > 0; i++)
         {
-            var randomElement = unlinkedNeighbors.ElementAt(Random.Next(unlinkedNeighbors.Count));
+            var randomElement = unlinkedNeighbors.ElementAt(_randomProvider.Next(unlinkedNeighbors.Count));
             var (roomName1, direction) = ParseKey(randomElement.Key);
             var roomName2 = randomElement.Value;
 

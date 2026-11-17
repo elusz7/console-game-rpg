@@ -1,6 +1,7 @@
 ﻿using ConsoleGame.Factories.Interfaces;
 using ConsoleGame.Models;
 using ConsoleGame.Services;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Monsters;
@@ -13,6 +14,9 @@ public class FloorProgressionServiceTests
 {
     // Mock the floor factory so tests don't depend on actual map generation.
     private readonly Mock<IFloorFactory> _floorFactoryMock = new();
+    
+    private Mock<IItemFactory> _itemFactory = new();
+    private Mock<IRandomProvider> _randomProvider = new();
 
     // The service being tested.
     private readonly FloorProgressionService _service;
@@ -44,9 +48,9 @@ public class FloorProgressionServiceTests
     }
 
     // Creates a floor containing the entrance room required by GetEntrance().
-    private static Floor CreateFloor()
+    private Floor CreateFloor()
     {
-        return new Floor
+        return new Floor(_itemFactory.Object, _randomProvider.Object)
         {
             Rooms =
             [

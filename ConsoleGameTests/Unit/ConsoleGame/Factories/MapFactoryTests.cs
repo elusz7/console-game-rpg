@@ -2,6 +2,7 @@
 using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers;
 using ConsoleGame.Helpers.Interfaces;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using Moq;
 
@@ -12,14 +13,16 @@ public class MapFactoryTests
 {
     private Mock<IRoomDao> _roomDaoMock = null!;
     private MapFactory _mapFactory = null!;
+    private Mock<IRandomProvider> _randomProvider = null!;
 
     [TestInitialize]
     public void Setup()
     {
         _roomDaoMock = new Mock<IRoomDao>();
+        _randomProvider = new Mock<IRandomProvider>();
         _mapFactory = new MapFactory(
             _roomDaoMock.Object,
-            new MapHelper());
+            new MapHelper(_randomProvider.Object));
     }
 
     [TestMethod]

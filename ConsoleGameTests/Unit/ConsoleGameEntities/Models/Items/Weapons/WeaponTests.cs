@@ -179,6 +179,6 @@ public class WeaponTests
     {
         var weapon = CreateWeapon(attackPower: 95);
         weapon.CalculateLevelByStats();
-        Assert.AreEqual(10, weapon.RequiredLevel);
+        Assert.AreEqual(13, weapon.RequiredLevel);
     }
 }

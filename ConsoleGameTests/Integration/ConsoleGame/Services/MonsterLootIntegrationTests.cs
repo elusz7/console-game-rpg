@@ -5,7 +5,6 @@ using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Managers;
 using ConsoleGame.Managers.Interfaces;
 using ConsoleGame.Models;
-using ConsoleGame.Models.Attributes;
 using ConsoleGame.Services;
 using ConsoleGame.Services.Interfaces;
 using ConsoleGameEntities.Data;
@@ -39,6 +38,7 @@ public class MonsterLootIntegrationTests
     private ITransactionManager _transactionManager = null!;
 
     private ILootService _lootService = null!;
+    private Mock<IItemFactory> _itemFactory;
     private IMonsterFactory _monsterFactory = null!;
     
     private const int TestRoomCount = 10;
@@ -74,7 +74,8 @@ public class MonsterLootIntegrationTests
         _randomProviderMock
             .Setup(r => r.Next(It.IsAny<int>(), It.IsAny<int>()))
             .Returns((int min, int max) => min);
-        
+
+        _itemFactory = new Mock<IItemFactory>();
         _monsterFactory = new MonsterFactory(_monsterDao, _skillDao, _skillSelector, _randomProviderMock.Object);
 
         //Set Up Loot Service
@@ -94,13 +95,12 @@ public class MonsterLootIntegrationTests
     
     private Floor CreateFloor(int level)
     {
-        return new Floor
+        return new Floor(_itemFactory.Object, _randomProviderMock.Object)
         {
             Level = level,
             Rooms = [],
             Monsters = [],
-            Loot = [],
-            ItemFactory = null!
+            Loot = []
         };
     }
     

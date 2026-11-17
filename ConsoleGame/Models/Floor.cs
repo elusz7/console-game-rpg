@@ -1,5 +1,5 @@
 ﻿using ConsoleGame.Factories.Interfaces;
-using ConsoleGameEntities.Interfaces.ItemAttributes;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Monsters;
@@ -7,45 +7,96 @@ using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGame.Models;
 
-public class Floor
+public class Floor(IItemFactory itemFactory, IRandomProvider randomProvider)
 {
-    private static readonly Random _rng = Random.Shared;
+    private readonly IItemFactory _itemFactory = itemFactory;
+    private readonly IRandomProvider _randomProvider = randomProvider;
 
-    public IItemFactory ItemFactory;
-    public int Level { get; set; }
-    public List<Monster> Monsters { get; set; } = [];
-    public List<Room> Rooms { get; set; } = [];
-    public List<Item> Loot { get; set; } = [];
-    public bool HasMetMerchant { get; set; } = false;
+    public int Level { get; init; }
+    public List<Monster> Monsters { get; init; } = [];
+    public List<Room> Rooms { get; init; } = [];
+    public List<Item> Loot { get; init; } = [];
+    public bool HasMetMerchant { get; set; }
+
     private List<Item> MerchantItems { get; set; } = [];
 
     public void AssignMonstersToRooms()
     {
-        var availableRooms = Rooms.Where(r => r.Name != "Entrance").ToList();
-        var usedRooms = new List<Room>();
+        var allAvailableRooms = Rooms.Where(r => r.Name != "Entrance").ToList();
 
-        foreach (var monster in Monsters)
+        var bossMonsters = Monsters.Where(m => m is BossMonster).ToList();
+        var eliteMonsters = Monsters.Where(m => m is EliteMonster).ToList();
+        var monsters = Monsters.Where(m => m is not BossMonster && m is not EliteMonster).ToList();
+        
+        ValidateMonsterRoomAssignment(
+            bossMonsters.Count, eliteMonsters.Count, monsters.Count,
+            allAvailableRooms.Count,
+            Rooms.Any(r => r.Name == "Entrance"));
+        
+        if (bossMonsters is [BossMonster boss])
         {
-            var randomRoomIndex = _rng.Next(0, availableRooms.Count);
-            var room = availableRooms[randomRoomIndex];
+            
+            var randomIndex = _randomProvider.Next(0, allAvailableRooms.Count);
+            var bossRoom = allAvailableRooms[randomIndex];
+            
+            boss.Room = bossRoom;
+            bossRoom.Monsters.Add(boss);
+            allAvailableRooms.Remove(bossRoom);
+        }
+        
+        foreach (var eliteMonster in eliteMonsters)
+        {
+            var randomIndex = _randomProvider.Next(0, allAvailableRooms.Count);
+            var eliteRoom = allAvailableRooms[randomIndex];
+            
+            eliteMonster.Room = eliteRoom;
+            eliteRoom.Monsters.Add(eliteMonster);
+            allAvailableRooms.Remove(eliteRoom);
+        }
+        
+        var usedRooms = new List<Room>();
+        foreach (var monster in monsters)
+        {
+            var randomRoomIndex = _randomProvider.Next(0, allAvailableRooms.Count);
+            var room = allAvailableRooms[randomRoomIndex];
 
             monster.Room = room;
             room.Monsters.Add(monster);
 
             usedRooms.Add(room);
-            availableRooms.Remove(room);
+            allAvailableRooms.Remove(room);
 
-            if (availableRooms.Count == 0)
+            if (allAvailableRooms.Count == 0)
             {
-                availableRooms = [.. usedRooms];
+                allAvailableRooms = [.. usedRooms];
                 usedRooms.Clear();
             }
         }
     }
 
+    private void ValidateMonsterRoomAssignment(int bossCount, int eliteCount, int monsterCount, int roomCount, bool hasEntrance)
+    {
+        if (!hasEntrance)
+            throw new InvalidOperationException("Floor must have an Entrance room");
+        
+        if (roomCount < 1)
+            throw new InvalidOperationException("At least one valid room is required for monster assignment");
+        
+        if (bossCount > 1)
+            throw new InvalidOperationException("Only 1 boss monster allowed per floor");
+
+        var remainingRoomCount = roomCount - bossCount - eliteCount;
+
+        if (remainingRoomCount < 0)
+            throw new InvalidOperationException("Not enough rooms for Boss and Elite monster assignment");
+
+        if (monsterCount > 0 && remainingRoomCount == 0)
+            throw new InvalidOperationException("No rooms available for non-Elite/Boss monster assignment");
+    }
+
     public void AssignItemsToMonsters()
     {
-        var availableMonsters = Monsters.Where(m => m.Treasure == null).OrderBy(_ => _rng.Next()).ToList();
+        var availableMonsters = Monsters.Where(m => m.Treasure == null).OrderBy(_ => _randomProvider.Next()).ToList();
 
         if (Loot.Count > availableMonsters.Count)
         {
@@ -53,32 +104,28 @@ public class Floor
                 $"Not enough monsters to assign items. Items: {Loot.Count}, Available Monsters: {availableMonsters.Count}");
         }
 
-        var shuffledItems = Loot.OrderBy(_ => _rng.Next()).ToList();
+        var shuffledItems = Loot.OrderBy(_ => _randomProvider.Next()).ToList();
 
         for (int i = 0; i < shuffledItems.Count; i++)
         {
-            availableMonsters[i].Treasure = shuffledItems[i];
+            availableMonsters[i].SetLoot(shuffledItems[i]);
         }
     }
 
     public Room GetEntrance()
     {
-        return Rooms.First(r => r.Name.Equals("Entrance"));
+        return Rooms.First(r => r.Name == "Entrance");
     }
 
     public string GetMerchantName()
     {
         if (HasMetMerchant)
-        {
             return "Senmothis";
-        }
-        else
-        {
-            return "A Mysterious Stranger";
-        }
+        
+        return "A Mysterious Stranger";
     }
 
-    public List<Item> GetMerchantItems()
+    public IReadOnlyList<Item> GetMerchantItems()
     {
         return MerchantItems;
     }
@@ -90,11 +137,11 @@ public class Floor
 
     public void UpdateMerchantItems()
     {
-        MerchantItems = ItemFactory.CreateMerchantItems(Level);
+        MerchantItems = _itemFactory.CreateMerchantItems(Level);
     }
 
     public List<Item> GetMerchantGifts(ArchetypeType type, int level)
     {
-        return ItemFactory.GetMerchantGifts(type, level);
+        return _itemFactory.GetMerchantGifts(type, level);
     }
 }

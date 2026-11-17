@@ -1,6 +1,7 @@
 ﻿using ConsoleGame.Factories.Interfaces;
 using ConsoleGame.Models;
 using ConsoleGame.Services;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Items;
 using ConsoleGameEntities.Models.Monsters;
@@ -13,6 +14,7 @@ public class RoomNavigationServiceTests
 {
     // Mocks the item factory used when refreshing merchant inventory.
     private readonly Mock<IItemFactory> _itemFactoryMock = new();
+    private Mock<IRandomProvider> _randomProvider = new();
 
     // The service being tested.
     private readonly RoomNavigationService _service = new();
@@ -38,13 +40,12 @@ public class RoomNavigationServiceTests
     // Creates a floor with its entrance room and mocked item factory.
     private Floor CreateFloor()
     {
-        return new Floor
+        return new Floor(_itemFactoryMock.Object, _randomProvider.Object)
         {
             Rooms =
             [
                 new Room("Entrance", "The entrance to the floor.")
             ],
-            ItemFactory = _itemFactoryMock.Object,
             Level = 1
         };
     }
@@ -60,10 +61,9 @@ public class RoomNavigationServiceTests
         // Connect the rooms.
         entrance.North = northRoom;
 
-        var floor = new Floor
+        var floor = new Floor(_itemFactoryMock.Object, _randomProvider.Object)
         {
             Rooms = [entrance, northRoom],
-            ItemFactory = _itemFactoryMock.Object,
             Level = 1
         };
 
@@ -94,10 +94,9 @@ public class RoomNavigationServiceTests
         var player = CreatePlayer();
         var entrance = new Room("Entrance", "The entrance.");
 
-        var floor = new Floor
+        var floor = new Floor(_itemFactoryMock.Object, _randomProvider.Object)
         {
             Rooms = [entrance],
-            ItemFactory = _itemFactoryMock.Object,
             Level = 1
         };
 
@@ -140,11 +139,10 @@ public class RoomNavigationServiceTests
         entrance.Monsters.Add(monsterWithoutTreasure);
         entrance.Monsters.Add(monsterWithTreasure);
 
-        var floor = new Floor
+        var floor = new Floor(_itemFactoryMock.Object, _randomProvider.Object)
         {
             Rooms = [entrance],
             Monsters = [monsterWithoutTreasure, monsterWithTreasure],
-            ItemFactory = _itemFactoryMock.Object,
             Level = 1
         };
 
@@ -176,10 +174,9 @@ public class RoomNavigationServiceTests
         // Connect the two non-entrance rooms.
         currentRoom.North = nextRoom;
 
-        var floor = new Floor
+        var floor = new Floor(_itemFactoryMock.Object, _randomProvider.Object)
         {
             Rooms = [entrance, currentRoom, nextRoom],
-            ItemFactory = _itemFactoryMock.Object,
             Level = 1
         };
 

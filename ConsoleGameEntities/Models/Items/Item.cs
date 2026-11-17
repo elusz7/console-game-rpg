@@ -4,6 +4,7 @@ using ConsoleGameEntities.Interfaces;
 using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Runes;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
@@ -11,7 +12,17 @@ namespace ConsoleGameEntities.Models.Items;
 
 public class Item : IItem
 {
-    private static readonly Random _rng = Random.Shared;
+    private readonly IRandomProvider _random;
+
+    public Item() : this(new RandomProvider())
+    {
+    }
+
+    public Item(IRandomProvider random)
+    {
+        _random = random ?? throw new ArgumentNullException(nameof(random));
+    }
+    
     public int Id { get; set; }
     public string Name { get; set; }
     public decimal Value { get; set; }
@@ -47,7 +58,7 @@ public class Item : IItem
         var baseValue = (decimal)Math.Pow(RequiredLevel, 1.15) * 1.5M;
         var durabilityValue = Durability * 1.5M;
 
-        var variance = (decimal)(_rng.NextDouble() * 0.2) + 0.9M;
+        var variance = (decimal)(_random.NextDouble() * 0.2) + 0.9M;
 
         var calculation = (baseValue + durabilityValue) * variance;
 
@@ -56,7 +67,7 @@ public class Item : IItem
 
     public virtual void CalculateStatsByLevel()
     {
-        Durability = _rng.Next(3, 9);
+        Durability = _random.Next(3, 9);
     }
 
     public virtual void CalculateLevelByStats()

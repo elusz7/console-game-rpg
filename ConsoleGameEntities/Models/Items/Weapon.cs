@@ -1,6 +1,8 @@
 ﻿using System.Text;
 using ConsoleGameEntities.Exceptions;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
+using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Runes;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
@@ -8,7 +10,16 @@ namespace ConsoleGameEntities.Models.Items;
 
 public class Weapon : Item, IEquippable, IEnchantable, ICursable
 {
-    private static readonly Random _rng = Random.Shared;
+    private readonly IRandomProvider _random;
+
+    public Weapon() : this(new RandomProvider())
+    {
+    }
+
+    public Weapon(IRandomProvider random)
+    {
+        _random = random ?? throw new ArgumentNullException(nameof(random));
+    }
 
     private bool Cursed { get; set; }
     private bool Equipped { get; set; }
@@ -37,7 +48,7 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
             throw new ItemEnchantmentException($"You are short by {price - Inventory.Gold} gold.");
 
         double failureChance = Math.Min(0.02 * RequiredLevel, 0.6);
-        if (_rng.NextDouble() < failureChance)
+        if (_random.NextDouble() < failureChance)
         {
             Inventory.Gold -= price;
             throw new ItemEnchantmentException("Enchantment attempt failed.");
@@ -45,9 +56,9 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
 
         RequiredLevel++;
 
-        var newStatMax = _rng.Next(RequiredLevel * 3, RequiredLevel * 6 + 1);
+        var newStatMax = _random.Next(RequiredLevel * 3, RequiredLevel * 6 + 1);
         var newStatMin = (int)Math.Max(1, Math.Floor(newStatMax * 0.33));
-        var newAttackPower = _rng.Next(newStatMin, newStatMax);
+        var newAttackPower = _random.Next(newStatMin, newStatMax);
 
         AttackPower += newAttackPower;
 
@@ -79,7 +90,7 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
         var durabilityValue = Durability * 1.5M;
         var attackValue = AttackPower * 1.2M;
 
-        var variance = (decimal)(_rng.NextDouble() * 0.2) + 0.9M;
+        var variance = (decimal)(_random.NextDouble() * 0.2) + 0.9M;
 
         var calculation = (baseValue + durabilityValue + attackValue) * variance;
 
@@ -88,9 +99,9 @@ public class Weapon : Item, IEquippable, IEnchantable, ICursable
 
     public override void CalculateStatsByLevel()
     {
-        Durability = _rng.Next(3, 9);
+        Durability = _random.Next(3, 9);
 
-        AttackPower = _rng.Next(RequiredLevel * 6, RequiredLevel * 9);
+        AttackPower = _random.Next(RequiredLevel * 6, RequiredLevel * 9);
     }
 
     public override void CalculateLevelByStats()

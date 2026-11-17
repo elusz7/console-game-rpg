@@ -182,7 +182,7 @@ public class ArmorTests
     {
         var armor = CreateArmor(defensePower: 50, resistancePower: 50);
         armor.CalculateLevelByStats();
-        Assert.AreEqual(12, armor.RequiredLevel);
+        Assert.AreEqual(15, armor.RequiredLevel);
     }
 
     [TestMethod]

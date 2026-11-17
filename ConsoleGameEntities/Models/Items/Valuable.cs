@@ -1,12 +1,20 @@
-﻿using ConsoleGameEntities.Models.Monsters;
+﻿using ConsoleGameEntities.Interfaces.Attributes;
+using ConsoleGameEntities.Models.Entities;
+using ConsoleGameEntities.Models.Monsters;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
 namespace ConsoleGameEntities.Models.Items;
 
 public class Valuable : Item
 {
-    private static readonly Random _rng = Random.Shared;
+    public Valuable() : this(new RandomProvider())
+    {
+    }
 
+    public Valuable(IRandomProvider random) : base(random)
+    {
+    }
+    
     public override void Use() =>
         throw new InvalidOperationException("A valuable cannot be used."); //A valuable cannot be used
 

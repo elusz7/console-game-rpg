@@ -1,8 +1,10 @@
-﻿using ConsoleGame.GameDao.Interfaces;
+﻿using ConsoleGame.Factories.Interfaces;
+using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers;
 using ConsoleGame.Managers.Interfaces;
 using ConsoleGame.Models;
 using ConsoleGame.Services;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using Moq;
 
@@ -13,6 +15,9 @@ public class CampaignServiceTests
 {
     // Mock the DAO so tests can verify persistence without a database.
     private readonly Mock<IPlayerDao> _playerDaoMock = new();
+    
+    private Mock<IItemFactory> _itemFactory = new();
+    private Mock<IRandomProvider> _randomProvider = new();
 
     // The service being tested.
     private readonly CampaignService _service;
@@ -55,7 +60,8 @@ public class CampaignServiceTests
     {
         // Arrange
         var player = CreatePlayer();
-        var session = new GameSession(player, new Floor(), true);
+        var floor = new Floor(_itemFactory.Object, _randomProvider.Object);
+        var session = new GameSession(player, floor, true);
 
         // Indicate that the player chose to quit the campaign.
         session.End(AdventureStatus.Quit);
@@ -83,7 +89,8 @@ public class CampaignServiceTests
     {
         // Arrange
         var player = CreatePlayer();
-        var session = new GameSession(player, new Floor(), true);
+        var floor = new Floor(_itemFactory.Object, _randomProvider.Object);
+        var session = new GameSession(player, floor, true);
 
         // Indicate that the player died during the campaign.
         session.End(AdventureStatus.PlayerDead);
@@ -107,7 +114,8 @@ public class CampaignServiceTests
     {
         // Arrange
         var player = CreatePlayer();
-        var session = new GameSession(player, new Floor(), false);
+        var floor = new Floor(_itemFactory.Object, _randomProvider.Object);
+        var session = new GameSession(player, floor, false);
 
         // Indicate that the player chose to quit the adventure.
         session.End(AdventureStatus.Quit);
@@ -135,7 +143,8 @@ public class CampaignServiceTests
     {
         // Arrange
         var player = CreatePlayer();
-        var session = new GameSession(player, new Floor(), false);
+        var floor = new Floor(_itemFactory.Object, _randomProvider.Object);
+        var session = new GameSession(player, floor, false);
 
         // Indicate that the player died during the adventure.
         session.End(AdventureStatus.PlayerDead);
@@ -162,7 +171,8 @@ public class CampaignServiceTests
     {
         // Arrange
         var player = CreatePlayer();
-        var session = new GameSession(player, new Floor(), true);
+        var floor = new Floor(_itemFactory.Object, _randomProvider.Object);
+        var session = new GameSession(player, floor, true);
 
         // Act: the campaign has not ended.
         _service.SaveIfCampaign(session);

@@ -1,6 +1,5 @@
 ﻿using ConsoleGame.Factories;
 using ConsoleGame.GameDao.Interfaces;
-using ConsoleGame.Models.Attributes;
 using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Monsters;
 using ConsoleGameEntities.Models.Skills;

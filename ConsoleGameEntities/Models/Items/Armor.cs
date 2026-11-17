@@ -1,7 +1,9 @@
 ﻿using System.Text;
 using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Interfaces.ItemAttributes;
+using ConsoleGameEntities.Models.Entities;
 using ConsoleGameEntities.Models.Runes;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
@@ -9,7 +11,16 @@ namespace ConsoleGameEntities.Models.Items;
 
 public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
 {
-    private readonly Random _rng = Random.Shared;
+    private readonly IRandomProvider _random;
+
+    public Armor() : this(new RandomProvider())
+    {
+    }
+
+    public Armor(IRandomProvider random)
+    {
+        _random = random ?? throw new ArgumentNullException(nameof(random));
+    }
 
     private bool Cursed { get; set; }
     private bool Equipped { get; set; }
@@ -42,7 +53,7 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
             throw new ItemReforgeException($"You are short by {price - Inventory.Gold} gold.");
 
         double failureChance = Math.Min(0.01 * RequiredLevel, 0.6);
-        if (_rng.NextDouble() < failureChance)
+        if (_random.NextDouble() < failureChance)
         {
             Inventory.Gold -= price;
             throw new ItemReforgeException("Reforge attempt failed.");
@@ -50,7 +61,7 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
 
         var totalPower = DefensePower + Resistance;
 
-        var newDefensePower = _rng.Next(totalPower);
+        var newDefensePower = _random.Next(totalPower);
         var newResistance = totalPower - newDefensePower;
 
         if (newDefensePower == DefensePower && newResistance == Resistance)
@@ -76,7 +87,7 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
             throw new ItemEnchantmentException($"You are short by {price - Inventory.Gold} gold.");
 
         var failureChance = Math.Min(0.02 * RequiredLevel, 0.6);
-        if (_rng.NextDouble() < failureChance)
+        if (_random.NextDouble() < failureChance)
         {
             Inventory.Gold -= price;
             throw new ItemEnchantmentException("Enchantment attempt failed.");
@@ -84,9 +95,9 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
 
         RequiredLevel++;
 
-        var newStats = Math.Max(2, _rng.Next(RequiredLevel, RequiredLevel * 2 + 1));
+        var newStats = Math.Max(2, _random.Next(RequiredLevel, RequiredLevel * 2 + 1));
 
-        var newDefensePower = _rng.Next(1, newStats);
+        var newDefensePower = _random.Next(1, newStats);
         var newResistance = newStats - newDefensePower;
 
         DefensePower += newDefensePower;
@@ -120,7 +131,7 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
         var durabilityValue = Durability * 1.5M;
         var armorValue = DefensePower * 0.5M + Resistance * 0.5M;
 
-        var variance = (decimal)(_rng.NextDouble() * 0.2) + 0.9M;
+        var variance = (decimal)(_random.NextDouble() * 0.2) + 0.9M;
 
         var calculation = (baseValue + durabilityValue + armorValue) * variance;
 
@@ -129,10 +140,10 @@ public class Armor : Item, IEquippable, IEnchantable, IReforgable, ICursable
 
     public override void CalculateStatsByLevel()
     {
-        Durability = _rng.Next(3, 9);
+        Durability = _random.Next(3, 9);
 
-        var total = _rng.Next(RequiredLevel * 5, RequiredLevel * 8);
-        DefensePower = _rng.Next(0, total + 1);
+        var total = _random.Next(RequiredLevel * 5, RequiredLevel * 8);
+        DefensePower = _random.Next(0, total + 1);
         Resistance = total - DefensePower;
     }
 

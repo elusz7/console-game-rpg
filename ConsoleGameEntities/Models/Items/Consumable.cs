@@ -1,5 +1,6 @@
 ﻿using ConsoleGameEntities.Exceptions;
 using ConsoleGameEntities.Interfaces;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 using static ConsoleGameEntities.Models.Entities.ModelEnums;
 
@@ -7,7 +8,17 @@ namespace ConsoleGameEntities.Models.Items;
 
 public class Consumable : Item
 {
-    private static readonly Random _rng = Random.Shared;
+    private readonly IRandomProvider _random;
+
+    public Consumable() : this(new RandomProvider())
+    {
+    }
+
+    public Consumable(IRandomProvider random)
+    {
+        _random = random ?? throw new ArgumentNullException(nameof(random));
+    }
+    
     public int Power { get; set; }
     public ConsumableType ConsumableType { get; set; }
 
@@ -64,7 +75,7 @@ public class Consumable : Item
         var durabilityValue = Durability * 1.5M;
         var powerValue = Power * 1.8M;
 
-        var variance = (decimal)(_rng.NextDouble() * 0.2) + 0.9M;
+        var variance = (decimal)(_random.NextDouble() * 0.2) + 0.9M;
 
         var calculation = (baseValue + durabilityValue + powerValue) * variance;
 
@@ -76,9 +87,9 @@ public class Consumable : Item
         Durability = 3;
         Power = ConsumableType switch
         {
-            ConsumableType.Health => _rng.Next(RequiredLevel * 3, RequiredLevel * 5),
-            ConsumableType.Durability => _rng.Next(RequiredLevel, RequiredLevel * 2),
-            ConsumableType.Resource => _rng.Next(RequiredLevel * 2, RequiredLevel * 4),
+            ConsumableType.Health => _random.Next(RequiredLevel * 3, RequiredLevel * 5),
+            ConsumableType.Durability => _random.Next(RequiredLevel, RequiredLevel * 2),
+            ConsumableType.Resource => _random.Next(RequiredLevel * 2, RequiredLevel * 4),
             _ => RequiredLevel * 2, // fallback value
         };
     }

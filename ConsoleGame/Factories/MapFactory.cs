@@ -1,6 +1,7 @@
 ﻿using ConsoleGame.Factories.Interfaces;
 using ConsoleGame.GameDao.Interfaces;
 using ConsoleGame.Helpers.Interfaces;
+using ConsoleGameEntities.Interfaces.Attributes;
 using ConsoleGameEntities.Models.Entities;
 
 namespace ConsoleGame.Factories;
